@@ -1,0 +1,10 @@
+version: "3"
+services:
+  gameserver:
+    image: gameserver
+    ports:
+      - "3001:3001"
+  gameclient:
+    image: gameclient
+    ports:
+      - "3000:3000"

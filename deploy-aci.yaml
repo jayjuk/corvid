@@ -1,0 +1,32 @@
+apiVersion: 2019-12-01
+location: westeurope
+name: jaysgame
+properties:
+  containers:
+    - name: gameclient
+      properties:
+        image: jayjuk/gameclient
+        resources:
+          requests:
+            cpu: 1
+            memoryInGb: 1.5
+        ports:
+          - port: 3000
+    - name: gameserver
+      properties:
+        image: jayjuk/gameserver
+        resources:
+          requests:
+            cpu: 1
+            memoryInGb: 1.5
+        ports:
+          - port: 3001
+  osType: Linux
+  ipAddress:
+    type: Public
+    dnsNameLabel: jaysgame
+    ports:
+      - port: 3000
+      - port: 3001
+tags: { exampleName: exampleValue }
+type: Microsoft.ContainerInstance/containerGroups
