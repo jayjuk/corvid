@@ -1,0 +1,117 @@
+{
+    "Living Room": {
+        "name": "Living Room",
+        "description": "A cozy living room filled with family photos and a TV.",
+        "exits": {
+            "north": "Kitchen",
+            "south": "Front Yard"
+        }
+    },
+    "Kitchen": {
+        "name": "Kitchen",
+        "description": "A well-used kitchen with various appliances and a dining table.",
+        "exits": {
+            "south": "Living Room",
+            "north": "Back Yard"
+        }
+    },
+    "Homer and Marge's Bedroom": {
+        "name": "Homer and Marge's Bedroom",
+        "description": "A bedroom with a large bed, and various personal belongings.",
+        "exits": {
+            "south": "Living Room"
+        }
+    },
+    "Bart's Room": {
+        "name": "Bart's Room",
+        "description": "A room full of toys, posters, and a skateboard.",
+        "exits": {
+            "south": "Living Room"
+        }
+    },
+    "Lisa's Room": {
+        "name": "Lisa's Room",
+        "description": "A room filled with books, a saxophone, and academic achievements.",
+        "exits": {
+            "south": "Living Room"
+        }
+    },
+    "Front Yard": {
+        "name": "Front Yard",
+        "description": "A small yard with a driveway and a mailbox.",
+        "exits": {
+            "north": "Living Room",
+            "south": "Residential Street"
+        }
+    },
+    "Back Yard": {
+        "name": "Back Yard",
+        "description": "A yard with a treehouse and a barbecue grill.",
+        "exits": {
+            "south": "Kitchen"
+        }
+    },
+    "Residential Street": {
+        "name": "Residential Street",
+        "description": "A quiet street lined with houses.",
+        "exits": {
+            "north": "Front Yard",
+            "south": "Downtown Springfield",
+            "west": "Power Plant Road"
+        }
+    },
+    "Downtown Springfield": {
+        "name": "Downtown Springfield",
+        "description": "The bustling downtown area of Springfield.",
+        "exits": {
+            "north": "Residential Street",
+            "east": "Kwik-E-Mart",
+            "west": "Moe's Tavern",
+            "south": "Springfield Elementary School",
+            "southwest": "Town Square"
+        }
+    },
+    "Kwik-E-Mart": {
+        "name": "Kwik-E-Mart",
+        "description": "A convenience store open 24/7.",
+        "exits": {
+            "west": "Downtown Springfield"
+        }
+    },
+    "Moe's Tavern": {
+        "name": "Moe's Tavern",
+        "description": "A dimly lit tavern, a regular hangout for some Springfield residents.",
+        "exits": {
+            "east": "Downtown Springfield"
+        }
+    },
+    "Springfield Elementary School": {
+        "name": "Springfield Elementary School",
+        "description": "A public school with a playground and a parking lot.",
+        "exits": {
+            "north": "Downtown Springfield"
+        }
+    },
+    "Springfield Nuclear Power Plant": {
+        "name": "Springfield Nuclear Power Plant",
+        "description": "A nuclear power plant, the largest employer in Springfield.",
+        "exits": {
+            "east": "Power Plant Road"
+        }
+    },
+    "Town Square": {
+        "name": "Town Square",
+        "description": "The center of the town, often the site of various events.",
+        "exits": {
+            "northeast": "Downtown Springfield"
+        }
+    },
+    "Power Plant Road": {
+        "name": "Power Plant Road",
+        "description": "A road leading to Springfield's Nuclear Power Plant.",
+        "exits": {
+            "west": "Residential Street",
+            "east": "Springfield Nuclear Power Plant"
+        }
+    }
+}
