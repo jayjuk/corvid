@@ -4,19 +4,58 @@ import { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import styles from "./all_styles.module.css";
 
+function useOrigin() {
+  const [mounted, setMounted] = useState(false);
+  const origin =
+    typeof window !== "undefined" && window.location.origin
+      ? window.location.origin
+      : "";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return origin;
+}
+
+function replaceAfterLastColon(
+  input: string | null,
+  replacement: string
+): string {
+  if (!input) return "";
+
+  const lastIndex = input.lastIndexOf(":");
+
+  if (lastIndex === -1) {
+    return input; // No colon found in the string
+  }
+
+  return input.slice(0, lastIndex + 1) + replacement;
+}
+
 export default function HomePage() {
   const [gameLog, setGameLog] = useState<string[]>([]);
   const [userInput, setUserInput] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [nameSet, setNameSet] = useState(false);
   const socket = useRef<Socket | null>(null);
+  const originalHost: string | null = useOrigin();
+  const gameServerHostName: string = replaceAfterLastColon(
+    originalHost,
+    "3001"
+  );
 
   useEffect(() => {
     // Connect to the game server via socket.io
     // Socket.current = io("http://gameserver:3001");
     // TODO: make this dynamic, for now you need to add this to hosts file
     // when running outside of Azure : 127.0.0.1 jaysgame.westeurope.azurecontainer.io
-    socket.current = io("http://jaysgame.westeurope.azurecontainer.io:3001");
+    //socket.current = io("http://jaysgame.westeurope.azurecontainer.io:3001");
+    socket.current = io(gameServerHostName);
 
     socket.current.on("game_update", (message) => {
       setGameLog((prevLog) => {
@@ -31,7 +70,7 @@ export default function HomePage() {
         socket.current.disconnect();
       }
     };
-  }, []);
+  }, [gameServerHostName]);
 
   const handleNameSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
