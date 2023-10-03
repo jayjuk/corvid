@@ -1,0 +1,11 @@
+.formContainer {
+  padding: 20px;
+}
+
+.inputField {
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  outline: none;
+  background-color: black; /* This is the background color for the input field */
+}

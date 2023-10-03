@@ -17,11 +17,9 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background-color: black;
+  color: #00ff00;
+  font-family: "Courier New", Courier, monospace; /* A font that gives a retro feel */
+  margin: 0;
+  padding: 0;
 }
