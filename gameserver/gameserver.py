@@ -19,14 +19,14 @@ global player_room
 player_room = {}
 
 
-class Game:
-    def __init__(self, sid):
-        self.player_name = "Anon"
+class Player:
+    def __init__(self, sid, player_name):
+        self.player_name = player_name
         self.current_room = "Living Room"
         self.sid = sid
-        game_manager.tell_me(
-            self.sid, game_manager.get_room_description(self.current_room)
-        )
+        game_manager.register_player(sid, self)
+        game_manager.tell_player(self.sid, f"Welcome to the game, {player_name}.")
+        game_manager.tell_others(self.sid, f"{player_name} has joined.")
 
     def process_player_input(self, player_input):
         player_response = ""
@@ -38,6 +38,11 @@ class Game:
             player_response = self.move_player(command)
         elif command in game_manager.directions:
             player_response = "Sorry, you can't go that way."
+        elif command == "xxxdie":
+            log("Server shutdown initiated.")
+            game_manager.tell_everyone(f"{self.player_name} has shut down the server.")
+            eventlet.sleep(1)
+            exit()
         else:
             log(f"User {self.player_name} spoke, I assume: {player_input}")
             game_manager.tell_others(
@@ -68,11 +73,6 @@ class Game:
 
         return message
 
-    def set_name(self, player_name):
-        self.player_name = player_name
-        game_manager.tell_me(self.sid, f"Welcome to the game, {player_name}.")
-        game_manager.tell_others(self.sid, f"{player_name} has joined.")
-
 
 class GameManager:
     _instance = None
@@ -94,8 +94,9 @@ class GameManager:
 
         return cls._instance
 
-    def register_game(self, sid, game):
+    def register_player(self, sid, game):
         self.games[sid] = game
+        return game
 
     def get_room_description(self, room):
         description = (
@@ -105,8 +106,8 @@ class GameManager:
             description += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
         return description
 
-    def tell_me(self, sid, message):
-        sio.emit("game_update", message, sid)
+    def tell_everyone(self, message):
+        sio.emit("game_update", message)
 
     def tell_others(self, sid, message):
         for other_game_sid in game_manager.games:
@@ -134,33 +135,37 @@ def get_rooms():
 @sio.event
 def connect(sid, environ):
     log("Client connected:", sid)
-    game_manager.register_game(sid, Game(sid))
-    player_count = len(game_manager.games)
-    sio.emit(
-        "game_update",
-        f"A player has joined. There are now {player_count} players in the game.",
-    )
-    # TODO: this is a bit naff
-    if player_count == 1:
-        eventlet.spawn(life_happens)
 
 
 @sio.event
 def user_action(sid, player_input):
-    game = game_manager.games[sid]
+    player = game_manager.games[sid]
     log(f"Received user action: {player_input} from {sid}")
-
-    player_response = game.process_player_input(player_input)
-
+    player_response = player.process_player_input(player_input)
     # Respond to player
     sio.emit("game_update", player_response, sid)
 
 
 @sio.event
 def set_player_name(sid, player_name):
-    game = game_manager.games[sid]
     log(f"Received user name: {player_name} from {sid}")
-    game.set_name(player_name)
+    # Set up new game
+    player = Player(sid, player_name)
+    # Tell other players about this new player
+    player_count = len(game_manager.games)
+    game_manager.tell_others(
+        sid,
+        f"A player has joined. There are now {player_count} players in the game.",
+    )
+    # TODO: this is a bit naff
+    # Spawn the world-wide loop when the first player enters the game.
+    if player_count == 1:
+        eventlet.spawn(life_happens)
+
+    # Tell this player where they are
+    game_manager.tell_player(
+        sid, game_manager.get_room_description(player.current_room)
+    )
 
 
 def life_happens():
@@ -168,7 +173,7 @@ def life_happens():
         # weather, time, life basically
         currentTime = datetime.now().strftime("%H:%M:%S")
         sio.emit("game_update", f"The time is now {currentTime}")
-        eventlet.sleep(30)  # Emit every 5 seconds
+        eventlet.sleep(300)
 
 
 if __name__ == "__main__":

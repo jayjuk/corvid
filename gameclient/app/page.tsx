@@ -75,7 +75,7 @@ export default function HomePage() {
         <div
           style={{
             overflowY: "auto",
-            maxHeight: "200px",
+            maxHeight: "400px",
             border: "1px solid gray",
           }}
         >
@@ -84,7 +84,7 @@ export default function HomePage() {
           ))}
         </div>
       )}
-      {nameSet && ( // Only rendering the output if user has input their name
+      {nameSet && ( // Only rendering the user action field if user has input their name
         <form onSubmit={handleSubmit}>
           <input
             className={styles.inputField}
