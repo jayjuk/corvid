@@ -146,10 +146,12 @@ export default function HomePage() {
             />
             <button type="submit">Submit</button>
           </form>
-          <div>
-            <h1>Room: {roomName}</h1>
-            <img src={getImageSrc()} alt={roomName} />
-          </div>
+          {getImageSrc() && roomName && (
+            <div>
+              <h1>Room: {roomName}</h1>
+              <img src={getImageSrc()} alt={roomName} />
+            </div>
+          )}
         </>
       )}
     </div>
