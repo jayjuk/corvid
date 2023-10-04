@@ -1,13 +1,13 @@
 {
   "Front Yard": {
-    "name": "Front Yard",
+    "image": "Front_Yard",
     "description": "A small yard with a driveway and a mailbox.",
     "exits": {
       "north": "Living Room"
     }
   },
   "Living Room": {
-    "name": "Living Room",
+    "image": "Living_Room",
     "description": "A cozy living room filled with family photos and a TV.",
     "exits": {
       "north": "Hall",
@@ -15,7 +15,7 @@
     }
   },
   "Hall": {
-    "name": "Hall",
+    "image": "Hall",
     "description": "A pretty average hall for a house this size.",
     "exits": {
       "north": "Kitchen",
@@ -25,7 +25,7 @@
     }
   },
   "Kitchen": {
-    "name": "Kitchen",
+    "image": "Kitchen",
     "description": "A well-used kitchen with various appliances and a dining table.",
     "exits": {
       "south": "Hall",
@@ -33,21 +33,21 @@
     }
   },
   "Back Yard": {
-    "name": "Back Yard",
+    "image": "Back_Yard",
     "description": "A yard with a treehouse and a barbecue grill.",
     "exits": {
       "south": "Kitchen"
     }
   },
   "Master Bedroom": {
-    "name": "Master Bedroom",
+    "image": "Master_Bedroom",
     "description": "A bedroom with a large bed, and various personal belongings.",
     "exits": {
       "west": "Hall"
     }
   },
   "Kid's Room": {
-    "name": "Kid's Room",
+    "image": "Kids_Room",
     "description": "A room full of toys, posters, and a skateboard.",
     "exits": {
       "east": "Hall"

@@ -25,6 +25,7 @@ class Player:
         self.current_room = "Living Room"
         self.sid = sid
         game_manager.register_player(sid, self)
+        game_manager.update_player_room(self.sid, self.current_room)
         game_manager.tell_player(self.sid, f"Welcome to the game, {player_name}.")
         game_manager.tell_others(self.sid, f"{player_name} has joined.")
 
@@ -60,9 +61,8 @@ class Player:
 
         # Set new room
         self.current_room = game_manager.rooms[self.current_room]["exits"][direction]
-
+        game_manager.update_player_room(self.sid, self.current_room)
         message = f"You went {direction} to {self.current_room}: {game_manager.get_room_description(self.current_room)}"
-
         # Check for other players you are arriving
         for other_player in game_manager.get_other_players(self.sid):
             if other_player.current_room == self.current_room:
@@ -82,7 +82,7 @@ class GameManager:
             cls._instance = super(GameManager, cls).__new__(cls)
             cls._instance.games = {}
             # Set up game state
-            cls._instance.rooms = get_rooms()
+            cls._instance.rooms = cls._instance.get_rooms()
             # TODO: resolve this from the rooms document
             cls._instance.synonyms = {
                 "n": "north",
@@ -93,6 +93,12 @@ class GameManager:
             cls._instance.directions = ["north", "east", "south", "west"]
 
         return cls._instance
+
+    def get_rooms(self):
+        json_file_path = "map.json"
+        with open(json_file_path, "r") as f:
+            rooms = json.load(f)
+        return rooms
 
     def register_player(self, sid, game):
         self.games[sid] = game
@@ -105,6 +111,9 @@ class GameManager:
         for exit in self.rooms[room]["exits"]:
             description += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
         return description
+
+    def update_player_room(self, sid, room):
+        sio.emit("room_update", self.rooms[room]["image"], sid)
 
     def tell_everyone(self, message):
         sio.emit("game_update", message)
@@ -123,13 +132,6 @@ class GameManager:
             if sid != other_game_sid:
                 other_players.append(other_game)
         return other_players
-
-
-def get_rooms():
-    json_file_path = "map.json"
-    with open(json_file_path, "r") as f:
-        rooms = json.load(f)
-    return rooms
 
 
 @sio.event
@@ -177,10 +179,6 @@ def life_happens():
 
 
 if __name__ == "__main__":
-    log("Start of main")
+    log("Starting up game server")
     game_manager = GameManager()
-
-    # host_name = "localhost"  # "0.0.0.0"
-    host_name = "0.0.0.0"
-    log("Last thing before I set up the WSGI server")
-    eventlet.wsgi.server(eventlet.listen((host_name, 3001)), app)
+    eventlet.wsgi.server(eventlet.listen(("0.0.0.0", 3001)), app)

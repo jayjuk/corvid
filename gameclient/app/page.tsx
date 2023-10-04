@@ -42,6 +42,7 @@ export default function HomePage() {
   const [userInput, setUserInput] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [nameSet, setNameSet] = useState(false);
+  const [roomName, setRoomName] = useState(null);
   const socket = useRef<Socket | null>(null);
   const originalHost: string | null = useOrigin();
   const gameServerHostName: string = replaceAfterLastColon(
@@ -58,11 +59,18 @@ export default function HomePage() {
     socket.current = io(gameServerHostName);
 
     socket.current.on("game_update", (message) => {
+      console.log("Got a game update: " + message);
       setGameLog((prevLog) => {
         const newLog = [...prevLog, message];
         // Keep only the last 10 messages
         return newLog.slice(-10);
       });
+    });
+
+    // Listen for the 'updateImage' event from the server
+    socket.current.on("room_update", (message) => {
+      console.log("Updating room " + message);
+      setRoomName(message);
     });
 
     return () => {
@@ -88,6 +96,11 @@ export default function HomePage() {
     }
   };
 
+  // Determine which image to display based on the `imageVar`
+  const getImageSrc = () => {
+    return "/" + roomName + ".jpg";
+  };
+
   return (
     <div>
       <h1 style={{ textAlign: "center", margin: "20px 0" }}>
@@ -111,29 +124,33 @@ export default function HomePage() {
         </form>
       )}
       {nameSet && ( // Only rendering the output if user has input their name
-        <div
-          style={{
-            overflowY: "auto",
-            maxHeight: "400px",
-            border: "1px solid gray",
-          }}
-        >
-          {gameLog.map((entry, index) => (
-            <div key={index}>{entry}</div>
-          ))}
-        </div>
-      )}
-      {nameSet && ( // Only rendering the user action field if user has input their name
-        <form onSubmit={handleSubmit}>
-          <input
-            className={styles.inputField}
-            type="text"
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            placeholder="Type your action..."
-          />
-          <button type="submit">Submit</button>
-        </form>
+        <>
+          <div
+            style={{
+              overflowY: "auto",
+              maxHeight: "400px",
+              border: "1px solid gray",
+            }}
+          >
+            {gameLog.map((entry, index) => (
+              <div key={index}>{entry}</div>
+            ))}
+          </div>
+          <form onSubmit={handleSubmit}>
+            <input
+              className={styles.inputField}
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder="Type your action..."
+            />
+            <button type="submit">Submit</button>
+          </form>
+          <div>
+            <h1>Room: {roomName}</h1>
+            <img src={getImageSrc()} alt={roomName} />
+          </div>
+        </>
       )}
     </div>
   );
