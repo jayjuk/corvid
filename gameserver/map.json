@@ -1,56 +1,114 @@
 {
-  "Front Yard": {
-    "image": "Front_Yard",
+  "Road": {
+    "image": "road.jpg",
+    "description": "A deserted road that stretches off into the distance in both directions. I wouldn't even think of trying to go anywhere on foot.",
+    "exits": {
+      "west": "Driveway"
+    }
+  },
+  "Driveway": {
+    "image": "driveway.jpg",
     "description": "A small yard with a driveway and a mailbox.",
     "exits": {
-      "north": "Living Room"
-    }
-  },
-  "Living Room": {
-    "image": "Living_Room",
-    "description": "A cozy living room filled with family photos and a TV.",
-    "exits": {
-      "north": "Hall",
-      "south": "Front Yard"
-    }
-  },
-  "Hall": {
-    "image": "Hall",
-    "description": "A pretty average hall for a house this size.",
-    "exits": {
-      "north": "Kitchen",
-      "south": "Living Room",
-      "east": "Master Bedroom",
-      "west": "Kid's Room"
-    }
-  },
-  "Kitchen": {
-    "image": "Kitchen",
-    "description": "A well-used kitchen with various appliances and a dining table.",
-    "exits": {
-      "south": "Hall",
-      "north": "Back Yard"
-    }
-  },
-  "Back Yard": {
-    "image": "Back_Yard",
-    "description": "A yard with a treehouse and a barbecue grill.",
-    "exits": {
-      "south": "Kitchen"
-    }
-  },
-  "Master Bedroom": {
-    "image": "Master_Bedroom",
-    "description": "A bedroom with a large bed, and various personal belongings.",
-    "exits": {
+      "east": "Road",
       "west": "Hall"
     }
   },
-  "Kid's Room": {
-    "image": "Kids_Room",
-    "description": "A room full of toys, posters, and a skateboard.",
+  "Hall": {
+    "image": "hall.jpg",
+    "description": "A pretty average entrance hall for a house this size.",
     "exits": {
-      "east": "Hall"
+      "north": "Kitchen",
+      "south": "Living Room",
+      "east": "Driveway",
+      "west": "Upstairs Landing"
+    }
+  },
+  "Living Room": {
+    "image": "living_room.jpg",
+    "description": "A cozy living room filled with family photos and a TV.",
+    "exits": {
+      "north": "Hall",
+      "west": "Garden"
+    }
+  },
+  "Upstairs Landing": {
+    "image": "upstairs_landing.jpg",
+    "description": "An upstairs landing.",
+    "exits": {
+      "north": "Guest Room",
+      "east": "Kids' Room",
+      "south": "Master Bedroom",
+      "west": "Hall"
+    }
+  },
+  "Guest Bedroom": {
+    "image": "guest_bedroom.jpg",
+    "description": "A bedroom for guests with a medium-sized bed.",
+    "exits": {
+      "south": "Upstairs Landing"
+    }
+  },
+  "Master Bedroom": {
+    "image": "master_bedroom.jpg",
+    "description": "A bedroom with a large bed, and various personal belongings.",
+    "exits": {
+      "north": "Upstairs Landing"
+    }
+  },
+  "Kids' Room": {
+    "image": "kids_room.jpg",
+    "description": "A room full of toys, posters etc. Kid stuff.",
+    "exits": {
+      "west": "Upstairs Landing"
+    }
+  },
+  "Kitchen": {
+    "image": "kitchen.jpg",
+    "description": "A well-used kitchen with various appliances and a dining table.",
+    "exits": {
+      "south": "Hall",
+      "east": "Study",
+      "west": "Garden"
+    }
+  },
+  "Study": {
+    "image": "study.jpg",
+    "description": "A study with a bookshelf and a computer on a tidy desk, and one of those fancy office chairs.",
+    "exits": {
+      "west": "Kitchen"
+    }
+  },
+  "Patio": {
+    "image": "patio.jpg",
+    "description": "A yard with a treehouse and a barbecue grill.",
+    "exits": {
+      "east": "Kitchen",
+      "south": "Garden"
+    }
+  },
+  "Garden": {
+    "image": "garden.jpg",
+    "description": "A yard with a treehouse and a barbecue grill.",
+    "exits": {
+      "north": "Patio",
+      "east": "Living Room",
+      "south": "Garage"
+    }
+  },
+  "Garage": {
+    "image": "garage.jpg",
+    "description": "The inside of a rather tidy double garage.",
+    "exits": {
+      "north": "Garden",
+      "south": "Home Office"
+    }
+  },
+  "Home Office": {
+    "image": "home_office.jpg",
+    "description": "A home office and man-cave.",
+    "exits": {
+      "north": "Garage"
     }
   }
 }
