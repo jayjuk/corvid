@@ -42,7 +42,7 @@ export default function HomePage() {
   const [userInput, setUserInput] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [nameSet, setNameSet] = useState(false);
-  const [roomName, setRoomName] = useState(null);
+  const [roomImageFileName, setRoomImageFileName] = useState(null);
   const socket = useRef<Socket | null>(null);
   const originalHost: string | null = useOrigin();
   const gameServerHostName: string = replaceAfterLastColon(
@@ -70,7 +70,7 @@ export default function HomePage() {
     // Listen for the 'updateImage' event from the server
     socket.current.on("room_update", (message) => {
       console.log("Updating room " + message);
-      setRoomName(message);
+      setRoomImageFileName(message);
     });
 
     return () => {
@@ -94,11 +94,6 @@ export default function HomePage() {
       socket.current.emit("user_action", userInput);
       setUserInput("");
     }
-  };
-
-  // Determine which image to display based on the `imageVar`
-  const getImageSrc = () => {
-    return "/" + roomName + ".jpg";
   };
 
   return (
@@ -146,10 +141,13 @@ export default function HomePage() {
             />
             <button type="submit">Submit</button>
           </form>
-          {getImageSrc() && roomName && (
+          {roomImageFileName && (
             <div>
-              <h1>Room: {roomName}</h1>
-              <img src={getImageSrc()} alt={roomName} />
+              <img
+                src={"/" + roomImageFileName}
+                alt={roomImageFileName}
+                width="400"
+              />
             </div>
           )}
         </>
