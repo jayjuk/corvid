@@ -36,8 +36,8 @@
     "image": "upstairs_landing.jpg",
     "description": "An upstairs landing.",
     "exits": {
-      "north": "Guest Room",
-      "east": "Kids' Room",
+      "north": "Guest Bedroom",
+      "east": "Kids' Bedroom",
       "south": "Master Bedroom",
       "west": "Hall"
     }
@@ -56,7 +56,7 @@
       "north": "Upstairs Landing"
     }
   },
-  "Kids' Room": {
+  "Kids' Bedroom": {
     "image": "kids_room.jpg",
     "description": "A room full of toys, posters etc. Kid stuff.",
     "exits": {

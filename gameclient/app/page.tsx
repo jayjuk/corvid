@@ -52,14 +52,18 @@ export default function HomePage() {
 
   useEffect(() => {
     // Connect to the game server via socket.io
-    // Socket.current = io("http://gameserver:3001");
-    // TODO: make this dynamic, for now you need to add this to hosts file
-    // when running outside of Azure : 127.0.0.1 jaysgame.westeurope.azurecontainer.io
-    //socket.current = io("http://jaysgame.westeurope.azurecontainer.io:3001");
     socket.current = io(gameServerHostName);
 
+    // Instructions come on their own and should be simply displayed.
+    socket.current.on("instructions", (instructions) => {
+      setGameLog((prevLog) => {
+        const newLog = [...prevLog, instructions];
+        return newLog;
+      });
+    });
+
     socket.current.on("game_update", (message) => {
-      console.log("Got a game update: " + message);
+      // console.log("Got a game update: " + message);
       setGameLog((prevLog) => {
         const newLog = [...prevLog, message];
         // Keep only the last 10 messages
@@ -123,7 +127,8 @@ export default function HomePage() {
           <div
             style={{
               overflowY: "auto",
-              maxHeight: "400px",
+              minHeight: "260px",
+              maxHeight: "260px",
               border: "1px solid gray",
             }}
           >
