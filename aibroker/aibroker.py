@@ -1,3 +1,4 @@
+import socket
 import socketio
 import time
 import datetime
@@ -42,12 +43,26 @@ class AIManager:
                 cls._instance = super(AIManager, cls).__new__(cls)
                 # Set up openAI connection
                 # We are going to use the chat interface to get AI To play our text adventure game
-
-                openai.organization = "org-8c0Mch2S2vEl9vzWd5cT82gj"
-                openai.api_key = os.environ.get("OPENAI_API_KEY")
-                openai.Model.list()
+                openai_connect()
 
             return cls._instance
+
+    def openai_connect(self):
+        openai.organization = "org-8c0Mch2S2vEl9vzWd5cT82gj"
+        # check file exists, use it if so
+        key_filename = "openai.key"
+        if os.path.exists(key_filename):
+            openai.api_key_file = key_filename
+        else:
+            # otherwise use env var
+            key_env_var = os.environ.get("OPENAI_API_KEY")
+            if not key_env_var:
+                log("ERROR: OPENAI_API_KEY not set")
+                sys.exit(1)
+            else:
+                openai.api_key = os.environ.get("OPENAI_API_KEY")
+        # TODO: set up OPENAI_API_KEY in Azure setup. Also set up OPENAI_ORGANIZATION_ID
+        openai.Model.list()
 
     def record_instructions(self, data):
         self.game_instructions += data
@@ -216,13 +231,17 @@ def disconnect():
 
 
 def main():
-    sio.connect(
-        # TODO: make this configurable
-        "http://localhost:3001"
-    )
+    # Set hostname (default is "localhost" to support local pre container testing)
+    # hostname = socket.getfqdn()
+    # if hostname.endswith(".lan"):
+    #     hostname = hostname[:-4]
+    hostname = os.environ.get("GAMESERVER_HOSTNAME") or "localhost"
+    log(f"Starting up AI Broker on hostname {hostname}")
+    sio.connect(f"http://{hostname}:3001")
     sio.wait()
 
 
 if __name__ == "__main__":
+    time.sleep(3)
     ai_manager = AIManager()
     main()

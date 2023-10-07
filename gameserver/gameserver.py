@@ -1,3 +1,4 @@
+import socket
 import socketio
 import eventlet
 import json
@@ -239,6 +240,9 @@ def life_happens():
 
 
 if __name__ == "__main__":
-    log("Starting up game server")
+    hostname = socket.getfqdn()
+    if hostname.endswith(".lan"):
+        hostname = hostname[:-4]
+    log(f"Starting up game server on {hostname}")
     game_manager = GameManager()
     eventlet.wsgi.server(eventlet.listen(("0.0.0.0", 3001)), app)
