@@ -4,6 +4,7 @@ import datetime
 import openai
 import sys
 from pprint import pprint
+import os
 
 # Register the client with the server
 sio = socketio.Client()
@@ -25,18 +26,28 @@ class AIManager:
     chat_count = 0
     max_chats = 300
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(AIManager, cls).__new__(cls)
-            # Set up openAI connection
-            # We are going to use the chat interface to get AI To play our text adventure game
-            api_key_file = "openai.key"
+    import os
 
-            openai.organization = "org-8c0Mch2S2vEl9vzWd5cT82gj"
-            openai.api_key_path = api_key_file
-            openai.Model.list()
+    class AIManager:
+        _instance = None
+        game_instructions = ""
+        chat_history = []
+        max_wait = 10  # secs
+        last_time = time.time()
+        chat_count = 0
+        max_chats = 300
 
-        return cls._instance
+        def __new__(cls):
+            if cls._instance is None:
+                cls._instance = super(AIManager, cls).__new__(cls)
+                # Set up openAI connection
+                # We are going to use the chat interface to get AI To play our text adventure game
+
+                openai.organization = "org-8c0Mch2S2vEl9vzWd5cT82gj"
+                openai.api_key = os.environ.get("OPENAI_API_KEY")
+                openai.Model.list()
+
+            return cls._instance
 
     def record_instructions(self, data):
         self.game_instructions += data
@@ -91,7 +102,14 @@ class AIManager:
                 + f" Respond only with one valid command or thing to say each time you are contacted. Instructions:\n{self.game_instructions}",
             }
         ]
-        for history_item in self.chat_history:
+        if len(self.chat_history) > 10:
+            messages.append(
+                {
+                    "role": "user",
+                    "content": "(some game transcript history removed for brevity))",
+                }
+            )
+        for history_item in self.chat_history[-10:]:
             messages.append(
                 {
                     "role": history_item["role"],
@@ -121,7 +139,7 @@ class AIManager:
             time.sleep(wait_time)
         try:
             response = openai.ChatCompletion.create(
-                model="gpt-4",
+                model="gpt-3.5-turbo",
                 messages=messages,
                 max_tokens=50,  # You can adjust the max_tokens based on your desired response length
             )
