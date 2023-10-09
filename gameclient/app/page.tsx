@@ -122,6 +122,15 @@ export default function HomePage() {
           <button type="submit">Set Name</button>
         </form>
       )}
+      {roomImageFileName && (
+        <div>
+          <img
+            src={"/" + roomImageFileName}
+            alt={roomImageFileName}
+            width="400"
+          />
+        </div>
+      )}
       {nameSet && ( // Only rendering the output if user has input their name
         <>
           <div
@@ -143,18 +152,10 @@ export default function HomePage() {
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="Type your action..."
+              autoFocus
             />
             <button type="submit">Submit</button>
           </form>
-          {roomImageFileName && (
-            <div>
-              <img
-                src={"/" + roomImageFileName}
-                alt={roomImageFileName}
-                width="400"
-              />
-            </div>
-          )}
         </>
       )}
     </div>

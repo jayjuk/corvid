@@ -24,8 +24,8 @@ properties:
     - name: aibroker
       properties:
         environmentVariables:
-          - name: "AI_COUNT"
-            value: "${AI_COUNT}"
+          - name: "AI_ACTIVE"
+            value: "${AI_ACTIVE}"
           - name: "OPENAI_API_KEY"
             value: "${OPENAI_API_KEY}"
           - name: "GAMESERVER_HOSTNAME"

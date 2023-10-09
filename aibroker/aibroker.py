@@ -242,6 +242,22 @@ def main():
 
 
 if __name__ == "__main__":
-    time.sleep(3)
-    ai_manager = AIManager()
-    main()
+    # Give the game server time to start up
+    time.sleep(10)
+
+    # Set up AIs according to config
+    ai_count = os.environ.get("AI_COUNT")
+
+    # If AI_COUNT is not set, sleep forever (if you exit, the container will restart)
+    if ai_count in ("""${AI_COUNT}""", "0"):
+        log("AI_COUNT not set - sleeping forever")
+        while True:
+            time.sleep(3600)
+    else:
+        if ai_count != "1":
+            log(
+                f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting."
+            )
+            sys.exit(1)
+        ai_manager = AIManager()
+        main()

@@ -20,7 +20,7 @@ app = socketio.WSGIApp(sio)
 class Player:
     def __init__(self, sid, player_name):
         self.player_name = player_name
-        self.current_room = "Living Room"
+        self.current_room = "Road"
         self.sid = sid
         game_manager.register_player(sid, self)
         game_manager.update_player_room(self.sid, self.current_room)
@@ -35,7 +35,7 @@ class Player:
         # Tell other players about this new player
         game_manager.tell_others(
             sid,
-            f"{player_name} has joined the game; there are now {len(game_manager.games)} players.",
+            f"{player_name} has joined the game, starting in the {self.current_room}; there are now {len(game_manager.games)} players.",
             shout=True,
         )
 
