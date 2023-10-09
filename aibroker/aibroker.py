@@ -22,10 +22,11 @@ class AIManager:
     _instance = None
     game_instructions = ""
     chat_history = []
-    max_wait = 10  # secs
+    max_wait = 5  # secs
     last_time = time.time()
     chat_count = 0
     max_chats = 300
+    active = False
 
     import os
 
@@ -94,19 +95,23 @@ class AIManager:
                 "content": event_text,
             }
         )
-        response = self.submit_input()
-        if response:
-            # Submit AI's response to the game server
-            sio.emit("user_action", response)
-            self.chat_history.append(
-                {
-                    "role": "assistant",
-                    "content": response,
-                }
-            )
+        if self.active:
+            response = self.submit_input()
+            if response:
+                # Submit AI's response to the game server
+                sio.emit("user_action", response)
+                self.chat_history.append(
+                    {
+                        "role": "assistant",
+                        "content": response,
+                    }
+                )
+            else:
+                log("ERROR: AI returned empty response")
+                sys.exit(1)
         else:
-            log("ERROR: AI returned empty response")
-            sys.exit(1)
+            # This is probably just the response to the user moving waiting etc.
+            log("AI is not active, so not responding to event")
 
     def submit_input(self):
         messages = [
@@ -211,6 +216,18 @@ def catch_all(data):
     # log(f"Received room update event: {data}")
     # for now nothing
     pass
+
+
+@sio.on("game_data_update")
+def catch_all(data):
+    if "player_count" in data:
+        if data["player_count"] == 1:
+            log("No players apart from me, so I won't do anything.")
+            ai_manager.active = False
+        else:
+            if not ai_manager.active:
+                log("I can wake up again!")
+                ai_manager.active = True
 
 
 @sio.on("*")
