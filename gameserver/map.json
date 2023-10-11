@@ -1,14 +1,14 @@
 {
   "Road": {
-    "image": "road.jpg",
-    "description": "A deserted road that stretches off into the distance in both directions. I wouldn't even think of trying to go anywhere on foot.",
+    "image": "road.png",
+    "description": "Endless horizons beckon from either direction of this seemingly abandoned road. Sunlight dances on the asphalt, hinting at a time when cars frequented here. Now, only the gentle whisper of wind breaks the stillness.",
     "exits": {
       "west": "Driveway"
     }
   },
   "Driveway": {
     "image": "driveway.jpg",
-    "description": "A small yard with a driveway and a mailbox.",
+    "description": "A quaint driveway, bordered by wildflowers, leads up to an inviting residence. The pebbled path crunches beneath your feet, a lone mailbox standing sentinel at the entrance.",
     "exits": {
       "east": "Road",
       "west": "Hall"
@@ -16,7 +16,7 @@
   },
   "Hall": {
     "image": "hall.jpg",
-    "description": "A pretty average entrance hall for a house this size.",
+    "description": "Elegant wooden flooring reflects soft light, creating a welcoming ambiance in this spacious entrance hall. Subtle artwork graces the walls, telling stories of a home filled with memories.",
     "exits": {
       "north": "Kitchen",
       "south": "Living Room",
@@ -26,7 +26,7 @@
   },
   "Living Room": {
     "image": "living_room.jpg",
-    "description": "A cozy living room filled with family photos and a TV.",
+    "description": "Warmth emanates from this room. Plush couches beckon, positioned thoughtfully around an old yet charming fireplace. The walls adorned with candid moments captured in frames.",
     "exits": {
       "north": "Hall",
       "west": "Garden"
@@ -34,7 +34,7 @@
   },
   "Upstairs Landing": {
     "image": "upstairs_landing.jpg",
-    "description": "An upstairs landing.",
+    "description": "The landing offers a peaceful overlook to the hall below. Soft carpet cushions each step, with doors leading off to various chambers of sanctuary and rest.",
     "exits": {
       "north": "Guest Bedroom",
       "east": "Kids' Bedroom",
@@ -44,28 +44,28 @@
   },
   "Guest Bedroom": {
     "image": "guest_bedroom.jpg",
-    "description": "A bedroom for guests with a medium-sized bed.",
+    "description": "Hints of lavender fill the air in this serene guest space. Gentle patterns on the walls soothe the eyes, while the bed promises deep slumber.",
     "exits": {
       "south": "Upstairs Landing"
     }
   },
   "Master Bedroom": {
     "image": "master_bedroom.jpg",
-    "description": "A bedroom with a large bed, and various personal belongings.",
+    "description": "A luxurious haven. The canopy bed rests beneath a softly glowing chandelier, with delicate drapes flowing like rivers. Here, time seems to stand still.",
     "exits": {
       "north": "Upstairs Landing"
     }
   },
   "Kids' Bedroom": {
     "image": "kids_room.jpg",
-    "description": "A room full of toys, posters etc. Kid stuff.",
+    "description": "Vibrant colors burst from every corner, painting a canvas of childhood wonder. This room hums with dreams of faraway adventures and tales of yesteryears.",
     "exits": {
       "west": "Upstairs Landing"
     }
   },
   "Kitchen": {
     "image": "kitchen.jpg",
-    "description": "A well-used kitchen with various appliances and a dining table.",
+    "description": "A symphony of culinary magic, the kitchen boasts wooden countertops aged by time. The aroma of baked goods once lingered, now waiting for new memories.",
     "exits": {
       "south": "Hall",
       "east": "Study",
@@ -74,14 +74,14 @@
   },
   "Study": {
     "image": "study.jpg",
-    "description": "A study with a bookshelf and a computer on a tidy desk, and one of those fancy office chairs.",
+    "description": "Silent and profound, the study is an alcove of knowledge. Bookshelves tower, holding volumes of wisdom, while the desk awaits tales yet to be written.",
     "exits": {
       "west": "Kitchen"
     }
   },
   "Patio": {
     "image": "patio.jpg",
-    "description": "A yard with a treehouse and a barbecue grill.",
+    "description": "The patio extends a tranquil outdoor embrace, with soft lanterns casting ambient glows. Perfect for evening reflections under the canopy of stars.",
     "exits": {
       "east": "Kitchen",
       "south": "Garden"
@@ -89,7 +89,7 @@
   },
   "Garden": {
     "image": "garden.jpg",
-    "description": "A yard with a treehouse and a barbecue grill.",
+    "description": "Nature's tapestry unfurls in this blossoming garden. Birds serenade amidst flowers that sway in gentle breezes, weaving a tale of time and tenderness.",
     "exits": {
       "north": "Patio",
       "east": "Living Room",
@@ -98,7 +98,7 @@
   },
   "Garage": {
     "image": "garage.jpg",
-    "description": "The inside of a rather tidy double garage.",
+    "description": "A cavern of ingenuity. Tools line the walls, standing testament to countless projects crafted. The scent of oil and timber fills the air.",
     "exits": {
       "north": "Garden",
       "south": "Home Office"
@@ -106,7 +106,7 @@
   },
   "Home Office": {
     "image": "home_office.jpg",
-    "description": "A home office and man-cave.",
+    "description": "Creativity meets solitude in this bespoke home office. Echoes of ideas birthed, this space inspires productivity amidst its cozy confines.",
     "exits": {
       "north": "Garage"
     }

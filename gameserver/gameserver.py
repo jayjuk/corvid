@@ -100,11 +100,9 @@ class Player:
         elif direction in game_manager.rooms[self.current_room]["exits"]:
             next_room = game_manager.rooms[self.current_room]["exits"][direction]
 
-            departure_message_to_other_players = (
-                f"{self.player_name} leaves, heading {direction} to the {next_room}."
-            )
+            departure_message_to_other_players = f"{self.player_name} leaves, heading {direction} to the {str(next_room).lower()}."
             arrival_message_to_other_players = (
-                f"{self.player_name} arrives from the {previous_room}."
+                f"{self.player_name} arrives from the {previous_room.lower()}."
             )
         else:
             # Valid direction but no exit
@@ -128,7 +126,7 @@ class Player:
         else:
             action = f"went {direction}"
 
-        message = f"You {action} to {self.current_room}: {game_manager.get_room_description(self.current_room)}"
+        message = f"You {action} to the {str(self.current_room).lower()}: {game_manager.get_room_description(self.current_room)}"
 
         # Check for other players you are arriving
         for other_player in game_manager.get_other_players(self.sid):
@@ -144,6 +142,7 @@ class Player:
 
 class GameManager:
     _instance = None
+    max_inactive_time = 300  # 5 minutes
 
     def __new__(cls):
         if cls._instance is None:
@@ -248,9 +247,7 @@ class GameManager:
         return game
 
     def get_room_description(self, room):
-        description = (
-            f"You are in {room}: {self.rooms[room]['description']} Available exits: "
-        )
+        description = f"You are in the {str(room).lower()}: {self.rooms[room]['description']} Available exits: "
         for exit in self.rooms[room]["exits"]:
             description += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
         return description
@@ -299,17 +296,19 @@ class GameManager:
         sids_to_remove = []
         # First go through players and make a list of who to remove
         for player_sid, player in self.players.items():
-            if current_time - player.last_action_time > 60:
+            if current_time - player.last_action_time > self.max_inactive_time:
                 sids_to_remove.append(player_sid)
         # Then once you're out of that dictionary, remove them
         for player_sid in sids_to_remove:
-            self.remove_player(player_sid)
+            self.remove_player(
+                player_sid, "You have been logged out due to inactivity."
+            )
 
-    def remove_player(self, sid):
+    def remove_player(self, sid, reason):
         player = self.players[sid]
         self.tell_player(
             player.sid,
-            "You have been logged out due to inactivity.",
+            reason,
         )
         self.tell_others(
             sid,
