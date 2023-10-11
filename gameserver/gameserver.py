@@ -4,6 +4,7 @@ import eventlet
 import json
 from datetime import datetime
 import time
+import sys
 
 
 # Simple print alternative to flush everything for now
@@ -68,44 +69,53 @@ class Player:
 
             command = game_manager.synonyms.get(command, command)
             log(f"Command: {command}")
-            if command in game_manager.rooms[self.current_room]["exits"]:
-                player_response = self.move_player(command)
+
+            # Call the function associated with a command
+            if command in game_manager.command_functions:
+                player_response = game_manager.command_functions[command](
+                    self, rest_of_response
+                )
+            # Call the function associated with the command
             elif command in game_manager.directions:
-                player_response = "Sorry, you can't go that way."
-            # TODO: this secret command shouldn't need to exist for causing all the other processes to end
-            elif command == "xox":
-                game_manager.shut_down(self.player_name)
-            elif command == "say":
-                log(f"User {self.player_name} says: {rest_of_response}")
-                if game_manager.get_player_count() == 1:
-                    player_response = "You are the only player in the game currently!"
-                else:
-                    told_count = game_manager.tell_others(
-                        self.sid, f'{self.player_name} says, "{rest_of_response}"'
-                    )
-                    if told_count == 0:
-                        player_response = "There is no one else here to hear you."
-            elif command == "wait":
-                time.sleep(10)
-                player_response = "You decide to just wait a while."
-                pass
+                player_response = self.move_player(command, rest_of_response)
             else:
+                # Invalid command
                 player_response = "Sorry, that is not a recognised command."
         else:
+            # Empty command
             player_response = "Sorry, you need to enter a command."
         return player_response
 
-    def move_player(self, direction):
+    def move_player(self, direction, next_room=None):
         # Set new room
         previous_room = self.current_room
-        next_room = game_manager.rooms[self.current_room]["exits"][direction]
+        if direction == "jump":
+            # If next room specified, player has 'jumped'!
+            departure_message_to_other_players = (
+                f"{self.player_name} has disappeared in a puff of smoke!"
+            )
+            arrival_message_to_other_players = (
+                f"{self.player_name} has materialised as if by magic!"
+            )
+        elif direction in game_manager.rooms[self.current_room]["exits"]:
+            next_room = game_manager.rooms[self.current_room]["exits"][direction]
+
+            departure_message_to_other_players = (
+                f"{self.player_name} leaves, heading {direction} to the {next_room}."
+            )
+            arrival_message_to_other_players = (
+                f"{self.player_name} arrives from the {previous_room}."
+            )
+        else:
+            # Valid direction but no exit
+            return "Sorry, you can't go that way."
 
         # Check for other players you are leaving
         for other_player in game_manager.get_other_players(self.sid):
             if other_player.current_room == self.current_room:
                 game_manager.tell_player(
                     other_player.sid,
-                    f"{self.player_name} leaves, heading {direction} to the {next_room}.",
+                    departure_message_to_other_players,
                 )
 
         # Set new room
@@ -113,7 +123,12 @@ class Player:
 
         game_manager.update_player_room(self.sid, self.current_room)
 
-        message = f"You went {direction} to {self.current_room}: {game_manager.get_room_description(self.current_room)}"
+        if direction == "jump":
+            action = "jumped"
+        else:
+            action = f"went {direction}"
+
+        message = f"You {action} to {self.current_room}: {game_manager.get_room_description(self.current_room)}"
 
         # Check for other players you are arriving
         for other_player in game_manager.get_other_players(self.sid):
@@ -121,7 +136,7 @@ class Player:
                 message += f" {other_player.player_name} is here."
                 game_manager.tell_player(
                     other_player.sid,
-                    f"{self.player_name} arrives from the {previous_room}.",
+                    arrival_message_to_other_players,
                 )
 
         return message
@@ -144,6 +159,17 @@ class GameManager:
                 "w": "west",
             }
             cls._instance.directions = ["north", "east", "south", "west"]
+
+            # Define a dictionary to map commands to functions
+            cls._instance.command_functions = {
+                # TODO: limit this action to admins with the right permissions
+                "💣": cls._instance.do_shutdown,
+                "say": cls._instance.do_say,
+                "wait": cls._instance.do_wait,
+                "jump": cls._instance.do_jump,
+                # Add more commands and functions here
+            }
+
             cls._instance.commands_description = "Available commands: " + ", ".join(
                 cls._instance.directions
             )
@@ -158,6 +184,55 @@ class GameManager:
             cls._instance.commands_description += "say = say something to all other players in your current location, e.g. say which way shall we go?\n"
 
         return cls._instance
+
+    # All these 'do_' functions are for processing commands from the player.
+    # They all take the player object and the rest of the response as arguments,
+    # Even if they're not needed. This is to keep the command processing simple.
+
+    def do_shutdown(self, player, rest_of_response):
+        message = f"{player.player_name} has shut down the server, saying '{rest_of_response}'."
+        log(message)
+        self.tell_everyone(message)
+        # TODO: web client should do something when the back end is down, can we terminate the client too?
+        # TODO: make this restart not die?
+        sio.emit("shutdown", message)
+        eventlet.sleep(1)
+        sys.exit(1)
+
+    def do_say(self, player, rest_of_response):
+        log(f"User {player.player_name} says: {rest_of_response}")
+        if game_manager.get_player_count() == 1:
+            player_response = "You are the only player in the game currently!"
+        else:
+            told_count = game_manager.tell_others(
+                player.sid, f'{player.player_name} says, "{rest_of_response}"'
+            )
+            if told_count == 0:
+                player_response = "There is no one else here to hear you."
+
+    def do_wait(self, player, rest_of_response):
+        # Not used, next line is to avoid warnings
+        f"""{player.player_name}  {rest_of_response}"""
+        return "You decide to just wait a while."
+
+    def do_jump(self, player, rest_of_response):
+        # Jump to location of another player named in rest_of_response
+        other_player_name = rest_of_response
+        # find location of other player
+        other_player_location = self.get_player_location_by_name(
+            player.sid, other_player_name
+        )
+        # if found, move player there
+        if other_player_location:
+            return player.move_player("jump", other_player_location)
+        else:
+            return f"Sorry, '{other_player_name}' is not a valid player name."
+
+    def get_player_location_by_name(self, sid, player_name):
+        for other_player in game_manager.get_other_players(sid):
+            if str(other_player.player_name).lower() == str(player_name).lower():
+                return other_player.current_room
+        return None
 
     def get_player_count(self):
         return len(self.players)
@@ -219,25 +294,19 @@ class GameManager:
             game_data,
         )
 
-    def shut_down(self, player_name):
-        message = f"{player_name} has shut down the server."
-        log(message)
-        self.tell_everyone(message)
-        # TODO: web client should do something when the back end is down, can we terminate the client too?
-        # TODO: make this restart not die?
-        sio.emit("shutdown", message)
-        eventlet.sleep(1)
-        exit()
-
     def check_players_activity(self):
         current_time = time.time()
+        sids_to_remove = []
+        # First go through players and make a list of who to remove
         for player_sid, player in self.players.items():
             if current_time - player.last_action_time > 60:
-                self.remove_player(player_sid)
+                sids_to_remove.append(player_sid)
+        # Then once you're out of that dictionary, remove them
+        for player_sid in sids_to_remove:
+            self.remove_player(player_sid)
 
     def remove_player(self, sid):
         player = self.players[sid]
-        del self.players[sid]
         self.tell_player(
             player.sid,
             "You have been logged out due to inactivity.",
@@ -248,6 +317,7 @@ class GameManager:
             shout=True,
         )
         self.emit_game_data_update()
+        del self.players[sid]
 
 
 @sio.event

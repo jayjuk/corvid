@@ -24,29 +24,16 @@ class AIManager:
     chat_history = []
     max_wait = 5  # secs
     last_time = time.time()
-    chat_count = 0
-    max_chats = 300
     active = False
 
-    import os
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(AIManager, cls).__new__(cls)
+            # Set up openAI connection
+            # We are going to use the chat interface to get AI To play our text adventure game
+            cls.openai_connect()
 
-    class AIManager:
-        _instance = None
-        game_instructions = ""
-        chat_history = []
-        max_wait = 10  # secs
-        last_time = time.time()
-        chat_count = 0
-        max_chats = 300
-
-        def __new__(cls):
-            if cls._instance is None:
-                cls._instance = super(AIManager, cls).__new__(cls)
-                # Set up openAI connection
-                # We are going to use the chat interface to get AI To play our text adventure game
-                openai_connect()
-
-            return cls._instance
+        return cls._instance
 
     def openai_connect(self):
         openai.organization = "org-8c0Mch2S2vEl9vzWd5cT82gj"
@@ -169,12 +156,6 @@ class AIManager:
         # Extract and print the response from ChatGPT
         chatgpt_response = response.choices[0]["message"]["content"].strip()
         log("ChatGPT Response: ", chatgpt_response)
-        self.chat_count += 1
-
-        # Stop going rogue
-        if self.chat_count > self.max_chats:
-            log("Too many messages sent, shutting down")
-            sys.exit(1)
 
         # Record time
         self.last_time = time.time()

@@ -136,8 +136,8 @@ export default function HomePage() {
           <div
             style={{
               overflowY: "auto",
-              minHeight: "260px",
-              maxHeight: "260px",
+              minHeight: "300px",
+              maxHeight: "300px",
               border: "1px solid gray",
             }}
           >
