@@ -49,6 +49,7 @@ export default function HomePage() {
     originalHost,
     "3001"
   );
+  const gameLogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Connect to the game server via socket.io
@@ -83,6 +84,13 @@ export default function HomePage() {
       }
     };
   }, [gameServerHostName]);
+
+  // Scroll to the bottom of the game log whenever it changes
+  useEffect(() => {
+    if (gameLogRef.current) {
+      gameLogRef.current.scrollTop = gameLogRef.current.scrollHeight;
+    }
+  }, [gameLog]);
 
   const handleNameSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -134,6 +142,7 @@ export default function HomePage() {
       {nameSet && ( // Only rendering the output if user has input their name
         <>
           <div
+            ref={gameLogRef}
             style={{
               overflowY: "auto",
               minHeight: "300px",

@@ -23,6 +23,7 @@ class Player:
         self.last_action_time = time.time()
         self.player_name = player_name
         self.current_room = "Road"
+        self.seen_rooms = {}
         self.sid = sid
         game_manager.register_player(sid, self)
         game_manager.update_player_room(self.sid, self.current_room)
@@ -35,6 +36,12 @@ class Player:
         for line in instructions.split("\n"):
             if line:
                 game_manager.tell_player(self.sid, line, type="instructions")
+
+        # Tell this player where they are
+        game_manager.tell_player(
+            sid, game_manager.get_room_description(self.current_room)
+        )
+        self.seen_rooms[self.current_room] = True
 
         # Tell other players about this new player
         game_manager.tell_others(
@@ -126,7 +133,15 @@ class Player:
         else:
             action = f"went {direction}"
 
-        message = f"You {action} to the {str(self.current_room).lower()}: {game_manager.get_room_description(self.current_room)}"
+        # Build message. only describe room if it is new to this player.
+        message = f"You {action} to the {str(self.current_room).lower()}"
+        if self.current_room in self.seen_rooms:
+            message += (
+                f". {game_manager.get_room_description(self.current_room, brief=True)}"
+            )
+        else:
+            message += f": {game_manager.get_room_description(self.current_room)}"
+            self.seen_rooms[self.current_room] = True
 
         # Check for other players you are arriving
         for other_player in game_manager.get_other_players(self.sid):
@@ -162,15 +177,15 @@ class GameManager:
             # Define a dictionary to map commands to functions
             cls._instance.command_functions = {
                 # TODO: limit this action to admins with the right permissions
-                "💣": cls._instance.do_shutdown,
+                "look": cls._instance.do_look,
                 "say": cls._instance.do_say,
                 "wait": cls._instance.do_wait,
                 "jump": cls._instance.do_jump,
-                # Add more commands and functions here
+                "💣": cls._instance.do_shutdown,
             }
 
-            cls._instance.commands_description = "Available commands: " + ", ".join(
-                cls._instance.directions
+            cls._instance.commands_description = (
+                "Available commands: " + ", ".join(cls._instance.directions) + ". "
             )
             # append synyonyms to comamnds description explaining what each synonym means:
             cls._instance.commands_description += "\n"
@@ -180,6 +195,9 @@ class GameManager:
             cls._instance.commands_description += "\n"
             # not xox
             cls._instance.commands_description += "wait = Do nothing for now.\n"
+            cls._instance.commands_description += (
+                "look = Get a description of your current location.\n"
+            )
             cls._instance.commands_description += "say = say something to all other players in your current location, e.g. say which way shall we go?\n"
 
         return cls._instance
@@ -188,15 +206,10 @@ class GameManager:
     # They all take the player object and the rest of the response as arguments,
     # Even if they're not needed. This is to keep the command processing simple.
 
-    def do_shutdown(self, player, rest_of_response):
-        message = f"{player.player_name} has shut down the server, saying '{rest_of_response}'."
-        log(message)
-        self.tell_everyone(message)
-        # TODO: web client should do something when the back end is down, can we terminate the client too?
-        # TODO: make this restart not die?
-        sio.emit("shutdown", message)
-        eventlet.sleep(1)
-        sys.exit(1)
+    def do_look(self, player, rest_of_response):
+        # Not used, next line is to avoid warnings
+        f"""{player.player_name}  {rest_of_response}"""
+        return f"You look again at the {str(player.current_room).lower()}: {game_manager.get_room_description(player.current_room)}"
 
     def do_say(self, player, rest_of_response):
         log(f"User {player.player_name} says: {rest_of_response}")
@@ -207,7 +220,10 @@ class GameManager:
                 player.sid, f'{player.player_name} says, "{rest_of_response}"'
             )
             if told_count == 0:
-                player_response = "There is no one else here to hear you."
+                player_response = "There is no one else here to hear you!"
+            else:
+                player_response = f"You say, '{rest_of_response}'."
+        return player_response
 
     def do_wait(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
@@ -226,6 +242,16 @@ class GameManager:
             return player.move_player("jump", other_player_location)
         else:
             return f"Sorry, '{other_player_name}' is not a valid player name."
+
+    def do_shutdown(self, player, rest_of_response):
+        message = f"{player.player_name} has shut down the server, saying '{rest_of_response}'."
+        log(message)
+        self.tell_everyone(message)
+        # TODO: web client should do something when the back end is down, can we terminate the client too?
+        # TODO: make this restart not die?
+        sio.emit("shutdown", message)
+        eventlet.sleep(1)
+        sys.exit(1)
 
     def get_player_location_by_name(self, sid, player_name):
         for other_player in game_manager.get_other_players(sid):
@@ -246,8 +272,13 @@ class GameManager:
         self.players[sid] = game
         return game
 
-    def get_room_description(self, room):
-        description = f"You are in the {str(room).lower()}: {self.rooms[room]['description']} Available exits: "
+    def get_room_description(self, room, brief=False):
+        if brief:
+            description = ""
+        else:
+            description = self.rooms[room]["description"]
+        # Always describe exits
+        description += " Available exits: "
         for exit in self.rooms[room]["exits"]:
             description += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
         return description
@@ -274,7 +305,6 @@ class GameManager:
 
     def tell_player(self, sid, message, type="game_update"):
         if message.strip():
-            print("DEBUG: TELLING PLAYER:", sid, message)
             sio.emit(type, message, sid)
 
     def get_other_players(self, sid):
@@ -344,11 +374,6 @@ def set_player_name(sid, player_name):
     # Spawn the world-wide metadata loop when the first player enters the game.
     if game_manager.get_player_count() == 1:
         eventlet.spawn(game_metadata_update)
-
-    # Tell this player where they are
-    game_manager.tell_player(
-        sid, game_manager.get_room_description(player.current_room)
-    )
 
 
 def game_metadata_update():
