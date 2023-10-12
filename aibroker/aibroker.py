@@ -6,6 +6,7 @@ import openai
 import sys
 from pprint import pprint
 import os
+from dotenv import load_dotenv
 
 # Register the client with the server
 sio = socketio.Client()
@@ -31,29 +32,25 @@ class AIManager:
             cls._instance = super(AIManager, cls).__new__(cls)
             # Set up openAI connection
             # We are going to use the chat interface to get AI To play our text adventure game
-            cls.openai_connect()
+            cls._instance.openai_connect()
 
         return cls._instance
 
     def openai_connect(self):
-        openai.organization = "org-8c0Mch2S2vEl9vzWd5cT82gj"
-        # check file exists, use it if so
-        key_filename = "openai.key"
-        if os.path.exists(key_filename):
-            openai.api_key_file = key_filename
-        else:
-            # otherwise use env var
-            key_env_var = os.environ.get("OPENAI_API_KEY")
-            if not key_env_var:
-                log("ERROR: OPENAI_API_KEY not set")
+        # openai.organization = "org-8c0Mch2S2vEl9vzWd5cT82gj"
+
+        # Use pre-set variable before dotenv.
+        if not os.environ.get("OPENAI_API_KEY"):
+            load_dotenv()
+            if not os.getenv("OPENAI_API_KEY"):
+                log("ERROR: OPENAI_API_KEY not set. Exiting.")
                 sys.exit(1)
-            else:
-                openai.api_key = os.environ.get("OPENAI_API_KEY")
-        # TODO: set up OPENAI_API_KEY in Azure setup. Also set up OPENAI_ORGANIZATION_ID
-        openai.Model.list()
+
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+        # openai.Model.list()
 
     def record_instructions(self, data):
-        self.game_instructions += data
+        self.game_instructions += data + "\n"
 
     def get_ai_name(self):
         messages = [
@@ -83,6 +80,11 @@ class AIManager:
             }
         )
         if self.active:
+            # If the input is just echoing back what you said, impose a delay.
+            # TODO: make it so this delay can be interrupted, this is a bit naff
+            if str(event_text).startswith("You say"):
+                time.sleep(ai_manager.max_wait * 2)
+
             response = self.submit_input()
             if response:
                 # Submit AI's response to the game server
@@ -127,13 +129,15 @@ class AIManager:
         messages.append(
             {
                 "role": "user",
-                "content": "Please enter your next game command. Hint: don't leave mid chat with another player!:",
+                "content": "Please enter your next game command. Hints:"
+                + "\n* prefer chatting to exploring!:"
+                + "\n* other players can only hear you when they are in the same place as you!:",
             }
         )
 
-        # print("<<<<<<<<<<<")
-        # pprint(messages)
-        # print(">>>>>>>>>>>")
+        print("<<<<<<<<<<<")
+        pprint(messages)
+        print(">>>>>>>>>>>")
 
         return self.submit_request(messages)
 
