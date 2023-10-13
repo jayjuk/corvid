@@ -9,5 +9,5 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11.5"
-      - run: ls -R
+      - run: pip install -r gameserver/requirements.txt
       - run: cd gameserver; python -m unittest test_gameserver
