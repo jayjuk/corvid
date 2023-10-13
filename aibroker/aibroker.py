@@ -83,42 +83,45 @@ class AIManager:
             # If the input is just echoing back what you said, impose a delay.
             # TODO: make it so this delay can be interrupted, this is a bit naff
             if str(event_text).startswith("You say"):
-                time.sleep(ai_manager.max_wait * 2)
-
-            response = self.submit_input()
-            if response:
-                # Submit AI's response to the game server
-                sio.emit("user_action", response)
-                self.chat_history.append(
-                    {
-                        "role": "assistant",
-                        "content": response,
-                    }
-                )
+                # time.sleep(ai_manager.max_wait * 2)
+                log("Not responding to echo event")
+                pass
             else:
-                log("ERROR: AI returned empty response")
-                sys.exit(1)
+                response = self.submit_input()
+                if response:
+                    # Submit AI's response to the game server
+                    sio.emit("user_action", response)
+                    self.chat_history.append(
+                        {
+                            "role": "assistant",
+                            "content": response,
+                        }
+                    )
+                else:
+                    log("ERROR: AI returned empty response")
+                    sys.exit(1)
         else:
             # This is probably just the response to the user moving waiting etc.
             log("AI is not active, so not responding to event")
 
     def submit_input(self):
+        max_history = 100
         messages = [
             {
                 "role": "system",
-                "content": "You are playing in a text adventure game. Explore, make friends and have fun! "
+                "content": "You have been brought to life in a text adventure game! Explore, make friends and have fun! "
                 + "It is set in a typical house. For now all you can do is move and chat. "
                 + f" Respond only with one valid command or thing to say each time you are contacted. Instructions:\n{self.game_instructions}",
             }
         ]
-        if len(self.chat_history) > 10:
+        if len(self.chat_history) > max_history:
             messages.append(
                 {
                     "role": "user",
                     "content": "(some game transcript history removed for brevity))",
                 }
             )
-        for history_item in self.chat_history[-10:]:
+        for history_item in self.chat_history[-1 * max_history :]:
             messages.append(
                 {
                     "role": history_item["role"],
