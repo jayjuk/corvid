@@ -1,13 +1,12 @@
-name: learn-github-actions
-run-name: ${{ github.actor }} is learning GitHub Actions
+name: run-unit-tests
+run-name: ${{ github.actor }} is running unit tests
 on: [push]
 jobs:
-  check-bats-version:
+  run-unit-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-python@v4
         with:
-          node-version: "14"
-      - run: npm install -g bats
-      - run: bats -v
+          python-version: "3.11.5"
+      - run: python -m unittest gameserver.test_gameserver
