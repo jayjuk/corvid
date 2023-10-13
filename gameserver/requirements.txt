@@ -1,2 +1,2 @@
-socketio
+python-socketio
 eventlet
