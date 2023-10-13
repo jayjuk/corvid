@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from aibroker import catch_all, connect, disconnect, main
+from aibroker import AIManager, catch_all, connect, disconnect, main
 
 
 class TestAIBroker(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestAIBroker(unittest.TestCase):
     @patch("aibroker.sio")
     def test_main(self, mock_sio):
         mock_ai_manager = MagicMock()
-        with patch("aibroker.AIManager", return_value=mock_ai_manager):
+        with patch.object(AIManager, "get_instance", return_value=mock_ai_manager):
             main()
             mock_sio.connect.assert_called_once_with("http://localhost:3001")
             mock_sio.wait.assert_called_once()
