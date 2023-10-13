@@ -10,5 +10,4 @@ jobs:
         with:
           python-version: "3.11.5"
       - run: ls -R
-      - run: cd gameserver
-      - run: python -m unittest gameserver.test_gameserver
+      - run: cd gameserver; python -m unittest test_gameserver
