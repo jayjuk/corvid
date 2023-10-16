@@ -27,7 +27,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: gameserver/Dockerfile
+          context: "{{defaultContext}}:gameserver"
+          : gameserver
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/gameserver:latest
