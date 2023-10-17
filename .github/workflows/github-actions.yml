@@ -30,3 +30,33 @@ jobs:
           context: "{{defaultContext}}:gameserver"
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/gameserver:latest
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repo
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@v4
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      #- name: 'Login to Docker Hub'
+      #  uses: docker/login-action@v3
+      #with:
+      #  username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #  password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: "Deploy to Azure Container Instances"
+        uses: "azure/aci-deploy@v1"
+        with:
+          name: jaysgame
+          resource-group: jay
+          dns-name-label: jaysgame
+          image: jayjuk/gameserver #:${{ github.sha }}
+          cpu: 1 #Optional
+          memory: 0.1 #Optional
+          #registry-username: ${{ secrets.REGISTRY_USERNAME }}
+          #registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+          location: "west europe"
+          secure-environment-variables: OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          environment-variables: AI_COUNT="0" #TODO - make this dynamic
