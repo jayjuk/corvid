@@ -19,37 +19,39 @@ app = socketio.WSGIApp(sio)
 
 
 class Player:
-    def __init__(self, sid, player_name):
+    def __init__(self, game_server, sid, player_name):
+        # Registering game server reference in player object to help with testing and minimise use of globals
+        self.game_server = game_server
         self.last_action_time = time.time()
         self.player_name = player_name
         self.current_room = "Road"
         self.seen_rooms = {}
         self.sid = sid
-        game_server.register_player(sid, self)
-        game_server.update_player_room(self.sid, self.current_room)
+        self.game_server.register_player(sid, self)
+        self.game_server.update_player_room(self.sid, self.current_room)
         instructions = (
             f"Welcome to the game, {player_name}. "
-            + game_server.get_players_text()
-            + game_server.get_commands_description()
+            + self.game_server.get_players_text()
+            + self.game_server.get_commands_description()
             + "Please input one of these commands."
         )
         for line in instructions.split("\n"):
             if line:
-                game_server.tell_player(self.sid, line, type="instructions")
+                self.game_server.tell_player(self.sid, line, type="instructions")
 
         # Tell this player where they are
-        game_server.tell_player(
-            sid, game_server.get_room_description(self.current_room)
+        self.game_server.tell_player(
+            sid, self.game_server.get_room_description(self.current_room)
         )
         self.seen_rooms[self.current_room] = True
 
         # Tell other players about this new player
-        game_server.tell_others(
+        self.game_server.tell_others(
             sid,
-            f"{player_name} has joined the game, starting in the {self.current_room}; there are now {game_server.get_player_count()} players.",
+            f"{player_name} has joined the game, starting in the {self.current_room}; there are now {self.game_server.get_player_count()} players.",
             shout=True,
         )
-        game_server.emit_game_data_update()
+        self.game_server.emit_game_data_update()
 
     def process_player_input(self, player_input):
         self.last_action_time = time.time()
@@ -66,16 +68,16 @@ class Player:
             elif rest_of_response.startswith("'") and rest_of_response.endswith("'"):
                 rest_of_response = rest_of_response[1:-1]
 
-            command = game_server.synonyms.get(command, command)
+            command = self.game_server.synonyms.get(command, command)
             log(f"Command: {command}")
 
             # Call the function associated with a command
-            if command in game_server.command_functions:
-                player_response = game_server.command_functions[command](
+            if command in self.game_server.command_functions:
+                player_response = self.game_server.command_functions[command](
                     self, rest_of_response
                 )
             # Call the function associated with the command
-            elif command in game_server.directions:
+            elif command in self.game_server.directions:
                 player_response = self.move_player(command, rest_of_response)
             else:
                 # Invalid command
@@ -96,8 +98,8 @@ class Player:
             arrival_message_to_other_players = (
                 f"{self.player_name} has materialised as if by magic!"
             )
-        elif direction in game_server.rooms[self.current_room]["exits"]:
-            next_room = game_server.rooms[self.current_room]["exits"][direction]
+        elif direction in self.game_server.rooms[self.current_room]["exits"]:
+            next_room = self.game_server.rooms[self.current_room]["exits"][direction]
 
             departure_message_to_other_players = f"{self.player_name} leaves, heading {direction} to the {str(next_room).lower()}."
             arrival_message_to_other_players = (
@@ -108,9 +110,9 @@ class Player:
             return "Sorry, you can't go that way."
 
         # Check for other players you are leaving
-        for other_player in game_server.get_other_players(self.sid):
+        for other_player in self.game_server.get_other_players(self.sid):
             if other_player.current_room == self.current_room:
-                game_server.tell_player(
+                self.game_server.tell_player(
                     other_player.sid,
                     departure_message_to_other_players,
                 )
@@ -118,7 +120,7 @@ class Player:
         # Set new room
         self.current_room = next_room
 
-        game_server.update_player_room(self.sid, self.current_room)
+        self.game_server.update_player_room(self.sid, self.current_room)
 
         if direction == "jump":
             action = "jumped"
@@ -128,18 +130,16 @@ class Player:
         # Build message. only describe room if it is new to this player.
         message = f"You {action} to the {str(self.current_room).lower()}"
         if self.current_room in self.seen_rooms:
-            message += (
-                f". {game_server.get_room_description(self.current_room, brief=True)}"
-            )
+            message += f". {self.game_server.get_room_description(self.current_room, brief=True)}"
         else:
-            message += f": {game_server.get_room_description(self.current_room)}"
+            message += f": {self.game_server.get_room_description(self.current_room)}"
             self.seen_rooms[self.current_room] = True
 
         # Check for other players you are arriving
-        for other_player in game_server.get_other_players(self.sid):
+        for other_player in self.game_server.get_other_players(self.sid):
             if other_player.current_room == self.current_room:
                 message += f" {other_player.player_name} is here."
-                game_server.tell_player(
+                self.game_server.tell_player(
                     other_player.sid,
                     arrival_message_to_other_players,
                 )
@@ -201,14 +201,14 @@ class GameServer:
     def do_look(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
         f"""{player.player_name}  {rest_of_response}"""
-        return f"You look again at the {str(player.current_room).lower()}: {game_server.get_room_description(player.current_room)}"
+        return f"You look again at the {str(player.current_room).lower()}: {self.get_room_description(player.current_room)}"
 
     def do_say(self, player, rest_of_response):
         log(f"User {player.player_name} says: {rest_of_response}")
-        if game_server.get_player_count() == 1:
+        if self.get_player_count() == 1:
             player_response = "You are the only player in the game currently!"
         else:
-            told_count = game_server.tell_others(
+            told_count = self.tell_others(
                 player.sid, f'{player.player_name} says, "{rest_of_response}"'
             )
             if told_count == 0:
@@ -257,7 +257,7 @@ class GameServer:
             return f"There are {self.get_player_count()} players online already.\n"
 
     def get_player_location_by_name(self, sid, player_name):
-        for other_player in game_server.get_other_players(sid):
+        for other_player in self.get_other_players(sid):
             if str(other_player.player_name).lower() == str(player_name).lower():
                 return other_player.current_room
         return None
@@ -296,11 +296,10 @@ class GameServer:
     def tell_others(self, sid, message, shout=False):
         told_count = 0
         if message.strip():
-            for other_game_sid, other_game in game_server.players.items():
+            for other_game_sid, other_game in self.players.items():
                 # Only tell another player if they are in the same room
                 if sid != other_game_sid and (
-                    shout
-                    or other_game.current_room == game_server.players[sid].current_room
+                    shout or other_game.current_room == self.players[sid].current_room
                 ):
                     sio.emit("game_update", message, other_game_sid)
                     told_count += 1
@@ -312,13 +311,13 @@ class GameServer:
 
     def get_other_players(self, sid):
         other_players = []
-        for other_game_sid, other_game in game_server.players.items():
+        for other_game_sid, other_game in self.players.items():
             if sid != other_game_sid:
                 other_players.append(other_game)
         return other_players
 
     def emit_game_data_update(self):
-        game_data = {"player_count": game_server.get_player_count()}
+        game_data = {"player_count": self.get_player_count()}
         sio.emit(
             "game_data_update",
             game_data,
@@ -351,6 +350,23 @@ class GameServer:
         self.emit_game_data_update()
         del self.players[sid]
 
+    def game_metadata_update(self):
+        while True:
+            # TODO: time out players who leave
+            self.check_players_activity()
+
+            # For now, the only thing happening is broadcast of player count
+            # So that AI players can pause when there are no human players, saving money
+            self.emit_game_data_update()
+
+            # TODO: think about whether to do this when players join/leave instead,
+            # and use this loop for other stuff in the game later
+            eventlet.sleep(60)
+
+
+# Event handlers
+# These use global game_server
+
 
 @sio.event
 def connect(sid, environ):
@@ -371,26 +387,15 @@ def user_action(sid, player_input):
 def set_player_name(sid, player_name):
     log(f"Received user name: {player_name} from {sid}")
     # Set up new game
-    player = Player(sid, player_name)
+    player = Player(game_server, sid, player_name)
 
     # TODO: this is a bit naff
     # Spawn the world-wide metadata loop when the first player enters the game.
     if game_server.get_player_count() == 1:
-        eventlet.spawn(game_metadata_update)
+        eventlet.spawn(game_server.game_metadata_update)
 
 
-def game_metadata_update():
-    while True:
-        # TODO: time out players who leave
-        game_server.check_players_activity()
-
-        # For now, the only thing happening is broadcast of player count
-        # So that AI players can pause when there are no human players, saving money
-        game_server.emit_game_data_update()
-
-        # TODO: think about whether to do this when players join/leave instead,
-        # and use this loop for other stuff in the game later
-        eventlet.sleep(60)
+# End of event handlers
 
 
 if __name__ == "__main__":
