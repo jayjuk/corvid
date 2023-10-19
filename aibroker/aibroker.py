@@ -25,14 +25,17 @@ class AIManager:
     chat_history = []
     max_wait = 5  # secs
     last_time = time.time()
-    active = False
+    active = True
+    mode = None
+    model_name = "gpt-3.5-turbo"  # "gpt-4"
 
-    def __new__(cls):
+    def __new__(cls, mode="player"):
         if cls._instance is None:
             cls._instance = super(AIManager, cls).__new__(cls)
             # Set up openAI connection
             # We are going to use the chat interface to get AI To play our text adventure game
             cls._instance.openai_connect()
+            cls._instance.mode = mode
 
         return cls._instance
 
@@ -53,10 +56,16 @@ class AIManager:
         self.game_instructions += data + "\n"
 
     def get_ai_name(self):
+        system_message = "You are playing an adventure game. It is set in a typical house in the modern era."
+        if self.mode == "builder":
+            system_message += (
+                " You are a builder. You can build things in the game where supported."
+            )
+
         messages = [
             {
                 "role": "system",
-                "content": "You are playing an adventure game. It is set in a typical house in the modern era.",
+                "content": system_message,
             }
         ]
 
@@ -66,6 +75,7 @@ class AIManager:
                 "content": "What do you want your name to be in this game? Please respond with a single one-word name only.",
             }
         )
+
         ai_name = None
         while not ai_name or " " in ai_name:
             # Keep trying til they get the name right
@@ -106,12 +116,22 @@ class AIManager:
 
     def submit_input(self):
         max_history = 100
+        builder_extra_instructions = ""
+        if self.mode == "builder":
+            builder_extra_instructions = (
+                "You are a builder. "
+                + "You can and should create new locations in the game with the 'build' command "
+                + "followed by the direction, location name (quotes for spaces) and the description (in quotes). "
+                + """e.g. build north "Neighbour's House" "A quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke."" """
+                + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions and north/south of the Road (don't modify existing houses)"
+            )
         messages = [
             {
                 "role": "system",
                 "content": "You have been brought to life in a text adventure game! Explore, make friends and have fun! "
                 + "It is set in a typical house. For now all you can do is move and chat. "
-                + f" Respond only with one valid command or thing to say each time you are contacted. Instructions:\n{self.game_instructions}",
+                + f" Respond only with one valid command or thing to say each time you are contacted. Instructions:\n{self.game_instructions}"
+                + builder_extra_instructions,
             }
         ]
         if len(self.chat_history) > max_history:
@@ -134,14 +154,14 @@ class AIManager:
                 "role": "user",
                 "content": "Please enter your next game command. Hints:"
                 + "\n* prefer chatting to exploring!:"
-                + "\n* other players can only hear you when they are in the same place as you!:",
+                + "\n* other players can only hear you when they are in the same place as you!:"
+                + builder_extra_instructions,
             }
         )
 
-        print("<<<<<<<<<<<")
-        pprint(messages)
-        print(">>>>>>>>>>>")
-
+        # print("<<<<<<<<<<<")
+        # pprint(messages)
+        # print(">>>>>>>>>>>")
         return self.submit_request(messages)
 
     def submit_request(self, messages):
@@ -153,7 +173,7 @@ class AIManager:
             time.sleep(wait_time)
         try:
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model=self.model_name,
                 messages=messages,
                 max_tokens=50,  # You can adjust the max_tokens based on your desired response length
             )
@@ -162,7 +182,7 @@ class AIManager:
             sys.exit(1)
         # Extract and print the response from ChatGPT
         chatgpt_response = response.choices[0]["message"]["content"].strip()
-        log("ChatGPT Response: ", chatgpt_response)
+        log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ChatGPT Response: ", chatgpt_response)
 
         # Record time
         self.last_time = time.time()
@@ -209,7 +229,7 @@ def catch_all(data):
 @sio.on("game_data_update")
 def catch_all(data):
     if "player_count" in data:
-        if data["player_count"] == 1:
+        if data["player_count"] == 1 and ai_manager.mode != "builder":
             log("No players apart from me, so I won't do anything.")
             ai_manager.active = False
         else:
@@ -253,6 +273,13 @@ if __name__ == "__main__":
     # Set up AIs according to config
     ai_count = os.environ.get("AI_COUNT")
 
+    ai_mode = os.environ.get("AI_MODE") or "player"
+    if ai_mode not in ("player", "builder", "observer"):
+        log(
+            f"ERROR: AI_MODE is set to {ai_mode} but must be either 'player' or 'observer'. Exiting."
+        )
+        sys.exit(1)
+
     # If AI_COUNT is not set, sleep forever (if you exit, the container will restart)
     if ai_count in ("""${AI_COUNT}""", "0"):
         log("AI_COUNT not set - sleeping forever")
@@ -264,5 +291,5 @@ if __name__ == "__main__":
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting."
             )
             sys.exit(1)
-        ai_manager = AIManager()
+        ai_manager = AIManager(mode=ai_mode)
         main()

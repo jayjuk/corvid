@@ -78,6 +78,15 @@ export default function HomePage() {
       setRoomImageFileName(message);
     });
 
+    // Listen for the 'logout' event from the server
+    socket.current.on("logout", (message) => {
+      console.log("Logging out");
+      if (message != null) {
+        alert(message);
+      }
+      setNameSet(false);
+    });
+
     return () => {
       if (socket.current) {
         socket.current.disconnect();

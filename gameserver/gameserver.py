@@ -5,12 +5,8 @@ import json
 from datetime import datetime
 import time
 import sys
-
-
-# Simple print alternative to flush everything for now
-# TODO: logging, common utils
-def log(message, second_message=""):
-    print(str(message) + " " + second_message, flush=True)
+import imagemanager
+from gameutils import log
 
 
 log("Setting up SocketIO")
@@ -32,8 +28,8 @@ class Player:
         instructions = (
             f"Welcome to the game, {player_name}. "
             + self.game_server.get_players_text()
+            + "Please input one of these commands:\n"
             + self.game_server.get_commands_description()
-            + "Please input one of these commands."
         )
         for line in instructions.split("\n"):
             if line:
@@ -150,6 +146,7 @@ class Player:
 class GameServer:
     _instance = None
     max_inactive_time = 300  # 5 minutes
+    map_json_file_path = "map.json"
 
     def __new__(cls):
         if cls._instance is None:
@@ -173,11 +170,15 @@ class GameServer:
                 "say": cls._instance.do_say,
                 "wait": cls._instance.do_wait,
                 "jump": cls._instance.do_jump,
-                "💣": cls._instance.do_shutdown,
+                "quit": cls._instance.do_quit,
+                "exit": cls._instance.do_quit,
+                "go": cls._instance.do_go,
+                "build": cls._instance.do_build,
+                "xox": cls._instance.do_shutdown,
             }
 
             cls._instance.commands_description = (
-                "Available commands: " + ", ".join(cls._instance.directions) + ". "
+                ", ".join(cls._instance.directions) + ". "
             )
             # append synyonyms to comamnds description explaining what each synonym means:
             cls._instance.commands_description += "\n"
@@ -197,6 +198,11 @@ class GameServer:
     # All these 'do_' functions are for processing commands from the player.
     # They all take the player object and the rest of the response as arguments,
     # Even if they're not needed. This is to keep the command processing simple.
+
+    def do_go(self, player, rest_of_response):
+        # Not used, next line is to avoid warnings
+        f"""{rest_of_response}"""
+        return player.move_player(rest_of_response, "")
 
     def do_look(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
@@ -236,7 +242,9 @@ class GameServer:
             return f"Sorry, '{other_player_name}' is not a valid player name."
 
     def do_shutdown(self, player, rest_of_response):
-        message = f"{player.player_name} has shut down the server, saying '{rest_of_response}'."
+        message = f"{player.player_name} has shut down the server."
+        if rest_of_response:
+            message = message[:-1] + ", saying '{rest_of_response}'."
         log(message)
         self.tell_everyone(message)
         # TODO: web client should do something when the back end is down, can we terminate the client too?
@@ -245,16 +253,116 @@ class GameServer:
         eventlet.sleep(1)
         sys.exit(1)
 
+    def do_quit(self, player, rest_of_response):
+        self.remove_player(player.sid, "You have left the game.")
+
+    def do_build(self, player, rest_of_response):
+        # Create a new room
+
+        # First parse the response to get the direction, room name and description. handle the player
+        # Using quotes in order to have room names and descriptions with spaces in
+
+        # First take the direction which is one word and must be one of the directions
+
+        direction = rest_of_response.split()[0]
+
+        # Check direction is valid and not taken
+        if direction not in self.directions:
+            return f"Sorry, '{direction}' is not a valid direction."
+        if direction in self.rooms[player.current_room]["exits"]:
+            return f"Sorry, there is already a room to the {direction}."
+
+        # Remove the direction from the response
+        rest_of_response = " ".join(rest_of_response.split()[1:])
+
+        # Check if the room name is in quotes
+        if rest_of_response.startswith("'") or rest_of_response.startswith('"'):
+            # Find the end of the quoted string
+            quote_char = rest_of_response[0]
+            end_quote_index = rest_of_response.find(quote_char, 1)
+            if end_quote_index == -1:
+                return "Sorry, invalid input. Room name is not properly quoted."
+            # Extract the room name from the quoted string
+            room_name = rest_of_response[1:end_quote_index]
+            # Remove the room name and any extra spaces from the response
+            rest_of_response = rest_of_response[end_quote_index + 1 :].strip()
+        else:
+            # Room name is a single word
+            room_name = rest_of_response.split()[0]
+            # Remove the room name from the response
+            rest_of_response = " ".join(rest_of_response.split()[1:])
+
+        # Check the room name is valid
+        if room_name == "":
+            return "Sorry, invalid input. Room name is empty."
+        if room_name in self.rooms:
+            return f"Sorry, there is already a room called '{room_name}'."
+        if room_name in self.synonyms or room_name in self.command_functions:
+            return f"Sorry, '{room_name}' is a reserved word."
+
+        # Now take the room description, which must be in quotes
+        if not rest_of_response.startswith("'") and not rest_of_response.startswith(
+            '"'
+        ):
+            return "Sorry, invalid input. Room description must be in quotes."
+        quote_char = rest_of_response[0]
+        end_quote_index = rest_of_response.find(quote_char, 1)
+        if end_quote_index == -1:
+            return "Sorry, invalid input. Room description is not properly quoted."
+        room_description = rest_of_response[1:end_quote_index]
+
+        self.rooms[room_name] = {}
+        self.rooms[room_name]["description"] = room_description
+        self.rooms[room_name]["exits"] = {}
+        self.rooms[room_name]["image"] = imagemanager.create_image(
+            room_name, room_description
+        )
+        # Add the new room to the exits of the current room
+        self.rooms[player.current_room]["exits"][direction] = room_name
+        # Add the current room to the exits of the new room
+        self.rooms[room_name]["exits"][
+            self.opposite_direction(direction)
+        ] = player.current_room
+        # Tell other players about the new room
+        self.tell_others(
+            player.sid,
+            f"{player.player_name} has built to the {direction} and made a new location, {room_name}.",
+            shout=True,
+        )
+        # Save the new room to the map file
+        time_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        with open(
+            self.map_json_file_path + ".user_generated_" + time_stamp + ".tmp", "w"
+        ) as f:
+            json.dump(self.rooms, f, indent=4)
+        return f"You build {direction} and make a new location, {room_name}: {room_description}"
+
+    def opposite_direction(self, direction):
+        if direction == "north":
+            return "south"
+        elif direction == "south":
+            return "north"
+        elif direction == "east":
+            return "west"
+        elif direction == "west":
+            return "east"
+        else:
+            return None
+
     # End of 'do_' functions
 
+    # Getters
     def get_commands_description(self):
         return self.commands_description
 
     def get_players_text(self):
-        if self.get_player_count() == 1:
+        others_count = self.get_player_count() - 1
+        if others_count == 0:
             return "You are the first player to join the game.\n"
+        elif others_count == 1:
+            return f"You are the second player in the game.\n"
         else:
-            return f"There are {self.get_player_count()} players online already.\n"
+            return f"There are {others_count} other players in the game.\n"
 
     def get_player_location_by_name(self, sid, player_name):
         for other_player in self.get_other_players(sid):
@@ -271,10 +379,6 @@ class GameServer:
             rooms = json.load(f)
         return rooms
 
-    def register_player(self, sid, game):
-        self.players[sid] = game
-        return game
-
     def get_room_description(self, room, brief=False):
         if brief:
             description = ""
@@ -285,6 +389,20 @@ class GameServer:
         for exit in self.rooms[room]["exits"]:
             description += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
         return description
+
+    def player_name_is_unique(self, player_name):
+        for player_sid, player in self.players.items():
+            if str(player.player_name).lower() == str(player_name).lower():
+                return False
+        return True
+
+    # End of getters
+
+    # Setters etc
+
+    def register_player(self, sid, game):
+        self.players[sid] = game
+        return game
 
     def update_player_room(self, sid, room):
         sio.emit("room_update", self.rooms[room]["image"], sid)
@@ -337,18 +455,25 @@ class GameServer:
             )
 
     def remove_player(self, sid, reason):
-        player = self.players[sid]
-        self.tell_player(
-            player.sid,
-            reason,
-        )
-        self.tell_others(
-            sid,
-            f"{player.player_name} has left the game; there are now {self.get_player_count()} players.",
-            shout=True,
-        )
-        self.emit_game_data_update()
-        del self.players[sid]
+        if sid in self.players:
+            player = self.players[sid]
+            self.tell_player(
+                player.sid,
+                reason,
+            )
+            eventlet.sleep(3)
+            message = f"{player.player_name} has left the game; there are now {self.get_player_count()-1} players."
+            log(message)
+            self.tell_others(
+                sid,
+                message,
+                shout=True,
+            )
+            self.emit_game_data_update()
+            sio.emit("logout", None, sid)
+            del self.players[sid]
+        else:
+            log(f"Attempt to remove non-existent player {sid}.")
 
     def game_metadata_update(self):
         while True:
@@ -373,26 +498,57 @@ def connect(sid, environ):
     log("Client connected:", sid)
 
 
+# Handle disconnects
+@sio.event
+def disconnect(sid):
+    log("Client disconnected:", sid)
+    # TODO: allow players to reconnect (for now disconnect is same as quit)
+    game_server.remove_player(
+        sid, "You have been logged out as your client disconnected."
+    )
+
+
 @sio.event
 def user_action(sid, player_input):
-    player = game_server.players[sid]
-    log(f"Received user action: {player_input} from {sid}")
-    player_response = player.process_player_input(player_input)
-    # Respond to player
-    if player_response:
-        sio.emit("game_update", player_response, sid)
+    if sid in game_server.players:
+        player = game_server.players[sid]
+        log(f"Received user action: {player_input} from {sid}")
+        player_response = player.process_player_input(player_input)
+        # Respond to player
+        if player_response:
+            sio.emit("game_update", player_response, sid)
+    else:
+        log(f"Received user action from non-existent player {sid}")
+        sio.emit(
+            "logout",
+            "You have been logged out due to a server error. Please log in again.",
+            sid,
+        )
 
 
 @sio.event
 def set_player_name(sid, player_name):
     log(f"Received user name: {player_name} from {sid}")
-    # Set up new game
-    player = Player(game_server, sid, player_name)
 
-    # TODO: this is a bit naff
-    # Spawn the world-wide metadata loop when the first player enters the game.
-    if game_server.get_player_count() == 1:
-        eventlet.spawn(game_server.game_metadata_update)
+    # Strip out any whitespace (defensive in case of client bug)
+    player_name = player_name.strip()
+
+    # Set up new game
+    if game_server.player_name_is_unique(player_name):
+        player = Player(game_server, sid, player_name)
+        # TODO: this is a bit naff
+        # Spawn the world-wide metadata loop when the first player enters the game.
+        if game_server.get_player_count() == 1:
+            eventlet.spawn(game_server.game_metadata_update)
+    else:
+        # Issue with player name setting
+        sio.emit("game_update", "Sorry, that name is already taken.", sid)
+        # Player logging out or trying an existing name is the same thing for now
+        sio.emit(
+            "logout",
+            "Sorry, that name is already taken.",
+            sid,
+        )
 
 
 # End of event handlers

@@ -1,9 +1,17 @@
 {
+  "Frozen Moorland": {
+    "image": "frozen_moorland.png",
+    "description": "Directly to the north of the road, the terrain transforms dramatically. Once-familiar asphalt gives way to an expanse of frozen moorland, stretching out infinitely beneath a muted sky. The ground is a patchwork of iced-over ponds and crunchy frosted grasses, reflecting the silvery light of the distant sun. Occasional gusts send ripples across the water's surface, and a thin layer of mist seems to hover just above the ground, making everything feel both ethereal and desolate. The only sound, apart from one's own footsteps, is the haunting call of distant birds and the subtle creak of ice adjusting beneath the weight of the world.",
+    "exits": {
+      "west": "Road"
+    }
+  },
   "Road": {
     "image": "road.png",
     "description": "Endless horizons beckon from either direction of this seemingly abandoned road. Sunlight dances on the asphalt, hinting at a time when cars frequented here. Now, only the gentle whisper of wind breaks the stillness.",
     "exits": {
-      "west": "Driveway"
+      "west": "Driveway",
+      "east": "Frozen Moorland"
     }
   },
   "Driveway": {
