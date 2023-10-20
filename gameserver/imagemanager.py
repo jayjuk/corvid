@@ -9,10 +9,11 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 DO_NOT_GENERATE_IMAGES = os.getenv("DO_NOT_GENERATE_IMAGES") or False
 
 
+# Stateless image manager
 def create_image(image_name, description):
     """Create an image from description and return the file name"""
     # make file name from image name, replacing spaces with underscores and lowercasing
-    file_name = image_name.lower().replace(" ", "_") + ".png"
+    file_name = image_name.lower().replace(" ", "_").replace("'", "") + ".png"
     if DO_NOT_GENERATE_IMAGES:
         # Let the client  handle missing file
         return file_name

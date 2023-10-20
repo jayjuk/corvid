@@ -23,6 +23,7 @@ class AIManager:
     _instance = None
     game_instructions = ""
     chat_history = []
+    max_history = 20
     max_wait = 5  # secs
     last_time = time.time()
     active = True
@@ -59,7 +60,7 @@ class AIManager:
         system_message = "You are playing an adventure game. It is set in a typical house in the modern era."
         if self.mode == "builder":
             system_message += (
-                " You are a builder. You can build things in the game where supported."
+                " You are a creator of worlds! You can add new locations in the game."
             )
 
         messages = [
@@ -115,33 +116,34 @@ class AIManager:
             log("AI is not active, so not responding to event")
 
     def submit_input(self):
-        max_history = 100
-        builder_extra_instructions = ""
+        # Set up role-specific instructions for the AI
         if self.mode == "builder":
-            builder_extra_instructions = (
-                "You are a builder. "
-                + "You can and should create new locations in the game with the 'build' command "
+            role_specific_instructions = (
+                "You are a creator of worlds! You can and should create new locations in the game with the 'build' command "
                 + "followed by the direction, location name (quotes for spaces) and the description (in quotes). "
-                + """e.g. build north "Neighbour's House" "A quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke."" """
-                + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions and north/south of the Road (don't modify existing houses)"
+                + """e.g. build north "Neighbour's House" "A quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke."" \n"""
+                + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions and north/south of the Road (don't modify existing houses)\n"
             )
+        else:
+            role_specific_instructions = "Explore, make friends and have fun! "
+
         messages = [
             {
                 "role": "system",
-                "content": "You have been brought to life in a text adventure game! Explore, make friends and have fun! "
+                "content": "You have been brought to life in a text adventure game! "
                 + "It is set in a typical house. For now all you can do is move and chat. "
-                + f" Respond only with one valid command or thing to say each time you are contacted. Instructions:\n{self.game_instructions}"
-                + builder_extra_instructions,
+                + f" Do not apologise to the game! Respond only with one valid command each time you are contacted. Instructions:\n{self.game_instructions}"
+                + role_specific_instructions,
             }
         ]
-        if len(self.chat_history) > max_history:
+        if len(self.chat_history) > self.max_history:
             messages.append(
                 {
                     "role": "user",
                     "content": "(some game transcript history removed for brevity))",
                 }
             )
-        for history_item in self.chat_history[-1 * max_history :]:
+        for history_item in self.chat_history[-1 * self.max_history :]:
             messages.append(
                 {
                     "role": history_item["role"],
@@ -152,10 +154,10 @@ class AIManager:
         messages.append(
             {
                 "role": "user",
-                "content": "Please enter your next game command. Hints:"
-                + "\n* prefer chatting to exploring!:"
+                "content": "Please enter your next game command."
+                # + "\n* prefer chatting to exploring!:"
                 + "\n* other players can only hear you when they are in the same place as you!:"
-                + builder_extra_instructions,
+                + role_specific_instructions,
             }
         )
 

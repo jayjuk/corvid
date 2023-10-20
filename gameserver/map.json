@@ -19,7 +19,9 @@
     "description": "A quaint driveway, bordered by wildflowers, leads up to an inviting residence. The pebbled path crunches beneath your feet, a lone mailbox standing sentinel at the entrance.",
     "exits": {
       "east": "Road",
-      "west": "Hall"
+      "west": "Hall",
+      "north": "Neighbour's House",
+      "south": "Front Garden"
     }
   },
   "Hall": {
@@ -101,7 +103,8 @@
     "exits": {
       "north": "Patio",
       "east": "Living Room",
-      "south": "Garage"
+      "south": "Garage",
+      "west": "Enchanted Forest"
     }
   },
   "Garage": {
@@ -118,5 +121,27 @@
     "exits": {
       "north": "Garage"
     }
+  },
+  "Front Garden": {
+    "description": "a vibrant garden bursting with colorful flowers and lush greenery. the air is filled with the sweet fragrance of blooming roses and the gentle buzzing of bees.",
+    "exits": {
+      "north": "Driveway",
+      "west": "Enchanted Forest"
+    },
+    "image": "front_garden.png"
+  },
+  "Neighbour's House": {
+    "description": "a quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke.",
+    "exits": {
+      "south": "Driveway"
+    },
+    "image": "neighbours_house.png"
+  },
+  "Enchanted Forest": {
+    "description": "A mystical forest filled with ancient trees, sparkling streams, and whispers of magic in the air. sunlight filters through the canopy, creating dancing patterns of light.",
+    "exits": {
+      "east": "Garden"
+    },
+    "image": "enchanted_forest.png"
   }
 }

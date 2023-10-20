@@ -6,6 +6,7 @@ from datetime import datetime
 import time
 import sys
 import imagemanager
+import storagemanager
 from gameutils import log
 
 
@@ -53,8 +54,8 @@ class Player:
         self.last_action_time = time.time()
         player_response = ""
         if player_input:
-            words = str(player_input.lower()).split()
-            command = words[0]
+            words = str(player_input).split()
+            command = words[0].lower()
             # get the rest of the response apart from the first word
             rest_of_response = " ".join(words[1:])
             # strip out quotes from the outside of the response only
@@ -77,7 +78,10 @@ class Player:
                 player_response = self.move_player(command, rest_of_response)
             else:
                 # Invalid command
-                player_response = "Sorry, that is not a recognised command."
+                player_response = (
+                    "Sorry, that is not a recognised command. Available commands:\n"
+                    + self.game_server.get_commands_description()
+                )
         else:
             # Empty command
             player_response = "Sorry, you need to enter a command."
@@ -174,6 +178,7 @@ class GameServer:
                 "exit": cls._instance.do_quit,
                 "go": cls._instance.do_go,
                 "build": cls._instance.do_build,
+                "help": cls._instance.do_help,
                 "xox": cls._instance.do_shutdown,
             }
 
@@ -208,6 +213,11 @@ class GameServer:
         # Not used, next line is to avoid warnings
         f"""{player.player_name}  {rest_of_response}"""
         return f"You look again at the {str(player.current_room).lower()}: {self.get_room_description(player.current_room)}"
+
+    def do_help(self, player, rest_of_response):
+        # Not used, next line is to avoid warnings
+        f"""{player.player_name}  {rest_of_response}"""
+        return f"Available commands:\n{game_server.get_commands_description()}"
 
     def do_say(self, player, rest_of_response):
         log(f"User {player.player_name} says: {rest_of_response}")
@@ -295,8 +305,11 @@ class GameServer:
         # Check the room name is valid
         if room_name == "":
             return "Sorry, invalid input. Room name is empty."
-        if room_name in self.rooms:
-            return f"Sorry, there is already a room called '{room_name}'."
+        # Check room name is not taken in any case (case insensitive)
+        for room in self.rooms:
+            if str(room).lower() == str(room_name).lower():
+                return f"Sorry, there is already a room called '{room_name}'."
+        # Check room name is not a reserved word
         if room_name in self.synonyms or room_name in self.command_functions:
             return f"Sorry, '{room_name}' is a reserved word."
 
@@ -335,6 +348,7 @@ class GameServer:
             self.map_json_file_path + ".user_generated_" + time_stamp + ".tmp", "w"
         ) as f:
             json.dump(self.rooms, f, indent=4)
+        storagemanager.store_locations(self.rooms)
         return f"You build {direction} and make a new location, {room_name}: {room_description}"
 
     def opposite_direction(self, direction):
@@ -374,9 +388,11 @@ class GameServer:
         return len(self.players)
 
     def get_rooms(self):
-        json_file_path = "map.json"
-        with open(json_file_path, "r") as f:
-            rooms = json.load(f)
+        rooms = storagemanager.get_locations()
+        if not rooms:
+            default_json_file_path = "map.json"
+            with open(default_json_file_path, "r") as f:
+                rooms = json.load(f)
         return rooms
 
     def get_room_description(self, room, brief=False):
