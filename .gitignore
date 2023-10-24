@@ -3,3 +3,5 @@
 __pycache__
 temp_*
 *.tmp
+*.log
+*.out
