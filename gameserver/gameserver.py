@@ -1,7 +1,7 @@
 import socket
 import socketio
 import eventlet
-from gameutils import log, create_folder_if_not_exists, make_name_safe_for_files
+from gameutils import log, make_name_safe_for_files
 from player import Player
 from game_manager import GameManager
 
@@ -11,7 +11,6 @@ app = socketio.WSGIApp(sio)
 
 
 # Event handlers
-# These use global game_server
 
 
 @sio.event
@@ -24,15 +23,15 @@ def connect(sid, environ):
 def disconnect(sid):
     log("Client disconnected:", sid)
     # TODO: allow players to reconnect (for now disconnect is same as quit)
-    game_server.remove_player(
+    game_manager.remove_player(
         sid, "You have been logged out as your client disconnected."
     )
 
 
 @sio.event
 def user_action(sid, player_input):
-    if sid in game_server.players:
-        player = game_server.players[sid]
+    if sid in game_manager.players:
+        player = game_manager.players[sid]
         log(f"Received user action: {player_input} from {sid}")
         player_response = player.process_player_input(player_input)
         # Respond to player
@@ -51,6 +50,8 @@ def user_action(sid, player_input):
 def set_player_name(sid, player_name):
     log(f"Received user name: {player_name} from {sid}")
 
+    # TODO: move this to game manager?
+
     # Strip out any whitespace (defensive in case of client bug)
     player_name = player_name.strip()
 
@@ -67,7 +68,7 @@ def set_player_name(sid, player_name):
             "Sorry, that name is not valid. Please try again.",
             sid,
         )
-    elif not game_server.player_name_is_unique(player_name):
+    elif not game_manager.player_name_is_unique(player_name):
         # Issue with player name setting
         sio.emit("game_update", "Sorry, that name is already taken.", sid)
         # Player logging out or trying an existing name is the same thing for now
@@ -77,10 +78,10 @@ def set_player_name(sid, player_name):
             sid,
         )
     else:
-        player = Player(game_server, sid, player_name)
+        player = Player(game_manager, sid, player_name)
         # Spawn the world-wide metadata loop when the first player enters the game.
         # This is to minimise resource usage when no one is playing.
-        game_server.activate_background_loop()
+        game_manager.activate_background_loop()
 
 
 # End of event handlers
@@ -91,5 +92,5 @@ if __name__ == "__main__":
     if hostname.endswith(".lan"):
         hostname = hostname[:-4]
     log(f"Starting up game server on {hostname}")
-    game_server = GameManager(sio)
+    game_manager = GameManager(sio)
     eventlet.wsgi.server(eventlet.listen(("0.0.0.0", 3001)), app)
