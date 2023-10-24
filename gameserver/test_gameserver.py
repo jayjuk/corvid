@@ -1,10 +1,11 @@
 import unittest
-from gameserver import GameServer, Player
+from GameManager import GameManager
+from player import Player
 
 
-class TestGameServer(unittest.TestCase):
+class TestGameManager(unittest.TestCase):
     def test_get_player_count(self):
-        game_server = GameServer()
+        game_server = GameManager()
         expected_count = 0
         actual_count = game_server.get_player_count()
         self.assertEqual(
@@ -12,7 +13,7 @@ class TestGameServer(unittest.TestCase):
         )
 
     def test_get_commands_description(self):
-        game_server = GameServer()
+        game_server = GameManager()
         description = game_server.get_commands_description().lower()
         for command in ("north", "south", "east", "west", "look", "say"):
             self.assertIn(
@@ -20,7 +21,7 @@ class TestGameServer(unittest.TestCase):
             )
 
     def test_do_look(self):
-        game_server = GameServer()
+        game_server = GameManager()
         player = Player(game_server, 0, "Test Player")
         description = game_server.do_look(player, None)
         # Check begins with "You are in"
@@ -32,7 +33,7 @@ class TestGameServer(unittest.TestCase):
         game_server.remove_player(player.sid, "Cleanup after testing")
 
     def test_do_say(self):
-        game_server = GameServer()
+        game_server = GameManager()
         player = Player(game_server, 0, "Test Player")
         description = game_server.do_say(player, "Hello")
         self.assertEqual(
