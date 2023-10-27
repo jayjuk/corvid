@@ -76,12 +76,12 @@ class GameManager:
     def do_go(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
         f"""{rest_of_response}"""
-        return player.move_player(rest_of_response, "")
+        return self.move_player(player, rest_of_response, "")
 
     def do_look(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
         f"""{player.player_name}  {rest_of_response}"""
-        return f"You look again at the {str(player.current_room).lower()}: {self.get_room_description(player.current_room)}"
+        return f"You look again at the {str(player.get_current_room()).lower()}: {self.get_room_description(player.get_current_room())}"
 
     def do_help(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
@@ -116,7 +116,7 @@ class GameManager:
         )
         # if found, move player there
         if other_player_location:
-            return player.move_player("jump", other_player_location)
+            return self.move_player(player, "jump", other_player_location)
         else:
             return f"Sorry, '{other_player_name}' is not a valid player name."
 
@@ -148,7 +148,7 @@ class GameManager:
         # Check direction is valid and not taken
         if direction not in self.directions:
             return f"Sorry, '{direction}' is not a valid direction."
-        if direction in self.rooms[player.current_room]["exits"]:
+        if direction in self.rooms[player.get_current_room()]["exits"]:
             return f"Sorry, there is already a room to the {direction}."
 
         # Remove the direction from the response
@@ -200,11 +200,11 @@ class GameManager:
             room_name, room_description
         )
         # Add the new room to the exits of the current room
-        self.rooms[player.current_room]["exits"][direction] = room_name
+        self.rooms[player.get_current_room()]["exits"][direction] = room_name
         # Add the current room to the exits of the new room
         self.rooms[room_name]["exits"][
             self.opposite_direction(direction)
-        ] = player.current_room
+        ] = player.get_current_room()
         # Tell other players about the new room
         self.tell_others(
             player.sid,
@@ -262,7 +262,7 @@ class GameManager:
     def get_player_location_by_name(self, sid, player_name):
         for other_player in self.get_other_players(sid):
             if str(other_player.player_name).lower() == str(player_name).lower():
-                return other_player.current_room
+                return other_player.get_current_room()
         return None
 
     def get_player_count(self):
@@ -276,15 +276,19 @@ class GameManager:
                 rooms = json.load(f)
         return rooms
 
+    def get_room_exits(self, room):
+        exits = " Available exits: "
+        for exit in self.rooms[room]["exits"]:
+            exits += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
+        return exits
+
     def get_room_description(self, room, brief=False):
         if brief:
             description = ""
         else:
             description = self.rooms[room]["description"]
         # Always describe exits
-        description += " Available exits: "
-        for exit in self.rooms[room]["exits"]:
-            description += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
+        description += self.get_room_exits(room)
         return description
 
     def player_name_is_unique(self, player_name):
@@ -296,6 +300,106 @@ class GameManager:
     # End of getters
 
     # Setters etc
+
+    def process_player_input(self, player, player_input):
+        player.update_last_action_time()
+        player_response = ""
+        if player_input:
+            words = str(player_input).split()
+            command = words[0].lower()
+            # get the rest of the response apart from the first word
+            rest_of_response = " ".join(words[1:])
+            # strip out quotes from the outside of the response only
+            if rest_of_response.startswith('"') and rest_of_response.endswith('"'):
+                rest_of_response = rest_of_response[1:-1]
+            # Do the same for single quotes
+            elif rest_of_response.startswith("'") and rest_of_response.endswith("'"):
+                rest_of_response = rest_of_response[1:-1]
+
+            command = self.synonyms.get(command, command)
+            log(f"Command: {command}")
+
+            # Call the function associated with a command
+            if command in self.command_functions:
+                player_response = self.command_functions[command](
+                    player, rest_of_response
+                )
+            # Call the function associated with the command
+            elif command in self.directions:
+                player_response = self.move_player(player, command, rest_of_response)
+            else:
+                # Invalid command
+                player_response = (
+                    "Sorry, that is not a recognised command. Available commands:\n"
+                    + self.get_commands_description()
+                )
+        else:
+            # Empty command
+            player_response = "Sorry, you need to enter a command."
+        return player_response
+
+    # TODO: Decide, does this belong in this class?
+    def move_player(self, player, direction, next_room=None):
+        # Set new room
+        previous_room = player.get_current_room()
+        if direction == "jump":
+            # If next room specified, player has 'jumped'!
+            departure_message_to_other_players = (
+                f"{player.player_name} has disappeared in a puff of smoke!"
+            )
+            arrival_message_to_other_players = (
+                f"{player.player_name} has materialised as if by magic!"
+            )
+        elif direction in self.rooms[player.get_current_room()]["exits"]:
+            next_room = self.rooms[player.get_current_room()]["exits"][direction]
+
+            departure_message_to_other_players = f"{player.player_name} leaves, heading {direction} to the {str(next_room).lower()}."
+            arrival_message_to_other_players = (
+                f"{player.player_name} arrives from the {previous_room.lower()}."
+            )
+        else:
+            # Valid direction but no exit
+            return "Sorry, you can't go that way." + self.get_room_exits(
+                player.get_current_room()
+            )
+
+        # Check for other players you are leaving
+        for other_player in self.get_other_players(player.sid):
+            if other_player.get_current_room() == player.get_current_room():
+                self.tell_player(
+                    other_player.sid,
+                    departure_message_to_other_players,
+                )
+
+        # Set new room
+        player.move_to_room(next_room)
+
+        self.update_player_room(player.sid, player.get_current_room())
+
+        if direction == "jump":
+            action = "jumped"
+        else:
+            action = f"went {direction}"
+
+        # Build message. only describe room if it is new to this player.
+        message = f"You {action} to the {str(player.get_current_room()).lower()}"
+        if player.get_current_room() in player.seen_rooms:
+            message += (
+                f". {self.get_room_description(player.get_current_room(), brief=True)}"
+            )
+        else:
+            message += f": {self.get_room_description(player.get_current_room())}"
+
+        # Check for other players you are arriving
+        for other_player in self.get_other_players(player.sid):
+            if other_player.get_current_room() == player.get_current_room():
+                message += f" {other_player.player_name} is here."
+                self.tell_player(
+                    other_player.sid,
+                    arrival_message_to_other_players,
+                )
+
+        return message
 
     def register_player(self, sid, game, player_name):
         self.players[sid] = game
@@ -318,7 +422,9 @@ class GameManager:
             for other_game_sid, other_game in self.players.items():
                 # Only tell another player if they are in the same room
                 if sid != other_game_sid and (
-                    shout or other_game.current_room == self.players[sid].current_room
+                    shout
+                    or other_game.get_current_room()
+                    == self.players[sid].get_current_room()
                 ):
                     self.sio.emit("game_update", message, other_game_sid)
                     told_count += 1

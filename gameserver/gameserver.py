@@ -32,8 +32,8 @@ def disconnect(sid):
 def user_action(sid, player_input):
     if sid in game_manager.players:
         player = game_manager.players[sid]
-        log(f"Received user action: {player_input} from {sid}")
-        player_response = player.process_player_input(player_input)
+        log(f"Received user action: {player_input} from {sid} ({player.player_name})")
+        player_response = game_manager.process_player_input(player, player_input)
         # Respond to player
         if player_response:
             sio.emit("game_update", player_response, sid)

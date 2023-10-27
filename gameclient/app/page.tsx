@@ -135,11 +135,12 @@ export default function HomePage() {
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             placeholder="Enter your name..."
+            autoFocus
           />
           <button type="submit">Set Name</button>
         </form>
       )}
-      {roomImageFileName && (
+      {nameSet && roomImageFileName && (
         <div>
           <img
             src={"/" + roomImageFileName}

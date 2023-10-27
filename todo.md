@@ -2,11 +2,11 @@
 
 ## UI
 
-- When game shuts down, clear the screen
 - Focus on name input box when that's all there is
 - When user quits, don't show image
 - Help user to reconnect to their old name
 - Authentication
+- When game shuts down, clear the screen
 
 ## Game Server
 
