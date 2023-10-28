@@ -1,3 +1,4 @@
-call conda activate jaysgame
+echo off
+rem call conda activate jaysgame
 python gameserver.py
-call conda deactivate
+rem call conda deactivate

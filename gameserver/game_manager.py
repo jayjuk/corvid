@@ -1,11 +1,8 @@
 import eventlet
-import json
 import time
 import sys
-import imagemanager
-import storagemanager
-from datetime import datetime
-from gameutils import log, create_folder_if_not_exists, make_name_safe_for_files
+from gameutils import log
+from world import World
 
 
 class GameManager:
@@ -17,16 +14,14 @@ class GameManager:
 
             # Static variables
             cls._instance.max_inactive_time = 300  # 5 minutes
-            # TODO: phase this out with move to storage manager
-            cls._instance.user_map_folder_path = "user_maps"
-            cls._instance.map_json_file_path = "map.json"
             cls._instance.background_loop_active = False
 
             # Set up game state
             cls._instance.sio = sio
             cls._instance.players = {}
             cls._instance.player_sid_to_name_map = {}
-            cls._instance.rooms = cls._instance.get_rooms()
+            cls._instance.world = World()
+
             # TODO: resolve this from the rooms document
             cls._instance.synonyms = {
                 "n": "north",
@@ -174,10 +169,6 @@ class GameManager:
         # Check the room name is valid
         if room_name == "":
             return "Sorry, invalid input. Room name is empty."
-        # Check room name is not taken in any case (case insensitive)
-        for room in self.rooms:
-            if str(room).lower() == str(room_name).lower():
-                return f"Sorry, there is already a room called '{room_name}'."
         # Check room name is not a reserved word
         if room_name in self.synonyms or room_name in self.command_functions:
             return f"Sorry, '{room_name}' is a reserved word."
@@ -193,56 +184,24 @@ class GameManager:
             return "Sorry, invalid input. Room description is not properly quoted."
         room_description = rest_of_response[1:end_quote_index]
 
-        self.rooms[room_name] = {}
-        self.rooms[room_name]["description"] = room_description
-        self.rooms[room_name]["exits"] = {}
-        self.rooms[room_name]["image"] = imagemanager.create_image(
-            room_name, room_description
+        error_message = self.world.add_room(
+            player.current_room(),
+            direction,
+            room_name,
+            room_description,
+            player.player_name,
         )
-        # Add the new room to the exits of the current room
-        self.rooms[player.get_current_room()]["exits"][direction] = room_name
-        # Add the current room to the exits of the new room
-        self.rooms[room_name]["exits"][
-            self.opposite_direction(direction)
-        ] = player.get_current_room()
-        # Tell other players about the new room
+        # If there was an error, return it
+        if error_message:
+            return error_message
+
+        # Otherwise, tell other players about the new room
         self.tell_others(
             player.sid,
             f"{player.player_name} has built to the {direction} and made a new location, {room_name}.",
             shout=True,
         )
-        # Save the new room to the map file
-        time_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Check subfolder exists for saving user generated maps
-        # TODO: for now this is saving every version
-        create_folder_if_not_exists(self.user_map_folder_path)
-        with open(
-            self.user_map_folder_path
-            + os.sep
-            + self.map_json_file_path
-            + ".user_generated_"
-            + make_name_safe_for_files(player.player_name)
-            + "_"
-            + player.sid
-            + ".tmp",
-            "w",
-        ) as f:
-            json.dump(self.rooms, f, indent=4)
-        storagemanager.store_locations(self.rooms)
         return f"You build {direction} and make a new location, {room_name}: {room_description}"
-
-    def opposite_direction(self, direction):
-        if direction == "north":
-            return "south"
-        elif direction == "south":
-            return "north"
-        elif direction == "east":
-            return "west"
-        elif direction == "west":
-            return "east"
-        else:
-            return None
 
     # End of 'do_' functions
 
@@ -267,29 +226,6 @@ class GameManager:
 
     def get_player_count(self):
         return len(self.players)
-
-    def get_rooms(self):
-        rooms = storagemanager.get_locations()
-        if not rooms:
-            default_json_file_path = "map.json"
-            with open(default_json_file_path, "r") as f:
-                rooms = json.load(f)
-        return rooms
-
-    def get_room_exits(self, room):
-        exits = " Available exits: "
-        for exit in self.rooms[room]["exits"]:
-            exits += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
-        return exits
-
-    def get_room_description(self, room, brief=False):
-        if brief:
-            description = ""
-        else:
-            description = self.rooms[room]["description"]
-        # Always describe exits
-        description += self.get_room_exits(room)
-        return description
 
     def player_name_is_unique(self, player_name):
         for player_sid, player in self.players.items():

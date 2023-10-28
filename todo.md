@@ -3,7 +3,7 @@
 ## UI
 
 - support different modes including blank map, and world theme to inspire builder
-- build grid view of rooms/map and validate that builder is not buliding something that doesn't make sense.
+- validate that builder is not building where there is already a room on the grid
 - Help user to reconnect to their old name
 - Authentication
 - When game shuts down, clear the screen

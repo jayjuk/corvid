@@ -1,4 +1,7 @@
+import os
 import sqlite3
+import json
+from gameutils import create_folder_if_not_exists, log
 
 
 # For now stateless as storage is infrequent
@@ -11,46 +14,60 @@ def create_schema():
     c = conn.cursor()
     # Check if schema exists, if not create it
     c.execute(
-        """CREATE TABLE IF NOT EXISTS locations
+        """CREATE TABLE IF NOT EXISTS rooms
                  (name text, description text, image text)"""
     )
     # Create index on name
-    c.execute("CREATE INDEX IF NOT EXISTS location_name ON locations (name)")
+    c.execute("CREATE INDEX IF NOT EXISTS room_name ON rooms (name)")
 
-    # Create child of locations table to store the exits per location
+    # Create child of rooms table to store the exits per room
     c.execute(
         """CREATE TABLE IF NOT EXISTS exits
-                 (location text, direction text, destination text)"""
+                 (room text, direction text, destination text)"""
     )
     conn.commit()
     conn.close()
 
 
-# Store the locations from the dict format in the database
-def store_locations(locations):
+# Store the rooms from the dict format in the database
+def store_rooms(rooms, new_room, changed_room, new_exit_direction):
+    log(
+        f"Storing new room {new_room['name']} and adding exit {new_exit_direction} to {changed_room}"
+    )
     # Check if schema exists, if not create it
     create_schema()
     conn = get_connection()
     c = conn.cursor()
-    # Get existing location names and only store new ones (currently no updates)
-    c.execute("SELECT name FROM locations")
-    existing_locations = c.fetchall()
-    existing_location_names = [location[0] for location in existing_locations]
-    for location in locations:
-        if location["name"] in existing_location_names:
-            continue
-        # Store location and exists
+
+    # Store new room and exits
+    c.execute(
+        "INSERT INTO rooms VALUES (?,?,?)",
+        (new_room["name"], new_room["description"], new_room["image"]),
+    )
+    for direction in new_room["exits"]:
         c.execute(
-            "INSERT INTO locations VALUES (?,?,?)",
-            (location["name"], location["description"], location["image"]),
+            "INSERT INTO exits VALUES (?,?,?)",
+            (new_room["name"], direction, new_room["exits"][direction]),
         )
-        for direction in location["exits"]:
-            c.execute(
-                "INSERT INTO exits VALUES (?,?,?)",
-                (location["name"], direction, location["exits"][direction]),
-            )
+
+    # Store only the new exit of new room and exits
+    c.execute(
+        "INSERT INTO exits VALUES (?,?,?)",
+        (changed_room, new_exit_direction, new_room["name"]),
+    )
+
     conn.commit()
     conn.close()
+
+    # Check subfolder exists for saving user generated maps
+    # TODO: for now this is saving every version, and this is really just a temporary backup
+    user_map_folder_path = "user_maps"
+    create_folder_if_not_exists(user_map_folder_path)
+    with open(
+        user_map_folder_path + os.sep + ".user_generated_map_backup.tmp",
+        "w",
+    ) as f:
+        json.dump(rooms, f, indent=4)
 
 
 # Check if the schema exists but don't create if not
@@ -61,38 +78,42 @@ def check_schema():
         return False
     c = conn.cursor()
     # Check if schema exists, if not create it
-    c.execute(
-        """SELECT name FROM sqlite_master WHERE type='table' AND name='locations'"""
-    )
+    c.execute("""SELECT name FROM sqlite_master WHERE type='table' AND name='rooms'""")
     schema_exists = c.fetchone()
     conn.close()
     return schema_exists
 
 
-# Get locations and return in the dict format expected by the game server
-def get_locations():
+# Get rooms and return in the dict format expected by the game server
+def get_rooms():
     conn = get_connection()
-    if conn is None:
-        return {}
     # Check schema
-    if not check_schema():
-        return {}
-    # Get locations and exits
+    if conn is None or not check_schema():
+        return get_default_rooms()
+    # Get rooms and exits
     c = conn.cursor()
-    c.execute("SELECT * FROM locations")
-    locations = c.fetchall()
+    c.execute("SELECT * FROM rooms")
+    rooms = c.fetchall()
     c.execute("SELECT * FROM exits")
     exits = c.fetchall()
     # Convert to dict
-    locations_dict = {}
-    for location in locations:
-        locations_dict[location[0]] = {
-            "name": location[0],
-            "description": location[1],
-            "image": location[2],
+    rooms_dict = {}
+    for room in rooms:
+        rooms_dict[room[0]] = {
+            "name": room[0],
+            "description": room[1],
+            "image": room[2],
             "exits": {},
         }
     for exit in exits:
-        locations_dict[exit[0]]["exits"][exit[1]] = exit[2]
+        rooms_dict[exit[0]]["exits"][exit[1]] = exit[2]
     conn.close()
-    return locations_dict
+    return rooms_dict
+
+
+def get_default_rooms():
+    # This is the built-in static rooms file
+    default_map_file = "map.json"
+    with open(default_map_file, "r") as f:
+        rooms = json.load(f)
+    return rooms
