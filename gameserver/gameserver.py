@@ -60,6 +60,7 @@ def set_player_name(sid, player_name):
         player_name
         and len(player_name) <= 20
         and player_name.isprintable()
+        and player_name.isalpha()
         and make_name_safe_for_files(player_name) == player_name
     ):
         # Issue with player name setting
