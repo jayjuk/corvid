@@ -5,18 +5,19 @@ from gameutils import log
 
 class World:
     _instance = None
+    directions = {
+        "north": (0, 1),
+        "south": (0, -1),
+        "east": (1, 0),
+        "west": (-1, 0),
+    }
+    grid_references = {}
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(World, cls).__new__(cls)
             # Load rooms from storage
             cls._instance.rooms = cls._instance.load_rooms()
-            cls._instance.directions = {
-                "north": (0, 1),
-                "south": (0, -1),
-                "east": (1, 0),
-                "west": (-1, 0),
-            }
 
         return cls._instance
 
@@ -31,8 +32,14 @@ class World:
         return rooms
 
     def add_grid_references(self, rooms, room_name, room, x, y):
+        log(f"Adding grid reference {x},{y} to {room_name}")
         room["grid_reference"] = f"{x},{y}"
-        log(f"Adding grid reference {room['grid_reference']} to {room_name}")
+        if f"{x},{y}" in self.grid_references:
+            log(
+                f"ERROR: {room_name} has the same grid reference as {self.grid_references[f'{x},{y}']}"
+            )
+            exit()
+        self.grid_references[f"{x},{y}"] = room_name
         # Go through each exit and recursively add grid references
         for direction, next_room in room["exits"].items():
             if "grid_reference" in rooms[next_room]:
@@ -93,6 +100,29 @@ class World:
             if str(room).lower() == str(new_room_name).lower():
                 return f"Sorry, there is already a room called '{new_room_name}'."
 
+        # Check that the current room does not already have  an exit in the specified direction
+        if direction in self.rooms[current_room]["exits"]:
+            return f"Sorry, there is already an exit in the {direction} from {current_room}."
+
+        # Check that there is not already a room in this location based on the grid reference
+        # Get the grid reference of the current room
+        current_room_grid_reference = self.rooms[current_room]["grid_reference"]
+        # Get the next x and y
+        next_x = (
+            int(current_room_grid_reference.split(",")[0])
+            + self.directions[direction][0]
+        )
+        next_y = (
+            int(current_room_grid_reference.split(",")[1])
+            + self.directions[direction][1]
+        )
+        # Check if there is already a room in this location
+        if f"{next_x},{next_y}" in self.grid_references:
+            return (
+                f"Sorry, there is already a room to the {direction} of {current_room}, "
+                + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else."
+            )
+
         self.rooms[new_room_name] = {}
         self.rooms[new_room_name]["description"] = room_description
         self.rooms[new_room_name]["exits"] = {}
@@ -107,5 +137,8 @@ class World:
         ] = current_room
         # Store current and new room (current has changed in that exit has been added)
         storagemanager.store_rooms(
-            self.rooms, self.rooms[new_room_name], current_room, direction
+            self.rooms,
+            new_room_name,
+            current_room,
+            direction,
         )

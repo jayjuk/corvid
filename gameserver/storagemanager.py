@@ -30,9 +30,10 @@ def create_schema():
 
 
 # Store the rooms from the dict format in the database
-def store_rooms(rooms, new_room, changed_room, new_exit_direction):
+def store_rooms(rooms, new_room_name, changed_room, new_exit_direction):
+    new_room = rooms[new_room_name]
     log(
-        f"Storing new room {new_room['name']} and adding exit {new_exit_direction} to {changed_room}"
+        f"Storing new room {new_room_name} and adding exit {new_exit_direction} to {changed_room}"
     )
     # Check if schema exists, if not create it
     create_schema()
@@ -42,18 +43,18 @@ def store_rooms(rooms, new_room, changed_room, new_exit_direction):
     # Store new room and exits
     c.execute(
         "INSERT INTO rooms VALUES (?,?,?)",
-        (new_room["name"], new_room["description"], new_room["image"]),
+        (new_room_name, new_room["description"], new_room["image"]),
     )
     for direction in new_room["exits"]:
         c.execute(
             "INSERT INTO exits VALUES (?,?,?)",
-            (new_room["name"], direction, new_room["exits"][direction]),
+            (new_room_name, direction, new_room["exits"][direction]),
         )
 
     # Store only the new exit of new room and exits
     c.execute(
         "INSERT INTO exits VALUES (?,?,?)",
-        (changed_room, new_exit_direction, new_room["name"]),
+        (changed_room, new_exit_direction, new_room_name),
     )
 
     conn.commit()
@@ -116,4 +117,39 @@ def get_default_rooms():
     default_map_file = "map.json"
     with open(default_map_file, "r") as f:
         rooms = json.load(f)
+    # Add room name to each room
+    for room in rooms:
+        rooms[room]["name"] = room
     return rooms
+
+
+# This is only called from a setup script
+def store_default_rooms():
+    # This is the built-in static rooms file
+    default_map_file = "map.json"
+    with open(default_map_file, "r") as f:
+        rooms = json.load(f)
+    # Check if schema exists, if not create it
+    create_schema()
+    conn = get_connection()
+    c = conn.cursor()
+
+    for room in rooms:
+        # Store room and exits
+        c.execute(
+            "INSERT INTO rooms VALUES (?,?,?)",
+            (room, rooms[room]["description"], rooms[room]["image"]),
+        )
+        for direction in rooms[room]["exits"]:
+            c.execute(
+                "INSERT INTO exits VALUES (?,?,?)",
+                (room, direction, rooms[room]["exits"][direction]),
+            )
+    log("Stored default rooms")
+    conn.commit()
+    conn.close()
+
+
+# Main runs store default rooms
+if __name__ == "__main__":
+    store_default_rooms()

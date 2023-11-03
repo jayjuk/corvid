@@ -76,7 +76,7 @@ class GameManager:
     def do_look(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
         f"""{player.player_name}  {rest_of_response}"""
-        return f"You look again at the {str(player.get_current_room()).lower()}: {self.get_room_description(player.get_current_room())}"
+        return f"You look again at the {str(player.get_current_room()).lower()}: {self.world.get_room_description(player.get_current_room())}"
 
     def do_help(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
@@ -143,7 +143,7 @@ class GameManager:
         # Check direction is valid and not taken
         if direction not in self.directions:
             return f"Sorry, '{direction}' is not a valid direction."
-        if direction in self.rooms[player.get_current_room()]["exits"]:
+        if direction in self.world.rooms[player.get_current_room()]["exits"]:
             return f"Sorry, there is already a room to the {direction}."
 
         # Remove the direction from the response
@@ -185,7 +185,7 @@ class GameManager:
         room_description = rest_of_response[1:end_quote_index]
 
         error_message = self.world.add_room(
-            player.current_room(),
+            player.get_current_room(),
             direction,
             room_name,
             room_description,
@@ -286,8 +286,8 @@ class GameManager:
             arrival_message_to_other_players = (
                 f"{player.player_name} has materialised as if by magic!"
             )
-        elif direction in self.rooms[player.get_current_room()]["exits"]:
-            next_room = self.rooms[player.get_current_room()]["exits"][direction]
+        elif direction in self.world.rooms[player.get_current_room()]["exits"]:
+            next_room = self.world.rooms[player.get_current_room()]["exits"][direction]
 
             departure_message_to_other_players = f"{player.player_name} leaves, heading {direction} to the {str(next_room).lower()}."
             arrival_message_to_other_players = (
@@ -295,7 +295,7 @@ class GameManager:
             )
         else:
             # Valid direction but no exit
-            return "Sorry, you can't go that way." + self.get_room_exits(
+            return "Sorry, you can't go that way." + self.world.get_room_exits(
                 player.get_current_room()
             )
 
@@ -320,11 +320,9 @@ class GameManager:
         # Build message. only describe room if it is new to this player.
         message = f"You {action} to the {str(player.get_current_room()).lower()}"
         if player.get_current_room() in player.seen_rooms:
-            message += (
-                f". {self.get_room_description(player.get_current_room(), brief=True)}"
-            )
+            message += f". {self.world.get_room_description(player.get_current_room(), brief=True)}"
         else:
-            message += f": {self.get_room_description(player.get_current_room())}"
+            message += f": {self.world.get_room_description(player.get_current_room())}"
 
         # Check for other players you are arriving
         for other_player in self.get_other_players(player.sid):
@@ -346,7 +344,7 @@ class GameManager:
         return game
 
     def update_player_room(self, sid, room):
-        self.sio.emit("room_update", self.rooms[room]["image"], sid)
+        self.sio.emit("room_update", self.world.rooms[room]["image"], sid)
 
     def tell_everyone(self, message):
         if message.strip():

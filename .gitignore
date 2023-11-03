@@ -5,3 +5,5 @@ temp_*
 *.tmp
 *.log
 *.out
+*.db
+*.sqlite3

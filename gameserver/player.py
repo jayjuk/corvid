@@ -25,7 +25,7 @@ class Player:
 
         # Tell this player where they are
         self.game_server.tell_player(
-            sid, self.game_server.get_room_description(self.current_room)
+            sid, self.game_server.world.get_room_description(self.current_room)
         )
         self.seen_rooms[self.current_room] = True
 
