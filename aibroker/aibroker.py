@@ -1,21 +1,38 @@
-import socket
 import socketio
 import time
-import datetime
 import openai
 import sys
 from pprint import pprint
 import os
 from dotenv import load_dotenv
+import json
+import logging
+
+# Set up logging to file and console
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        logging.FileHandler(f"{__name__}.log"),
+        logging.StreamHandler(),
+    ],
+)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.info("Starting up AI Broker")
 
 # Register the client with the server
 sio = socketio.Client()
 
 
-# Simple print alternative to flush everything for now
-# TODO: logging, common utils
-def log(message, second_message=""):
-    print(str(message) + " " + second_message, flush=True)
+def save_model_data(filename_prefix, data):
+    folder_path = "model_io"
+    os.makedirs(folder_path, exist_ok=True)
+    with open(
+        folder_path + os.sep + f"{filename_prefix}.tmp",
+        "w",
+    ) as f:
+        json.dump(data, f, indent=4)
 
 
 # Class to handle interaction with the AI
@@ -28,7 +45,7 @@ class AIManager:
     last_time = time.time()
     active = True
     mode = None
-    model_name = "gpt-3.5-turbo"  # "gpt-4"
+    model_name = "gpt-3.5-turbo"  # "gpt-4" #gpt-3.5-turbo-0613
 
     def __new__(cls, mode="player"):
         if cls._instance is None:
@@ -47,7 +64,7 @@ class AIManager:
         if not os.environ.get("OPENAI_API_KEY"):
             load_dotenv()
             if not os.getenv("OPENAI_API_KEY"):
-                log("ERROR: OPENAI_API_KEY not set. Exiting.")
+                logger.info("ERROR: OPENAI_API_KEY not set. Exiting.")
                 sys.exit(1)
 
         openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -95,7 +112,7 @@ class AIManager:
             # TODO: make it so this delay can be interrupted, this is a bit naff
             if str(event_text).startswith("You say"):
                 # time.sleep(ai_manager.max_wait * 2)
-                log("Not responding to echo event")
+                ("Not responding to echo event")
                 pass
             else:
                 response = self.submit_input()
@@ -109,11 +126,11 @@ class AIManager:
                         }
                     )
                 else:
-                    log("ERROR: AI returned empty response")
+                    logger.info("ERROR: AI returned empty response")
                     sys.exit(1)
         else:
             # This is probably just the response to the user moving waiting etc.
-            log("AI is not active, so not responding to event")
+            logger.info("AI is not active, so not responding to event")
 
     def submit_input(self):
         # Set up role-specific instructions for the AI
@@ -161,30 +178,35 @@ class AIManager:
             }
         )
 
-        # print("<<<<<<<<<<<")
-        # pprint(messages)
-        # print(">>>>>>>>>>>")
         return self.submit_request(messages)
 
     def submit_request(self, messages):
         wait_time = self.max_wait - (time.time() - self.last_time)
         if wait_time > 0:
             # don't do anything for now
-            log(f"Not doing anything in the next {wait_time} seconds")
+            logger.info(f"Not doing anything in the next {wait_time} seconds")
             # TODO: figure out if this is blocking the game! e.g. when another event happens. is this causing stuff to happen out of order?
             time.sleep(wait_time)
         try:
+            # TODO: TBD whether we want the input or the output or both
+            save_model_data("input", messages)
+
+            # Submit request to ChatGPT
             response = openai.ChatCompletion.create(
                 model=self.model_name,
                 messages=messages,
                 max_tokens=50,  # You can adjust the max_tokens based on your desired response length
             )
         except Exception as e:
-            log(f"Error from ChatGPT: {str(e)}")
+            logger.info(f"Error from ChatGPT: {str(e)}")
             sys.exit(1)
+
+        # Save response to file for fine-tuning purposes
+        save_model_data("response", response)
+
         # Extract and print the response from ChatGPT
         chatgpt_response = response.choices[0]["message"]["content"].strip()
-        log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ChatGPT Response: ", chatgpt_response)
+        logger.info("ChatGPT Response: " + str(chatgpt_response))
 
         # Record time
         self.last_time = time.time()
@@ -195,10 +217,10 @@ class AIManager:
 @sio.on("game_update")
 def catch_all(data):
     if data:
-        log(f"Received game update event: {data}")
+        logger.info(f"Received game update event: {data}")
         ai_manager.log_event(data)
     else:
-        log("ERROR: Received empty game update event")
+        logger.info("ERROR: Received empty game update event")
         sys.exit(1)
 
 
@@ -209,21 +231,21 @@ def catch_all(data):
 
 @sio.on("heartbeat")
 def catch_all(data):
-    # log(f"HEARTBEAT INFO (NOT SENT TO AI): {data}")
+    # logger.info(f"HEARTBEAT INFO (NOT SENT TO AI): {data}")
     # for now nothing
     pass
 
 
 @sio.on("shutdown")
 def catch_all(data):
-    log(data)
+    logger.info(data)
     sio.disconnect()
     sys.exit(1)
 
 
 @sio.on("room_update")
 def catch_all(data):
-    # log(f"Received room update event: {data}")
+    # logger.info(f"Received room update event: {data}")
     # for now nothing
     pass
 
@@ -232,29 +254,29 @@ def catch_all(data):
 def catch_all(data):
     if "player_count" in data:
         if data["player_count"] == 1 and ai_manager.mode != "builder":
-            log("No players apart from me, so I won't do anything.")
+            logger.info("No players apart from me, so I won't do anything.")
             ai_manager.active = False
         else:
             if not ai_manager.active:
-                log("I can wake up again!")
+                logger.info("I can wake up again!")
                 ai_manager.active = True
 
 
 @sio.on("*")
 def catch_all(event, data):
-    log(f"Received other event '{event}': {data}")
+    logger.info(f"Received other event '{event}': {data}")
 
 
 @sio.event
 def connect():
-    log("Connected to Server.")
+    logger.info("Connected to Server.")
     ai_name = ai_manager.get_ai_name()
     sio.emit("set_player_name", ai_name)
 
 
 @sio.event
 def disconnect():
-    log("Disconnected from Server.")
+    logger.info("Disconnected from Server.")
 
 
 def main():
@@ -263,7 +285,7 @@ def main():
     # if hostname.endswith(".lan"):
     #     hostname = hostname[:-4]
     hostname = os.environ.get("GAMESERVER_HOSTNAME") or "localhost"
-    log(f"Starting up AI Broker on hostname {hostname}")
+    logger.info(f"Starting up AI Broker on hostname {hostname}")
     sio.connect(f"http://{hostname}:3001")
     sio.wait()
 
@@ -277,19 +299,19 @@ if __name__ == "__main__":
 
     ai_mode = os.environ.get("AI_MODE") or "player"
     if ai_mode not in ("player", "builder", "observer"):
-        log(
+        logger.info(
             f"ERROR: AI_MODE is set to {ai_mode} but must be either 'player' or 'observer'. Exiting."
         )
         sys.exit(1)
 
     # If AI_COUNT is not set, sleep forever (if you exit, the container will restart)
     if ai_count in ("""${AI_COUNT}""", "0"):
-        log("AI_COUNT not set - sleeping forever")
+        logger.info("AI_COUNT not set - sleeping forever")
         while True:
             time.sleep(3600)
     else:
         if ai_count != "1":
-            log(
+            logger.info(
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting."
             )
             sys.exit(1)

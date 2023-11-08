@@ -2,7 +2,10 @@ import os
 import openai
 import urllib.request
 from dotenv import load_dotenv
-from gameutils import log
+from logger_config import setup_logger
+
+# Set up logging
+logger = setup_logger()
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -24,5 +27,5 @@ def create_image(image_name, description):
     # Download URL and save to file
     full_path = os.sep.join(("..", "gameclient", "public", file_name))
     urllib.request.urlretrieve(url, full_path)
-    log(f"Generated {file_name}")
+    logger.info(f"Generated {file_name}")
     return file_name

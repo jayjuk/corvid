@@ -1,7 +1,10 @@
 import os
 import sqlite3
 import json
-from gameutils import create_folder_if_not_exists, log
+from logger_config import setup_logger
+
+# Set up logging
+logger = setup_logger()
 
 
 # For now stateless as storage is infrequent
@@ -9,6 +12,7 @@ def get_connection():
     return sqlite3.connect("gameserver.db")
 
 
+# Create the schema if it doesn't exist
 def create_schema():
     conn = get_connection()
     c = conn.cursor()
@@ -63,7 +67,7 @@ def store_rooms(rooms, new_room_name, changed_room, new_exit_direction):
     # Check subfolder exists for saving user generated maps
     # TODO: for now this is saving every version, and this is really just a temporary backup
     user_map_folder_path = "user_maps"
-    create_folder_if_not_exists(user_map_folder_path)
+    os.makedirs(user_map_folder_path, exist_ok=True)
     with open(
         user_map_folder_path + os.sep + ".user_generated_map_backup.tmp",
         "w",

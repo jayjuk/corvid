@@ -3,9 +3,10 @@
 ## Game Server
 
 - Unit tests
-- validate that builder is not building where there is already a room on the grid
-- support different modes including blank map, and world theme to inspire builder
+- support different modes including blank map, and world theme to inspire builder (random 'seed')
 - make objects and animals/creatures (with images)
+- Refactor so AI usage is centralised
+- Storage must work on the cloud
 
 ## UI
 
@@ -24,3 +25,5 @@
 - Sometimes there is no delay between commands
 - Unit tests
 - Try Claude, local LLM
+- Langchain
+- Use embeddings / fine tuning so that the rules don't have to be repeated

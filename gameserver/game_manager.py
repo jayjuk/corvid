@@ -3,6 +3,10 @@ import time
 import sys
 from gameutils import log
 from world import World
+from logger_config import setup_logger
+
+# Set up logging
+logger = setup_logger()
 
 
 class GameManager:
@@ -84,7 +88,7 @@ class GameManager:
         return f"Available commands:\n{game_manager.get_commands_description()}"
 
     def do_say(self, player, rest_of_response):
-        log(f"User {player.player_name} says: {rest_of_response}")
+        logger.info(f"User {player.player_name} says: {rest_of_response}")
         if self.get_player_count() == 1:
             player_response = "You are the only player in the game currently!"
         else:
@@ -119,7 +123,7 @@ class GameManager:
         message = f"{player.player_name} has shut down the server."
         if rest_of_response:
             message = message[:-1] + ", saying '{rest_of_response}'."
-        log(message)
+        logger.info(message)
         self.tell_everyone(message)
         # TODO: web client should do something when the back end is down, can we terminate the client too?
         # TODO: make this restart not die?
@@ -253,7 +257,7 @@ class GameManager:
                 rest_of_response = rest_of_response[1:-1]
 
             command = self.synonyms.get(command, command)
-            log(f"Command: {command}")
+            logger.info(f"Command: {command}")
 
             # Call the function associated with a command
             if command in self.command_functions:
@@ -404,7 +408,7 @@ class GameManager:
                 reason,
             )
             message = f"{player.player_name} has left the game; there are now {self.get_player_count()-1} players."
-            log(message)
+            logger.info(message)
             self.tell_others(
                 sid,
                 message,
@@ -419,19 +423,19 @@ class GameManager:
             if self.get_player_count() == 0:
                 self.deactivate_background_loop()
         else:
-            log(
+            logger.info(
                 f"Player with SID {sid} ({self.player_sid_to_name_map.get(sid,'name unknown')}) has already been removed, they probably quit before."
             )
 
     def activate_background_loop(self):
         if not self.background_loop_active:
-            log("Activating background loop.")
+            logger.info("Activating background loop.")
             self.background_loop_active == True
             eventlet.spawn(self.game_background_loop)
 
     def deactivate_background_loop(self):
         # This will cause the game background loop to exit
-        log("Deactivating background loop.")
+        logger.info("Deactivating background loop.")
         self.background_loop_active == False
 
     def game_background_loop(self):
