@@ -1,6 +1,9 @@
 import imagemanager
 import storagemanager
-from gameutils import log
+from logger import setup_logger
+
+# Set up logging
+logger = setup_logger()
 
 
 class World:
@@ -32,10 +35,10 @@ class World:
         return rooms
 
     def add_grid_references(self, rooms, room_name, room, x, y):
-        log(f"Adding grid reference {x},{y} to {room_name}")
+        logger.info(f"Adding grid reference {x},{y} to {room_name}")
         room["grid_reference"] = f"{x},{y}"
         if f"{x},{y}" in self.grid_references:
-            log(
+            logger.info(
                 f"ERROR: {room_name} has the same grid reference as {self.grid_references[f'{x},{y}']}"
             )
             exit()
@@ -68,6 +71,36 @@ class World:
         for exit in self.rooms[room]["exits"]:
             exits += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
         return exits
+
+    def get_room_build_options(self, room):
+        # Check that there is not already a room in this location based on the grid reference
+        # Get the grid reference of the current room
+        current_room_grid_reference = self.rooms[room]["grid_reference"]
+
+        build_directions = []
+        for direction in self.directions:
+            if direction not in self.rooms[room]["exits"]:
+                # Get the hypothetical x and y of this direction
+                x = (
+                    int(current_room_grid_reference.split(",")[0])
+                    + self.directions[direction][0]
+                )
+                y = (
+                    int(current_room_grid_reference.split(",")[1])
+                    + self.directions[direction][1]
+                )
+                # Check if there is already a room in this location
+                if f"{n},{y}" not in self.grid_references:
+                    build_directions.append(direction)
+
+        if build_directions:
+            return (
+                "Available directions in which you can build: "
+                + ", ".join(build_directions)
+                + "."
+            )
+        else:
+            return "There are no available directions in which you can build."
 
     def get_room_description(self, room, brief=False):
         if brief:
@@ -120,7 +153,8 @@ class World:
         if f"{next_x},{next_y}" in self.grid_references:
             return (
                 f"Sorry, there is already a room to the {direction} of {current_room}, "
-                + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else."
+                + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else. "
+                + self.get_room_build_options(current_room)
             )
 
         self.rooms[new_room_name] = {}

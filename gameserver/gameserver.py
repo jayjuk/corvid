@@ -3,8 +3,8 @@ import socketio
 import eventlet
 from gameutils import log, make_name_safe_for_files
 from player import Player
-from game_manager import GameManager
-from logger_config import setup_logger
+from gamemanager import GameManager
+from logger import setup_logger
 
 # Set up logging
 logger = setup_logger()

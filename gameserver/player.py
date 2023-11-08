@@ -1,10 +1,14 @@
 import time
-from gameutils import log
+from logger import setup_logger
+
+# Set up logging
+logger = setup_logger()
 
 
 class Player:
     def __init__(self, game_server, sid, player_name):
         # Registering game server reference in player object to help with testing and minimise use of globals
+        logger.info(f"Creating player {player_name}, sid {sid}")
         self.game_server = game_server
         self.last_action_time = time.time()
         self.player_name = player_name

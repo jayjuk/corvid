@@ -3,7 +3,7 @@ import time
 import sys
 from gameutils import log
 from world import World
-from logger_config import setup_logger
+from logger import setup_logger
 
 # Set up logging
 logger = setup_logger()
@@ -79,8 +79,13 @@ class GameManager:
 
     def do_look(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
-        f"""{player.player_name}  {rest_of_response}"""
-        return f"You look again at the {str(player.get_current_room()).lower()}: {self.world.get_room_description(player.get_current_room())}"
+        rest_of_response
+
+        message = f"You look again at the {str(player.get_current_room()).lower()}: {self.world.get_room_description(player.get_current_room())}"
+        # Add buildable directions if player is a builder
+        if player.role == "builder":
+            message += "\n" + self.world.get_room_exits(player.get_current_room())
+        return message
 
     def do_help(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
@@ -276,6 +281,7 @@ class GameManager:
         else:
             # Empty command
             player_response = "Sorry, you need to enter a command."
+        logger.info(f"Player response: {player_response}")
         return player_response
 
     # TODO: Decide, does this belong in this class?
@@ -327,6 +333,10 @@ class GameManager:
             message += f". {self.world.get_room_description(player.get_current_room(), brief=True)}"
         else:
             message += f": {self.world.get_room_description(player.get_current_room())}"
+
+        # Add buildable directions if player is a builder
+        if player.role == "builder":
+            message += "\n" + self.world.get_room_exits(player.get_current_room())
 
         # Check for other players you are arriving
         for other_player in self.get_other_players(player.sid):

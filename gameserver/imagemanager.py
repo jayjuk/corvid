@@ -2,7 +2,7 @@ import os
 import openai
 import urllib.request
 from dotenv import load_dotenv
-from logger_config import setup_logger
+from logger import setup_logger
 
 # Set up logging
 logger = setup_logger()
