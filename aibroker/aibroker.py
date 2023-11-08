@@ -270,8 +270,8 @@ def catch_all(event, data):
 @sio.event
 def connect():
     logger.info("Connected to Server.")
-    ai_name = ai_manager.get_ai_name()
-    sio.emit("set_player_name", ai_name)
+    character = {"name": ai_manager.get_ai_name(), "role": ai_manager.mode}
+    sio.emit("set_player_name", character)
 
 
 @sio.event

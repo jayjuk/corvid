@@ -36,7 +36,7 @@ def create_schema():
 # Store the rooms from the dict format in the database
 def store_rooms(rooms, new_room_name, changed_room, new_exit_direction):
     new_room = rooms[new_room_name]
-    log(
+    logger.info(
         f"Storing new room {new_room_name} and adding exit {new_exit_direction} to {changed_room}"
     )
     # Check if schema exists, if not create it
@@ -149,7 +149,7 @@ def store_default_rooms():
                 "INSERT INTO exits VALUES (?,?,?)",
                 (room, direction, rooms[room]["exits"][direction]),
             )
-    log("Stored default rooms")
+    logger.info("Stored default rooms")
     conn.commit()
     conn.close()
 

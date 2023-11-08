@@ -1,7 +1,6 @@
 import eventlet
 import time
 import sys
-from gameutils import log
 from world import World
 from logger import setup_logger
 
@@ -323,9 +322,9 @@ class GameManager:
         self.update_player_room(player.sid, player.get_current_room())
 
         if direction == "jump":
-            action = "jumped"
+            action = "jump"
         else:
-            action = f"went {direction}"
+            action = f"head {direction}"
 
         # Build message. only describe room if it is new to this player.
         message = f"You {action} to the {str(player.get_current_room()).lower()}"
@@ -333,10 +332,6 @@ class GameManager:
             message += f". {self.world.get_room_description(player.get_current_room(), brief=True)}"
         else:
             message += f": {self.world.get_room_description(player.get_current_room())}"
-
-        # Add buildable directions if player is a builder
-        if player.role == "builder":
-            message += "\n" + self.world.get_room_exits(player.get_current_room())
 
         # Check for other players you are arriving
         for other_player in self.get_other_players(player.sid):

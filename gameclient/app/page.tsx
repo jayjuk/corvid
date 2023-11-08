@@ -104,7 +104,7 @@ export default function HomePage() {
   const handleNameSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (socket.current && playerName.trim() !== "") {
-      socket.current.emit("set_player_name", playerName); // Emitting new event to the game engine
+      socket.current.emit("set_player_name", { name: playerName }); // Emitting new event to the game engine
       setNameSet(true); // Name is now set, hide the input field
     }
   };

@@ -53,7 +53,13 @@ def user_action(sid, player_input):
 
 
 @sio.event
-def set_player_name(sid, player_name):
+def set_player_name(sid, character):
+    player_name = character["name"]
+    # Default role is player
+    if "role" in character:
+        player_role = character["role"]
+    else:
+        player_role = "player"
     logger.info(f"Received user name: {player_name} from {sid}")
 
     # TODO: move this to game manager?
@@ -86,7 +92,7 @@ def set_player_name(sid, player_name):
             sid,
         )
     else:
-        player = Player(game_manager, sid, player_name)
+        player = Player(game_manager, sid, player_name, player_role)
         # Spawn the world-wide metadata loop when the first player enters the game.
         # This is to minimise resource usage when no one is playing.
         game_manager.activate_background_loop()

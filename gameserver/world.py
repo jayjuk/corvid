@@ -90,7 +90,7 @@ class World:
                     + self.directions[direction][1]
                 )
                 # Check if there is already a room in this location
-                if f"{n},{y}" not in self.grid_references:
+                if f"{x},{y}" not in self.grid_references:
                     build_directions.append(direction)
 
         if build_directions:
@@ -103,12 +103,15 @@ class World:
             return "There are no available directions in which you can build."
 
     def get_room_description(self, room, brief=False):
+        # TODO: decide when to show build options
         if brief:
-            description = ""
+            description = self.get_room_exits(room) + self.get_room_build_options(room)
         else:
-            description = self.rooms[room]["description"]
-        # Always describe exits
-        description += self.get_room_exits(room)
+            description = (
+                self.rooms[room]["description"]
+                + self.get_room_exits(room)
+                + self.get_room_build_options(room)
+            )
         return description
 
     def opposite_direction(self, direction):
@@ -156,6 +159,9 @@ class World:
                 + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else. "
                 + self.get_room_build_options(current_room)
             )
+
+        # Format the room name to be title case
+        new_room_name = new_room_name.title()
 
         self.rooms[new_room_name] = {}
         self.rooms[new_room_name]["description"] = room_description

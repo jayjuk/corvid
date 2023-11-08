@@ -6,12 +6,18 @@ logger = setup_logger()
 
 
 class Player:
-    def __init__(self, game_server, sid, player_name):
+    def __init__(self, game_server, sid, player_name, player_role):
         # Registering game server reference in player object to help with testing and minimise use of globals
         logger.info(f"Creating player {player_name}, sid {sid}")
         self.game_server = game_server
         self.last_action_time = time.time()
         self.player_name = player_name
+
+        # TODO: Remove this hack, it's for simulating the AI
+        if player_name == "Doug":
+            self.role = "builder"
+        else:
+            self.role = player_role
         self.current_room = "Road"
         self.seen_rooms = {}
         self.sid = sid
