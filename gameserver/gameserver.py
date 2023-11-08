@@ -1,7 +1,7 @@
+import os
 import socket
 import socketio
 import eventlet
-from gameutils import log, make_name_safe_for_files
 from player import Player
 from gamemanager import GameManager
 from logger import setup_logger
@@ -62,12 +62,13 @@ def set_player_name(sid, player_name):
     player_name = player_name.strip()
 
     # Set up new game
+    # First check if player name is valid
     if not (
         player_name
         and len(player_name) <= 20
         and player_name.isprintable()
         and player_name.isalpha()
-        and make_name_safe_for_files(player_name) == player_name
+        and os.path.normpath(player_name).replace(os.sep, "_") == player_name
     ):
         # Issue with player name setting
         sio.emit(
