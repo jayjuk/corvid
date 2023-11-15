@@ -1,5 +1,5 @@
 import unittest
-from game_manager import GameManager
+from gamemanager import GameManager
 from player import Player
 
 
