@@ -1,3 +1,4 @@
+import os
 import time
 from logger import setup_logger
 
@@ -5,57 +6,85 @@ from logger import setup_logger
 logger = setup_logger()
 
 
+# Player class
 class Player:
-    def __init__(self, game_server, sid, player_name, player_role):
-        # Registering game server reference in player object to help with testing and minimise use of globals
+    # Game manager reference applies to all players
+    game_manager = None
+
+    def __init__(self, game_manager, sid, player_name, player_role, starting_room):
+        # First check if player name is valid
+        if not (
+            player_name
+            and len(player_name) <= 20
+            and player_name.isprintable()
+            and player_name.isalpha()
+            and os.path.normpath(player_name).replace(os.sep, "_") == player_name
+        ):
+            # Issue with player name setting
+            raise ValueError(
+                "Sorry, that name is not valid, it should be up to 20 alphabetical characters only. Please try again."
+            )
+
         logger.info(f"Creating player {player_name}, sid {sid}")
-        self.game_server = game_server
+
+        # Register game server reference in player object to help with testing and minimise use of globals
+        if Player.game_manager is None and game_manager is not None:
+            Player.game_manager = game_manager
         self.last_action_time = time.time()
         self.player_name = player_name
 
-        # TODO: Remove this hack, it's for simulating the AI
+        # TODO: Remove this, it's for simulating AI builders
         if player_name == "Doug":
             self.role = "builder"
         else:
             self.role = player_role
-        self.current_room = "Road"
-        self.seen_rooms = {}
-        self.sid = sid
-        self.game_server.register_player(sid, self, player_name)
-        self.game_server.update_player_room(self.sid, self.current_room)
-        instructions = (
-            f"Welcome to the game, {player_name}. "
-            + self.game_server.get_players_text()
-            + "Please input one of these commands:\n"
-            + self.game_server.get_commands_description()
-        )
-        for line in instructions.split("\n"):
-            if line:
-                self.game_server.tell_player(self.sid, line, type="instructions")
 
-        # Tell this player where they are
-        self.game_server.tell_player(
-            sid, self.game_server.world.get_room_description(self.current_room)
-        )
+        # Default starting location
+        self.current_room = starting_room
+
+        # Register of rooms this player has visited before (so they don't get long descriptions again)
+        self.seen_rooms = {}
         self.seen_rooms[self.current_room] = True
 
-        # Tell other players about this new player
-        self.game_server.tell_others(
-            sid,
-            f"{player_name} has joined the game, starting in the {self.current_room}; there are now {self.game_server.get_player_count()} players.",
-            shout=True,
-        )
-        self.game_server.emit_game_data_update()
+        # SID is the unique identifier for this player used by SocketIO
+        self.sid = sid
 
+        # Inventory
+        self.inventory = []
+
+    # Setter for updating player's last action time
+    # Used to check for idle players
     def update_last_action_time(self):
         self.last_action_time = time.time()
 
-    # TODO: Decide, does this belong in this class?
+    # Setter for player's location change
     def move_to_room(self, next_room):
         # Set new room
         self.current_room = next_room
         # Flag this room as seen
         self.seen_rooms[self.current_room] = True
 
+    # Getter for player's current location
     def get_current_room(self):
         return self.current_room
+
+    # Setter for player picking up an object
+    def add_object(self, object):
+        self.inventory.append(object)
+
+    # Setter for player dropping an object
+    def drop_object(self, object_name):
+        for object in self.inventory:
+            if object.get_name().lower() == object_name.lower():
+                self.inventory.remove(object)
+                object.set_room(self.current_room)
+                return object
+
+    def get_inventory(self):
+        return self.inventory
+
+    def get_inventory_description(self):
+        description = "You are carrying: "
+        for object in self.get_inventory():
+            description += object.get_name("a") + ", "
+        return description[:-2] + "."

@@ -2,6 +2,7 @@ import os
 import sqlite3
 import json
 from logger import setup_logger
+from object import Object
 
 # Set up logging
 logger = setup_logger()
@@ -125,6 +126,29 @@ def get_default_rooms():
     for room in rooms:
         rooms[room]["name"] = room
     return rooms
+
+
+# Load objects from database and return a map of room to objects
+def load_room_objects(world):
+    # Stubbed test data for now
+    test_object_data = [
+        ["Thingy", "This is a thingy", "Road"],
+        ["Zingy", "This is a zingy", "North Road"],
+        ["Dingy", "This is a dingy", "Norther Road"],
+    ]
+    room_object_map = {}
+    for _ in test_object_data:
+        (object_name, object_description, starting_room) = _
+        # Populate the room_object_map with object versions of the objects!
+        o = Object(world, object_name, object_description, starting_room)
+        if starting_room in room_object_map:
+            room_object_map[starting_room].append(o)
+        else:
+            room_object_map[starting_room] = [o]
+
+    return room_object_map
+
+    # TODO: Store and reload object state
 
 
 # This is only called from a setup script

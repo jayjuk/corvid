@@ -43,6 +43,8 @@ export default function HomePage() {
   const [playerName, setPlayerName] = useState("");
   const [nameSet, setNameSet] = useState(false);
   const [roomImageFileName, setRoomImageFileName] = useState(null);
+  const [roomTitle, setRoomTitle] = useState(null);
+  const [roomDescription, setRoomDescription] = useState(null);
   const socket = useRef<Socket | null>(null);
   const originalHost: string | null = useOrigin();
   const gameServerHostName: string = replaceAfterLastColon(
@@ -72,10 +74,21 @@ export default function HomePage() {
       });
     });
 
-    // Listen for the 'updateImage' event from the server
+    // Listen for the room update event from the server
     socket.current.on("room_update", (message) => {
-      console.log("Updating room " + message);
-      setRoomImageFileName(message);
+      setRoomImageFileName(message["image"]);
+      setRoomTitle(message["title"]);
+      setRoomDescription(message["description"]);
+    });
+
+    // Listen for the 'shutdown' event from the server
+    socket.current.on("shutdown", (message) => {
+      if (message != null) {
+        message = "The server is shutting down!"
+      }
+      console.log(message);
+      alert(message);
+      setNameSet(false);
     });
 
     // Listen for the 'logout' event from the server
@@ -141,12 +154,20 @@ export default function HomePage() {
         </form>
       )}
       {nameSet && roomImageFileName && (
-        <div>
-          <img
-            src={"/" + roomImageFileName}
-            alt={roomImageFileName}
-            width="400"
-          />
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <img src={"/" + roomImageFileName} alt={roomTitle} width="400" />
+          {/* Some text to the right of the image */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginLeft: "10px",
+            }}
+          >
+            <p style={{ margin: 0, maxWidth: 800 }}>
+              <b>{roomTitle}</b>: {roomDescription}
+            </p>
+          </div>
         </div>
       )}
       {nameSet && ( // Only rendering the output if user has input their name
@@ -156,7 +177,7 @@ export default function HomePage() {
             style={{
               overflowY: "auto",
               minHeight: "300px",
-              maxHeight: "300px",
+              maxHeight: "400px",
               border: "1px solid gray",
             }}
           >

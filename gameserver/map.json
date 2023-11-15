@@ -16,7 +16,7 @@
     }
   },
   "North Road": {
-    "image": "road.png",
+    "image": "north_road.png",
     "description": "Endless horizons beckon from either direction of this seemingly abandoned road. Sunlight dances on the asphalt, hinting at a time when cars frequented here. Now, only the gentle whisper of wind breaks the stillness.",
     "exits": {
       "north": "Norther Road",
@@ -24,7 +24,7 @@
     }
   },
   "Norther Road": {
-    "image": "road.png",
+    "image": "norther_road.png",
     "description": "Endless horizons beckon from either direction of this seemingly abandoned road. Sunlight dances on the asphalt, hinting at a time when cars frequented here. Now, only the gentle whisper of wind breaks the stillness.",
     "exits": {
       "west": "Neighbour's House",

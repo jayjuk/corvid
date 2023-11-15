@@ -1,14 +1,13 @@
-import os
 import socket
 import socketio
 import eventlet
-from player import Player
 from gamemanager import GameManager
 from logger import setup_logger
 
+# This is the main game server file. It sets up the SocketIO server and handles events only
+
 # Set up logging
 logger = setup_logger()
-
 logger.info("Setting up SocketIO")
 sio = socketio.Server(cors_allowed_origins="*")
 app = socketio.WSGIApp(sio)
@@ -17,21 +16,30 @@ app = socketio.WSGIApp(sio)
 # Event handlers
 
 
+# Connection
 @sio.event
 def connect(sid, environ):
     logger.info(f"Client connected: {sid}")
 
 
-# Handle disconnects
+# Player setup
 @sio.event
-def disconnect(sid):
-    logger.info(f"Client disconnected: {sid}")
-    # TODO: allow players to reconnect (for now disconnect is same as quit)
-    game_manager.remove_player(
-        sid, "You have been logged out as your client disconnected."
+def set_player_name(sid, character):
+    logger.info(
+        f"Client requesting player setup: {sid}, {character.get('name')}, {character.get('role')}"
     )
+    outcome = game_manager.process_player_setup(sid, character)
+    # Blank outcome = success
+    if outcome:
+        # Issue with player name setting - log out client with error message
+        sio.emit(
+            "logout",
+            outcome,
+            sid,
+        )
 
 
+# Player input from the client
 @sio.event
 def user_action(sid, player_input):
     if sid in game_manager.players:
@@ -52,50 +60,14 @@ def user_action(sid, player_input):
         )
 
 
+# Disconnection
 @sio.event
-def set_player_name(sid, character):
-    player_name = character["name"]
-    # Default role is player
-    if "role" in character:
-        player_role = character["role"]
-    else:
-        player_role = "player"
-    logger.info(f"Received user name: {player_name} from {sid}")
-
-    # TODO: move this to game manager?
-
-    # Strip out any whitespace (defensive in case of client bug)
-    player_name = player_name.strip()
-
-    # Set up new game
-    # First check if player name is valid
-    if not (
-        player_name
-        and len(player_name) <= 20
-        and player_name.isprintable()
-        and player_name.isalpha()
-        and os.path.normpath(player_name).replace(os.sep, "_") == player_name
-    ):
-        # Issue with player name setting
-        sio.emit(
-            "logout",
-            "Sorry, that name is not valid. Please try again.",
-            sid,
-        )
-    elif not game_manager.player_name_is_unique(player_name):
-        # Issue with player name setting
-        sio.emit("game_update", "Sorry, that name is already taken.", sid)
-        # Player logging out or trying an existing name is the same thing for now
-        sio.emit(
-            "logout",
-            "Sorry, that name is already taken.",
-            sid,
-        )
-    else:
-        player = Player(game_manager, sid, player_name, player_role)
-        # Spawn the world-wide metadata loop when the first player enters the game.
-        # This is to minimise resource usage when no one is playing.
-        game_manager.activate_background_loop()
+def disconnect(sid):
+    logger.info(f"Client disconnected: {sid}")
+    # TODO: allow players to reconnect (for now disconnect is same as quit)
+    game_manager.remove_player(
+        sid, "You have been logged out as your client disconnected."
+    )
 
 
 # End of event handlers

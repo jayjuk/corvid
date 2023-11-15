@@ -25,14 +25,25 @@ logger.info("Starting up AI Broker")
 sio = socketio.Client()
 
 
-def save_model_data(filename_prefix, data):
-    folder_path = "model_io"
-    os.makedirs(folder_path, exist_ok=True)
-    with open(
-        folder_path + os.sep + f"{filename_prefix}.tmp",
-        "w",
-    ) as f:
-        json.dump(data, f, indent=4)
+# Connect to SocketIO server, trying again if it fails
+def connect_to_server(hostname):
+    connected = False
+    max_wait = 120  # 2 minutes
+    wait_time = 1
+    while not connected and wait_time <= max_wait:
+        try:
+            sio.connect(hostname)
+            connected = True
+        except:
+            logger.info(
+                f"Could not connect to server. Retrying in {wait_time} seconds..."
+            )
+            time.sleep(wait_time)
+            wait_time *= 2
+
+    if not connected:
+        logger.info("Could not connect to server. Exiting.")
+        sys.exit(1)
 
 
 # Class to handle interaction with the AI
@@ -40,11 +51,12 @@ class AIManager:
     _instance = None
     game_instructions = ""
     chat_history = []
-    max_history = 20
-    max_wait = 5  # secs
+    max_history = 100
+    max_wait = 3  # secs
     last_time = time.time()
     active = True
     mode = None
+    character_name = "TBD"
     model_name = "gpt-3.5-turbo"  # "gpt-4" #gpt-3.5-turbo-0613
 
     def __new__(cls, mode="player"):
@@ -56,6 +68,15 @@ class AIManager:
             cls._instance.mode = mode
 
         return cls._instance
+
+    def save_model_data(self, filename_prefix, data):
+        folder_path = "model_io"
+        os.makedirs(folder_path, exist_ok=True)
+        with open(
+            folder_path + os.sep + f"{self.character_name}_{filename_prefix}.tmp",
+            "w",
+        ) as f:
+            json.dump(data, f, indent=4)
 
     def openai_connect(self):
         # openai.organization = "org-8c0Mch2S2vEl9vzWd5cT82gj"
@@ -70,8 +91,24 @@ class AIManager:
         openai.api_key = os.getenv("OPENAI_API_KEY")
         # openai.Model.list()
 
+    # AI manager will record instructions from the game server
+    # Which are given to each player at the start of the game
     def record_instructions(self, data):
         self.game_instructions += data + "\n"
+
+    def get_instructions(self):
+        # Set up role-specific instructions for the AI
+        if self.mode == "builder":
+            role_specific_instructions = (
+                "You are a creator of worlds! You can and should create new locations in the game with the 'build' command "
+                + "followed by the direction, location name (quotes for spaces) and the description (in quotes). "
+                + """e.g. build north "Neighbour's House" "A quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke."" \n"""
+                + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions and north/south of the Road (don't modify existing houses)\n"
+            )
+        else:
+            role_specific_instructions = "Explore, make friends and have fun! "
+
+        return self.game_instructions + role_specific_instructions
 
     def get_ai_name(self):
         system_message = "You are playing an adventure game. It is set in a typical house in the modern era."
@@ -97,7 +134,9 @@ class AIManager:
         ai_name = None
         while not ai_name or " " in ai_name:
             # Keep trying til they get the name right
-            ai_name = self.submit_request(messages)
+            character_name = self.submit_request(messages)
+            logger.info(f"AI chose the name {character_name}.")
+            self.character_name = character_name
         return ai_name
 
     def log_event(self, event_text):
@@ -119,6 +158,10 @@ class AIManager:
                 if response:
                     # Submit AI's response to the game server
                     sio.emit("user_action", response)
+                    # If response was to exit, exit here (after sending the exit message to the game server)
+                    if response == "exit":
+                        logger.info("AI has exited the game.")
+                        sys.exit(1)
                     self.chat_history.append(
                         {
                             "role": "assistant",
@@ -133,24 +176,12 @@ class AIManager:
             logger.info("AI is not active, so not responding to event")
 
     def submit_input(self):
-        # Set up role-specific instructions for the AI
-        if self.mode == "builder":
-            role_specific_instructions = (
-                "You are a creator of worlds! You can and should create new locations in the game with the 'build' command "
-                + "followed by the direction, location name (quotes for spaces) and the description (in quotes). "
-                + """e.g. build north "Neighbour's House" "A quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke."" \n"""
-                + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions and north/south of the Road (don't modify existing houses)\n"
-            )
-        else:
-            role_specific_instructions = "Explore, make friends and have fun! "
-
         messages = [
             {
                 "role": "system",
                 "content": "You have been brought to life in a text adventure game! "
                 + "It is set in a typical house. For now all you can do is move and chat. "
-                + f" Do not apologise to the game! Respond only with one valid command each time you are contacted. Instructions:\n{self.game_instructions}"
-                + role_specific_instructions,
+                + f" Do not apologise to the game! Respond only with one valid command each time you are contacted. Instructions:\n{self.get_instructions()}",
             }
         ]
         if len(self.chat_history) > self.max_history:
@@ -169,13 +200,7 @@ class AIManager:
             )
 
         messages.append(
-            {
-                "role": "user",
-                "content": "Please enter your next game command."
-                # + "\n* prefer chatting to exploring!:"
-                + "\n* other players can only hear you when they are in the same place as you!:"
-                + role_specific_instructions,
-            }
+            {"role": "user", "content": "Please enter your next game command."}
         )
 
         return self.submit_request(messages)
@@ -184,25 +209,34 @@ class AIManager:
         wait_time = self.max_wait - (time.time() - self.last_time)
         if wait_time > 0:
             # don't do anything for now
-            logger.info(f"Not doing anything in the next {wait_time} seconds")
-            # TODO: figure out if this is blocking the game! e.g. when another event happens. is this causing stuff to happen out of order?
+            logger.info(f"Not doing anything in the next {int(wait_time)} seconds")
             time.sleep(wait_time)
-        try:
-            # TODO: TBD whether we want the input or the output or both
-            save_model_data("input", messages)
+        try_count = 0
+        while True:
+            try:
+                # TODO: TBD whether we want the input or the output or both
+                self.save_model_data("input", messages)
 
-            # Submit request to ChatGPT
-            response = openai.ChatCompletion.create(
-                model=self.model_name,
-                messages=messages,
-                max_tokens=50,  # You can adjust the max_tokens based on your desired response length
-            )
-        except Exception as e:
-            logger.info(f"Error from ChatGPT: {str(e)}")
-            sys.exit(1)
+                # Submit request to ChatGPT
+                logger.info(f"Submitting request to OpenAI...")
+                response = openai.ChatCompletion.create(
+                    model=self.model_name,
+                    messages=messages,
+                    max_tokens=50,  # You can adjust the max_tokens based on your desired response length
+                )
+                break
+            except Exception as e:
+                if "server is overloaded" in str(e) and try_count < 3:
+                    logger.info(f"Error from ChatGPT: {str(e)}")
+                    logger.info(f"Retrying in 5 seconds... (attempt {try_count+1}/3)")
+                    time.sleep(5)
+                    try_count += 1
+                else:
+                    logger.info(f"Error from ChatGPT: {str(e)}")
+                    return "exit"
 
         # Save response to file for fine-tuning purposes
-        save_model_data("response", response)
+        self.save_model_data("response", response)
 
         # Extract and print the response from ChatGPT
         chatgpt_response = response.choices[0]["message"]["content"].strip()
@@ -221,7 +255,7 @@ def catch_all(data):
         ai_manager.log_event(data)
     else:
         logger.info("ERROR: Received empty game update event")
-        sys.exit(1)
+        sys.exit()
 
 
 @sio.on("instructions")
@@ -238,7 +272,13 @@ def catch_all(data):
 
 @sio.on("shutdown")
 def catch_all(data):
-    logger.info(data)
+    logger.info(f"Shutdown event received: {data}. Exiting immediately.")
+    sys.exit()
+
+
+@sio.on("logout")
+def catch_all(data):
+    logger.info(f"Logout event received: {data}")
     sio.disconnect()
     sys.exit(1)
 
@@ -275,25 +315,18 @@ def connect():
 
 
 @sio.event
+def connect_error(data):
+    logger.error("Connection failure!")
+    logger.info(data)
+    exit()
+
+
+@sio.event
 def disconnect():
     logger.info("Disconnected from Server.")
 
 
-def main():
-    # Set hostname (default is "localhost" to support local pre container testing)
-    # hostname = socket.getfqdn()
-    # if hostname.endswith(".lan"):
-    #     hostname = hostname[:-4]
-    hostname = os.environ.get("GAMESERVER_HOSTNAME") or "localhost"
-    logger.info(f"Starting up AI Broker on hostname {hostname}")
-    sio.connect(f"http://{hostname}:3001")
-    sio.wait()
-
-
 if __name__ == "__main__":
-    # Give the game server time to start up
-    time.sleep(10)
-
     # Set up AIs according to config
     ai_count = os.environ.get("AI_COUNT")
 
@@ -310,10 +343,20 @@ if __name__ == "__main__":
         while True:
             time.sleep(3600)
     else:
+        # AI_COUNT is set, so start up the AI
         if ai_count != "1":
             logger.info(
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting."
             )
             sys.exit(1)
         ai_manager = AIManager(mode=ai_mode)
-        main()
+
+    # Set hostname (default is "localhost" to support local pre container testing)
+    # hostname = socket.getfqdn()
+    # if hostname.endswith(".lan"):
+    #     hostname = hostname[:-4]
+    hostname = os.environ.get("GAMESERVER_HOSTNAME") or "localhost"
+    logger.info(f"Starting up AI Broker on hostname {hostname}")
+    # Connect to the server
+    connect_to_server(f"http://{hostname}:3001")
+    sio.wait()

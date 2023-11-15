@@ -15,12 +15,16 @@ class World:
         "west": (-1, 0),
     }
     grid_references = {}
+    room_objects = {}
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(World, cls).__new__(cls)
             # Load rooms from storage
             cls._instance.rooms = cls._instance.load_rooms()
+            # Load objects and their positions
+            cls._instance.room_objects = storagemanager.load_room_objects(cls._instance)
+            print("DEBUG at start of world creation", cls._instance.room_objects)
 
         return cls._instance
 
@@ -56,6 +60,9 @@ class World:
 
     def get_rooms(self):
         return self.rooms
+
+    def get_starting_room(self):
+        return "Road"
 
     def get_text_map(self):
         # Generate a map of the world in text form
@@ -100,7 +107,7 @@ class World:
                 + "."
             )
         else:
-            return "There are no available directions in which you can build."
+            return "You cannot build from here."
 
     def get_room_description(self, room, brief=False):
         # TODO: decide when to show build options
@@ -112,6 +119,8 @@ class World:
                 + self.get_room_exits(room)
                 + self.get_room_build_options(room)
             )
+        for object in self.room_objects.get(room, []):
+            description += f" There is {object.get_name(article='a')} here."
         return description
 
     def opposite_direction(self, direction):
@@ -153,7 +162,8 @@ class World:
             + self.directions[direction][1]
         )
         # Check if there is already a room in this location
-        if f"{next_x},{next_y}" in self.grid_references:
+        new_grid_reference = f"{next_x},{next_y}"
+        if new_grid_reference in self.grid_references:
             return (
                 f"Sorry, there is already a room to the {direction} of {current_room}, "
                 + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else. "
@@ -164,6 +174,7 @@ class World:
         new_room_name = new_room_name.title()
 
         self.rooms[new_room_name] = {}
+        self.rooms[new_room_name]["grid_reference"] = new_grid_reference
         self.rooms[new_room_name]["description"] = room_description
         self.rooms[new_room_name]["exits"] = {}
         self.rooms[new_room_name]["image"] = imagemanager.create_image(
@@ -182,3 +193,31 @@ class World:
             current_room,
             direction,
         )
+
+    # Search room for object by name and return reference to it if found
+    def search_object(self, object_name, room):
+        logger.info(f"Searching for object {object_name} in {room}")
+        for object in self.room_objects.get(room, []):
+            logger.info(f"  Checking {object.get_name()}")
+            if object.get_name().lower() == object_name.lower():
+                return object
+        return None
+
+    # Room objects getter
+    def get_room_objects(self, room):
+        return self.room_objects.get(room, [])
+
+    # Room objects setter
+    def add_object_to_room(self, object, room_name):
+        if room_name in self.room_objects:
+            self.room_objects[room_name].append(object)
+        else:
+            self.room_objects[room_name] = [object]
+
+    # Room objects setter
+    def remove_object_from_room(self, object, room_name):
+        if room_name in self.room_objects:
+            for i, o in enumerate(self.room_objects[room_name]):
+                if o.name == object.name:
+                    self.room_objects[room_name].pop(i)
+                    return
