@@ -44,9 +44,7 @@ def set_player_name(sid, character):
 def user_action(sid, player_input):
     if sid in game_manager.players:
         player = game_manager.players[sid]
-        logger.info(
-            f"Received user action: {player_input} from {sid} ({player.player_name})"
-        )
+        logger.info(f"Received user action: {player_input} from {sid} ({player.name})")
         player_response = game_manager.process_player_input(player, player_input)
         # Respond to player
         if player_response:

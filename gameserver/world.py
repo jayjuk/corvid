@@ -1,6 +1,8 @@
 import imagemanager
 import storagemanager
 from logger import setup_logger
+from merchant import Merchant
+from object import Object
 
 # Set up logging
 logger = setup_logger()
@@ -23,8 +25,9 @@ class World:
             # Load rooms from storage
             cls._instance.rooms = cls._instance.load_rooms()
             # Load objects and their positions
-            cls._instance.room_objects = storagemanager.load_room_objects(cls._instance)
-            print("DEBUG at start of world creation", cls._instance.room_objects)
+            cls._instance.room_objects = cls._instance.load_room_objects(cls._instance)
+
+            cls._instance.load_merchants()
 
         return cls._instance
 
@@ -221,3 +224,33 @@ class World:
                 if o.name == object.name:
                     self.room_objects[room_name].pop(i)
                     return
+
+    # Load objects and return a map of room to objects
+    def load_room_objects(self, world):
+        # TODO: Store and reload object state
+        # Stubbed test data for now
+        test_object_data = [
+            ["Thingy", "This is a thingy", "Road"],
+            ["Zingy", "This is a zingy", "North Road"],
+            ["Dingy", "This is a dingy", "Norther Road"],
+        ]
+        room_object_map = {}
+        for _ in test_object_data:
+            (object_name, object_description, starting_room) = _
+            # Populate the room_object_map with object versions of the objects!
+            o = Object(world, object_name, object_description, starting_room)
+            if starting_room in room_object_map:
+                room_object_map[starting_room].append(o)
+            else:
+                room_object_map[starting_room] = [o]
+
+        return room_object_map
+
+    def load_merchants(self):
+        # Merchant objects have no room
+        apple = Object("Apple", "A juicy apple.", None, 1)
+        banana = Object("Banana", "A yellowy banana.", None, 2)
+        pear = Object("Pear", "A peary pear.", None, 3)
+        gambinos_stuff = [apple, banana, pear]
+        gambino = Merchant(self, "Gambino", "Road", gambinos_stuff)
+        # TODO: more stuff with merchant

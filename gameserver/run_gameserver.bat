@@ -4,6 +4,6 @@ rem call conda activate jaysgame
 echo Running Game Server...
 python gameserver.py
 echo About to restart...
-pause
+rem pause
 goto loop
 rem call conda deactivate

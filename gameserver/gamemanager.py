@@ -137,12 +137,12 @@ class GameManager:
 
     def do_say(self, player, rest_of_response, shout=False):
         verb = "shouts" if shout else "says"
-        logger.info(f"User {player.player_name} {verb}: {rest_of_response}")
+        logger.info(f"User {player.name} {verb}: {rest_of_response}")
         if self.get_player_count() == 1:
             player_response = "You are the only player in the game currently!"
         else:
             told_count = self.tell_others(
-                player.sid, f'{player.player_name} says, "{rest_of_response}"', shout
+                player.sid, f'{player.name} says, "{rest_of_response}"', shout
             )
             if not told_count:
                 player_response = "There is no one else here to hear you!"
@@ -173,7 +173,7 @@ class GameManager:
             return f"Sorry, '{other_player_name}' is not a valid player name."
 
     def do_shutdown(self, player, rest_of_response):
-        message = f"{player.player_name} has shut down the server."
+        message = f"{player.name} has shut down the server."
         if rest_of_response:
             message = message[:-1] + ", saying '{rest_of_response}'."
         logger.info(message)
@@ -246,7 +246,7 @@ class GameManager:
             direction,
             room_name,
             room_description,
-            player.player_name,
+            player.name,
         )
         # If there was an error, return it
         if error_message:
@@ -255,7 +255,7 @@ class GameManager:
         # Otherwise, tell other players about the new room
         self.tell_others(
             player.sid,
-            f"{player.player_name} has built to the {direction} and made a new location, {room_name}.",
+            f"{player.name} has built to the {direction} and made a new location, {room_name}.",
             shout=True,
         )
         return f"You build {direction} and make a new location, {room_name}: {room_description}"
@@ -341,7 +341,7 @@ class GameManager:
     # Get location of player given a name
     def get_player_location_by_name(self, sid, player_name):
         for other_player in self.get_other_players(sid):
-            if str(other_player.player_name).lower() == str(player_name).lower():
+            if str(other_player.name).lower() == str(player_name).lower():
                 return other_player.get_current_room()
         return None
 
@@ -352,7 +352,7 @@ class GameManager:
     # Check if a player name is unique
     def player_name_is_unique(self, player_name):
         for player_sid, player in self.players.items():
-            if str(player.player_name).lower() == str(player_name).lower():
+            if str(player.name).lower() == str(player_name).lower():
                 return False
         return True
 
@@ -463,17 +463,17 @@ class GameManager:
         if direction == "jump":
             # If next room specified, player has 'jumped'!
             departure_message_to_other_players = (
-                f"{player.player_name} has disappeared in a puff of smoke!"
+                f"{player.name} has disappeared in a puff of smoke!"
             )
             arrival_message_to_other_players = (
-                f"{player.player_name} has materialised as if by magic!"
+                f"{player.name} has materialised as if by magic!"
             )
         elif direction in self.world.rooms[player.get_current_room()]["exits"]:
             next_room = self.world.rooms[player.get_current_room()]["exits"][direction]
 
-            departure_message_to_other_players = f"{player.player_name} leaves, heading {direction} to the {str(next_room).lower()}."
+            departure_message_to_other_players = f"{player.name} leaves, heading {direction} to the {str(next_room).lower()}."
             arrival_message_to_other_players = (
-                f"{player.player_name} arrives from the {previous_room.lower()}."
+                f"{player.name} arrives from the {previous_room.lower()}."
             )
         else:
             # Valid direction but no exit
@@ -504,7 +504,7 @@ class GameManager:
         # Check for other players you are arriving
         for other_player in self.get_other_players(player.sid):
             if other_player.get_current_room() == next_room:
-                message += f" {other_player.player_name} is here."
+                message += f" {other_player.name} is here."
                 self.tell_player(
                     other_player.sid,
                     arrival_message_to_other_players,
@@ -602,7 +602,7 @@ class GameManager:
                 player.sid,
                 reason,
             )
-            message = f"{player.player_name} has left the game; there are now {self.get_player_count()-1} players."
+            message = f"{player.name} has left the game; there are now {self.get_player_count()-1} players."
             logger.info(message)
             self.tell_others(
                 sid,

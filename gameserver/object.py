@@ -6,7 +6,9 @@ logger = setup_logger()
 
 # Player class
 class Object:
-    def __init__(self, world_ref, object_name, object_description, starting_room):
+    def __init__(
+        self, world_ref, object_name, object_description, starting_room, price=0
+    ):
         logger.info(f"Creating object  {object_name} starting in {starting_room}")
 
         # An object belongs to a world and has a name, a description and a location
@@ -16,6 +18,7 @@ class Object:
         self.room = starting_room
         # An object can be in the player's possession but doesn't start that way
         self.player_possession = None
+        self.price = price
 
     # Getter for player's current location
     def get_room(self):
@@ -29,7 +32,6 @@ class Object:
         logger.info(f"{self.name} is being dropped in {room_name}")
         self.room = room_name
         self.player_possession = None
-        print("DEBUG", room_name, self.name, self.world)
         self.world.add_object_to_room(self, room_name)
 
     # Setter for player picking up
@@ -48,6 +50,10 @@ class Object:
     # Description of the object
     def get_description(self):
         return self.description
+
+    # Description of the object
+    def get_price(self):
+        return self.price
 
     # Name of the object
     def get_name(self, article=""):
