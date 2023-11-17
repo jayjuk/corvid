@@ -122,13 +122,31 @@ class GameManager:
 
     def do_look(self, player, rest_of_response):
         # Not used for now, next line is to avoid warnings
-        rest_of_response
-
-        message = f"You look again at the {str(player.get_current_room()).lower()}: {self.world.get_room_description(player.get_current_room())}"
-        # Add buildable directions if player is a builder
-        if player.role == "builder":
-            message += "\n" + self.world.get_room_exits(player.get_current_room())
-        return message
+        if rest_of_response[0:3] == "at ":
+            rest_of_response = rest_of_response[3:]
+            if rest_of_response == "":
+                return "Look at what?"
+            else:
+                # Find what they are looking at
+                object_name = self.get_object_name_from_response(rest_of_response)
+                # Check if the object is in the room
+                object = self.world.search_object(
+                    object_name, player.get_current_room()
+                )
+                if object:
+                    return f"You look at {object.get_name(article='the')}: {object.get_description()}"
+                # Check if they named a character
+                character = self.is_character(object_name)
+                if character:
+                    return character.get_description()
+                return f"Sorry, there is no '{object_name}' here."
+        else:
+            # Looking at the room
+            message = f"You look again at the {str(player.get_current_room()).lower()}: {self.world.get_room_description(player.get_current_room())}"
+            # Add buildable directions if player is a builder
+            if player.role == "builder":
+                message += "\n" + self.world.get_room_exits(player.get_current_room())
+            return message
 
     def do_help(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
@@ -161,16 +179,16 @@ class GameManager:
 
     def do_jump(self, player, rest_of_response):
         # Jump to location of another player named in rest_of_response
-        other_player_name = rest_of_response
+        other_character_name = rest_of_response
         # find location of other player
-        other_player_location = self.get_player_location_by_name(
-            player.sid, other_player_name
+        other_character_location = self.get_player_location_by_name(
+            player.sid, other_character_name
         )
         # if found, move player there
-        if other_player_location:
-            return self.move_player(player, "jump", other_player_location)
+        if other_character_location:
+            return self.move_player(player, "jump", other_character_location)
         else:
-            return f"Sorry, '{other_player_name}' is not a valid player name."
+            return f"Sorry, '{other_character_name}' is not a valid player name."
 
     def do_shutdown(self, player, rest_of_response):
         message = f"{player.name} has shut down the server."
@@ -284,7 +302,16 @@ class GameManager:
                 return f"You pick up {object.get_name(article='the')}."
             return result
         else:
+            # Check if they named a character
+            if is_character(object_name):
+                return f"I would advise against picking up {object_name}, they will not react well!"
             return f"Sorry, there is no '{object_name}' here."
+
+    def is_character(self, object_name):
+        for other_character in self.get_other_characters():
+            if str(other_character.name).lower() == str(object_name).lower():
+                return other_character
+        return False
 
     def do_inventory(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
@@ -340,9 +367,9 @@ class GameManager:
 
     # Get location of player given a name
     def get_player_location_by_name(self, sid, player_name):
-        for other_player in self.get_other_players(sid):
-            if str(other_player.name).lower() == str(player_name).lower():
-                return other_player.get_current_room()
+        for other_character in self.get_other_characters(sid):
+            if str(other_character.name).lower() == str(player_name).lower():
+                return other_character.get_current_room()
         return None
 
     # Get number of players in the game
@@ -390,27 +417,27 @@ class GameManager:
         # Register this player with the game server
         self.register_player(sid, player, player_name, starting_room)
 
-        # Tell this player about the game
-        instructions = (
-            f"Welcome to the game, {player_name}. "
-            + self.get_players_text()
-            + "Please input one of these commands:\n"
-            + self.get_commands_description()
-        )
-        for line in instructions.split("\n"):
-            if line:
-                self.tell_player(sid, line, type="instructions")
-
-        # Tell this player where they are
-        self.tell_player(sid, "\nThe game begins...\n")
-        self.tell_player(sid, self.world.get_room_description(starting_room))
-
         # Tell other players about this new player
         self.tell_others(
             sid,
             f"{player_name} has joined the game, starting in the {starting_room}; there are now {self.get_player_count()} players.",
             shout=True,
         )
+
+        # Tell this player about the game
+        instructions = (
+            f"Welcome to the game, {player_name}. "
+            + self.get_players_text()
+            + "How to play:\n"
+            + self.get_commands_description()
+            + "\nHave fun!\n \n"
+        )
+
+        self.tell_player(sid, instructions, type="instructions")
+
+        self.tell_player(sid, self.move_player(player, "join", starting_room))
+        # self.tell_player(sid, self.world.get_room_description(starting_room))
+
         self.emit_game_data_update()
 
         # Spawn the world-wide metadata loop when the first player is created
@@ -461,20 +488,16 @@ class GameManager:
         # Set new room
         previous_room = player.get_current_room()
         if direction == "jump":
-            # If next room specified, player has 'jumped'!
-            departure_message_to_other_players = (
-                f"{player.name} has disappeared in a puff of smoke!"
-            )
-            arrival_message_to_other_players = (
-                f"{player.name} has materialised as if by magic!"
-            )
+            departure_message = f"{player.name} has disappeared in a puff of smoke!"
+            arrival_message = f"{player.name} has materialised as if by magic!"
+        elif direction == "join":
+            departure_message = ""
+            arrival_message = f"{player.name} has joined the game, starting here."
         elif direction in self.world.rooms[player.get_current_room()]["exits"]:
             next_room = self.world.rooms[player.get_current_room()]["exits"][direction]
 
-            departure_message_to_other_players = f"{player.name} leaves, heading {direction} to the {str(next_room).lower()}."
-            arrival_message_to_other_players = (
-                f"{player.name} arrives from the {previous_room.lower()}."
-            )
+            departure_message = f"{player.name} leaves, heading {direction} to the {str(next_room).lower()}."
+            arrival_message = f"{player.name} arrives from the {previous_room.lower()}."
         else:
             # Valid direction but no exit
             return "Sorry, you can't go that way." + self.world.get_room_exits(
@@ -482,33 +505,37 @@ class GameManager:
             )
 
         # Check for other players you are leaving
-        for other_player in self.get_other_players(player.sid):
-            if other_player.get_current_room() == player.get_current_room():
+        for other_character in self.get_other_characters(player.sid, players_only=True):
+            if other_character.get_current_room() == player.get_current_room():
                 self.tell_player(
-                    other_player.sid,
-                    departure_message_to_other_players,
+                    other_character.sid,
+                    departure_message,
                 )
 
         if direction == "jump":
-            action = "jump"
+            action = "jump to"
+        if direction == "join":
+            action = "start in"
         else:
-            action = f"head {direction}"
+            action = f"head {direction} to"
 
         # Build message. only describe room if it is new to this player.
-        message = f"You {action} to the {next_room.lower()}"
+        message = f"You {action} the {next_room.lower()}"
         if next_room in player.seen_rooms:
             message += f". {self.world.get_room_description(next_room, brief=True)}"
         else:
             message += f": {self.world.get_room_description(next_room)}"
 
-        # Check for other players you are arriving
-        for other_player in self.get_other_players(player.sid):
-            if other_player.get_current_room() == next_room:
-                message += f" {other_player.name} is here."
-                self.tell_player(
-                    other_player.sid,
-                    arrival_message_to_other_players,
-                )
+        # Check for other players where you are arriving
+        for other_character in self.get_other_characters(player.sid):
+            if other_character.get_current_room() == next_room:
+                message += f" {other_character.get_name()} is here."
+                # Only tell players not nps
+                if other_character.get_is_player():
+                    self.tell_player(
+                        other_character.sid,
+                        arrival_message,
+                    )
         # Set new room
         player.move_to_room(next_room)
         # Emit update to player
@@ -560,16 +587,21 @@ class GameManager:
 
     # Emit a message to a specific player
     def tell_player(self, sid, message, type="game_update"):
-        if message.strip():
-            self.sio.emit(type, message, sid)
+        message = message.strip()
+        for line in message.split("\n"):
+            if line != "":
+                self.sio.emit(type, line, sid)
 
     # Get other players
-    def get_other_players(self, sid):
-        other_players = []
+    def get_other_characters(self, sid=None, players_only=False):
+        other_characters = []
         for other_game_sid, other_game in self.players.items():
-            if sid != other_game_sid:
-                other_players.append(other_game)
-        return other_players
+            if sid is None or sid != other_game_sid:
+                other_characters.append(other_game)
+        if not players_only:
+            other_characters.extend(self.world.npcs)
+        print("DEBUG", other_characters)
+        return other_characters
 
     # Emit game data update to all players
     def emit_game_data_update(self):

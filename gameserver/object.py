@@ -7,7 +7,7 @@ logger = setup_logger()
 # Player class
 class Object:
     def __init__(
-        self, world_ref, object_name, object_description, starting_room, price=0
+        self, world_ref, object_name, object_description, price=0, starting_room=None
     ):
         logger.info(f"Creating object  {object_name} starting in {starting_room}")
 

@@ -18,6 +18,7 @@ class World:
     }
     grid_references = {}
     room_objects = {}
+    npcs = []
 
     def __new__(cls):
         if cls._instance is None:
@@ -248,9 +249,13 @@ class World:
 
     def load_merchants(self):
         # Merchant objects have no room
-        apple = Object("Apple", "A juicy apple.", None, 1)
-        banana = Object("Banana", "A yellowy banana.", None, 2)
-        pear = Object("Pear", "A peary pear.", None, 3)
+        apple = Object(self, "Apple", "A juicy apple.", price=1)
+        banana = Object(self, "Banana", "A yellowy banana.", price=2)
+        pear = Object(self, "Pear", "A peary pear.", price=3)
         gambinos_stuff = [apple, banana, pear]
         gambino = Merchant(self, "Gambino", "Road", gambinos_stuff)
         # TODO: more stuff with merchant
+
+    # Static method to register NPC in the world
+    def register_npc(self, npc):
+        self.npcs.append(npc)

@@ -2,13 +2,17 @@ class Character:
     # World reference applies to all character
     world = None
 
-    def __init__(self, world, character_name, character_role, starting_room):
+    def __init__(
+        self, world, character_name, character_role, starting_room, description=None
+    ):
         # Register game server reference in player object to help with testing and minimise use of globals
-        if Character.world is None and world is not None:
-            Character.world = world
+        if self.__class__.world is None and world is not None:
+            self.__class__.world = world
 
         self.name = character_name
         self.role = character_role
+        self.is_player = False
+        self.description = description
 
         # Default starting location
         self.current_room = starting_room
@@ -41,3 +45,16 @@ class Character:
 
     def get_inventory(self):
         return self.inventory
+
+    def get_is_player(self):
+        return self.is_player
+
+    def get_name(self):
+        return (
+            f"{self.name}{' The ' + str(self.role).capitalize() if self.role else ''}"
+        )
+
+    def get_description(self):
+        if self.description:
+            return self.description
+        return f"You see nothing special about {self.get_name()}."

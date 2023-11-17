@@ -27,6 +27,8 @@ class Player(Character):
 
         # Set up character
         Character.__init__(self, world, player_name, player_role, starting_room)
+        # Set flag to indicate this is a player
+        self.is_player = True
 
         # Last action time is used to check for idle players
         self.last_action_time = time.time()
