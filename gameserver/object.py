@@ -9,7 +9,11 @@ class Object:
     def __init__(
         self, world_ref, object_name, object_description, price=0, starting_room=None
     ):
-        logger.info(f"Creating object  {object_name} starting in {starting_room}")
+        logger.info(
+            f"Creating object {object_name}" + f" starting in {starting_room}"
+            if starting_room is not None
+            else ""
+        )
 
         # An object belongs to a world and has a name, a description and a location
         self.world = world_ref

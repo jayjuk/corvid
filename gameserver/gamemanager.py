@@ -1,4 +1,3 @@
-import os
 import eventlet
 import time
 import sys
@@ -13,7 +12,7 @@ logger = setup_logger()
 class GameManager:
     _instance = None
 
-    def __new__(cls, sio):
+    def __new__(cls, sio, mode=None):
         if cls._instance is None:
             cls._instance = super(GameManager, cls).__new__(cls)
 
@@ -25,7 +24,7 @@ class GameManager:
             cls._instance.sio = sio
             cls._instance.players = {}
             cls._instance.player_sid_to_name_map = {}
-            cls._instance.world = World()
+            cls._instance.world = World(mode)
 
             # TODO: resolve this from the rooms document
             cls._instance.synonyms = {
@@ -142,7 +141,14 @@ class GameManager:
                 return f"Sorry, there is no '{object_name}' here."
         else:
             # Looking at the room
-            message = f"You look again at the {str(player.get_current_room()).lower()}: {self.world.get_room_description(player.get_current_room())}"
+            message = (
+                f"You look again at the "
+                + str(player.get_current_room()).lower()
+                + ": "
+                + self.world.get_room_description(
+                    player.get_current_room(), brief=False, role=player.get_role()
+                )
+            )
             # Add buildable directions if player is a builder
             if player.role == "builder":
                 message += "\n" + self.world.get_room_exits(player.get_current_room())
@@ -436,7 +442,6 @@ class GameManager:
         self.tell_player(sid, instructions, type="instructions")
 
         self.tell_player(sid, self.move_player(player, "join", starting_room))
-        # self.tell_player(sid, self.world.get_room_description(starting_room))
 
         self.emit_game_data_update()
 
@@ -522,9 +527,9 @@ class GameManager:
         # Build message. only describe room if it is new to this player.
         message = f"You {action} the {next_room.lower()}"
         if next_room in player.seen_rooms:
-            message += f". {self.world.get_room_description(next_room, brief=True)}"
+            message += f". {self.world.get_room_description(next_room, brief=True, role=player.get_role())}"
         else:
-            message += f": {self.world.get_room_description(next_room)}"
+            message += f": {self.world.get_room_description(next_room, role=player.get_role())}"
 
         # Check for other players where you are arriving
         for other_character in self.get_other_characters(player.sid):
@@ -539,7 +544,7 @@ class GameManager:
         # Set new room
         player.move_to_room(next_room)
         # Emit update to player
-        self.emit_player_room_update(player.sid, next_room)
+        self.emit_player_room_update(player, next_room)
 
         return message
 
@@ -549,20 +554,27 @@ class GameManager:
         # This is so that when a player disconnects (e.g. closes their browser) after 'quitting' we can
         # understand that, and it will allow them to rejoin with the same name later
         self.player_sid_to_name_map[sid] = player_name
-        self.emit_player_room_update(sid, current_room)
+        # self.emit_player_room_update(sid, current_room)
         return game
 
     # Emit a message about a room to a specific player
-    def emit_player_room_update(self, sid, room):
+    def emit_player_room_update(self, player, room):
         # Tell the player about the room including the image name
         self.sio.emit(
             "room_update",
             {
                 "image": self.world.rooms[room]["image"],
                 "title": room,
-                "description": self.world.rooms[room]["description"],
+                "description": self.world.get_room_description(
+                    room,
+                    brief=False,
+                    role=player.get_role(),
+                    show_objects=False,
+                    show_exits=False,
+                ),
+                "exits": self.world.get_room_exits(room),
             },
-            sid,
+            player.sid,
         )
 
     # Emit a message to all players

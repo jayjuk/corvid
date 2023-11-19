@@ -114,6 +114,8 @@ def get_rooms():
     for exit in exits:
         rooms_dict[exit[0]]["exits"][exit[1]] = exit[2]
     conn.close()
+    if not rooms:
+        return get_default_rooms()
     return rooms_dict
 
 

@@ -58,3 +58,6 @@ class Character:
         if self.description:
             return self.description
         return f"You see nothing special about {self.get_name()}."
+
+    def get_role(self):
+        return self.role

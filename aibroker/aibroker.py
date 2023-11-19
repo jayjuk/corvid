@@ -51,7 +51,7 @@ class AIManager:
     _instance = None
     game_instructions = ""
     chat_history = []
-    max_history = 100
+    max_history = 3
     max_wait = 3  # secs
     last_time = time.time()
     active = True
@@ -79,8 +79,6 @@ class AIManager:
             json.dump(data, f, indent=4)
 
     def openai_connect(self):
-        # openai.organization = "org-8c0Mch2S2vEl9vzWd5cT82gj"
-
         # Use pre-set variable before dotenv.
         if not os.environ.get("OPENAI_API_KEY"):
             load_dotenv()
@@ -89,7 +87,6 @@ class AIManager:
                 sys.exit(1)
 
         openai.api_key = os.getenv("OPENAI_API_KEY")
-        # openai.Model.list()
 
     # AI manager will record instructions from the game server
     # Which are given to each player at the start of the game
@@ -134,9 +131,9 @@ class AIManager:
         ai_name = None
         while not ai_name or " " in ai_name:
             # Keep trying til they get the name right
-            character_name = self.submit_request(messages)
-            logger.info(f"AI chose the name {character_name}.")
-            self.character_name = character_name
+            ai_name = self.submit_request(messages)
+            logger.info(f"AI chose the name {ai_name}.")
+            self.character_name = ai_name
         return ai_name
 
     def log_event(self, event_text):
@@ -222,7 +219,7 @@ class AIManager:
                 response = openai.ChatCompletion.create(
                     model=self.model_name,
                     messages=messages,
-                    max_tokens=50,  # You can adjust the max_tokens based on your desired response length
+                    max_tokens=200,  # You can adjust the max_tokens based on your desired response length
                 )
                 break
             except Exception as e:
@@ -310,8 +307,10 @@ def catch_all(event, data):
 @sio.event
 def connect():
     logger.info("Connected to Server.")
-    character = {"name": ai_manager.get_ai_name(), "role": ai_manager.mode}
-    sio.emit("set_player_name", character)
+    # Emit the AI's chosen name to the server
+    sio.emit(
+        "set_player_name", {"name": ai_manager.get_ai_name(), "role": ai_manager.mode}
+    )
 
 
 @sio.event

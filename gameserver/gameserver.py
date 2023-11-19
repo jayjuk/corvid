@@ -1,3 +1,4 @@
+import sys
 import socket
 import socketio
 import eventlet
@@ -76,5 +77,7 @@ if __name__ == "__main__":
     if hostname.endswith(".lan"):
         hostname = hostname[:-4]
     logger.info(f"Starting up game server on {hostname}")
-    game_manager = GameManager(sio)
+    # Get first argument as game mode
+    mode = sys.argv[1] if len(sys.argv) > 1 else None
+    game_manager = GameManager(sio, mode)
     eventlet.wsgi.server(eventlet.listen(("0.0.0.0", 3001)), app)

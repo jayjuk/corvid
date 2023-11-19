@@ -1,4 +1,4 @@
-import imagemanager
+import aimanager
 import storagemanager
 from logger import setup_logger
 from merchant import Merchant
@@ -19,63 +19,130 @@ class World:
     grid_references = {}
     room_objects = {}
     npcs = []
+    done_path = {}
+    starting_room = "Road"
 
-    def __new__(cls):
+    def __new__(cls, mode=None):
         if cls._instance is None:
             cls._instance = super(World, cls).__new__(cls)
             # Load rooms from storage
-            cls._instance.rooms = cls._instance.load_rooms()
-            # Load objects and their positions
-            cls._instance.room_objects = cls._instance.load_room_objects(cls._instance)
+            cls._instance.rooms = cls._instance.load_rooms(mode)
 
-            cls._instance.load_merchants()
+            # Only load objects and merchants if not in any special mode
+            if not mode:
+                cls._instance.room_objects = cls._instance.load_room_objects(
+                    cls._instance
+                )
+                cls._instance.load_merchants()
 
         return cls._instance
 
-    def load_rooms(self):
+    def load_rooms(self, mode):
+        # Get rooms from storage
         rooms = storagemanager.get_rooms()
-        if not rooms:
-            rooms = storagemanager.get_default_rooms()
+
         # Add a grid reference for each room. This is used to validate that rooms don't overlap
         # Start with the first room found, grid references can go negative
-        first_room_name = list(rooms.keys())[0]
-        self.add_grid_references(rooms, first_room_name, rooms[first_room_name], 0, 0)
+        self.add_grid_references(
+            rooms, self.get_starting_room(), rooms[self.get_starting_room()], 0, 0
+        )
+        # Write map to file
+        with open("rooms_dump.json", "w") as f:
+            f.write(str(rooms))
+
+        try:
+            with open("map.csv", "w") as f:
+                f.write(self.generate_map(rooms))
+        except Exception as e:
+            logger.error(f"Error writing map: {e}")
         return rooms
 
-    def add_grid_references(self, rooms, room_name, room, x, y):
-        logger.info(f"Adding grid reference {x},{y} to {room_name}")
-        room["grid_reference"] = f"{x},{y}"
-        if f"{x},{y}" in self.grid_references:
-            logger.info(
-                f"ERROR: {room_name} has the same grid reference as {self.grid_references[f'{x},{y}']}"
-            )
-            exit()
-        self.grid_references[f"{x},{y}"] = room_name
+    def add_grid_references(
+        self, rooms, room_name, room, x, y, prv_direction=None, indent=0
+    ):
+        grid_ref_str = f"{x},{y}"
+        logger.info(
+            " " * indent + f"Checking grid reference {grid_ref_str} at {room_name}"
+        )
+        room["grid_reference"] = grid_ref_str
+        if grid_ref_str in self.grid_references:
+            if room_name not in self.grid_references[grid_ref_str]:
+                logger.info(
+                    f"ERROR: {room_name} has the same grid reference as {self.grid_references[grid_ref_str]}"
+                )
+                self.grid_references[grid_ref_str].append(room_name)
+        else:
+            # logger.info(f"Adding grid reference {grid_ref_str} to {room_name}")
+            self.grid_references[grid_ref_str] = [room_name]
         # Go through each exit and recursively add grid references
         for direction, next_room in room["exits"].items():
-            if "grid_reference" in rooms[next_room]:
-                # This room has already been visited, so skip it
-                continue
             # Get the next x and y
             next_x = x + self.directions[direction][0]
             next_y = y + self.directions[direction][1]
             # Add the grid reference to the next room and recursively add grid references
-            self.add_grid_references(rooms, next_room, rooms[next_room], next_x, next_y)
+            # Keep track of each step taken so that we don't go back on ourselves
+            key = room_name + " " + direction
+            if not (
+                key in self.done_path
+                or (
+                    prv_direction
+                    and direction == self.get_opposite_direction(prv_direction)
+                )
+            ):
+                self.done_path[key] = True
+                self.add_grid_references(
+                    rooms,
+                    next_room,
+                    rooms[next_room],
+                    next_x,
+                    next_y,
+                    direction,
+                    indent + 1,
+                )
 
     def get_rooms(self):
         return self.rooms
 
     def get_starting_room(self):
-        return "Road"
+        return self.starting_room
 
-    def get_text_map(self):
+    def generate_map(self, rooms, mode="grid"):
         # Generate a map of the world in text form
-        map = ""
-        for room in self.rooms:
-            map += room + ": " + self.rooms[room]["description"] + "\n"
-            for exit in self.rooms[room]["exits"]:
-                map += "  " + exit + ": " + self.rooms[room]["exits"][exit] + "\n"
-        return map
+        if mode == "grid":
+            map = ""
+            # Get the min and max x and y
+            min_x = 0
+            max_x = 0
+            min_y = 0
+            max_y = 0
+            for room in rooms:
+                print(room)
+                if "grid_reference" not in rooms[room]:
+                    print("ERROR: no grid reference for", room)
+                else:
+                    x = int(rooms[room]["grid_reference"].split(",")[0])
+                    y = int(rooms[room]["grid_reference"].split(",")[1])
+                    if x < min_x:
+                        min_x = x
+                    if x > max_x:
+                        max_x = x
+                    if y < min_y:
+                        min_y = y
+                    if y > max_y:
+                        max_y = y
+            # Generate the map
+            for y in range(max_y, min_y - 1, -1):
+                for x in range(min_x, max_x + 1):
+                    map += "&".join(self.grid_references.get(f"{x},{y}", [])) + "\t"
+                map += "\n"
+            return map
+        else:
+            map = ""
+            for room in rooms:
+                map += room + ": " + rooms[room]["description"] + "\n"
+                for exit in rooms[room]["exits"]:
+                    map += "  " + exit + ": " + rooms[room]["exits"][exit] + "\n"
+            return map
 
     def get_room_exits(self, room):
         exits = " Available exits: "
@@ -113,21 +180,27 @@ class World:
         else:
             return "You cannot build from here."
 
-    def get_room_description(self, room, brief=False):
+    def get_room_description(
+        self, room, brief=False, role=None, show_objects=True, show_exits=True
+    ):
         # TODO: decide when to show build options
-        if brief:
-            description = self.get_room_exits(room) + self.get_room_build_options(room)
-        else:
-            description = (
-                self.rooms[room]["description"]
-                + self.get_room_exits(room)
-                + self.get_room_build_options(room)
-            )
-        for object in self.room_objects.get(room, []):
-            description += f" There is {object.get_name(article='a')} here."
+        description = ""
+        if not brief:
+            description = self.rooms[room]["description"] + "\n"
+
+        if show_exits:
+            description += self.get_room_exits(room)
+
+        # Only show build options to builders
+        if role == "builder":
+            description += self.get_room_build_options(room)
+
+        if show_objects:
+            for object in self.room_objects.get(room, []):
+                description += f" There is {object.get_name(article='a')} here."
         return description
 
-    def opposite_direction(self, direction):
+    def get_opposite_direction(self, direction):
         directions = {
             "north": "south",
             "south": "north",
@@ -177,18 +250,20 @@ class World:
         # Format the room name to be title case
         new_room_name = new_room_name.title()
 
+        logger.info(f"Adding room {new_room_name} to the {direction} of {current_room}")
+
         self.rooms[new_room_name] = {}
         self.rooms[new_room_name]["grid_reference"] = new_grid_reference
         self.rooms[new_room_name]["description"] = room_description
         self.rooms[new_room_name]["exits"] = {}
-        self.rooms[new_room_name]["image"] = imagemanager.create_image(
+        self.rooms[new_room_name]["image"] = aimanager.create_image(
             new_room_name, room_description
         )
         # Add the new room to the exits of the current room
         self.rooms[current_room]["exits"][direction] = new_room_name
         # Add the current room to the exits of the new room
         self.rooms[new_room_name]["exits"][
-            self.opposite_direction(direction)
+            self.get_opposite_direction(direction)
         ] = current_room
         # Store current and new room (current has changed in that exit has been added)
         storagemanager.store_rooms(
@@ -253,7 +328,7 @@ class World:
         banana = Object(self, "Banana", "A yellowy banana.", price=2)
         pear = Object(self, "Pear", "A peary pear.", price=3)
         gambinos_stuff = [apple, banana, pear]
-        gambino = Merchant(self, "Gambino", "Road", gambinos_stuff)
+        Merchant(self, "Gambino", "Road", gambinos_stuff)
         # TODO: more stuff with merchant
 
     # Static method to register NPC in the world

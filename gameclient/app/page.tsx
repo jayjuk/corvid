@@ -45,6 +45,7 @@ export default function HomePage() {
   const [roomImageFileName, setRoomImageFileName] = useState(null);
   const [roomTitle, setRoomTitle] = useState(null);
   const [roomDescription, setRoomDescription] = useState(null);
+  const [roomExits, setRoomExits] = useState(null);
   const socket = useRef<Socket | null>(null);
   const originalHost: string | null = useOrigin();
   const gameServerHostName: string = replaceAfterLastColon(
@@ -79,6 +80,7 @@ export default function HomePage() {
       setRoomImageFileName(message["image"]);
       setRoomTitle(message["title"]);
       setRoomDescription(message["description"]);
+      setRoomExits(message["exits"]);
     });
 
     // Listen for the 'shutdown' event from the server
@@ -164,8 +166,8 @@ export default function HomePage() {
               marginLeft: "10px",
             }}
           >
-            <p style={{ margin: 0, maxWidth: 800 }}>
-              <b>{roomTitle}</b>: {roomDescription}
+            <p style={{ margin: 0, maxWidth: 1000 }}>
+              <b>{roomTitle}</b>: {roomDescription} {roomExits}
             </p>
           </div>
         </div>
