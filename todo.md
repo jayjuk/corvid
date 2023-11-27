@@ -15,6 +15,8 @@
 ## UI
 
 - Authentication
+- Improve layout of showing exits to user
+- Add buttons for N/E/S/W
 
 ### Storage Manager
 

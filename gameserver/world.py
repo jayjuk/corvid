@@ -215,7 +215,7 @@ class World:
         direction,
         new_room_name,
         room_description,
-        creator_name=None,
+        creator_name="system",
     ):
         # Check room name is not taken in any case (case insensitive)
         for room in self.rooms:
@@ -252,19 +252,17 @@ class World:
 
         logger.info(f"Adding room {new_room_name} to the {direction} of {current_room}")
 
-        self.rooms[new_room_name] = {}
-        self.rooms[new_room_name]["grid_reference"] = new_grid_reference
-        self.rooms[new_room_name]["description"] = room_description
-        self.rooms[new_room_name]["exits"] = {}
-        self.rooms[new_room_name]["image"] = aimanager.create_image(
-            new_room_name, room_description
-        )
+        # Set up new room
+        self.rooms[new_room_name] = {
+            "name": new_room_name,
+            "grid_reference": new_grid_reference,
+            "description": room_description,
+            "image": aimanager.create_image(new_room_name, room_description),
+            "creator": creator_name,
+            "exits": {self.get_opposite_direction(direction): current_room},
+        }
         # Add the new room to the exits of the current room
         self.rooms[current_room]["exits"][direction] = new_room_name
-        # Add the current room to the exits of the new room
-        self.rooms[new_room_name]["exits"][
-            self.get_opposite_direction(direction)
-        ] = current_room
         # Store current and new room (current has changed in that exit has been added)
         storagemanager.store_rooms(
             self.rooms,

@@ -14,6 +14,13 @@ properties:
           - port: 3000
     - name: gameserver
       properties:
+        environmentVariables:
+          - name: "OPENAI_API_KEY"
+            value: "${OPENAI_API_KEY}"
+          - name: "AZURE_STORAGE_ACCOUNT_NAME"
+            value: "${AZURE_STORAGE_ACCOUNT_NAME}"
+          - name: "AZURE_STORAGE_ACCOUNT_KEY"
+            value: "${AZURE_STORAGE_ACCOUNT_KEY}"
         image: jayjuk/gameserver
         resources:
           requests:

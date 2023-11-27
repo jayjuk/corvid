@@ -407,6 +407,9 @@ class GameManager:
         if not self.player_name_is_unique(player_name):
             # Issue with player name setting
             return "game_update", "Sorry, that name is already taken."
+        if player_name == "system":
+            # Do not let any player be called system
+            return "game_update", "Sorry, that name is reserved."
 
         # Set starting room
         starting_room = self.world.get_starting_room()
