@@ -7,3 +7,4 @@ temp_*
 *.out
 *.db
 *.sqlite3
+backup_the_oldfashioned_way.py
