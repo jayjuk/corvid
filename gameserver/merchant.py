@@ -8,7 +8,7 @@ logger = setup_logger()
 # Player class
 class Merchant(Character):
     def __init__(
-        self, world, merchant_name, starting_room, inventory=None, description=""
+        self, world, merchant_name, starting_room, inventory=[], description=""
     ):
         # First check
         logger.info(f"Creating merchant {merchant_name}")
@@ -22,14 +22,15 @@ class Merchant(Character):
         # TODO: consider creating a class NPC between Character and Merchant
         world.register_npc(self)
 
-        if inventory:
-            self.inventory = inventory
+        for object in inventory:
+            # Add object to merchant's inventory
+            object.set_player(self)
 
     # Get inventory description
     def get_inventory_description(self):
-        description = "The merchant has the following available for sale: "
+        description = "They have the following available for sale: "
         for object in self.get_inventory():
-            description += f"{object.get_name('a')} ({'' if object.get_price()==0 else str(object.get_price())}), "
+            description += f"{object.get_name('a')} ({self.world.get_currency(object.get_price(), short=True)}), "
         return description[:-2] + "."
 
     # Overridden method to get description of merchant including their inventory.

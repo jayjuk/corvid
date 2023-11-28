@@ -3,7 +3,12 @@ class Character:
     world = None
 
     def __init__(
-        self, world, character_name, character_role, starting_room=None, description=None
+        self,
+        world,
+        character_name,
+        character_role,
+        starting_room=None,
+        description=None,
     ):
         # Register game server reference in player object to help with testing and minimise use of globals
         if self.__class__.world is None and world is not None:
@@ -37,12 +42,23 @@ class Character:
         self.inventory.append(object)
 
     # Setter for player dropping an object
-    def drop_object(self, object_name):
-        for object in self.inventory:
-            if object.get_name().lower() == str(object_name).lower():
-                self.inventory.remove(object)
-                object.set_room(self.current_room)
-                return object
+    def drop_object(self, object):
+        # Check if object is a string
+        # TODO: decide whether caller of this function should already have object reference not name.
+        # That could be done by building a dictionary of all objects perhaps under the world class
+        if isinstance(object, str):
+            # Check if object is in inventory
+            for item in self.inventory:
+                if item.get_name().lower() == object.lower():
+                    object = item
+                    break
+            else:
+                return False
+        if object in self.inventory:
+            self.inventory.remove(object)
+            object.set_room(self.current_room)
+            return True
+        return False
 
     def get_inventory(self):
         return self.inventory

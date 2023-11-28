@@ -33,10 +33,8 @@ class Player(Character):
         else:
             player_role = player_role or "player"
         print(world, player_name, player_role)
-        #Call superclass constructor
-        Character.__init__(
-            self, world, player_name, player_role
-        )
+        # Call superclass constructor
+        Character.__init__(self, world, player_name, player_role)
 
         # Set flag to indicate this is a player
         self.is_player = True
@@ -66,8 +64,11 @@ class Player(Character):
         description = "You are carrying: "
         for object in self.get_inventory():
             description += object.get_name("a") + ", "
-        #Add money to inventory description
-        description =  description[:-2] + f".\nYou also have {self.world.get_currency(self.money)} in your pocket."
+        # Add money to inventory description
+        description = (
+            description[:-2]
+            + f".\nYou also have {self.world.get_currency(self.money)} in your pocket."
+        )
         return description
 
     def deduct_money(self, amount):

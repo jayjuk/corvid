@@ -334,12 +334,13 @@ class World:
     def register_npc(self, npc):
         self.npcs.append(npc)
 
-    def get_currency(self, unit=None):
-        if unit == 1:
-            return str(unit) + " penny"
-        elif unit > 1 or unit==0:
-            return str(unit) + " pennies"
+    def get_currency(self, amount=None, short=False):
+        if short:
+            return f"{amount}p"
+        if amount == 1:
+            return str(amount) + " penny"
+        elif amount > 1 or amount == 0:
+            return str(amount) + " pennies"
         else:
-            #Currency name alone
+            # Currency name alone
             return "penny"
-        

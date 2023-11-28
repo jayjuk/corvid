@@ -325,14 +325,14 @@ class GameManager:
     # Check if an object is in a merchant's possession
     def transact_object(self, object_name, player, action="get"):
         for merchant in self.get_merchants(player.get_current_room()):
-            if action=="sell":
+            if action == "sell":
                 for object in player.get_inventory():
                     if object.get_name().lower() == object_name.lower():
                         # Add the money to the player's inventory
                         player.add_money(object.get_price())
                         # NOTE: Merchant has unlimited money for now at least
                         # Change object ownership
-                        object.change_player(player, merchant)
+                        object.transfer(player, merchant)
                         return f"You sell {object.get_name(article='the')} to {merchant.get_name()} for {self.world.get_currency(object.get_price())}."
             else:
                 for object in merchant.get_inventory():
@@ -344,7 +344,7 @@ class GameManager:
                         elif action == "buy":
                             # Simply return True if the object is in the merchant's possession and the player said to buy
                             if player.deduct_money(object.get_price()):
-                                issue = object.set_player(player)
+                                issue = object.transfer(merchant, player)
                                 if not issue:
                                     return f"Congratulations, you successfully purchased {object.get_name(article='the')} for {self.world.get_currency(object.get_price())}."
                                 return issue
@@ -382,9 +382,7 @@ class GameManager:
             return f"I would advise against picking up {object_name}, they will not react well!"
         # Check if the object is in the possession of a merchant
         else:
-            outcome = self.transact_object(
-                object_name, player, "get"
-            )
+            outcome = self.transact_object(object_name, player, "get")
             if outcome:
                 return outcome
             return f"Sorry, there is no '{object_name}' here."
@@ -403,7 +401,8 @@ class GameManager:
             return "Sorry, invalid input. Object name is empty."
 
         # Check if the object is in the player's inventory
-        if player.drop_object(object_name):
+        object = player.drop_object(object_name)
+        if object:
             return f"You drop {object.get_name(article='the')}."
         return f"Sorry, you are not carrying '{object_name}'."
 
@@ -418,20 +417,17 @@ class GameManager:
         # Check if the object is in the room
         object = self.world.search_object(object_name, player.get_current_room())
         if object:
-            #Can just pick it up
+            # Can just pick it up
             return "You don't have to buy that, you can just pick it up!"
         # Check if they named a character
         elif self.is_character(object_name):
             return f"That character is not for sale!"
         # Check if the object is in the possession of a merchant
         else:
-            outcome = self.transact_object(
-                object_name, player, "buy"
-            )
+            outcome = self.transact_object(object_name, player, "buy")
             if outcome:
                 return outcome
             return f"Sorry, there is no '{object_name}' here."
-
 
     def do_sell(self, player, rest_of_response):
         # Get object name by calling a function to parse the response
@@ -446,11 +442,12 @@ class GameManager:
             if object.get_name().lower() == object_name.lower():
                 if not object.get_price():
                     return f"You can't sell {object.get_name(article='the')}."
-                print("DEBUG: Found object in player's inventory, price = ", object.get_price())
-                # Try to sell it to a merchant
-                outcome = self.transact_object(
-                    object_name, player, "sell"
+                print(
+                    "DEBUG: Found object in player's inventory, price = ",
+                    object.get_price(),
                 )
+                # Try to sell it to a merchant
+                outcome = self.transact_object(object_name, player, "sell")
                 if outcome:
                     return outcome
                 return f"Sorry, there is no merchant here to sell {object.get_name(article='the')} to."
@@ -536,9 +533,7 @@ class GameManager:
 
         # Create the player
         try:
-            player = Player(
-                self.world, sid, player_name, character.get("role")
-            )
+            player = Player(self.world, sid, player_name, character.get("role"))
         except ValueError as e:
             # Issue with player creation
             return str(e)
@@ -564,7 +559,9 @@ class GameManager:
 
         self.tell_player(sid, instructions, type="instructions")
 
-        self.tell_player(sid, self.move_player(player, "join", player.get_current_room()))
+        self.tell_player(
+            sid, self.move_player(player, "join", player.get_current_room())
+        )
 
         self.emit_game_data_update()
 
@@ -658,6 +655,8 @@ class GameManager:
         for other_character in self.get_other_characters(player.sid):
             if other_character.get_current_room() == next_room:
                 message += f" {other_character.get_name()} is here."
+                if other_character.get_role() == "merchant":
+                    message += " " + other_character.get_inventory_description()
                 # Only tell players not nps that you have arrived
                 if other_character.get_is_player():
                     self.tell_player(

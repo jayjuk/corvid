@@ -50,15 +50,12 @@ class Object:
         # Return empty string means it's been picked up without issue
         return ""
 
-    def change_player(self, old_player, new_player):
-        # Remove from old player
+    # Remove from old player and add to new player
+    def transfer(self, old_player, new_player):
         old_player.drop_object(self)
-        self.room = None
-        # Add to new player
-        new_player.add_object(self)
-        self.player_possession = new_player
+        self.set_player(new_player)
         # Return empty string means it's been picked up without issue
-        return ""      
+        return ""
 
     # Description of the object
     def get_description(self):
