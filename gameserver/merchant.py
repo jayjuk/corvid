@@ -29,7 +29,6 @@ class Merchant(Character):
     def get_inventory_description(self):
         description = "The merchant has the following available for sale: "
         for object in self.get_inventory():
-            print("DEBUG", object.name, object.get_price())
             description += f"{object.get_name('a')} ({'' if object.get_price()==0 else str(object.get_price())}), "
         return description[:-2] + "."
 

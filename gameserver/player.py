@@ -9,7 +9,7 @@ logger = setup_logger()
 
 # Player class
 class Player(Character):
-    def __init__(self, world, sid, player_name, player_role, starting_room):
+    def __init__(self, world, sid, player_name, player_role):
         # First check if player name is valid
         if not (
             player_name
@@ -26,16 +26,28 @@ class Player(Character):
         logger.info(f"Creating player {player_name}, sid {sid}")
 
         # Set up character
-        Character.__init__(self, world, player_name, player_role, starting_room)
+        print("DEBUG: Setting up character")
+        # TODO: Remove this, it's for simulating AI builders
+        if player_name == "Doug":
+            player_role = "builder"
+        else:
+            player_role = player_role or "player"
+        print(world, player_name, player_role)
+        #Call superclass constructor
+        Character.__init__(
+            self, world, player_name, player_role
+        )
+
         # Set flag to indicate this is a player
         self.is_player = True
 
+        # Set default score
+        self.money = (
+            100  # TODO: change this to 0 once other ways to earn money are implemented
+        )
+
         # Last action time is used to check for idle players
         self.last_action_time = time.time()
-
-        # TODO: Remove this, it's for simulating AI builders
-        if player_name == "Doug":
-            self.role = "builder"
 
         # Register of rooms this player has visited before (so they don't get long descriptions again)
         self.seen_rooms = {}
@@ -54,4 +66,16 @@ class Player(Character):
         description = "You are carrying: "
         for object in self.get_inventory():
             description += object.get_name("a") + ", "
-        return description[:-2] + "."
+        #Add money to inventory description
+        description =  description[:-2] + f".\nYou also have {self.world.get_currency(self.money)} in your pocket."
+        return description
+
+    def deduct_money(self, amount):
+        if self.money < amount:
+            return False
+        else:
+            self.money -= amount
+            return True
+
+    def add_money(self, amount):
+        self.money += amount

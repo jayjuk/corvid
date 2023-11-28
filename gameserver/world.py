@@ -304,15 +304,15 @@ class World:
         # TODO: Store and reload object state
         # Stubbed test data for now
         test_object_data = [
-            ["Thingy", "This is a thingy", "Road"],
-            ["Zingy", "This is a zingy", "North Road"],
-            ["Dingy", "This is a dingy", "Norther Road"],
+            ["Thingy", "This is a thingy", 0, "Road"],
+            ["Zingy", "This is a zingy", 1, "North Road"],
+            ["Dingy", "This is a dingy", 100, "Norther Road"],
         ]
         room_object_map = {}
         for _ in test_object_data:
-            (object_name, object_description, starting_room) = _
+            (object_name, object_description, price, starting_room) = _
             # Populate the room_object_map with object versions of the objects!
-            o = Object(world, object_name, object_description, starting_room)
+            o = Object(world, object_name, object_description, price, starting_room)
             if starting_room in room_object_map:
                 room_object_map[starting_room].append(o)
             else:
@@ -325,10 +325,21 @@ class World:
         apple = Object(self, "Apple", "A juicy apple.", price=1)
         banana = Object(self, "Banana", "A yellowy banana.", price=2)
         pear = Object(self, "Pear", "A peary pear.", price=3)
-        gambinos_stuff = [apple, banana, pear]
+        gold_bar = Object(self, "Necklace", "A necklace made of pure gold.", price=99)
+        gambinos_stuff = [apple, banana, pear, gold_bar]
         Merchant(self, "Gambino", "Road", gambinos_stuff)
         # TODO: more stuff with merchant
 
     # Static method to register NPC in the world
     def register_npc(self, npc):
         self.npcs.append(npc)
+
+    def get_currency(self, unit=None):
+        if unit == 1:
+            return str(unit) + " penny"
+        elif unit > 1 or unit==0:
+            return str(unit) + " pennies"
+        else:
+            #Currency name alone
+            return "penny"
+        

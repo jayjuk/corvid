@@ -1,12 +1,13 @@
 class Character:
-    # World reference applies to all character
+    # World reference applies to all characters
     world = None
 
     def __init__(
-        self, world, character_name, character_role, starting_room, description=None
+        self, world, character_name, character_role, starting_room=None, description=None
     ):
         # Register game server reference in player object to help with testing and minimise use of globals
         if self.__class__.world is None and world is not None:
+            print("DEBUG: Setting world reference", world)
             self.__class__.world = world
 
         self.name = character_name
@@ -15,7 +16,7 @@ class Character:
         self.description = description
 
         # Default starting location
-        self.current_room = starting_room
+        self.current_room = starting_room or world.get_starting_room()
 
         # Inventory
         self.inventory = []
@@ -38,13 +39,17 @@ class Character:
     # Setter for player dropping an object
     def drop_object(self, object_name):
         for object in self.inventory:
-            if object.get_name().lower() == object_name.lower():
+            if object.get_name().lower() == str(object_name).lower():
                 self.inventory.remove(object)
                 object.set_room(self.current_room)
                 return object
 
     def get_inventory(self):
         return self.inventory
+
+    def get_inventory_description(self):
+        # Superclass / default implementation is blank as only certain characters will have an inventory
+        return ""
 
     def get_is_player(self):
         return self.is_player

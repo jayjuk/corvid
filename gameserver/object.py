@@ -40,7 +40,6 @@ class Object:
 
     # Setter for player picking up
     def set_player(self, player):
-        print("XXW", self.world.room_objects)
         self.room = None
         # Set the player possession to the player both ways
         self.player_possession = player
@@ -50,6 +49,16 @@ class Object:
 
         # Return empty string means it's been picked up without issue
         return ""
+
+    def change_player(self, old_player, new_player):
+        # Remove from old player
+        old_player.drop_object(self)
+        self.room = None
+        # Add to new player
+        new_player.add_object(self)
+        self.player_possession = new_player
+        # Return empty string means it's been picked up without issue
+        return ""      
 
     # Description of the object
     def get_description(self):

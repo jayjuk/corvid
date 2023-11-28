@@ -206,7 +206,6 @@ def get_rooms_from_cloud():
     if rooms_client:
         rooms = {}
         for entity in rooms_client.query_entities(""):
-            print("DEBUG", entity)
             rooms[entity["RowKey"]] = {
                 "name": entity["RowKey"],
                 "description": entity["description"],
