@@ -2,3 +2,4 @@ python-socketio
 eventlet
 openai
 azure-data-tables
+dotenv
