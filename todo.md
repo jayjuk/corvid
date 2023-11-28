@@ -1,16 +1,20 @@
 # To do list for the game
 
+## DevOps / Other
+
+- Fix az-deploy-ai.bat to python and sourcing from .env, and azure variables
+- Test cloud deployment with Azure Tables
+
 ## Game Server
 
-- Unit tests
+- Unit tests esp more around storage
+- Enable trading with the merchant
+- Add market data / price changes
+- Add AI to merchant (referee parses his responses and decides when he is selling/buying?)
+- Add narrator
 - support different modes including blank map, and world theme to inspire builder (random 'seed')
 - make animals/creatures (with images)
 - Refactor so AI usage is centralised
-- Storage must work on the cloud
-- Enable trading with the merchant
-- Add market data / price changes
-- Add AI to merchant
-
 
 ## UI
 
