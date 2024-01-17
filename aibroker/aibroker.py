@@ -17,7 +17,7 @@ from vertexai.preview.generative_models import GenerativeModel
 
 # Set up logging to file and console
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(message)s",
     handlers=[
         logging.FileHandler(f"{__name__}.log"),
@@ -25,7 +25,6 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 logger.info("Starting up AI Broker")
 
 # Register the client with the server
@@ -55,18 +54,19 @@ def connect_to_server(hostname):
 
 # Class to handle interaction with the AI
 class AIManager:
+    first_contact = True
     time_to_die = False
     _instance = None
     game_instructions = ""
     chat_history = []
     event_log = []
-    max_history = 3
-    max_wait = 5  # secs
+    max_history = 10
+    max_wait = 10  # secs
     last_time = time.time()
     active = True
     mode = None
     character_name = "TBD"
-    model_name = "gpt-3.5-turbo"  # "gpt-4" #gpt-3.5-turbo-0613
+    model_name = "gemini-pro"  # "gpt-3.5-turbo"  # "gpt-4" #gpt-3.5-turbo-0613
     max_tokens = 200  # adjust the max_tokens based on desired response length
 
     def __new__(cls, mode="player"):
@@ -76,6 +76,10 @@ class AIManager:
             # We are going to use the chat interface to get AI To play our text adventure game
             cls._instance.model_api_connect()
             cls._instance.mode = mode
+
+            # Override max history for Gemini for now, as it's free
+            if cls._instance.model_name.startswith("gemini"):
+                cls._instance.max_history = 99999
 
         return cls._instance
 
@@ -145,11 +149,13 @@ class AIManager:
                 + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions and north/south of the Road (don't modify existing houses)\n"
             )
         else:
-            role_specific_instructions = "Explore, make friends and have fun! "
+            role_specific_instructions = "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
 
         return self.game_instructions + role_specific_instructions
 
     def get_ai_name(self):
+        # TODO - improve this so builder works for Gemini and we don't switch on model, the messages construction needs to be centralised
+
         system_message = "You are playing an adventure game. It is set in a typical house in the modern era."
         if self.mode == "builder":
             system_message += (
@@ -163,17 +169,25 @@ class AIManager:
             }
         ]
 
+        name_message = "What do you want your name to be in this game? Please respond with a single one-word name only."
         messages.append(
             {
                 "role": "user",
-                "content": "What do you want your name to be in this game? Please respond with a single one-word name only.",
+                "content": name_message,
             }
         )
+
+        message_text = None
+        if self.model_name.startswith("gemini"):
+            message_text = system_message + name_message
 
         ai_name = None
         while not ai_name or " " in ai_name:
             # Keep trying til they get the name right
-            ai_name = self.submit_request(messages).strip(".")
+            ai_name = self.submit_request(messages, message_text).strip(".")
+            # Reset so the intro is done again
+            # TODO - improve this
+            self.first_contact = False
             logger.info(f"AI chose the name {ai_name}.")
             self.character_name = ai_name
         return ai_name
@@ -189,6 +203,10 @@ class AIManager:
         if self.event_log and self.active:
             # OK, time to process the events that have built up
             response = self.submit_input()
+            # TODO: clean this up
+            # Check again we are still running (due to wait on model)
+            if self.time_to_die:
+                return
             if response:
                 # Submit AI's response to the game server
                 sio.emit("user_action", response)
@@ -213,47 +231,57 @@ class AIManager:
         self.event_log = []
         print(f"Found {len(tmp_log)} events to submit to model.")
 
-        # Add the history
-        for event_text in tmp_log:
-            self.chat_history.append(
-                {
-                    "role": "user",
-                    "content": event_text,
-                }
-            )
-
-        # Now use history to build the messages for model input
-        messages = [
-            {
-                "role": "system",
-                "content": "You have been brought to life in a text adventure game! "
-                + "It is set in a typical house. For now all you can do is move and chat. "
-                + f" Do not apologise to the game! Respond only with one valid command each time you are contacted. Instructions:\n{self.get_instructions()}",
-            }
-        ]
-        if len(self.chat_history) > self.max_history:
-            messages.append(
-                {
-                    "role": "user",
-                    "content": "(some game transcript history removed for brevity))",
-                }
-            )
-        for history_item in self.chat_history[-1 * self.max_history :]:
-            messages.append(
-                {
-                    "role": history_item["role"],
-                    "content": history_item["content"],
-                }
-            )
-
-        messages.append(
-            {"role": "user", "content": "Please enter your next game command."}
+        intro_text = (
+            "You have been brought to life in a text adventure game! "
+            + "It is set in a typical house. For now all you can do is move and chat. "
+            + f" Do not apologise to the game! Respond only with one valid command "
+            + "each time you are contacted. Instructions:\n{self.get_instructions()}"
         )
 
-        return self.submit_request(messages)
+        if self.model_name.startswith("gpt"):
+            # Add the history
 
-    def submit_request(self, messages):
-        logger.debug(f"submit_request called, {messages=}")
+            for event_text in tmp_log:
+                self.chat_history.append(
+                    {
+                        "role": "user",
+                        "content": event_text,
+                    }
+                )
+
+            # Now use history to build the messages for model input
+            messages = [{"role": "system", "content": intro_text}]
+            if len(self.chat_history) > self.max_history:
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": "(some game transcript history removed for brevity))",
+                    }
+                )
+            for history_item in self.chat_history[-1 * self.max_history :]:
+                messages.append(
+                    {
+                        "role": history_item["role"],
+                        "content": history_item["content"],
+                    }
+                )
+
+            messages.append(
+                {"role": "user", "content": "Please enter your next game command."}
+            )
+
+            return self.submit_request(messages)
+        elif self.model_name.startswith("gemini"):
+            message_text = ""
+            if self.first_contact:
+                message_text += intro_text
+                self.first_contact = False
+            for event_text in tmp_log:
+                message_text += event_text + "\n"
+            return self.submit_request(None, message_text)
+
+    def submit_request(self, messages, message_text=None):
+        # logger.debug(f"submit_request called, {messages=}")
         try_count = 0
         model_response = None
         retries = 0
@@ -275,19 +303,17 @@ class AIManager:
                         break
                 elif self.model_name.startswith("gemini"):
                     # Gemini does not support system message
-                    message_to_send = ""
-                    if messages[0]["role"] == "system":
-                        message_to_send = (
-                            "(System message: *** "
-                            + messages[0]["content"]
-                            + "\n***)\n"
-                        )
-                    # Gemini API remembers history, so we only need to send the last message
-                    message_to_send += messages[-1]["content"]
+                    message_to_send = message_text
+                    logging.info("FINAL GEMINI INPUT:\n" + message_to_send)
                     model_response = self.chat.send_message(message_to_send)
+                    logging.info("FULL GEMINI RESPONSE:\n" + str(model_response))
+                    model_response = model_response.text.strip("*").strip()
                     break
             except Exception as e:
-                if "server is overloaded" in str(e) and try_count < 3:
+                if (
+                    "server is overloaded" in str(e)
+                    or "The response was blocked." in str(e)
+                ) and try_count < 3:
                     logger.info(f"Error from model: {str(e)}")
                     logger.info(f"Retrying in 5 seconds... (attempt {try_count+1}/3)")
                     time.sleep(5)

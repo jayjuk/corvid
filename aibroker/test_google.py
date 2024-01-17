@@ -30,8 +30,8 @@ chat = model.start_chat(history=[])
 
 def get_chat_response(chat, message):
     response = chat.send_message(message)
-    print(response)
-    print(chat.history)
+    print(response.text)
+    print("full response:\n", response, "\n\nhistory:", chat.history)
 
 
 user_input = None
