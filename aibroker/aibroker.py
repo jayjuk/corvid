@@ -1,12 +1,19 @@
+import eventlet
 import socketio
 import time
-import openai
 import sys
 from pprint import pprint
 import os
 from dotenv import load_dotenv
 import json
 import logging
+
+# TODO: move this out to a seperate class etc, should not import both then only use one
+import openai
+from google.cloud import aiplatform_v1
+import vertexai
+from vertexai.preview.generative_models import GenerativeModel
+
 
 # Set up logging to file and console
 logging.basicConfig(
@@ -38,7 +45,7 @@ def connect_to_server(hostname):
             logger.info(
                 f"Could not connect to server. Retrying in {wait_time} seconds..."
             )
-            time.sleep(wait_time)
+            eventlet.sleep(wait_time)
             wait_time *= 2
 
     if not connected:
@@ -48,28 +55,32 @@ def connect_to_server(hostname):
 
 # Class to handle interaction with the AI
 class AIManager:
+    time_to_die = False
     _instance = None
     game_instructions = ""
     chat_history = []
+    event_log = []
     max_history = 3
-    max_wait = 3  # secs
+    max_wait = 5  # secs
     last_time = time.time()
     active = True
     mode = None
     character_name = "TBD"
     model_name = "gpt-3.5-turbo"  # "gpt-4" #gpt-3.5-turbo-0613
+    max_tokens = 200  # adjust the max_tokens based on desired response length
 
     def __new__(cls, mode="player"):
         if cls._instance is None:
             cls._instance = super(AIManager, cls).__new__(cls)
             # Set up openAI connection
             # We are going to use the chat interface to get AI To play our text adventure game
-            cls._instance.openai_connect()
+            cls._instance.model_api_connect()
             cls._instance.mode = mode
 
         return cls._instance
 
     def save_model_data(self, filename_prefix, data):
+        print("Saving model data")
         folder_path = "model_io"
         os.makedirs(folder_path, exist_ok=True)
         with open(
@@ -78,15 +89,46 @@ class AIManager:
         ) as f:
             json.dump(data, f, indent=4)
 
-    def openai_connect(self):
+    def model_api_connect(self):
         # Use pre-set variable before dotenv.
-        if not os.environ.get("OPENAI_API_KEY"):
-            load_dotenv()
-            if not os.getenv("OPENAI_API_KEY"):
-                logger.info("ERROR: OPENAI_API_KEY not set. Exiting.")
-                sys.exit(1)
+        if self.model_name.startswith("gpt"):
+            if not os.environ.get("OPENAI_API_KEY"):
+                load_dotenv()
+                if not os.getenv("OPENAI_API_KEY"):
+                    logger.info("ERROR: OPENAI_API_KEY not set. Exiting.")
+                    sys.exit(1)
 
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+            openai.api_key = os.getenv("OPENAI_API_KEY")
+            self.model_client = openai.OpenAI()
+        elif self.model_name.startswith("gemini"):
+            # If env variable not set and file exists, set it
+            # set GOOGLE_APPLICATION_CREDENTIALS=
+            gcloud_credentials_file = "gemini.key"
+            if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
+                if not os.path.exists(gcloud_credentials_file):
+                    print(
+                        "GOOGLE_APPLICATION_CREDENTIALS not set and {} does not exist".format(
+                            gcloud_credentials_file
+                        )
+                    )
+                    exit()
+                else:
+                    print(
+                        "Setting GOOGLE_APPLICATION_CREDENTIALS to {}".format(
+                            gcloud_credentials_file
+                        )
+                    )
+                    os.environ[
+                        "GOOGLE_APPLICATION_CREDENTIALS"
+                    ] = gcloud_credentials_file
+
+            vertexai.init(project="jaysgame", location="us-central1")
+            self.model_client = GenerativeModel("gemini-pro")
+            self.chat = self.model_client.start_chat(history=[])
+
+        else:
+            logger.info(f"ERROR: Model name {self.model_name} not recognised. Exiting.")
+            sys.exit(1)
 
     # AI manager will record instructions from the game server
     # Which are given to each player at the start of the game
@@ -131,48 +173,56 @@ class AIManager:
         ai_name = None
         while not ai_name or " " in ai_name:
             # Keep trying til they get the name right
-            ai_name = self.submit_request(messages)
+            ai_name = self.submit_request(messages).strip(".")
             logger.info(f"AI chose the name {ai_name}.")
             self.character_name = ai_name
         return ai_name
 
     def log_event(self, event_text):
-        self.chat_history.append(
-            {
-                "role": "user",
-                "content": event_text,
-            }
-        )
-        if self.active:
-            # If the input is just echoing back what you said, impose a delay.
-            # TODO: make it so this delay can be interrupted, this is a bit naff
-            if str(event_text).startswith("You say"):
-                # time.sleep(ai_manager.max_wait * 2)
-                ("Not responding to echo event")
-                pass
-            else:
-                response = self.submit_input()
-                if response:
-                    # Submit AI's response to the game server
-                    sio.emit("user_action", response)
-                    # If response was to exit, exit here (after sending the exit message to the game server)
-                    if response == "exit":
-                        logger.info("AI has exited the game.")
-                        sys.exit(1)
-                    self.chat_history.append(
-                        {
-                            "role": "assistant",
-                            "content": response,
-                        }
-                    )
-                else:
-                    logger.info("ERROR: AI returned empty response")
+        # If the input is just echoing back what you said, do nothing
+        if str(event_text).startswith("You say"):
+            return
+        # Otherwise, add this to the user input backlog
+        self.event_log.append(event_text)
+
+    def poll_event_log(self):
+        if self.event_log and self.active:
+            # OK, time to process the events that have built up
+            response = self.submit_input()
+            if response:
+                # Submit AI's response to the game server
+                sio.emit("user_action", response)
+                # If response was to exit, exit here (after sending the exit message to the game server)
+                if response == "exit":
+                    logger.info("AI has exited the game.")
                     sys.exit(1)
-        else:
-            # This is probably just the response to the user moving waiting etc.
-            logger.info("AI is not active, so not responding to event")
+                self.chat_history.append(
+                    {
+                        "role": "assistant",
+                        "content": response,
+                    }
+                )
+            else:
+                logger.info("ERROR: AI returned empty response")
+                sys.exit(1)
 
     def submit_input(self):
+        # TODO: review this in case there is a better way
+        # Grab and clear the log quickly to minimise threading issue risk
+        tmp_log = self.event_log.copy()
+        self.event_log = []
+        print(f"Found {len(tmp_log)} events to submit to model.")
+
+        # Add the history
+        for event_text in tmp_log:
+            self.chat_history.append(
+                {
+                    "role": "user",
+                    "content": event_text,
+                }
+            )
+
+        # Now use history to build the messages for model input
         messages = [
             {
                 "role": "system",
@@ -203,46 +253,74 @@ class AIManager:
         return self.submit_request(messages)
 
     def submit_request(self, messages):
-        wait_time = self.max_wait - (time.time() - self.last_time)
-        if wait_time > 0:
-            # don't do anything for now
-            logger.info(f"Not doing anything in the next {int(wait_time)} seconds")
-            time.sleep(wait_time)
+        logger.debug(f"submit_request called, {messages=}")
         try_count = 0
-        while True:
+        model_response = None
+        retries = 0
+        while not model_response and retries < 3:
+            retries += 1
+            response = None
             try:
-                # TODO: TBD whether we want the input or the output or both
-                self.save_model_data("input", messages)
-
                 # Submit request to ChatGPT
-                logger.info(f"Submitting request to OpenAI...")
-                response = openai.ChatCompletion.create(
-                    model=self.model_name,
-                    messages=messages,
-                    max_tokens=200,  # You can adjust the max_tokens based on your desired response length
-                )
-                break
+                logger.info(f"Submitting request to model...")
+                if self.model_name.startswith("gpt"):
+                    response = self.model_client.chat.completions.create(
+                        model=self.model_name,
+                        messages=messages,
+                        max_tokens=self.max_tokens,
+                    )
+                    # Extract response content
+                    for choice in response.choices:
+                        model_response = choice.message.content
+                        break
+                elif self.model_name.startswith("gemini"):
+                    # Gemini does not support system message
+                    message_to_send = ""
+                    if messages[0]["role"] == "system":
+                        message_to_send = (
+                            "(System message: *** "
+                            + messages[0]["content"]
+                            + "\n***)\n"
+                        )
+                    # Gemini API remembers history, so we only need to send the last message
+                    message_to_send += messages[-1]["content"]
+                    model_response = self.chat.send_message(message_to_send)
+                    break
             except Exception as e:
                 if "server is overloaded" in str(e) and try_count < 3:
-                    logger.info(f"Error from ChatGPT: {str(e)}")
+                    logger.info(f"Error from model: {str(e)}")
                     logger.info(f"Retrying in 5 seconds... (attempt {try_count+1}/3)")
                     time.sleep(5)
                     try_count += 1
                 else:
-                    logger.info(f"Error from ChatGPT: {str(e)}")
+                    logger.info(f"Error from model: {str(e)}")
                     return "exit"
 
-        # Save response to file for fine-tuning purposes
-        self.save_model_data("response", response)
+        if response:
+            # Save response to file for fine-tuning purposes
+            pass
+            # TODO: TBD whether we want the input or the output or both
+            # self.save_model_data("input", messages)
+            # self.save_model_data("response", response)
 
-        # Extract and print the response from ChatGPT
-        chatgpt_response = response.choices[0]["message"]["content"].strip()
-        logger.info("ChatGPT Response: " + str(chatgpt_response))
+        logger.info("Model Response: " + str(model_response))
 
-        # Record time
-        self.last_time = time.time()
+        return model_response
 
-        return chatgpt_response
+    # The main processing loop
+    def ai_response_loop(self):
+        while True:
+            # Exit own thread when time comes
+            if self.time_to_die:
+                return
+
+            wait_time = self.max_wait - (time.time() - self.last_time)
+            if wait_time > 0:
+                # don't do anything for now
+                eventlet.sleep(wait_time)
+            self.poll_event_log()
+            # Record time
+            self.last_time = time.time()
 
 
 @sio.on("game_update")
@@ -270,12 +348,16 @@ def catch_all(data):
 @sio.on("shutdown")
 def catch_all(data):
     logger.info(f"Shutdown event received: {data}. Exiting immediately.")
-    sys.exit()
+    ai_manager.time_to_die = True
+    sio.disconnect()
+    sio.eio.disconnect()
+    sys.exit(1)
 
 
+# This might happen if the AI quits!
 @sio.on("logout")
 def catch_all(data):
-    logger.info(f"Logout event received: {data}")
+    logger.info(f"Logout event received: {data} did AI quit?")
     sio.disconnect()
     sys.exit(1)
 
@@ -317,7 +399,7 @@ def connect():
 def connect_error(data):
     logger.error("Connection failure!")
     logger.info(data)
-    exit()
+    sys.exit(1)
 
 
 @sio.event
@@ -358,4 +440,9 @@ if __name__ == "__main__":
     logger.info(f"Starting up AI Broker on hostname {hostname}")
     # Connect to the server
     connect_to_server(f"http://{hostname}:3001")
+
+    # This is where the main processing of inputs happens
+    eventlet.spawn(ai_manager.ai_response_loop())
+
+    # This keeps the SocketIO event processing going
     sio.wait()

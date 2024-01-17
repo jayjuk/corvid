@@ -617,7 +617,7 @@ class GameManager:
             arrival_message = f"{player.name} has materialised as if by magic!"
         elif direction == "join":
             departure_message = ""
-            arrival_message = f"{player.name} has joined the game, starting here."
+            arrival_message = ""  # Covered elsewhere
         elif direction in self.world.rooms[player.get_current_room()]["exits"]:
             next_room = self.world.rooms[player.get_current_room()]["exits"][direction]
 

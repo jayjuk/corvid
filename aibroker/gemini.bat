@@ -1,0 +1,2 @@
+set GOOGLE_APPLICATION_CREDENTIALS=jaysgame-e62e5a716d59.key
+python test_google.py
