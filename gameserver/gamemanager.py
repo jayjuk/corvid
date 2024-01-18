@@ -153,7 +153,7 @@ class GameManager:
 
     def do_look(self, player, rest_of_response):
         # Strip off at and the
-        if rest_of_response[0:3] == "at ":
+        if rest_of_response and rest_of_response[0:3] == "at ":
             rest_of_response = rest_of_response[3:]
             if rest_of_response[0:4] == "the ":
                 rest_of_response = rest_of_response[4:]

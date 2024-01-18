@@ -9,7 +9,7 @@ logger = setup_logger()
 
 # Player class
 class Player(Character):
-    def __init__(self, world, sid, player_name, player_role):
+    def __init__(self, world, sid, player_name, player_role="player"):
         # First check if player name is valid
         if not (
             player_name
@@ -30,8 +30,7 @@ class Player(Character):
         # TODO: Remove this, it's for simulating AI builders
         if player_name == "Doug":
             player_role = "builder"
-        else:
-            player_role = player_role or "player"
+
         print(world, player_name, player_role)
         # Call superclass constructor
         Character.__init__(self, world, player_name, player_role)
