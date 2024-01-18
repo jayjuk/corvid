@@ -304,9 +304,9 @@ class World:
         # TODO: Store and reload object state
         # Stubbed test data for now
         test_object_data = [
-            ["Rock", "This is an ordinary rock", 0, "Road"],
-            ["Stone", "This is a fairly normal stone", 1, "North Road"],
-            ["Pebble", "This is a little shiny pebble", 100, "Norther Road"],
+            ["Rock", "This is an ordinary rock.", 0, "Road"],
+            ["Stone", "This is a fairly normal stone.", 1, "North Road"],
+            ["Pebble", "This is a little shiny pebble.", 100, "Norther Road"],
         ]
         room_object_map = {}
         for _ in test_object_data:

@@ -34,6 +34,8 @@ class GameManager:
                 "w": "west",
                 "exit": "quit",
                 "pick": "get",
+                "hi": "greet",
+                "talk": "say",
                 "inv": "inventory",
                 "haggle": "trade",
                 "purchase": "buy",
@@ -54,6 +56,10 @@ class GameManager:
                 "shout": {
                     "function": cls._instance.do_shout,
                     "description": "Shout something to everyone in the game, e.g. shout Where is everyone?",
+                },
+                "greet": {
+                    "function": cls._instance.do_greet,
+                    "description": "Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!",
                 },
                 "wait": {
                     "function": cls._instance.do_wait,
@@ -142,9 +148,11 @@ class GameManager:
         return self.move_player(player, rest_of_response, "")
 
     def do_look(self, player, rest_of_response):
-        # Not used for now, next line is to avoid warnings
+        # Strip off at and the
         if rest_of_response[0:3] == "at ":
             rest_of_response = rest_of_response[3:]
+            if rest_of_response[0:4] == "the ":
+                rest_of_response = rest_of_response[4:]
             if rest_of_response == "":
                 return "Look at what?"
             else:
@@ -183,6 +191,18 @@ class GameManager:
 
     def do_say(self, player, rest_of_response, shout=False):
         verb = "shouts" if shout else "says"
+        # Remove 'to' and player name
+        if rest_of_response.startswith("to "):
+            # Split rest of response into player name and message
+            other_player_name, rest_of_response = rest_of_response[3:].split(" ", 1)
+            if self.is_existing_player_name(other_player_name):
+                if rest_of_response == "":
+                    return f"Say what to {other_player_name}?"
+                else:
+                    return "You can't currently speak to just one person in the room. To converse, just use 'say' followed by what you want to say, everyone in the room will hear you."
+            else:
+                return f"{other_player_name} is not in the game!"
+
         logger.info(f"User {player.name} {verb}: {rest_of_response}")
         if self.get_player_count() == 1:
             player_response = "You are the only player in the game currently!"
@@ -199,6 +219,10 @@ class GameManager:
     def do_shout(self, player, rest_of_response):
         # Shout is the same as say but to everyone
         self.do_say(player, rest_of_response, shout=True)
+
+    def do_greet(self, player, rest_of_response):
+        # Like say hi!
+        self.do_say(player, "Hi " + rest_of_response)
 
     def do_wait(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
@@ -503,11 +527,11 @@ class GameManager:
         return len(self.players)
 
     # Check if a player name is unique
-    def player_name_is_unique(self, player_name):
+    def is_existing_player_name(self, player_name):
         for player_sid, player in self.players.items():
             if str(player.name).lower() == str(player_name).lower():
-                return False
-        return True
+                return True
+        return False
 
     # End of getters
 
@@ -524,7 +548,7 @@ class GameManager:
         player_name = character["name"].strip().title()
 
         # Check uniqueness here, other checks are done in the player class
-        if not self.player_name_is_unique(player_name):
+        if self.is_existing_player_name(player_name):
             # Issue with player name setting
             return "game_update", "Sorry, that name is already taken."
         if player_name == "system":
@@ -574,6 +598,11 @@ class GameManager:
         player.update_last_action_time()
         player_response = ""
         if player_input:
+            # Special handling of leading apostrophe (means say):
+            if player_input.startswith("'"):
+                player_input = player_input.strip("'")
+                player_input = "say " + player_input
+
             words = str(player_input).split()
             command = words[0].lower()
             # get the rest of the response apart from the first word
@@ -623,11 +652,14 @@ class GameManager:
 
             departure_message = f"{player.name} leaves, heading {direction} to the {str(next_room).lower()}."
             arrival_message = f"{player.name} arrives from the {previous_room.lower()}."
-        else:
+        elif direction in self.directions:
             # Valid direction but no exit
-            return "Sorry, you can't go that way." + self.world.get_room_exits(
+            return f"Sorry, you can't go {direction}." + self.world.get_room_exits(
                 player.get_current_room()
             )
+        else:
+            # Not a valid direction
+            return f"{direction} is not a valid direction."
 
         # Check for other players you are leaving
         for other_character in self.get_other_characters(player.sid, players_only=True):

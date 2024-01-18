@@ -61,7 +61,7 @@ class AIManager:
     chat_history = []
     event_log = []
     max_history = 10
-    max_wait = 10  # secs
+    max_wait = 5  # secs
     last_time = time.time()
     active = True
     mode = None
@@ -78,10 +78,22 @@ class AIManager:
             cls._instance.mode = mode
 
             # Override max history for Gemini for now, as it's free
-            if cls._instance.model_name.startswith("gemini"):
+            if cls._instance.get_model_api() == "Gemini":
                 cls._instance.max_history = 99999
 
         return cls._instance
+
+    def get_model_api(self):
+        # Use the specific model name to generalise which class/company we are using
+        if self.model_name.startswith("gpt"):
+            return "GPT"
+        elif self.model_name.startswith("gemini"):
+            return "Gemini"
+
+    def model_client_manages_history(self):
+        if self.get_model_api() == "Gemini":
+            return True
+        return False
 
     def save_model_data(self, filename_prefix, data):
         print("Saving model data")
@@ -95,7 +107,7 @@ class AIManager:
 
     def model_api_connect(self):
         # Use pre-set variable before dotenv.
-        if self.model_name.startswith("gpt"):
+        if self.get_model_api() == "GPT":
             if not os.environ.get("OPENAI_API_KEY"):
                 load_dotenv()
                 if not os.getenv("OPENAI_API_KEY"):
@@ -104,7 +116,7 @@ class AIManager:
 
             openai.api_key = os.getenv("OPENAI_API_KEY")
             self.model_client = openai.OpenAI()
-        elif self.model_name.startswith("gemini"):
+        elif self.get_model_api() == "Gemini":
             # If env variable not set and file exists, set it
             # set GOOGLE_APPLICATION_CREDENTIALS=
             gcloud_credentials_file = "gemini.key"
@@ -178,7 +190,7 @@ class AIManager:
         )
 
         message_text = None
-        if self.model_name.startswith("gemini"):
+        if self.model_client_manages_history():
             message_text = system_message + name_message
 
         ai_name = None
@@ -235,12 +247,25 @@ class AIManager:
             "You have been brought to life in a text adventure game! "
             + "It is set in a typical house. For now all you can do is move and chat. "
             + f" Do not apologise to the game! Respond only with one valid command "
-            + "each time you are contacted. Instructions:\n{self.get_instructions()}"
+            + f"each time you are contacted.\nInstructions:\n{self.get_instructions()}"
+        )
+        command_text = (
+            "Please enter your a valid command per the instructions given previously."
         )
 
-        if self.model_name.startswith("gpt"):
+        # Assume that if the client manages history, it just takes a string as input
+        if self.model_client_manages_history():
+            message_text = ""
+            if self.first_contact:
+                message_text += intro_text
+                self.first_contact = False
+            for event_text in tmp_log:
+                message_text += event_text + "\n"
+            message_text += command_text
+            return self.submit_request(None, message_text)
+        else:
             # Add the history
-
+            # Assume for now that API clients that need history use the OpenAI role/content structure below
             for event_text in tmp_log:
                 self.chat_history.append(
                     {
@@ -266,19 +291,9 @@ class AIManager:
                     }
                 )
 
-            messages.append(
-                {"role": "user", "content": "Please enter your next game command."}
-            )
+            messages.append({"role": "user", "content": command_text})
 
             return self.submit_request(messages)
-        elif self.model_name.startswith("gemini"):
-            message_text = ""
-            if self.first_contact:
-                message_text += intro_text
-                self.first_contact = False
-            for event_text in tmp_log:
-                message_text += event_text + "\n"
-            return self.submit_request(None, message_text)
 
     def submit_request(self, messages, message_text=None):
         # logger.debug(f"submit_request called, {messages=}")
@@ -306,8 +321,14 @@ class AIManager:
                     message_to_send = message_text
                     logging.info("FINAL GEMINI INPUT:\n" + message_to_send)
                     model_response = self.chat.send_message(message_to_send)
-                    logging.info("FULL GEMINI RESPONSE:\n" + str(model_response))
+                    logging.info("ORIGINAL GEMINI RESPONSE:\n" + str(model_response))
                     model_response = model_response.text.strip("*").strip()
+                    # If the response contains newline(s) followed by some info in parentheses, strip all this out
+                    if "\n(" in model_response and model_response.endswith(")"):
+                        model_response = model_response.split("\n")[0].strip()
+                    # Convert all-upper-case response to natural case
+                    if model_response.isupper():
+                        model_response = model_response.title()
                     break
             except Exception as e:
                 if (
