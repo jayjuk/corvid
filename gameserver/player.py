@@ -54,6 +54,20 @@ class Player(Character):
         # SID is the unique identifier for this player used by SocketIO
         self.sid = sid
 
+        # Define history
+        self.max_input_history_length = 1000
+        self.input_history = []
+
+    # Getter for input history (optional input of number of entries to return)
+    def get_input_history(self, number_of_entries=1):
+        return "\n".join(self.input_history[-number_of_entries:]) + "\n"
+
+    # Setter for input history - add a new entry but don't let it get above a certain length
+    def add_input_history(self, input):
+        self.input_history.append(input)
+        if len(self.input_history) > self.max_input_history_length:
+            self.input_history.pop(0)
+
     # Setter for updating player's last action time
     # Used to check for idle players
     def update_last_action_time(self):

@@ -10,10 +10,18 @@ from logger import setup_logger
 logger = setup_logger()
 
 load_dotenv()
+try:
+    client = OpenAI()
+    logger.info("Connected to OpenAI API")
+    DO_NOT_GENERATE_IMAGES = os.getenv("DO_NOT_GENERATE_IMAGES") or False
+except Exception as e:
+    logger.error(f"Error connecting to OpenAI API: {e}")
+    DO_NOT_GENERATE_IMAGES = True
 
-client = OpenAI()
-DO_NOT_GENERATE_IMAGES = os.getenv("DO_NOT_GENERATE_IMAGES") or False
-print(client)
+# TODO: Errors will occur if the functions below are called without the client being set up. For now, just making unit tests pass.
+# This is better than connecting to OpenAI in unit testing, but not ideal
+# .env is not in Github
+# TODO: figure out how to manage keys in Github
 
 
 # Stateless image manager

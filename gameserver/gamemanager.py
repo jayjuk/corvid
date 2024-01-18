@@ -4,6 +4,7 @@ import sys
 from player import Player
 from world import World
 from logger import setup_logger
+import aimanager
 
 # Set up logging
 logger = setup_logger()
@@ -34,6 +35,9 @@ class GameManager:
                 "w": "west",
                 "exit": "quit",
                 "pick": "get",
+                "head": "go",
+                "walk": "go",
+                "run": "go",
                 "hi": "greet",
                 "talk": "say",
                 "inv": "inventory",
@@ -587,10 +591,10 @@ class GameManager:
             + "\nHave fun!\n \n"
         )
 
-        self.tell_player(sid, instructions, type="instructions")
+        self.tell_player(player, instructions, type="instructions")
 
         self.tell_player(
-            sid, self.move_player(player, "join", player.get_current_room())
+            player, self.move_player(player, "join", player.get_current_room())
         )
 
         self.emit_game_data_update()
@@ -600,7 +604,7 @@ class GameManager:
         self.activate_background_loop()
 
     # Process player input
-    def process_player_input(self, player, player_input):
+    def process_player_input(self, player, player_input, translated=False):
         player.update_last_action_time()
         player_response = ""
         if player_input:
@@ -632,11 +636,30 @@ class GameManager:
             elif command in self.directions:
                 player_response = self.move_player(player, command, rest_of_response)
             else:
-                # Invalid command
-                player_response = (
-                    "Sorry, that is not a recognised command. Available commands:\n"
-                    + self.get_commands_description()
-                )
+                # If the command is not recognised, try to translate it using AI (unless this is already a translation)
+                if not translated:
+                    # Try to translate the user input into a valid command using AI :-)
+                    ai_translation = aimanager.submit_prompt(
+                        "Please help me to translate my user's input into a valid adventure game command.\n"
+                        + "Valid commands:"
+                        + self.get_commands_description()
+                        + "\nRespond with only a valid command, nothing else.\n"
+                        + f"Some history of what the user has seen for context:\n{player.get_input_history(10)}\n"
+                        + f"Their input: {player_input}",
+                    )
+                    logger.info(f"AI translation: {ai_translation}")
+                    if ai_translation:
+                        # Try to process the AI translation as a command, but only try this once
+                        player_response = self.process_player_input(
+                            player, ai_translation, translated=True
+                        )
+                else:
+                    # Invalid command
+                    player_response = (
+                        "Sorry, that is not a recognised command. Available commands:\n"
+                        + self.get_commands_description()
+                    )
+
         else:
             # Empty command
             player_response = "Sorry, you need to enter a command."
@@ -671,7 +694,7 @@ class GameManager:
         for other_character in self.get_other_characters(player.sid, players_only=True):
             if other_character.get_current_room() == player.get_current_room():
                 self.tell_player(
-                    other_character.sid,
+                    other_character,
                     departure_message,
                 )
 
@@ -698,7 +721,7 @@ class GameManager:
                 # Only tell players not nps that you have arrived
                 if other_character.get_is_player():
                     self.tell_player(
-                        other_character.sid,
+                        other_character,
                         arrival_message,
                     )
         # Set new room
@@ -739,30 +762,30 @@ class GameManager:
 
     # Emit a message to all players
     def tell_everyone(self, message):
-        if message.strip():
-            self.sio.emit("game_update", message)
+        self.tell_others(None, message, shout=True)
 
     # Emit a message to all players except the one specified
     def tell_others(self, sid, message, shout=False):
         told_count = 0
         if message.strip():
-            for other_game_sid, other_game in self.players.items():
+            for other_player_sid, other_player in self.players.items():
                 # Only tell another player if they are in the same room
-                if sid != other_game_sid and (
+                if sid != other_player_sid and (
                     shout
-                    or other_game.get_current_room()
+                    or other_player.get_current_room()
                     == self.players[sid].get_current_room()
                 ):
-                    self.sio.emit("game_update", message, other_game_sid)
+                    self.tell_player(other_player, message)
                     told_count += 1
         return told_count
 
     # Emit a message to a specific player
-    def tell_player(self, sid, message, type="game_update"):
+    def tell_player(self, player, message, type="game_update"):
         message = message.strip()
         for line in message.split("\n"):
             if line != "":
-                self.sio.emit(type, line, sid)
+                self.sio.emit(type, line, player.sid)
+                player.add_input_history(line)
 
     # Get other players
     def get_other_characters(self, sid=None, players_only=False):
@@ -802,7 +825,7 @@ class GameManager:
         if sid in self.players:
             player = self.players[sid]
             self.tell_player(
-                player.sid,
+                player,
                 reason,
             )
             message = f"{player.name} has left the game; there are now {self.get_player_count()-1} players."

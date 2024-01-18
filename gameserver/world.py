@@ -304,9 +304,9 @@ class World:
         # TODO: Store and reload object state
         # Stubbed test data for now
         test_object_data = [
-            ["Rock", "This is an ordinary rock.", 0, "Road"],
-            ["Stone", "This is a fairly normal stone.", 1, "North Road"],
-            ["Pebble", "This is a little shiny pebble.", 100, "Norther Road"],
+            ["rock", "This is an ordinary rock.", 0, "Road"],
+            ["stone", "This is a fairly normal stone.", 1, "North Road"],
+            ["pebble", "This is a little shiny pebble.", 100, "Norther Road"],
         ]
         room_object_map = {}
         for _ in test_object_data:
@@ -322,10 +322,10 @@ class World:
 
     def load_merchants(self):
         # Merchant objects have no room
-        apple = Object(self, "Apple", "A juicy apple.", price=1)
-        banana = Object(self, "Banana", "A yellowy banana.", price=2)
-        pear = Object(self, "Pear", "A peary pear.", price=3)
-        gold_bar = Object(self, "Necklace", "A necklace made of pure gold.", price=99)
+        apple = Object(self, "apple", "A juicy apple.", price=1)
+        banana = Object(self, "banana", "A yellowy banana.", price=2)
+        pear = Object(self, "pear", "A peary pear.", price=3)
+        gold_bar = Object(self, "necklace", "A necklace made of pure gold.", price=99)
         gambinos_stuff = [apple, banana, pear, gold_bar]
         Merchant(self, "Gambino", "Road", gambinos_stuff)
         # TODO: more stuff with merchant

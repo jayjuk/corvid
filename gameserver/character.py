@@ -57,8 +57,8 @@ class Character:
         if object in self.inventory:
             self.inventory.remove(object)
             object.set_room(self.current_room)
-            return True
-        return False
+            return object
+        return None
 
     def get_inventory(self):
         return self.inventory
