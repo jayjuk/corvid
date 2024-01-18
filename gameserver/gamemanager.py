@@ -370,7 +370,13 @@ class GameManager:
                             if player.deduct_money(object.get_price()):
                                 issue = object.transfer(merchant, player)
                                 if not issue:
+                                    # Tell the others about the transaction
+                                    self.tell_others(
+                                        player.sid,
+                                        f"{player.name} has bought {object.get_name(article='the')} from {merchant.get_name()}.",
+                                    )
                                     return f"Congratulations, you successfully purchased {object.get_name(article='the')} for {self.world.get_currency(object.get_price())}."
+
                                 return issue
 
                             else:
