@@ -48,16 +48,17 @@ class Character:
         # That could be done by building a dictionary of all objects perhaps under the world class
         if isinstance(object, str):
             # Check if object is in inventory
-            for item in self.inventory:
-                if object_name.lower() in item.get_name().lower():
-                    object = item
-                    break
+            for object in self.inventory:
+                if (
+                    object_name.lower() in object.get_name().lower()
+                    or object_name.lower() == "all"
+                ):
+                    if object in self.inventory:
+                        self.inventory.remove(object)
+                        object.set_room(self.current_room)
+                        return object
             else:
                 return False
-        if object in self.inventory:
-            self.inventory.remove(object)
-            object.set_room(self.current_room)
-            return object
         return None
 
     def get_inventory(self):
