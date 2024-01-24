@@ -1,0 +1,79 @@
+Road
+Frozen Moorland
+Crystal Cave
+Test
+Forgotten Pathway
+Ancient Gatehouse
+Abandoned Outpost
+Shadowy Hollow
+Glowworm Grotto
+Stargazer's Summit
+Celestial Observatory
+North Road
+Factory
+Norther Road
+Strange Shed
+Mysterious Forest
+Hidden Grove
+Enchanted Clearing
+Whispering Woods
+Deserted Cabin
+Luminous Glade
+Deserted Gas Station
+Sunset Bridge
+Enchanted Forest
+Comet's Alcove
+Planetary Parlor
+Meteor Shower Balcony
+Cosmic Stairwell
+Astral Antechamber
+Stellar Staircase
+Nebula Nexus
+Quasar Quarters
+Supernova Sanctuary
+Galaxy Gallery
+Celestial Hall Of Mirrors
+Twilight Thicket
+Stargazing Plateau
+Lunar Gaze Pond
+Moonlit Meadow
+Stellar Conservatory
+Galactic Greenhouse
+Eclipse Orchard
+Infinity Attic
+Orbiting Observatory
+Stardust Saloon
+Nova Nook
+Cosmic Kitchen
+Plutonian Pantry
+Interstellar Library
+Cosmic Conservatory
+Starstruck Sanctuary
+Celestial Amphitheatre
+Astral Arboretum
+Cosmic Canopy
+Neighbour's House
+Driveway
+Front Garden
+Secret Garden
+Garage
+Home Office
+Garden Shed
+Hall
+Kitchen
+Study
+Courtyard
+Patio
+Garden
+Hall
+Driveway
+Road
+Corridor
+Another Corridor
+Master Bedroom
+Kids' Bedroom
+Living Room
+Garden
+Patio
+Kitchen
+Hall

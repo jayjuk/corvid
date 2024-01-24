@@ -3,6 +3,7 @@ import storagemanager
 from logger import setup_logger
 from merchant import Merchant
 from object import Object
+import test_objects
 
 # Set up logging
 logger = setup_logger()
@@ -276,7 +277,9 @@ class World:
         logger.info(f"Searching for object {object_name} in {room}")
         for object in self.room_objects.get(room, []):
             logger.info(f"  Checking {object.get_name()}")
-            if object.get_name().lower() == object_name.lower():
+            # Return the first object that includes the given object name
+            # So "get clock" will find "dusty clock" and "grandfather clock"
+            if object_name.lower() in object.get_name().lower():
                 return object
         return None
 
@@ -303,11 +306,7 @@ class World:
     def load_room_objects(self, world):
         # TODO: Store and reload object state
         # Stubbed test data for now
-        test_object_data = [
-            ["rock", "This is an ordinary rock.", 0, "Road"],
-            ["stone", "This is a fairly normal stone.", 1, "North Road"],
-            ["pebble", "This is a little shiny pebble.", 100, "Norther Road"],
-        ]
+        test_object_data = test_objects.get_test_objects()
         room_object_map = {}
         for _ in test_object_data:
             (object_name, object_description, price, starting_room) = _

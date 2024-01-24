@@ -33,7 +33,7 @@ class GameManager:
                 "e": "east",
                 "s": "south",
                 "w": "west",
-                "exit": "quit",
+                # "exit": "quit", #AI tries exit to leave a room :-(
                 "pick": "get",
                 "head": "go",
                 "walk": "go",

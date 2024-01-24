@@ -15,17 +15,19 @@ import vertexai
 from vertexai.preview.generative_models import GenerativeModel
 
 
-# Set up logging to file and console
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s %(levelname)s %(message)s",
-    handlers=[
-        logging.FileHandler(f"{__name__}.log"),
-        logging.StreamHandler(),
-    ],
-)
-logger = logging.getLogger(__name__)
-logger.info("Starting up AI Broker")
+def setup_logger(file_name="ai_broker.log"):
+    # Set up logging to file and console
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s %(levelname)s %(message)s",
+        handlers=[
+            logging.FileHandler(file_name),
+            logging.StreamHandler(),
+        ],
+    )
+    logger = logging.getLogger(__name__)
+    return logger
+
 
 # Register the client with the server
 sio = socketio.Client()
@@ -68,6 +70,7 @@ class AIManager:
     character_name = "TBD"
     model_name = "gemini-pro"  # "gpt-3.5-turbo"  # "gpt-4" #gpt-3.5-turbo-0613
     max_tokens = 200  # adjust the max_tokens based on desired response length
+    ai_name = None
 
     def __new__(cls, mode="player"):
         if cls._instance is None:
@@ -80,6 +83,9 @@ class AIManager:
             # Override max history for Gemini for now, as it's free
             if cls._instance.get_model_api() == "Gemini":
                 cls._instance.max_history = 99999
+
+            # Get the AI's name
+            cls._instance.ai_name = cls._instance.get_ai_name()
 
         return cls._instance
 
@@ -181,7 +187,7 @@ class AIManager:
             }
         ]
 
-        name_message = "What do you want your name to be in this game? Please respond with a single one-word name only."
+        name_message = "What do you want your name to be in this game? Please respond with a single one-word name only, and try to be random."
         messages.append(
             {
                 "role": "user",
@@ -334,7 +340,7 @@ class AIManager:
                 if (
                     "server is overloaded" in str(e)
                     or "The response was blocked." in str(e)
-                ) and try_count < 3:
+                ) and try_count < 10:
                     logger.info(f"Error from model: {str(e)}")
                     logger.info(f"Retrying in 5 seconds... (attempt {try_count+1}/3)")
                     time.sleep(5)
@@ -437,9 +443,7 @@ def catch_all(event, data):
 def connect():
     logger.info("Connected to Server.")
     # Emit the AI's chosen name to the server
-    sio.emit(
-        "set_player_name", {"name": ai_manager.get_ai_name(), "role": ai_manager.mode}
-    )
+    sio.emit("set_player_name", {"name": ai_manager.ai_name, "role": ai_manager.mode})
 
 
 @sio.event
@@ -455,6 +459,10 @@ def disconnect():
 
 
 if __name__ == "__main__":
+    # Set up logging to file and console
+    logger = setup_logger()
+    logger.info("Starting up AI Broker")
+
     # Set up AIs according to config
     ai_count = os.environ.get("AI_COUNT")
 
@@ -478,6 +486,9 @@ if __name__ == "__main__":
             )
             sys.exit(1)
         ai_manager = AIManager(mode=ai_mode)
+
+    # Change log file name to include AI name
+    logger = setup_logger(f"ai_broker_{ai_manager.ai_name}.log")
 
     # Set hostname (default is "localhost" to support local pre container testing)
     # hostname = socket.getfqdn()
