@@ -42,14 +42,14 @@ class Character:
         self.inventory.append(object)
 
     # Setter for player dropping an object
-    def drop_object(self, object):
+    def drop_object(self, object_name):
         # Check if object is a string
         # TODO: decide whether caller of this function should already have object reference not name.
         # That could be done by building a dictionary of all objects perhaps under the world class
         if isinstance(object, str):
             # Check if object is in inventory
             for item in self.inventory:
-                if item.get_name().lower() == object.lower():
+                if object_name.lower() in item.get_name().lower():
                     object = item
                     break
             else:
