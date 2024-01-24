@@ -426,6 +426,20 @@ class GameManager:
         rest_of_response
         return player.get_inventory_description()
 
+    def get_object_list_text(self, objects):
+        drop_list_text = ""
+        drop_count = 0
+        for object in objects:
+            drop_count += 1
+            if drop_count > 1:
+                if drop_count == len(objects):
+                    drop_list_text += " and "
+                else:
+                    drop_list_text += ", "
+            drop_list_text += f"{object.get_name(article='the')}"
+        drop_list_text += "."
+        return drop_list_text
+
     def do_drop(self, player, rest_of_response):
         # Get object name by calling a function to parse the response
         object_name = self.get_object_name_from_response(rest_of_response)
@@ -434,11 +448,22 @@ class GameManager:
         if object_name == "":
             return "Sorry, invalid input. Object name is empty."
 
-        # Check if the object is in the player's inventory
-        object = player.drop_object(object_name)
-        if object:
-            return f"You drop {object.get_name(article='the')}."
-        return f"Sorry, you are not carrying '{object_name}'."
+        # Check if the object is in the player's inventory, if so, drop it
+        # "all" is a special case to drop everything
+        objects = player.drop_object(object_name)
+        if objects:
+            drop_list_text = self.get_object_list_text(objects)
+            # Tell the others about the drop
+            self.tell_others(
+                player.sid,
+                f"{player.name} has dropped {drop_list_text}",
+            )
+            return "You drop " + drop_list_text
+        else:
+            if object_name == "all":
+                return f"You are not carrying anything."
+            else:
+                return f"Sorry, you are not carrying '{object_name}'."
 
     def do_buy(self, player, rest_of_response):
         # Get object name by calling a function to parse the response
@@ -824,6 +849,9 @@ class GameManager:
     def remove_player(self, sid, reason):
         if sid in self.players:
             player = self.players[sid]
+            # Make player drop all objects in their inventory
+            self.tell_player(player, self.do_drop(player, "all"))
+            # TODO: create coin objects corresponding to their money
             self.tell_player(
                 player,
                 reason,
@@ -836,6 +864,8 @@ class GameManager:
                 shout=True,
             )
             self.emit_game_data_update()
+            # Give player time to read the messages before logging them out
+            eventlet.sleep(2)
             self.sio.emit("logout", None, sid)
             # Check again (race condition)
             if sid in self.players:

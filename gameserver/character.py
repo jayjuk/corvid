@@ -1,3 +1,9 @@
+from logger import setup_logger
+
+# Set up logging
+logger = setup_logger()
+
+
 class Character:
     # World reference applies to all characters
     world = None
@@ -12,7 +18,6 @@ class Character:
     ):
         # Register game server reference in player object to help with testing and minimise use of globals
         if self.__class__.world is None and world is not None:
-            print("DEBUG: Setting world reference", world)
             self.__class__.world = world
 
         self.name = character_name
@@ -46,20 +51,19 @@ class Character:
         # Check if object is a string
         # TODO: decide whether caller of this function should already have object reference not name.
         # That could be done by building a dictionary of all objects perhaps under the world class
-        if isinstance(object, str):
+        dropped_objects = []
+        if isinstance(object_name, str):
             # Check if object is in inventory
-            for object in self.inventory:
+            for object in self.inventory.copy():
+                logger.debug("you have " + object.get_name().lower())
                 if (
                     object_name.lower() in object.get_name().lower()
                     or object_name.lower() == "all"
                 ):
-                    if object in self.inventory:
-                        self.inventory.remove(object)
-                        object.set_room(self.current_room)
-                        return object
-            else:
-                return False
-        return None
+                    self.inventory.remove(object)
+                    object.set_room(self.current_room)
+                    dropped_objects.append(object)
+        return dropped_objects
 
     def get_inventory(self):
         return self.inventory
