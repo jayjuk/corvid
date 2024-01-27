@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "jaysgame",
+  "private_key_id": "a223b47c28d94e3f2e3d4c72b9a7a84", 
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCrer2+VGVcgIUZ\nqE6U5dEBEWHet5k0lbZN50q1Lqirzv7J0WP5+JD3W+XwcwlVbCAQqDM4a6DAzbuR\nYb6jDZI8fM6Yr5TwOiL4RngksfNgAI27ebBBS9rG5MNrywbiM0jKQEDcw9PYnBNi\n/FO5D9kja14eIw+Zi3qhzHaFdNCUOFcCB4814Bk6ljkBovNJDUofvyTr/UA7YDEd\nVC3zJ4V/+w1Kftw++gjOKooKqR/pqp9xpgbFvFqIrxw5dM+4SEDyxYpKB+sERjtj\nwN7a3Wkm77vTeumkWJPign8CGPv6TTKuTcd/hCUh1cvsEL20ezY/cyiCofTgKJ7o\n7PwxJ4ANAgMBAAECggEAFMZ2Ho0TCrX3ajhd7OQ7Aioc9WLBCQHqaF3RS0ov3UDi\n1Yis2CgpSA62OP927gZ/jAUUz40amMFULDTvZ8nJIdLtJMqA/OnOOs4u2CNHHSZ0\nBXakyARsqRQmKPUcDGOyOe627Qg8rk2ae6+eZRlqcUQczwHobe3cGaYv5dNVQd+u\nxTvYcZ/tvSzwwfMK6tfhdBD17NElmE6JbMPX5PmzcGs6U9S6J9gLdAcZyKm3HsXV\niG3X/rDO5xWtEklYQdCXGgt9cZZT8+XxrMAutO+1zXSVMkv4DbK9z+5/+Di3smsB\n4uUtzZoYteQrVHnwabAApPlilGG85TNNGXlzQXK3AQKBgQDT+sFOUmkY+XrHyXrd\nuMtjqaa3Ne6h6rj92mpxpKMP/4ourbqf4oVT5aZcGcoLQcIzdEp+LaIQinVA7ykx\nnhnZD2qSLDPfeRdOCjcR41G4MQuIrXl47Jts8spY7Ckz4qkI8x7zxEzN9nDG8b7N\niF307i1iu7ZKr+QIY2aU9Zl2vQKBgQDPFuyRMA8z70Fs3snpAk2gbw2o+pGSRjPZ\nAb5hncflP3wATZxzJ2EgVe1bu127yB5zAolNo44M3bUk7oWSIqpxWMLN6NSC5UUw\nEWK9tnfe9tii3sczRoti8u72iboiRLFOz/oOlGZ3zHJDgZDYdFKSiQzIjq48NrW/\nQA70vserkQKBgCcbvSwxAhjMdj2Dy3o6jLOfahWlCpiu0GBtOnQq9raN47WG8cZr\nqUN4PAAD9gWrpSOPEetDigHZOZa4SPZRf91O/c9n/k39bjJEqjJPqRT9X25g6udH\nZ8lq5bAQKe3bpGn1SMGadr0M+XOKyDPtM8BrbM4paZFP8BcoF5Xl1eFVAoGAOeOe\nnbdhiJMJJvXgW1JZgM+KcgIZT1pwg+kI3yDMEDl+4FbRtR78950NjOcDfMqkOGIt\nH5bozo/rYzeJ/x/RpX26dvTu8uhEPvudLosjVyCJzn2YEa1WqYJfamt1rL6nEfDx\nZcH2IubzygseAmQB8RR+jlHUQuDITX4KsD/kcQECgYB3zhmaGYUrX0Fjed/LkJ2Q\n4JU4pGI3mLa0Zf27cWegHjAmchDcmaIsqsK2AXGyxthr/xjPumP8vuo3KZabbUPf\nCfHyBGpxTjGypyhK09SGRZWEiKw5yIo5mMDj6cOWyYGuYbwUjjH8uIRqq7Bb6g4E\nF26xaoc9roqqJ678Jmx6lA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "aibroker@jaysgame.iam.gserviceaccount.com",
+  "client_id": "123454432123423423432",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/aibroker%40jaysgame.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
