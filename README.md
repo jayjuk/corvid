@@ -33,7 +33,7 @@ Currently, each service runs within its own subdirectory via the appropriate run
 
 To run the game locally, clone the whole jaysgame repo, and in three different DOS windows, go into the subdirectory for each of the above services, and execute the run script. Then you can play via https://localhost:3000.
 
-Operation of the AI broker depends on the existence of a relevant .key file in the AI broker subdirectory (e.g. openai.key, gemini.key). This file is not in Github because it contains my private account key. Note that the openai.key file should contain only the key value from the OpenAI website for your account, but the Google Gemini file (gemini.key) contains a JSON document in the format and with the content provided by Google's Vertex AI website (see gemini_key_dummy_example.json for an example). Gemini's API expects the filename (gemini.key) to be in GOOGLE_APPLICATION_CREDENTIALS.
+Operation of the AI broker depends on the existence of a relevant .key file in the AI broker subdirectory (e.g. openai.key, gemini.key). This file is not in Github because it contains my private account key. Note that the openai.key file should contain only the key value from the OpenAI website for your account, but the Google Gemini file (gemini.key) contains a JSON document in the format and with the content provided by Google's Vertex AI website (see gemini_key_dummy_example.json for an example). Gemini's API expects the filename (gemini.key) to be in GOOGLE_APPLICATION_CREDENTIALS. See https://cloud.google.com/iam/docs/keys-create-delete#iam-service-account-keys-create-console for instructions on how to create this key file.
 
 ### Cloud Deployment
 
