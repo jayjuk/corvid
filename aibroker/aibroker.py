@@ -6,28 +6,13 @@ from pprint import pprint
 import os
 from dotenv import load_dotenv
 import json
-import logging
+from logger import setup_logger
 
 # TODO: move this out to a seperate class etc, should not import both then only use one
 import openai
 from google.cloud import aiplatform_v1
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel
-
-
-def setup_logger(file_name="ai_broker.log"):
-    # Set up logging to file and console
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s %(levelname)s %(message)s",
-        handlers=[
-            logging.FileHandler(file_name),
-            logging.StreamHandler(),
-        ],
-    )
-    logger = logging.getLogger(__name__)
-    return logger
-
 
 # Register the client with the server
 sio = socketio.Client()
@@ -460,7 +445,7 @@ def disconnect():
 
 if __name__ == "__main__":
     # Set up logging to file and console
-    logger = setup_logger()
+    logger = setup_logger("ai_broker.log")
     logger.info("Starting up AI Broker")
 
     # Set up AIs according to config
