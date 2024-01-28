@@ -1,12 +1,13 @@
+from logger import setup_logger
+
+# Set up logger
+logger = setup_logger()
+
 import aimanager
 import storagemanager
-from logger import setup_logger
 from merchant import Merchant
 from object import Object
 import test_objects
-
-# Set up logging
-logger = setup_logger()
 
 
 class World:

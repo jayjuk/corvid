@@ -27,11 +27,20 @@ This simple service runs the web-based UI. It listens to and broadcasts updates 
 
 This service allows LLMs to play the game too. Each run-time instance of this service creates one AI player. It collects updates from the game server, presents them to a designated LLM (currently OpenAI's GPT-3.5 / GPT-4, or Google's Gemini Pro), with relevant context, and relays the LLM's decisions (i.e. game commands) back to the game server via SocketIO. The game server does not know or care who is a human player and who is an AI.
 
-## Local Testing
+## Local Execution
 
 Currently, each service runs within its own subdirectory via the appropriate run_xxxxxxx.bat startup script. For the game server and AI broker a number of Python modules must be installed (these are listed in the requirements.txt file in each subdirectory).
 
-To run the game locally, clone the whole jaysgame repo, and in three different DOS windows, go into the subdirectory for each of the above services, and execute the run script. Then you can play via https://localhost:3000.
+To run the game locally:
+
+1. Set up environment variable PYTHONPATH to include the jaysgame\common subdirectory (this is where logging module lives).
+2. Clone the whole jaysgame repo
+3. Run the game server: Open a new DOS window, enter into a Python environment with the modules in gameserver\requirements.txt installed via pip (see below\*), cd into gameserver, and run run_gameserver.bat
+4. Open a new DOS window, cd into gameclient, and run run_gameclient.bat (or launch this from Windows)
+5. Play the game in your browser via https://localhost:3000.
+6. Optionally, to add some AIs into the game, for each one you want to run: Open a new DOS window, enter into a Python environment with the modules in aibroker\requirements.txt installed via pip, cd into aibroker, and run run_aibroker.bat
+
+(\*My chosen method was to install Anaconda including Navigator, and create an environment called jaysgame shared by both the AI broker and the game server)
 
 Operation of the AI broker depends on the existence of a relevant .key file in the AI broker subdirectory (e.g. openai.key, gemini.key). This file is not in Github because it contains my private account key. Note that the openai.key file should contain only the key value from the OpenAI website for your account, but the Google Gemini file (gemini.key) contains a JSON document in the format and with the content provided by Google's Vertex AI website (see gemini_key_dummy_example.json for an example). Gemini's API expects the filename (gemini.key) to be in GOOGLE_APPLICATION_CREDENTIALS. See https://cloud.google.com/iam/docs/keys-create-delete#iam-service-account-keys-create-console for instructions on how to create this key file.
 

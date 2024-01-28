@@ -1,13 +1,14 @@
+from logger import setup_logger
+
+# Set up logger
+logger = setup_logger()
+
 import eventlet
 import time
 import sys
 from player import Player
 from world import World
-from logger import setup_logger
 import aimanager
-
-# Set up logging
-logger = setup_logger()
 
 
 class GameManager:

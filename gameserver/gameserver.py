@@ -1,14 +1,16 @@
+# Set up logger first
+from logger import setup_logger
+
+logger = setup_logger("gameserver")
+
 import sys
 import socket
 import socketio
 import eventlet
 from gamemanager import GameManager
-from logger import setup_logger
 
 # This is the main game server file. It sets up the SocketIO server and handles events only
 
-# Set up logging
-logger = setup_logger()
 logger.info("Setting up SocketIO")
 sio = socketio.Server(cors_allowed_origins="*")
 app = socketio.WSGIApp(sio)

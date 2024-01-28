@@ -1,6 +1,6 @@
 from logger import setup_logger
 
-# Set up logging
+# Set up logger
 logger = setup_logger()
 
 

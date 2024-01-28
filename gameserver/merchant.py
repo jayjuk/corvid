@@ -1,8 +1,9 @@
 from logger import setup_logger
-from character import Character
 
-# Set up logging
+# Set up logger
 logger = setup_logger()
+
+from character import Character
 
 
 # Player class

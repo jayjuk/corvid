@@ -1,10 +1,11 @@
+from logger import setup_logger
+
+# Set up logger
+logger = setup_logger()
+
 import os
 import time
-from logger import setup_logger
 from character import Character
-
-# Set up logging
-logger = setup_logger()
 
 
 # Player class

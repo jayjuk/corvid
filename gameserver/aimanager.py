@@ -6,7 +6,7 @@ import urllib.request
 from dotenv import load_dotenv
 from logger import setup_logger
 
-# Set up logging
+# Set up logger
 logger = setup_logger()
 
 load_dotenv()

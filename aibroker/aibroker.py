@@ -1,3 +1,8 @@
+from logger import setup_logger
+
+# Set up logger
+logger = setup_logger("aibroker")
+
 import eventlet
 import socketio
 import time
@@ -6,9 +11,8 @@ from pprint import pprint
 import os
 from dotenv import load_dotenv
 import json
-from logger import setup_logger
 
-# TODO: move this out to a seperate class etc, should not import both then only use one
+# TODO: move this out to a separate class etc, should not import both then only use one
 import openai
 from google.cloud import aiplatform_v1
 import vertexai
@@ -445,7 +449,6 @@ def disconnect():
 
 if __name__ == "__main__":
     # Set up logging to file and console
-    logger = setup_logger("ai_broker.log")
     logger.info("Starting up AI Broker")
 
     # Set up AIs according to config

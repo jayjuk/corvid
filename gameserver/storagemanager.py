@@ -8,7 +8,7 @@ import sys
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.data.tables import TableServiceClient, TableClient
 
-# Set up logging
+# Set up logger
 logger = setup_logger()
 
 
