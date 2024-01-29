@@ -1,5 +1,7 @@
 # To do list for the game
 
+_NOTE: I am in the process of migrating these to GitHub Issues which has some improvements not shown below._
+
 ## DevOps / Other
 
 - Fix az-deploy-ai.bat to python and sourcing from .env, and azure variables
@@ -8,9 +10,6 @@
 
 ## Game Server
 
-- Enable trading with the merchant
-- Add market data / price changes
-- Add AI to merchant (referee parses his responses and decides when he is selling/buying?)
 - Add narrator
 - support different modes including blank map, and world theme to inspire builder (random 'seed')
 - make animals/creatures (with images)
@@ -24,12 +23,16 @@
 
 ### Storage Manager
 
-- Support Azure storage
+- Move to object approach with state so that storage is faster
 
 ## AI Broker
 
 - AIs don't seem to try to build
-- Sometimes there is no delay between commands
-- Try Gemini, Claude, local LLM
-- Langchain
+- Try Mistral, Claude, local LLM
+- Langchain???
 - Use fine tuning so that the rules don't have to be repeated
+
+# LOGGED AS ISSUES
+
+- Add AI to merchant (referee parses his responses and decides when he is selling/buying?)
+- Add market data / price changes
