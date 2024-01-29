@@ -11,6 +11,7 @@ from pprint import pprint
 import os
 from dotenv import load_dotenv
 import json
+import re
 
 # TODO: move this out to a separate class etc, should not import both then only use one
 import openai
@@ -57,7 +58,24 @@ class AIManager:
     active = True
     mode = None
     character_name = "TBD"
-    model_name = "gemini-pro"  # "gpt-3.5-turbo"  # "gpt-4" #gpt-3.5-turbo-0613
+    input_token_count = 0
+    output_token_count = 0
+
+    # Model costs as of 29 Jan 2024
+    input_cost = {
+        "gpt-3.5-turbo-1106": 0.001,
+        "gpt-4-0125-preview": 0.01,
+        "gemini-pro": 0,
+    }
+    output_cost = {
+        "gpt-3.5-turbo-1106": 0.002,
+        "gpt-4-0125-preview": 0.03,
+        "gemini-pro": 0,
+    }
+
+    # Get model choice from env variable if possible
+    model_name = os.environ.get("MODEL_NAME") or "gpt-3.5-turbo-1106"
+    # model_name = "gemini-pro"  # "gpt-3.5-turbo"  # "gpt-4" #gpt-3.5-turbo-1106 #gpt-4-0125-preview #gpt-4-1106-preview
     max_tokens = 200  # adjust the max_tokens based on desired response length
     ai_name = None
 
@@ -72,6 +90,8 @@ class AIManager:
             # Override max history for Gemini for now, as it's free
             if cls._instance.get_model_api() == "Gemini":
                 cls._instance.max_history = 99999
+
+            logger.info("Starting up AI with model " + cls._instance.model_name)
 
             # Get the AI's name
             cls._instance.ai_name = cls._instance.get_ai_name()
@@ -204,6 +224,9 @@ class AIManager:
         if str(event_text).startswith("You say") or str(event_text).startswith("You:"):
             return
         # Otherwise, add this to the user input backlog
+        # Strip anything inside curly braces as this is detail human players will enjoy but it will just cost money for the AI
+        # There could be stuff after the braces, include that
+        event_text = re.sub(r"\{.*?\}", "", event_text)
         self.event_log.append(event_text)
 
     def poll_event_log(self):
@@ -311,6 +334,24 @@ class AIManager:
                     for choice in response.choices:
                         model_response = choice.message.content
                         break
+                    # Get tokens and calculate cost
+                    self.input_token_count += response.usage.prompt_tokens
+                    self.output_token_count += response.usage.completion_tokens
+                    session_cost = (
+                        (
+                            self.input_cost.get(self.model_name, 0)
+                            * self.input_token_count
+                            / 1000
+                        )
+                        + (
+                            self.output_cost.get(self.model_name, 0)
+                            * self.output_token_count
+                            / 1000
+                        )
+                    ) / 1.27  # To £
+                    logger.info(
+                        f"Tokens used: {response.usage.total_tokens} (input {response.usage.prompt_tokens}, output {response.usage.completion_tokens}). Running total cost: £{session_cost:.2f}"
+                    )
                 elif self.model_name.startswith("gemini"):
                     # Gemini does not support system message
                     message_to_send = message_text

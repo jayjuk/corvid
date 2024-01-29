@@ -46,7 +46,8 @@ class World:
         return (
             "The aim of this game is to earn enough money to buy The Button. "
             + "You don't know what will happen when you press The Button, but you know it will be good. "
-            + "The first player to press the button (in their possession) wins the game!"
+            + "The first player to press the button (in their possession) wins the game! "
+            + "Hint: earn money buy exploring the game world, finding items and selling them to a merchant."
         )
 
     def load_rooms(self, mode):
@@ -198,7 +199,9 @@ class World:
         # TODO: decide when to show build options
         description = ""
         if not brief:
-            description = self.rooms[room]["description"] + "\n"
+            # Contents of curly brackets removed from AI description,
+            # Actual brackets removed in UI
+            description = "{" + self.rooms[room]["description"] + "\n" + "}"
 
         if show_exits:
             description += self.get_room_exits(room)
