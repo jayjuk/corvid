@@ -43,19 +43,22 @@ class Object:
         self.room = None
         # Set the player possession to the player both ways
         self.player_possession = player
-        player.add_object(self)
+        # Try to add the object to the player's inventory, if it fails, return an error string, no error means success
+        add_object_error = player.add_object(self)
+        if add_object_error:
+            return add_object_error
+
         # Remove from room
         self.world.remove_object_from_room(self, player.get_current_room())
-
         # Return empty string means it's been picked up without issue
         return ""
 
     # Remove from old player and add to new player
     def transfer(self, old_player, new_player):
-        old_player.drop_object(self)
-        self.set_player(new_player)
-        # Return empty string means it's been picked up without issue
-        return ""
+        if new_player.can_add_object():
+            old_player.drop_object(self)
+            return self.set_player(new_player)
+        return f"{new_player.name} can't carry any more."
 
     # Description of the object
     def get_description(self):

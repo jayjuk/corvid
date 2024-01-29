@@ -42,6 +42,10 @@ class Character:
     def get_current_room(self):
         return self.current_room
 
+    def can_add_object(self):
+        # Default behaviour for NPCs is to not allow them to pick up objects
+        return False
+
     # Setter for player picking up an object
     def add_object(self, object):
         self.inventory.append(object)

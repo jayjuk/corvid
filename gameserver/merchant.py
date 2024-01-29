@@ -37,3 +37,7 @@ class Merchant(Character):
     # Overridden method to get description of merchant including their inventory.
     def get_description(self):
         return self.description + " " + self.get_inventory_description()
+
+    # Overridden method to allow them to receive objects
+    def can_add_object(self):
+        return True

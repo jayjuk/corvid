@@ -9,6 +9,8 @@ from merchant import Merchant
 from object import Object
 import test_objects
 
+# TODO: support many worlds, each with different objectives, rooms, objects etc
+
 
 class World:
     _instance = None
@@ -38,6 +40,14 @@ class World:
                 cls._instance.load_merchants()
 
         return cls._instance
+
+    # Get the objective of the game
+    def get_objective(self):
+        return (
+            "The aim of this game is to earn enough money to buy The Button. "
+            + "You don't know what will happen when you press The Button, but you know it will be good. "
+            + "The first player to press the button (in their possession) wins the game!"
+        )
 
     def load_rooms(self, mode):
         # Get rooms from storage
@@ -280,7 +290,10 @@ class World:
             logger.info(f"  Checking {object.get_name()}")
             # Return the first object that includes the given object name
             # So "get clock" will find "dusty clock" and "grandfather clock"
-            if object_name.lower() in object.get_name().lower():
+            if (
+                object_name.lower() in object.get_name().lower()
+                or object_name.lower() == "all"
+            ):
                 return object
         return None
 
@@ -325,8 +338,9 @@ class World:
         apple = Object(self, "apple", "A juicy apple.", price=1)
         banana = Object(self, "banana", "A yellowy banana.", price=2)
         pear = Object(self, "pear", "A peary pear.", price=3)
-        gold_bar = Object(self, "necklace", "A necklace made of pure gold.", price=99)
-        gambinos_stuff = [apple, banana, pear, gold_bar]
+        # TODO: refactor so game content is separate from engine code
+        the_button = Object(self, "button", "OMG, it's The Button!", price=999)
+        gambinos_stuff = [apple, banana, pear, the_button]
         Merchant(self, "Gambino", "Road", gambinos_stuff)
         # TODO: more stuff with merchant
 

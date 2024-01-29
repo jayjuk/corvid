@@ -201,7 +201,7 @@ class AIManager:
 
     def log_event(self, event_text):
         # If the input is just echoing back what you said, do nothing
-        if str(event_text).startswith("You say"):
+        if str(event_text).startswith("You say") or str(event_text).startswith("You:"):
             return
         # Otherwise, add this to the user input backlog
         self.event_log.append(event_text)
@@ -294,9 +294,9 @@ class AIManager:
         # logger.debug(f"submit_request called, {messages=}")
         try_count = 0
         model_response = None
-        retries = 0
-        while not model_response and retries < 3:
-            retries += 1
+        max_tries = 10
+        while not model_response and try_count < max_tries:
+            try_count += 1
             response = None
             try:
                 # Submit request to ChatGPT
@@ -329,11 +329,13 @@ class AIManager:
                 if (
                     "server is overloaded" in str(e)
                     or "The response was blocked." in str(e)
-                ) and try_count < 10:
+                ) and try_count < max_tries:
                     logger.info(f"Error from model: {str(e)}")
-                    logger.info(f"Retrying in 5 seconds... (attempt {try_count+1}/3)")
-                    time.sleep(5)
-                    try_count += 1
+                    sleep_time = try_count * 5
+                    logger.info(
+                        f"Retrying in {sleep_time} seconds... (attempt {try_count+1}/{max_tries})"
+                    )
+                    time.sleep(sleep_time)
                 else:
                     logger.info(f"Error from model: {str(e)}")
                     return "exit"

@@ -58,6 +58,9 @@ class Player(Character):
         self.max_input_history_length = 1000
         self.input_history = []
 
+        # Define inventory limit for players
+        self.max_inventory = 5
+
     # Getter for input history (optional input of number of entries to return)
     def get_input_history(self, number_of_entries=1):
         return "\n".join(self.input_history[-number_of_entries:]) + "\n"
@@ -94,3 +97,12 @@ class Player(Character):
 
     def add_money(self, amount):
         self.money += amount
+
+    def can_add_object(self):
+        return len(self.inventory) < self.max_inventory
+
+    # Override for player picking up an object - has a limit
+    def add_object(self, object):
+        if not self.can_add_object():
+            return "You can't carry any more items."
+        self.inventory.append(object)
