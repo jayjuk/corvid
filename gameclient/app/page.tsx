@@ -53,6 +53,8 @@ export default function HomePage() {
     "3001"
   );
   const gameLogRef = useRef<HTMLDivElement>(null);
+  let myRoomDescription: string | null = roomDescription ?? "";
+  myRoomDescription = myRoomDescription.replace(/[{}]/g, "");
 
   useEffect(() => {
     // Connect to the game server via socket.io
@@ -157,7 +159,7 @@ export default function HomePage() {
       )}
       {nameSet && roomImageFileName && (
         <div style={{ display: "flex", flexDirection: "row" }}>
-          <img src={"/" + roomImageFileName} alt={roomTitle} width="400" />
+          <img src={"/" + (roomImageFileName ?? "")} alt={roomTitle ?? ""} width="400" />
           {/* Some text to the right of the image */}
           <div
             style={{
@@ -167,7 +169,7 @@ export default function HomePage() {
             }}
           >
             <p style={{ margin: 0, maxWidth: 1000 }}>
-              <b>{roomTitle}</b>: {roomDescription} {roomExits}
+              <b>{roomTitle}</b>: {myRoomDescription} {roomExits}
             </p>
           </div>
         </div>
