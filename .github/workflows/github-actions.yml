@@ -30,6 +30,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: "{{defaultContext}}"
+          file: "gameserver/Dockerfile"
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/gameserver:latest
   # deploy:
