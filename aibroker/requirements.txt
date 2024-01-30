@@ -1,5 +1,6 @@
 python-dotenv
 python-socketio
+socketio-client
 eventlet
 openai
 google-cloud-aiplatform
