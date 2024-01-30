@@ -4,7 +4,7 @@ _NOTE: I am in the process of migrating these to GitHub Issues which has some im
 
 ## DevOps / Other
 
-- Fix az-deploy-ai.bat to python and sourcing from .env, and azure variables
+- Migrate az-deploy-ai.bat to python and change to sourcing from .env, and azure variables
 - Test cloud deployment with Azure Tables
 - Unit tests esp more around storage
 

@@ -53,6 +53,10 @@ export default function HomePage() {
     "3001"
   );
   const gameLogRef = useRef<HTMLDivElement>(null);
+  // Add a state variable to keep track of the previous commands
+  const [previousCommands, setPreviousCommands] = useState<string[]>([]);
+  const [commandIndex, setCommandIndex] = useState<number>(0);
+
   let myRoomDescription: string | null = roomDescription ?? "";
   myRoomDescription = myRoomDescription.replace(/[{}]/g, "");
 
@@ -134,6 +138,29 @@ export default function HomePage() {
     }
   };
 
+  // Modify your onChange handler to store the user input as a previous command
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInput(e.target.value);
+    setPreviousCommands(prevCommands => [...prevCommands, e.target.value]);
+    setCommandIndex(0);
+  };
+
+    // Add a keyUp handler to handle the up arrow key
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowUp' && commandIndex < previousCommands.length) {
+      setUserInput(previousCommands[previousCommands.length - 1 - commandIndex]);
+      setCommandIndex(prevIndex => prevIndex + 1);
+    }
+  };
+
+  // Add a keyDown handler to handle the up arrow key
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown' && commandIndex > 0) {
+      setUserInput(previousCommands[previousCommands.length - commandIndex]);
+      setCommandIndex(prevIndex => prevIndex - 1);
+    }
+  };
+
   return (
     <div>
       <h1 style={{ textAlign: "center", margin: "20px 0" }}>
@@ -194,7 +221,9 @@ export default function HomePage() {
               className={styles.inputField}
               type="text"
               value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
+              onChange={handleInputChange}
+              onKeyUp={handleKeyUp}
+              onKeyDown={handleKeyDown}
               placeholder="Type your action..."
               autoFocus
             />
