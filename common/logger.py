@@ -1,4 +1,5 @@
 import logging
+import sys
 import os
 
 # INSTRUCTIONS TO USE THIS MODULE
@@ -10,7 +11,11 @@ import os
 # (e.g. gameserver.log)
 
 
-def setup_logger(file_name="unit_testing.log"):
+def is_debug_mode():
+    return len(sys.argv) > 1 and sys.argv[1].lower() == "debug"
+
+
+def setup_logger(file_name="unit_testing.log", debug_mode=False):
     # If logger already set up, return it
     if logging.getLogger().hasHandlers():
         return logging.getLogger()
@@ -26,9 +31,14 @@ def setup_logger(file_name="unit_testing.log"):
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
 
+    if is_debug_mode():
+        logging_level = logging.DEBUG
+    else:
+        logging_level = logging.INFO
+
     # Set up logging to file and console
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging_level,
         format="%(asctime)s %(levelname)s %(message)s",
         handlers=[
             logging.FileHandler(logs_dir + os.sep + file_name),

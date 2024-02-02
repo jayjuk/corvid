@@ -26,7 +26,7 @@ class World:
     done_path = {}
     starting_room = "Road"
 
-    def __new__(cls, mode=None):
+    def __new__(cls, mode=None, ai_manager=None):
         if cls._instance is None:
             cls._instance = super(World, cls).__new__(cls)
             # Load rooms from storage
@@ -38,6 +38,12 @@ class World:
                     cls._instance
                 )
                 cls._instance.load_merchants()
+
+            # Instantiate AI manager
+            if ai_manager:
+                cls._instance.ai_manager = ai_manager
+            else:
+                cls._instance.ai_manager = aimanager.AIManager()
 
         return cls._instance
 
@@ -74,14 +80,14 @@ class World:
         self, rooms, room_name, room, x, y, prv_direction=None, indent=0
     ):
         grid_ref_str = f"{x},{y}"
-        logger.info(
+        logger.debug(
             " " * indent + f"Checking grid reference {grid_ref_str} at {room_name}"
         )
         room["grid_reference"] = grid_ref_str
         if grid_ref_str in self.grid_references:
             if room_name not in self.grid_references[grid_ref_str]:
-                logger.info(
-                    f"ERROR: {room_name} has the same grid reference as {self.grid_references[grid_ref_str]}"
+                logger.error(
+                    f"{room_name} has the same grid reference as {self.grid_references[grid_ref_str]}"
                 )
                 self.grid_references[grid_ref_str].append(room_name)
         else:
@@ -129,9 +135,8 @@ class World:
             min_y = 0
             max_y = 0
             for room in rooms:
-                print(room)
                 if "grid_reference" not in rooms[room]:
-                    print("ERROR: no grid reference for", room)
+                    logger.error("No grid reference for", room)
                 else:
                     x = int(rooms[room]["grid_reference"].split(",")[0])
                     y = int(rooms[room]["grid_reference"].split(",")[1])
@@ -272,7 +277,7 @@ class World:
             "name": new_room_name,
             "grid_reference": new_grid_reference,
             "description": room_description,
-            "image": aimanager.create_image(new_room_name, room_description),
+            "image": self.ai_manager.create_image(new_room_name, room_description),
             "creator": creator_name,
             "exits": {self.get_opposite_direction(direction): current_room},
         }

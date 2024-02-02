@@ -7,17 +7,8 @@ import random
 # Set up logging
 logger = setup_logger()
 
-world = world.World("builder")
-max_iterations = 1
-model_name = "gpt-4"  # "gpt-4" #gpt-3.5-turbo-0613
-max_tokens = 300
-temperature = 0.7
-top_p = 1
-frequency_penalty = 0
-presence_penalty = 0
 
-
-def explore_room(room, data, done_rooms):
+def explore_room(ai_manager, room, data, done_rooms):
     print(room)
     build_options = world.get_room_build_options(room)
     print("    ", build_options)
@@ -37,11 +28,11 @@ def explore_room(room, data, done_rooms):
                 + f"For context, the room to the {world.get_opposite_direction(exit)} of the new room is '{room}: {data['description']}'. Return only the name and description separated by a colon."
             )
             print("     ", prompt)
-            response = aimanager.submit_prompt(
+            response = ai_manager.submit_prompt(
                 prompt,
-                model_name=model_name,
-                max_tokens=max_tokens,
-                temperature=temperature,
+                model_name="gpt-4",
+                max_tokens=300,
+                temperature=0.7,
             )
             print("     ", response)
             # Parse the response into name and description
@@ -68,16 +59,22 @@ def explore_room(room, data, done_rooms):
             # This room has already been visited, so skip it
             continue
         else:
-            explore_room(next_room, world.rooms[next_room], done_rooms)
+            explore_room(ai_manager, next_room, world.rooms[next_room], done_rooms)
 
 
-for i in range(1, max_iterations + 1):
-    # Start in the first room
-    done_rooms = {}
-    # Go through each exit and recursively add grid references
-    explore_room("Road", world.rooms["Road"], done_rooms)
+# Main
+if __name__ == "__main__":
+    ai_manager = aimanager.AIManager()
+    world = world.World("builder", ai_manager)
+    max_iterations = 1
 
-    logger.info(f"Finished iteration {i} of generating rooms.")
-    if i < max_iterations:
-        logger.info(f"Sleeping for 10 seconds")
-        time.sleep(10)
+    for i in range(1, max_iterations + 1):
+        # Start in the first room
+        done_rooms = {}
+        # Go through each exit and recursively add grid references
+        explore_room(ai_manager, "Road", world.rooms["Road"], done_rooms)
+
+        logger.info(f"Finished iteration {i} of generating rooms.")
+        if i < max_iterations:
+            logger.info(f"Sleeping for 10 seconds")
+            time.sleep(10)

@@ -27,12 +27,10 @@ class Player(Character):
         logger.info(f"Creating player {player_name}, sid {sid}")
 
         # Set up character
-        print("DEBUG: Setting up character")
         # TODO: Remove this, it's for simulating AI builders
         if player_name == "Doug":
             player_role = "builder"
 
-        print(world, player_name, player_role)
         # Call superclass constructor
         Character.__init__(self, world, player_name, player_role)
 

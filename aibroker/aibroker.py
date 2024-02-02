@@ -111,7 +111,7 @@ class AIManager:
         return False
 
     def save_model_data(self, filename_prefix, data):
-        print("Saving model data")
+        logger.info("Saving model data")
         folder_path = "model_io"
         os.makedirs(folder_path, exist_ok=True)
         with open(
@@ -137,14 +137,14 @@ class AIManager:
             gcloud_credentials_file = "gemini.key"
             if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
                 if not os.path.exists(gcloud_credentials_file):
-                    print(
+                    logger.error(
                         "GOOGLE_APPLICATION_CREDENTIALS not set and {} does not exist".format(
                             gcloud_credentials_file
                         )
                     )
                     exit()
                 else:
-                    print(
+                    logger.info(
                         "Setting GOOGLE_APPLICATION_CREDENTIALS to {}".format(
                             gcloud_credentials_file
                         )
@@ -259,7 +259,7 @@ class AIManager:
         # Grab and clear the log quickly to minimise threading issue risk
         tmp_log = self.event_log.copy()
         self.event_log = []
-        print(f"Found {len(tmp_log)} events to submit to model.")
+        logger.info(f"Found {len(tmp_log)} events to submit to model.")
 
         intro_text = (
             "You have been brought to life in a text adventure game! "

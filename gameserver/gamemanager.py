@@ -5,13 +5,12 @@ logger = setup_logger()
 
 
 # Cheeky little debug function
-import traceback
-
-
 def dbg(thing=None):
+    import traceback
+
     # print stack trace
     traceback.print_stack()
-    print(f"DEBUG: <{str(thing)}>")
+    print(f" <{str(thing)}>")
 
 
 import eventlet
@@ -25,7 +24,7 @@ import aimanager
 class GameManager:
     _instance = None
 
-    def __new__(cls, sio, mode=None):
+    def __new__(cls, sio):
         if cls._instance is None:
             cls._instance = super(GameManager, cls).__new__(cls)
 
@@ -37,8 +36,10 @@ class GameManager:
             cls._instance.sio = sio
             cls._instance.players = {}
             cls._instance.player_sid_to_name_map = {}
-            cls._instance.world = World(mode)
+            cls._instance.ai_manager = aimanager.AIManager()
+            cls._instance.world = World(mode=None, ai_manager=cls._instance.ai_manager)
 
+            # TODO: move all this out of the constructor into a dedicated function
             # TODO: resolve this from the rooms document
             cls._instance.synonyms = {
                 "n": "north",
@@ -687,7 +688,7 @@ class GameManager:
                 # If the command is not recognised, try to translate it using AI (unless this is already a translation)
                 if not translated:
                     # Try to translate the user input into a valid command using AI :-)
-                    ai_translation = aimanager.submit_prompt(
+                    ai_translation = self.ai_manager.submit_prompt(
                         "Please help me to translate my user's input into a valid adventure game command.\n"
                         + "Valid commands:"
                         + self.get_commands_description()
