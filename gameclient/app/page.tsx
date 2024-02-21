@@ -57,9 +57,6 @@ export default function HomePage() {
   const [previousCommands, setPreviousCommands] = useState<string[]>([]);
   const [commandIndex, setCommandIndex] = useState<number>(0);
 
-  let myRoomDescription: string | null = roomDescription ?? "";
-  myRoomDescription = myRoomDescription.replace(/[{}]/g, "");
-
   useEffect(() => {
     // Connect to the game server via socket.io
     socket.current = io(gameServerHostName);
@@ -73,7 +70,8 @@ export default function HomePage() {
     });
 
     socket.current.on("game_update", (message) => {
-      // console.log("Got a game update: " + message);
+      // Strip curly brackets (indicate content to be hidden from models)
+      message = message.replace(/[{|}]/g, "");
       setGameLog((prevLog) => {
         const newLog = [...prevLog, message];
         // Keep only the last 10 messages
@@ -85,7 +83,8 @@ export default function HomePage() {
     socket.current.on("room_update", (message) => {
       setRoomImageFileName(message["image"]);
       setRoomTitle(message["title"]);
-      setRoomDescription(message["description"]);
+      //Strip curly backets out (they tell the AI broker what is superfluous to the LLM)
+      setRoomDescription(message["description"].replace(/[{|}]/g, ""));
       setRoomExits(message["exits"]);
     });
 
@@ -196,7 +195,7 @@ export default function HomePage() {
             }}
           >
             <p style={{ margin: 0, maxWidth: 1000 }}>
-              <b>{roomTitle}</b>: {myRoomDescription} {roomExits}
+              <b>{roomTitle}</b>: {roomDescription} {roomExits}
             </p>
           </div>
         </div>
