@@ -149,9 +149,9 @@ class AIManager:
                             gcloud_credentials_file
                         )
                     )
-                    os.environ[
-                        "GOOGLE_APPLICATION_CREDENTIALS"
-                    ] = gcloud_credentials_file
+                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+                        gcloud_credentials_file
+                    )
 
             vertexai.init(project="jaysgame", location="us-central1")
             self.model_client = GenerativeModel("gemini-pro")
@@ -355,9 +355,9 @@ class AIManager:
                 elif self.model_name.startswith("gemini"):
                     # Gemini does not support system message
                     message_to_send = message_text
-                    logger.info("FINAL GEMINI INPUT:\n" + message_to_send)
+                    # logger.info("FINAL GEMINI INPUT:\n" + message_to_send)
                     model_response = self.chat.send_message(message_to_send)
-                    logger.info("ORIGINAL GEMINI RESPONSE:\n" + str(model_response))
+                    # logger.info("ORIGINAL GEMINI RESPONSE:\n" + str(model_response))
                     model_response = model_response.text.strip("*").strip()
                     # If the response contains newline(s) followed by some info in parentheses, strip all this out
                     if "\n(" in model_response and model_response.endswith(")"):

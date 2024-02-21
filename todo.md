@@ -7,6 +7,7 @@ _NOTE: I am in the process of migrating these to GitHub Issues which has some im
 - Migrate az-deploy-ai.bat to python and change to sourcing from .env, and azure variables
 - Test cloud deployment with Azure Tables
 - Unit tests esp more around storage
+- Improve singleton code in AI manager and elsewhere - should use \_\_init\_\_, and also not have so much business logic
 
 ## Game Server
 
@@ -27,6 +28,7 @@ _NOTE: I am in the process of migrating these to GitHub Issues which has some im
 
 ## AI Broker
 
+- Log model input/output nicely whether Gemini or OpenAI
 - AIs don't seem to try to build
 - Try Mistral, Claude, local LLM
 - Langchain???

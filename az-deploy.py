@@ -52,10 +52,7 @@ with open(outfile, "w") as f:
 
 # Run the az container create command
 print("Deploying containers...")
-print(
-    "not!"
-    # os.system(f"az container create --resource-group jay --file {outfile}")
-)
+print(os.system(f"az container create --resource-group jay --file {outfile}"))
 
 # Delete the temporary yaml file
-# os.remove(outfile)
+os.remove(outfile)
