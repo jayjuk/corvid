@@ -18,7 +18,7 @@ import time
 import sys
 from player import Player
 from world import World
-import aimanager
+from aimanager import AIManager
 
 
 class GameManager:
@@ -36,7 +36,7 @@ class GameManager:
             cls._instance.sio = sio
             cls._instance.players = {}
             cls._instance.player_sid_to_name_map = {}
-            cls._instance.ai_manager = aimanager.AIManager()
+            cls._instance.ai_manager = AIManager()
             cls._instance.world = World(mode=None, ai_manager=cls._instance.ai_manager)
 
             # TODO: move all this out of the constructor into a dedicated function

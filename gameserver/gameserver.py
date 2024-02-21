@@ -3,7 +3,6 @@ from logger import setup_logger
 
 logger = setup_logger("gameserver")
 
-import sys
 import socket
 import socketio
 import eventlet

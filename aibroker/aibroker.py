@@ -9,44 +9,15 @@ import time
 import sys
 from pprint import pprint
 import os
-from dotenv import load_dotenv
-import json
 import re
-
-# TODO: move this out to a separate class etc, should not import both then only use one
-import openai
-from google.cloud import aiplatform_v1
-import vertexai
-from vertexai.preview.generative_models import GenerativeModel
+from dotenv import load_dotenv
+from aimanager import AIManager_broker_legacy
 
 # Register the client with the server
 sio = socketio.Client()
 
 
-# Connect to SocketIO server, trying again if it fails
-def connect_to_server(hostname):
-    connected = False
-    max_wait = 120  # 2 minutes
-    wait_time = 1
-    while not connected and wait_time <= max_wait:
-        try:
-            sio.connect(hostname)
-            connected = True
-        except:
-            logger.info(
-                f"Could not connect to server. Retrying in {wait_time} seconds..."
-            )
-            eventlet.sleep(wait_time)
-            wait_time *= 2
-
-    if not connected:
-        logger.info("Could not connect to server. Exiting.")
-        sys.exit(1)
-
-
-# Class to handle interaction with the AI
-class AIManager:
-    first_contact = True
+class AIBroker:
     time_to_die = False
     _instance = None
     game_instructions = ""
@@ -61,105 +32,42 @@ class AIManager:
     input_token_count = 0
     output_token_count = 0
 
-    # Model costs as of 29 Jan 2024
-    input_cost = {
-        "gpt-3.5-turbo-1106": 0.001,
-        "gpt-4-0125-preview": 0.01,
-        "gemini-pro": 0,
-    }
-    output_cost = {
-        "gpt-3.5-turbo-1106": 0.002,
-        "gpt-4-0125-preview": 0.03,
-        "gemini-pro": 0,
-    }
-
-    # Get model choice from env variable if possible
-    model_name = os.environ.get("MODEL_NAME") or "gpt-3.5-turbo-1106"
-    # model_name = "gemini-pro"  # "gpt-3.5-turbo"  # "gpt-4" #gpt-3.5-turbo-1106 #gpt-4-0125-preview #gpt-4-1106-preview
-    max_tokens = 200  # adjust the max_tokens based on desired response length
-    ai_name = None
-
     def __new__(cls, mode="player"):
         if cls._instance is None:
-            cls._instance = super(AIManager, cls).__new__(cls)
-            # Set up openAI connection
-            # We are going to use the chat interface to get AI To play our text adventure game
-            cls._instance.model_api_connect()
+            cls._instance = super(AIBroker, cls).__new__(cls)
             cls._instance.mode = mode
 
-            # Override max history for Gemini for now, as it's free
-            if cls._instance.get_model_api() == "Gemini":
-                cls._instance.max_history = 99999
+            intro_text = (
+                "You have been brought to life in a text adventure game! "
+                + "For now all you can do is move and chat. "
+                + f" Do not apologise to the game! Respond only with one valid command phrase "
+                + f"each time you are contacted.\nInstructions:\n{cls._instance.get_instructions()}"
+            )
 
-            logger.info("Starting up AI with model " + cls._instance.model_name)
+            # Set up the AI manager
+            cls._instance.ai_manager = AIManager_broker_legacy(
+                mode=mode, system_message=intro_text
+            )
 
             # Get the AI's name
             cls._instance.ai_name = cls._instance.get_ai_name()
 
         return cls._instance
 
-    def get_model_api(self):
-        # Use the specific model name to generalise which class/company we are using
-        if self.model_name.startswith("gpt"):
-            return "GPT"
-        elif self.model_name.startswith("gemini"):
-            return "Gemini"
+    # The main processing loop
+    def ai_response_loop(self):
+        while True:
+            # Exit own thread when time comes
+            if self.time_to_die:
+                return
 
-    def model_client_manages_history(self):
-        if self.get_model_api() == "Gemini":
-            return True
-        return False
-
-    def save_model_data(self, filename_prefix, data):
-        logger.info("Saving model data")
-        folder_path = "model_io"
-        os.makedirs(folder_path, exist_ok=True)
-        with open(
-            folder_path + os.sep + f"{self.character_name}_{filename_prefix}.tmp",
-            "w",
-        ) as f:
-            json.dump(data, f, indent=4)
-
-    def model_api_connect(self):
-        # Use pre-set variable before dotenv.
-        if self.get_model_api() == "GPT":
-            if not os.environ.get("OPENAI_API_KEY"):
-                load_dotenv()
-                if not os.getenv("OPENAI_API_KEY"):
-                    logger.info("ERROR: OPENAI_API_KEY not set. Exiting.")
-                    sys.exit(1)
-
-            openai.api_key = os.getenv("OPENAI_API_KEY")
-            self.model_client = openai.OpenAI()
-        elif self.get_model_api() == "Gemini":
-            # If env variable not set and file exists, set it
-            # set GOOGLE_APPLICATION_CREDENTIALS=
-            gcloud_credentials_file = "gemini.key"
-            if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
-                if not os.path.exists(gcloud_credentials_file):
-                    logger.error(
-                        "GOOGLE_APPLICATION_CREDENTIALS not set and {} does not exist".format(
-                            gcloud_credentials_file
-                        )
-                    )
-                    exit()
-                else:
-                    logger.info(
-                        "Setting GOOGLE_APPLICATION_CREDENTIALS to {}".format(
-                            gcloud_credentials_file
-                        )
-                    )
-                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-                        gcloud_credentials_file
-                    )
-
-            vertexai.init(project="jaysgame", location="us-central1")
-            self.model_client = GenerativeModel("gemini-pro")
-            self.chat = self.model_client.start_chat(history=[])
-
-        else:
-            logger.info(f"ERROR: Model name {self.model_name} not recognised. Exiting.")
-            sys.exit(1)
+            wait_time = self.max_wait - (time.time() - self.last_time)
+            if wait_time > 0:
+                # don't do anything for now
+                eventlet.sleep(wait_time)
+            self.poll_event_log()
+            # Record time
+            self.last_time = time.time()
 
     # AI manager will record instructions from the game server
     # Which are given to each player at the start of the game
@@ -181,43 +89,44 @@ class AIManager:
         return self.game_instructions + role_specific_instructions
 
     def get_ai_name(self):
-        # TODO - improve this so builder works for Gemini and we don't switch on model, the messages construction needs to be centralised
 
-        system_message = "You are playing an adventure game. It is set in a typical house in the modern era."
-        if self.mode == "builder":
-            system_message += (
-                " You are a creator of worlds! You can add new locations in the game."
-            )
-
-        messages = [
-            {
-                "role": "system",
-                "content": system_message,
-            }
-        ]
-
-        name_message = "What do you want your name to be in this game? Please respond with a single one-word name only, and try to be random."
-        messages.append(
-            {
-                "role": "user",
-                "content": name_message,
-            }
+        mode_name_hints = {
+            "builder": "You are a creator of worlds! You can add new locations in the game. "
+        }
+        request = (
+            mode_name_hints.get(self.mode, "")
+            + "What do you want your name to be in this game? Please respond with a single one-word name only, and try to be random."
         )
-
-        message_text = None
-        if self.model_client_manages_history():
-            message_text = system_message + name_message
 
         ai_name = None
         while not ai_name or " " in ai_name:
             # Keep trying til they get the name right
-            ai_name = self.submit_request(messages, message_text).strip(".")
+            ai_name = self.ai_manager.submit_request(request).strip(".")
             # Reset so the intro is done again
             # TODO - improve this
-            self.first_contact = False
             logger.info(f"AI chose the name {ai_name}.")
             self.character_name = ai_name
         return ai_name
+
+    def submit_input(self):
+        # TODO: review this in case there is a better way
+        # Grab and clear the log quickly to minimise threading issue risk
+        tmp_log = self.event_log.copy()
+        self.event_log = []
+        logger.info(f"Found {len(tmp_log)} events to submit to model.")
+
+        # Catch up with the input / game context
+        message_text = ""
+        for event_text in tmp_log:
+            message_text += event_text + "\n"
+
+        # Now append the command request
+        command_text = (
+            "Please enter your a valid command per the instructions given previously."
+        )
+        message_text += command_text
+
+        return self.ai_manager.submit_request(message_text)
 
     def log_event(self, event_text):
         # If the input is just echoing back what you said, do nothing
@@ -254,165 +163,33 @@ class AIManager:
                 logger.info("ERROR: AI returned empty response")
                 sys.exit(1)
 
-    def submit_input(self):
-        # TODO: review this in case there is a better way
-        # Grab and clear the log quickly to minimise threading issue risk
-        tmp_log = self.event_log.copy()
-        self.event_log = []
-        logger.info(f"Found {len(tmp_log)} events to submit to model.")
 
-        intro_text = (
-            "You have been brought to life in a text adventure game! "
-            + "It is set in a typical house. For now all you can do is move and chat. "
-            + f" Do not apologise to the game! Respond only with one valid command "
-            + f"each time you are contacted.\nInstructions:\n{self.get_instructions()}"
-        )
-        command_text = (
-            "Please enter your a valid command per the instructions given previously."
-        )
+# Connect to SocketIO server, trying again if it fails
+def connect_to_server(hostname):
+    connected = False
+    max_wait = 120  # 2 minutes
+    wait_time = 1
+    while not connected and wait_time <= max_wait:
+        try:
+            sio.connect(hostname)
+            connected = True
+        except:
+            logger.info(
+                f"Could not connect to server. Retrying in {wait_time} seconds..."
+            )
+            eventlet.sleep(wait_time)
+            wait_time *= 2
 
-        # Assume that if the client manages history, it just takes a string as input
-        if self.model_client_manages_history():
-            message_text = ""
-            if self.first_contact:
-                message_text += intro_text
-                self.first_contact = False
-            for event_text in tmp_log:
-                message_text += event_text + "\n"
-            message_text += command_text
-            return self.submit_request(None, message_text)
-        else:
-            # Add the history
-            # Assume for now that API clients that need history use the OpenAI role/content structure below
-            for event_text in tmp_log:
-                self.chat_history.append(
-                    {
-                        "role": "user",
-                        "content": event_text,
-                    }
-                )
-
-            # Now use history to build the messages for model input
-            messages = [{"role": "system", "content": intro_text}]
-            if len(self.chat_history) > self.max_history:
-                messages.append(
-                    {
-                        "role": "user",
-                        "content": "(some game transcript history removed for brevity))",
-                    }
-                )
-            for history_item in self.chat_history[-1 * self.max_history :]:
-                messages.append(
-                    {
-                        "role": history_item["role"],
-                        "content": history_item["content"],
-                    }
-                )
-
-            messages.append({"role": "user", "content": command_text})
-
-            return self.submit_request(messages)
-
-    def submit_request(self, messages, message_text=None):
-        # logger.debug(f"submit_request called, {messages=}")
-        try_count = 0
-        model_response = None
-        max_tries = 10
-        while not model_response and try_count < max_tries:
-            try_count += 1
-            response = None
-            try:
-                # Submit request to ChatGPT
-                logger.info(f"Submitting request to model...")
-                if self.model_name.startswith("gpt"):
-                    response = self.model_client.chat.completions.create(
-                        model=self.model_name,
-                        messages=messages,
-                        max_tokens=self.max_tokens,
-                    )
-                    # Extract response content
-                    for choice in response.choices:
-                        model_response = choice.message.content
-                        break
-                    # Get tokens and calculate cost
-                    self.input_token_count += response.usage.prompt_tokens
-                    self.output_token_count += response.usage.completion_tokens
-                    session_cost = (
-                        (
-                            self.input_cost.get(self.model_name, 0)
-                            * self.input_token_count
-                            / 1000
-                        )
-                        + (
-                            self.output_cost.get(self.model_name, 0)
-                            * self.output_token_count
-                            / 1000
-                        )
-                    ) / 1.27  # To £
-                    logger.info(
-                        f"Tokens used: {response.usage.total_tokens} (input {response.usage.prompt_tokens}, output {response.usage.completion_tokens}). Running total cost: £{session_cost:.2f}"
-                    )
-                elif self.model_name.startswith("gemini"):
-                    # Gemini does not support system message
-                    message_to_send = message_text
-                    # logger.info("FINAL GEMINI INPUT:\n" + message_to_send)
-                    model_response = self.chat.send_message(message_to_send)
-                    # logger.info("ORIGINAL GEMINI RESPONSE:\n" + str(model_response))
-                    model_response = model_response.text.strip("*").strip()
-                    # If the response contains newline(s) followed by some info in parentheses, strip all this out
-                    if "\n(" in model_response and model_response.endswith(")"):
-                        model_response = model_response.split("\n")[0].strip()
-                    # Convert all-upper-case response to natural case
-                    if model_response.isupper():
-                        model_response = model_response.title()
-                    break
-            except Exception as e:
-                if (
-                    "server is overloaded" in str(e)
-                    or "The response was blocked." in str(e)
-                ) and try_count < max_tries:
-                    logger.info(f"Error from model: {str(e)}")
-                    sleep_time = try_count * 5
-                    logger.info(
-                        f"Retrying in {sleep_time} seconds... (attempt {try_count+1}/{max_tries})"
-                    )
-                    time.sleep(sleep_time)
-                else:
-                    logger.info(f"Error from model: {str(e)}")
-                    return "exit"
-
-        if response:
-            # Save response to file for fine-tuning purposes
-            pass
-            # TODO: TBD whether we want the input or the output or both
-            # self.save_model_data("input", messages)
-            # self.save_model_data("response", response)
-
-        logger.info("Model Response: " + str(model_response))
-
-        return model_response
-
-    # The main processing loop
-    def ai_response_loop(self):
-        while True:
-            # Exit own thread when time comes
-            if self.time_to_die:
-                return
-
-            wait_time = self.max_wait - (time.time() - self.last_time)
-            if wait_time > 0:
-                # don't do anything for now
-                eventlet.sleep(wait_time)
-            self.poll_event_log()
-            # Record time
-            self.last_time = time.time()
+    if not connected:
+        logger.info("Could not connect to server. Exiting.")
+        sys.exit(1)
 
 
 @sio.on("game_update")
 def catch_all(data):
     if data:
         logger.info(f"Received game update event: {data}")
-        ai_manager.log_event(data)
+        ai_broker.log_event(data)
     else:
         logger.info("ERROR: Received empty game update event")
         sys.exit()
@@ -420,7 +197,7 @@ def catch_all(data):
 
 @sio.on("instructions")
 def catch_all(data):
-    ai_manager.record_instructions(data)
+    ai_broker.record_instructions(data)
 
 
 @sio.on("heartbeat")
@@ -433,7 +210,7 @@ def catch_all(data):
 @sio.on("shutdown")
 def catch_all(data):
     logger.info(f"Shutdown event received: {data}. Exiting immediately.")
-    ai_manager.time_to_die = True
+    ai_broker.time_to_die = True
     sio.disconnect()
     sio.eio.disconnect()
     sys.exit(1)
@@ -457,13 +234,13 @@ def catch_all(data):
 @sio.on("game_data_update")
 def catch_all(data):
     if "player_count" in data:
-        if data["player_count"] == 1 and ai_manager.mode != "builder":
+        if data["player_count"] == 1 and ai_broker.mode != "builder":
             logger.info("No players apart from me, so I won't do anything.")
-            ai_manager.active = False
+            ai_broker.active = False
         else:
-            if not ai_manager.active:
+            if not ai_broker.active:
                 logger.info("I can wake up again!")
-                ai_manager.active = True
+                ai_broker.active = True
 
 
 @sio.on("*")
@@ -475,7 +252,7 @@ def catch_all(event, data):
 def connect():
     logger.info("Connected to Server.")
     # Emit the AI's chosen name to the server
-    sio.emit("set_player_name", {"name": ai_manager.ai_name, "role": ai_manager.mode})
+    sio.emit("set_player_name", {"name": ai_broker.ai_name, "role": ai_broker.mode})
 
 
 @sio.event
@@ -516,10 +293,10 @@ if __name__ == "__main__":
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting."
             )
             sys.exit(1)
-        ai_manager = AIManager(mode=ai_mode)
+        ai_broker = AIBroker(mode=ai_mode)
 
     # Change log file name to include AI name
-    logger = setup_logger(f"ai_broker_{ai_manager.ai_name}.log")
+    logger = setup_logger(f"ai_broker_{ai_broker.ai_name}.log")
 
     # Set hostname (default is "localhost" to support local pre container testing)
     # hostname = socket.getfqdn()
@@ -531,7 +308,7 @@ if __name__ == "__main__":
     connect_to_server(f"http://{hostname}:3001")
 
     # This is where the main processing of inputs happens
-    eventlet.spawn(ai_manager.ai_response_loop())
+    eventlet.spawn(ai_broker.ai_response_loop())
 
     # This keeps the SocketIO event processing going
     sio.wait()
