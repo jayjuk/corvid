@@ -2,6 +2,7 @@ import os
 import json
 import time
 import sys
+from pprint import pprint
 
 # from openai.types import Image, ImagesResponse
 import urllib.request
@@ -27,7 +28,7 @@ class AIManager:
         self.chat_history = []
         self.event_log = []
         self.max_history = 10
-        self.max_wait = 5  # secs
+        self.max_wait = 7  # secs
         self.last_time = time.time()
         self.active = True
         self.mode = mode
@@ -62,9 +63,7 @@ class AIManager:
         self.mode = mode
 
         # Set system message
-        self.system_message = (
-            "You are playing an adventure game." or self.system_message
-        )
+        self.system_message = system_message or "You are playing an adventure game."
 
         # Override max history for Gemini for now, as it's free
         if self.get_model_api() == "Gemini":
@@ -74,12 +73,17 @@ class AIManager:
 
         self.create_model_log_file()
 
+    def set_system_message(self, system_message):
+        if system_message:
+            logger.info(f"Updating system message to: {system_message}")
+            self.system_message = system_message
+
     def create_model_log_file(self):
-        with open(f"{self.model_client}_response_log.txt", "w") as f:
+        with open(f"{self.get_model_api()}_response_log.txt", "w") as f:
             f.write(f"# Model input and response log for {self.model_client}\n\n")
 
     def log_response_to_file(self, request, response):
-        with open(f"{self.model_client}_response_log.txt", "a") as f:
+        with open(f"{self.get_model_api()}_response_log.txt", "a") as f:
             f.write(f"Request: {request}\nResponse: {response}\n\n")
 
     def get_model_api(self):
@@ -166,7 +170,7 @@ class AIManager:
                     # Add latest request to history
                     self.chat_history.append(
                         {
-                            "role": "assistant",
+                            "role": "user",
                             "content": request,
                         }
                     )
@@ -192,6 +196,8 @@ class AIManager:
                             )
 
                         messages.append({"role": "user", "content": request})
+
+                    pprint(messages)
 
                     response = self.model_client.chat.completions.create(
                         model=(model_name or self.model_name),

@@ -70,6 +70,7 @@ class AIBroker:
     # Which are given to each player at the start of the game
     def record_instructions(self, data):
         self.game_instructions += data + "\n"
+        self.ai_manager.set_system_message(self.game_instructions)
 
     def get_instructions(self):
         # Set up role-specific instructions for the AI
@@ -132,7 +133,9 @@ class AIBroker:
         # Otherwise, add this to the user input backlog
         # Strip anything inside curly braces as this is detail human players will enjoy but it will just cost money for the AI
         # There could be stuff after the braces, include that
-        event_text = re.sub(r"\{.*?\}", "", event_text)
+        event_text = re.sub(
+            r"{.*?}", "", event_text, flags=re.DOTALL
+        )  # dotall flag is to handle newline
         self.event_log.append(event_text)
 
     def poll_event_log(self):

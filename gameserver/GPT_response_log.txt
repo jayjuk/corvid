@@ -1,0 +1,26 @@
+# Model input and response log for <openai.OpenAI object at 0x0000027AD38B4A10>
+
+Request: Help me to translate my user's input into a valid adventure game command.
+Valid commands:Valid directions: north, east, south, west.
+Synonyms: n = north, e = east, s = south, w = west, pick = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an object in your current location; drop = Drop an object in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an object from a character (e.g. a Merchant) in your current location.; sell = Sell an object to a character (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; help = Get game instructions; inventory = List the objects you are carrying
+Respond with only a valid command, nothing else.
+Some history of what the user has seen for context:
+Welcome to the game, Jay. The aim of this game is to earn enough money to buy The Button. You don't know what will happen when you press The Button, but you know it will be good. The first player to press the button (in their possession) wins the game! Hint: earn money buy exploring the game world, finding items and selling them to a merchant.You are the first player to join the game.
+
+Available commands:
+Valid directions: north, east, south, west.
+Synonyms: n = north, e = east, s = south, w = west, pick = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an object in your current location; drop = Drop an object in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an object from a character (e.g. a Merchant) in your current location.; sell = Sell an object to a character (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; help = Get game instructions; inventory = List the objects you are carrying
+You start in the road.  Available exits: east: Frozen Moorland.  north: North Road.  west: Driveway.   There is a rock here. There is a Traveler's Backpack here. Gambino The Merchant is here. They have the following available for sale: an apple (1p), a banana (2p), a pear (3p), a button (999p).
+You: n
+You: e
+You: w
+You: look
+You: help
+You: s
+You: wander in a southerly direction
+
+Their input: wander in a southerly direction
+Response: go south
+

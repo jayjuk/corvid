@@ -1,0 +1,16 @@
+# Model input and response log for <openai.OpenAI object at 0x0000020947724ED0>
+
+Request: What do you want your name to be in this game? Please respond with a single one-word name only, and try to be random.
+Response: Luna
+
+Request: You start in the road.  Available exits: east: Frozen Moorland.  north: North Road.  west: Driveway.   There is a rock here. There is a Traveler's Backpack here. Gambino The Merchant is here. They have the following available for sale: an apple (1p), a banana (2p), a pear (3p), a button (999p).
+Jay has joined the game, starting in the Road; there are now 2 players.
+Please enter your a valid command per the instructions given previously.
+Response: Look
+
+Request: You look again at the road:  Available exits: east: Frozen Moorland.  north: North Road.  west: Driveway.   There is a rock here. There is a Traveler's Backpack here.
+Jay has shut down the server.
+You are not carrying anything.
+Please enter your a valid command per the instructions given previously.
+Response: Go east
+

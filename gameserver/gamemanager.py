@@ -843,10 +843,8 @@ class GameManager:
     # Emit a message to a specific player
     def tell_player(self, player, message, type="game_update"):
         message = message.strip()
-        for line in message.split("\n"):
-            if line != "":
-                self.sio.emit(type, line, player.sid)
-                player.add_input_history(line)
+        self.sio.emit(type, message, player.sid)
+        player.add_input_history(message)
 
     # Get other players
     def get_other_characters(self, sid=None, players_only=False):
