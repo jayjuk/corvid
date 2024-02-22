@@ -11,7 +11,7 @@ from pprint import pprint
 import os
 import re
 from dotenv import load_dotenv
-from aimanager import AIManager_broker_legacy
+from aimanager import AIManager
 
 # Register the client with the server
 sio = socketio.Client()
@@ -21,7 +21,6 @@ class AIBroker:
     time_to_die = False
     _instance = None
     game_instructions = ""
-    chat_history = []
     event_log = []
     max_history = 10
     max_wait = 5  # secs
@@ -45,9 +44,7 @@ class AIBroker:
             )
 
             # Set up the AI manager
-            cls._instance.ai_manager = AIManager_broker_legacy(
-                mode=mode, system_message=intro_text
-            )
+            cls._instance.ai_manager = AIManager(mode=mode, system_message=intro_text)
 
             # Get the AI's name
             cls._instance.ai_name = cls._instance.get_ai_name()
@@ -153,12 +150,6 @@ class AIBroker:
                 if response == "exit":
                     logger.info("AI has exited the game.")
                     sys.exit(1)
-                self.chat_history.append(
-                    {
-                        "role": "assistant",
-                        "content": response,
-                    }
-                )
             else:
                 logger.info("ERROR: AI returned empty response")
                 sys.exit(1)

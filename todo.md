@@ -4,11 +4,10 @@ _NOTE: I am in the process of migrating these to GitHub Issues which has some im
 
 ## DevOps / Other
 
-- Finish deduplicating ai management (legacy one from broker is now in the aimanager class, need to merge those classes into one after testing)
-
 - Test cloud deployment with Azure Tables
 - Unit tests esp more around storage
 - Improve singleton code in AI manager and elsewhere - should use \_\_init\_\_, and also not have so much business logic
+- Store images in DB
 
 ## Game Server
 

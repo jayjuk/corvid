@@ -325,6 +325,9 @@ class GameManager:
             room_name = rest_of_response[1:end_quote_index]
             # Remove the room name and any extra spaces from the response
             rest_of_response = rest_of_response[end_quote_index + 1 :].strip()
+        elif not rest_of_response:
+            # User did not specify what to build
+            return "Please specify room name in quotes and a description."
         else:
             # Room name is a single word
             room_name = rest_of_response.split()[0]
@@ -688,8 +691,8 @@ class GameManager:
                 # If the command is not recognised, try to translate it using AI (unless this is already a translation)
                 if not translated:
                     # Try to translate the user input into a valid command using AI :-)
-                    ai_translation = self.ai_manager.submit_prompt(
-                        "Please help me to translate my user's input into a valid adventure game command.\n"
+                    ai_translation = self.ai_manager.submit_request(
+                        "Help me to translate my user's input into a valid adventure game command.\n"
                         + "Valid commands:"
                         + self.get_commands_description()
                         + "\nRespond with only a valid command, nothing else.\n"

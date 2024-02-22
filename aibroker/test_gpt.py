@@ -21,7 +21,7 @@ def query_gpt(model_client, prompt):
         }
     )
     response = model_client.chat.completions.create(
-        model="gpt-4-0125-preview",
+        model="gpt-4-turbo-preview",
         messages=messages,
         max_tokens=500,
     )

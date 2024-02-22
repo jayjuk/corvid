@@ -28,9 +28,9 @@ def explore_room(ai_manager, room, data, done_rooms):
                 + f"For context, the room to the {world.get_opposite_direction(exit)} of the new room is '{room}: {data['description']}'. Return only the name and description separated by a colon."
             )
             print("     ", prompt)
-            response = ai_manager.submit_prompt(
+            response = ai_manager.submit_request(
                 prompt,
-                model_name="gpt-4",
+                model_name="gpt-3.5-turbo"",
                 max_tokens=300,
                 temperature=0.7,
             )
