@@ -22,8 +22,8 @@ class AIBroker:
     _instance = None
     game_instructions = ""
     event_log = []
-    max_history = 10
-    max_wait = 5  # secs
+    max_history = 50
+    max_wait = 3  # secs
     last_time = time.time()
     active = True
     mode = None
@@ -119,9 +119,7 @@ class AIBroker:
             message_text += event_text + "\n"
 
         # Now append the command request
-        command_text = (
-            "Please enter your a valid command per the instructions given previously."
-        )
+        command_text = "Please enter a valid command phrase:"
         message_text += command_text
 
         return self.ai_manager.submit_request(message_text)

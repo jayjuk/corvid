@@ -1,16 +1,101 @@
-# Model input and response log for <openai.OpenAI object at 0x0000020947724ED0>
+# Model input and response log for <openai.OpenAI object at 0x000001D062764ED0>
 
 Request: What do you want your name to be in this game? Please respond with a single one-word name only, and try to be random.
-Response: Luna
+Response: Whisker
 
 Request: You start in the road.  Available exits: east: Frozen Moorland.  north: North Road.  west: Driveway.   There is a rock here. There is a Traveler's Backpack here. Gambino The Merchant is here. They have the following available for sale: an apple (1p), a banana (2p), a pear (3p), a button (999p).
 Jay has joined the game, starting in the Road; there are now 2 players.
 Please enter your a valid command per the instructions given previously.
-Response: Look
+Response: hi Jay
 
-Request: You look again at the road:  Available exits: east: Frozen Moorland.  north: North Road.  west: Driveway.   There is a rock here. There is a Traveler's Backpack here.
-Jay has shut down the server.
-You are not carrying anything.
+Request: Jay says, "hi!"
 Please enter your a valid command per the instructions given previously.
-Response: Go east
+Response: say hi Jay
+
+Request: Jay says, "how are you?"
+Please enter your a valid command per the instructions given previously.
+Response: say I'm good, thanks!
+
+Request: Jay says, ":-)"
+Jay says, "i like your name"
+Please enter your a valid command per the instructions given previously.
+Response: say thanks!
+
+Request: Jay says, "how did you get it?"
+Please enter your a valid command per the instructions given previously.
+Response: say I'm not sure, I've had it for as long as I can remember!
+
+Request: Jay says, "ah! OK, see if you can follow me, keep up OK?"
+Jay leaves, heading north to the north road.
+Please enter your a valid command per the instructions given previously.
+Response: go north
+
+Request: You head north to the north road:  Available exits: east: Factory.  north: Norther Road.  south: Road.   There is a stone here. There is a Lost Compass here. Jay is here.
+Jay leaves, heading north to the norther road.
+Please enter your a valid command per the instructions given previously.
+Response: get Lost Compass
+
+Request: You pick up the Lost Compass.
+Please enter your a valid command per the instructions given previously.
+Response: go north
+
+Request: You head north to the norther road:  Available exits: east: Strange Shed.  north: Mysterious Forest.  south: North Road.  west: Neighbour's House.   There is a pebble here. Jay is here.
+Jay leaves, heading east to the strange shed.
+Please enter your a valid command per the instructions given previously.
+Response: get pebble
+
+Request: You pick up the pebble.
+Please enter your a valid command per the instructions given previously.
+Response: go east
+
+Request: You head east to the strange shed:  Available exits: west: Norther Road.   There is an Old Lantern here. Jay is here.
+Please enter your a valid command per the instructions given previously.
+Response: get Old Lantern
+
+Request: Jay leaves, heading west to the norther road.
+You pick up the Old Lantern.
+Please enter your a valid command per the instructions given previously.
+Response: go west
+
+Request: You head west to the norther road.  Available exits: east: Strange Shed.  north: Mysterious Forest.  south: North Road.  west: Neighbour's House.   Jay is here.
+Please enter your a valid command per the instructions given previously.
+Response: get Old Lantern
+
+Request: Jay leaves, heading south to the north road.
+Sorry, there is no 'Old Lantern' here.
+Please enter your a valid command per the instructions given previously.
+Response: go north
+
+Request: You head north to the mysterious forest:  Available exits: east: Hidden Grove.  north: Deserted Gas Station.  south: Norther Road.   There is a Fairy Ring here.
+Please enter your a valid command per the instructions given previously.
+Response: get Fairy Ring
+
+Request: You pick up the Fairy Ring.
+Jay has materialised as if by magic!
+Please enter your a valid command per the instructions given previously.
+Response: go south
+
+Request: You head south to the norther road.  Available exits: east: Strange Shed.  north: Mysterious Forest.  south: North Road.  west: Neighbour's House.  
+Jay says, "heeeey! you lost me!"
+Please enter your a valid command per the instructions given previously.
+Response: go south
+
+Request: You head south to the north road.  Available exits: east: Factory.  north: Norther Road.  south: Road.   There is a stone here.
+Please enter your a valid command per the instructions given previously.
+Response: get Stone
+
+Request: You pick up the stone.
+Jay has materialised as if by magic!
+Please enter your a valid command per the instructions given previously.
+Response: go north
+
+Request: You head north to the norther road.  Available exits: east: Strange Shed.  north: Mysterious Forest.  south: North Road.  west: Neighbour's House.  
+Please enter your a valid command per the instructions given previously.
+Response: get Stone
+
+Request: Sorry, there is no 'Stone' here.
+Jay has shut down the server.
+You drop the Lost Compass, the pebble, the Old Lantern, the Fairy Ring and the stone.
+Please enter your a valid command per the instructions given previously.
+Response: go north
 

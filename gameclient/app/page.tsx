@@ -185,7 +185,7 @@ export default function HomePage() {
       )}
       {nameSet && roomImageFileName && (
         <div style={{ display: "flex", flexDirection: "row" }}>
-          <img src={"/" + (roomImageFileName ?? "")} alt={roomTitle ?? ""} width="400" />
+          <img src={"/" + (roomImageFileName ?? "")} alt={roomTitle ?? ""} width="1024" />
           {/* Some text to the right of the image */}
           <div
             style={{

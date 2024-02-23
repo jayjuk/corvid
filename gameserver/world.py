@@ -272,12 +272,25 @@ class World:
 
         logger.info(f"Adding room {new_room_name} to the {direction} of {current_room}")
 
+        # Try to create the image and save it
+        # TODO: review whether we can avoid using a temporary file like this
+        image_file_name = None
+        try:
+            image_file_name = self.ai_manager.create_image(
+                new_room_name, room_description
+            )
+            storagemanager.save_image(image_file_name)
+        except:
+            logger.error(
+                "Error creating/saving image, this room will be created without one"
+            )
+
         # Set up new room
         self.rooms[new_room_name] = {
             "name": new_room_name,
             "grid_reference": new_grid_reference,
             "description": room_description,
-            "image": self.ai_manager.create_image(new_room_name, room_description),
+            "image": image_file_name,
             "creator": creator_name,
             "exits": {self.get_opposite_direction(direction): current_room},
         }

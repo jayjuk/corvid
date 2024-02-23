@@ -287,8 +287,8 @@ class AIManager:
         """Create an image from description and return the file name"""
         # make file name from image name, replacing spaces with underscores and lowercasing
         file_name = image_name.lower().replace(" ", "_").replace("'", "") + ".png"
-        full_path = os.sep.join(("..", "gameclient", "public", file_name))
-        if self.do_not_generate_images or os.path.exists(full_path):
+        # TODO: consider whether current directory is right, and whether we can move away from file, passing around blob in memory instead
+        if self.do_not_generate_images or os.path.exists(file_name):
             # Let the client handle if a file is missing.
             # Although room name is unique, during testing a room may have been created before
             # And so the image may already exist
@@ -301,7 +301,7 @@ class AIManager:
             image = response.data[0]
             url = image.url
             # Download URL and save to file
-            urllib.request.urlretrieve(url, full_path)
+            urllib.request.urlretrieve(url, file_name)
             logger.info(f"Generated {file_name}")
             return file_name
         else:

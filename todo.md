@@ -4,10 +4,10 @@ _NOTE: I am in the process of migrating these to GitHub Issues which has some im
 
 ## DevOps / Other
 
-- Test cloud deployment with Azure Tables
+- Store images in DB: retrieval needs to work for game client in node!!! on startup it should load all images into public dir
+
 - Unit tests esp more around storage
 - Improve singleton code in AI manager and elsewhere - should use \_\_init\_\_, and also not have so much business logic
-- Store images in DB
 
 ## Game Server
 

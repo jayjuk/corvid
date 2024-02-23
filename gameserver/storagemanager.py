@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import sys
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.data.tables import TableServiceClient, TableClient
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+from azure.core.exceptions import ResourceExistsError
 
 # Set up logger
 logger = setup_logger()
@@ -19,16 +21,22 @@ def check_env_var(var_name):
         sys.exit(1)
 
 
-# Set up Azure storage account (fall back to .env if not set)
-def get_azure_storage_service_client():
+# Return Azure credential
+def get_azure_credential():
+    # TODO: error handling
     if not os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"):
         load_dotenv()
     check_env_var("AZURE_STORAGE_ACCOUNT_NAME")
     check_env_var("AZURE_STORAGE_ACCOUNT_KEY")
-    credential = AzureNamedKeyCredential(
+    return AzureNamedKeyCredential(
         os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"),
         os.environ.get("AZURE_STORAGE_ACCOUNT_KEY"),
     )
+
+
+# Return Azure table service client
+# Assumes if we have a credential, we have AZURE_STORAGE_ACCOUNT_NAME set
+def get_azure_storage_service_client(credential):
     return TableServiceClient(
         endpoint="https://"
         + os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
@@ -106,9 +114,58 @@ def check_rowkey(table_client, query_filter_rowkey):
     return False
 
 
+def save_image_on_cloud(image_path, image_name):
+    credential = get_azure_credential()
+
+    # Get Azure storage client
+    blob_service_client = BlobServiceClient(
+        account_url="https://"
+        + os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
+        + ".blob.core.windows.net",
+        credential=credential,
+    )
+    container_name = "jaysgameimages"
+    # Get a reference to the container
+    container_client = blob_service_client.get_container_client(container_name)
+
+    # Create the container if it doesn't exist
+    try:
+        container_client.create_container()
+        print(f"Created container '{container_name}'")
+    except ResourceExistsError:
+        print(f"Container '{container_name}' already exists")
+
+    # Get a reference to the blob
+    blob_client = blob_service_client.get_blob_client(container_name, image_name)
+
+    # Upload the image
+    with open(image_path, "rb") as data:
+        try:
+            blob_client.upload_blob(data)
+            print(f"Uploaded image '{image_name}'")
+        except ResourceExistsError:
+            print(f"Container '{image_name}' already exists")
+
+
+# External function for the world class to use, world doesn't need to know about cloud etc
+def save_image(file_name):
+    # For now, only cloud storage
+    save_image_on_cloud(file_name)
+    # Move file name to full path
+    # TODO: (won't work on cloud as game client is in different container)
+    try:
+        full_path = os.sep.join(("..", "gameclient", "public", file_name))
+        os.rename(file_name, full_path)
+    except:
+        logger.error(f"Error moving file {file_name} to {full_path}")
+        return False
+    return True
+
+
 def save_new_room_on_cloud(new_room, new_exit_direction, changed_room):
     # Get Azure storage client
-    service_client = get_azure_storage_service_client()
+    credential = get_azure_credential()
+    service_client = get_azure_storage_service_client(credential)
     rooms_client = service_client.create_table_if_not_exists("rooms")
 
     # Store room in Azure
@@ -193,7 +250,7 @@ def check_schema():
 
 def cloud_enabled():
     try:
-        x = get_azure_storage_service_client()
+        get_azure_storage_service_client(get_azure_credential())
         return True
     except:
         return False
@@ -201,7 +258,8 @@ def cloud_enabled():
 
 def get_rooms_from_cloud():
     # Get Azure storage client
-    service_client = get_azure_storage_service_client()
+    credential = get_azure_credential()
+    service_client = get_azure_storage_service_client(credential)
     rooms_client = service_client.get_table_client("rooms")
     if rooms_client:
         rooms = {}
