@@ -9,3 +9,4 @@ temp_*
 *.sqlite3
 backup_the_oldfashioned_way.py
 temp-deploy-aci-ai.yaml
+temp-deploy-aci.yaml

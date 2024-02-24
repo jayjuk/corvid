@@ -6,4 +6,4 @@ rem powershell -Command "(Get-Content temp-deploy-aci-ai.yaml) -replace 'value: 
 rem az container create --resource-group jay --file temp-deploy-aci-ai.yaml
 rem rem Clean up temporary file:
 rem del temp-deploy-aci-ai.yaml
-az-deploy.py %AI_COUNT%
+python az-deploy.py %AI_COUNT%
