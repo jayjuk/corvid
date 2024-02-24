@@ -807,7 +807,7 @@ class GameManager:
         self.sio.emit(
             "room_update",
             {
-                "image": self.world.rooms[room]["image"],
+                "image": self.world.get_room_image_url(room),
                 "title": room,
                 "description": self.world.get_room_description(
                     room,

@@ -4,7 +4,7 @@ from logger import setup_logger
 logger = setup_logger()
 
 import aimanager
-import storagemanager
+from storagemanager import StorageManager
 from merchant import Merchant
 from object import Object
 import test_objects
@@ -26,26 +26,34 @@ class World:
     done_path = {}
     starting_room = "Road"
 
-    def __new__(cls, mode=None, ai_manager=None):
-        if cls._instance is None:
-            cls._instance = super(World, cls).__new__(cls)
-            # Load rooms from storage
-            cls._instance.rooms = cls._instance.load_rooms(mode)
+    # Singleton pattern
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, "instance"):
+            cls.instance = super(World, cls).__new__(cls)
+            cls.instance.__initialized = False
+        return cls.instance
 
-            # Only load objects and merchants if not in any special mode
-            if not mode:
-                cls._instance.room_objects = cls._instance.load_room_objects(
-                    cls._instance
-                )
-                cls._instance.load_merchants()
+    # Constructor
+    def __init__(self, mode=None, ai_manager=None):
+        if self.__initialized:
+            return
+        self.__initialized = True
 
-            # Instantiate AI manager
-            if ai_manager:
-                cls._instance.ai_manager = ai_manager
-            else:
-                cls._instance.ai_manager = aimanager.AIManager()
+        # Instantiate storage manager
+        self.storage_manager = StorageManager()
 
-        return cls._instance
+        self.rooms = self.load_rooms(mode)
+
+        # Only load objects and merchants if not in any special mode
+        if not mode:
+            self.room_objects = self.load_room_objects()
+            self.load_merchants()
+
+        # Instantiate AI manager
+        if ai_manager:
+            self.ai_manager = ai_manager
+        else:
+            self.ai_manager = aimanager.AIManager()
 
     # Get the objective of the game
     def get_objective(self):
@@ -58,7 +66,7 @@ class World:
 
     def load_rooms(self, mode):
         # Get rooms from storage
-        rooms = storagemanager.get_rooms()
+        rooms = self.storage_manager.get_rooms()
 
         # Add a grid reference for each room. This is used to validate that rooms don't overlap
         # Start with the first room found, grid references can go negative
@@ -220,6 +228,11 @@ class World:
                 description += f" There is {object.get_name(article='a')} here."
         return description
 
+    def get_room_image_url(self, room_name):
+        url = self.storage_manager.get_image_url(self.rooms[room_name]["image"])
+        logger.info(f"URL for {self.rooms[room_name]['name']}: {url}")
+        return url
+
     def get_opposite_direction(self, direction):
         directions = {
             "north": "south",
@@ -279,7 +292,7 @@ class World:
             image_file_name = self.ai_manager.create_image(
                 new_room_name, room_description
             )
-            storagemanager.save_image(image_file_name)
+            self.storage_manager.save_image(image_file_name)
         except:
             logger.error(
                 "Error creating/saving image, this room will be created without one"
@@ -297,7 +310,7 @@ class World:
         # Add the new room to the exits of the current room
         self.rooms[current_room]["exits"][direction] = new_room_name
         # Store current and new room (current has changed in that exit has been added)
-        storagemanager.store_rooms(
+        self.storage_manager.store_rooms(
             self.rooms,
             new_room_name,
             current_room,
@@ -338,7 +351,7 @@ class World:
                     return
 
     # Load objects and return a map of room to objects
-    def load_room_objects(self, world):
+    def load_room_objects(self):
         # TODO: Store and reload object state
         # Stubbed test data for now
         test_object_data = test_objects.get_test_objects()
@@ -346,7 +359,7 @@ class World:
         for _ in test_object_data:
             (object_name, object_description, price, starting_room) = _
             # Populate the room_object_map with object versions of the objects!
-            o = Object(world, object_name, object_description, price, starting_room)
+            o = Object(self, object_name, object_description, price, starting_room)
             if starting_room in room_object_map:
                 room_object_map[starting_room].append(o)
             else:

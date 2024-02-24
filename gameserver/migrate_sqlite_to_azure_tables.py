@@ -1,7 +1,9 @@
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.data.tables import TableServiceClient, TableClient
-import storagemanager
+from storagemanager import StorageManager
 from pprint import pprint
+
+storage_manager = StorageManager()
 
 credential = AzureNamedKeyCredential(
     "csb10033fff9f716c2d",
@@ -28,7 +30,7 @@ stored_rooms = get_rowkeys_dict_from_table_client(rooms_client)
 exits_client = service_client.create_table_if_not_exists("exits")
 stored_exits = get_rowkeys_dict_from_table_client(exits_client)
 
-rooms = storagemanager.get_rooms()
+rooms = storage_manager.get_rooms()
 for room in rooms.values():
     # print(room)
     room["PartitionKey"] = "jaysgame"

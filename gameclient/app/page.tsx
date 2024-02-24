@@ -42,7 +42,7 @@ export default function HomePage() {
   const [userInput, setUserInput] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [nameSet, setNameSet] = useState(false);
-  const [roomImageFileName, setRoomImageFileName] = useState(null);
+  const [roomImageURL, setRoomImageURL] = useState(null);
   const [roomTitle, setRoomTitle] = useState(null);
   const [roomDescription, setRoomDescription] = useState(null);
   const [roomExits, setRoomExits] = useState(null);
@@ -81,7 +81,7 @@ export default function HomePage() {
 
     // Listen for the room update event from the server
     socket.current.on("room_update", (message) => {
-      setRoomImageFileName(message["image"]);
+      setRoomImageURL(message["image"]);
       setRoomTitle(message["title"]);
       //Strip curly backets out (they tell the AI broker what is superfluous to the LLM)
       setRoomDescription(message["description"].replace(/[{|}]/g, ""));
@@ -183,9 +183,9 @@ export default function HomePage() {
           <button type="submit">Set Name</button>
         </form>
       )}
-      {nameSet && roomImageFileName && (
+      {nameSet && roomImageURL && (
         <div style={{ display: "flex", flexDirection: "row" }}>
-          <img src={"/" + (roomImageFileName ?? "")} alt={roomTitle ?? ""} width="1024" />
+          <img src={roomImageURL ?? ""} alt={roomTitle ?? ""} width="512" />
           {/* Some text to the right of the image */}
           <div
             style={{

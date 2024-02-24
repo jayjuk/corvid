@@ -1,10 +1,14 @@
-import storagemanager
-import imagemanager
+from storagemanager import StorageManager
+import aimanager
 
-rooms = storagemanager.get_rooms()
+
+storage_manager = StorageManager()
+rooms = storage_manager.get_rooms()
+
+ai_manager = aimanager.AIManager()
 
 for location, data in rooms.items():
-    result = imagemanager.create_image(
+    result = ai_manager.create_image(
         data["image"].replace(".jpg", ".png"), data["description"]
     )
     if result:

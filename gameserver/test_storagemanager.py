@@ -1,11 +1,13 @@
-import storagemanager
+from storagemanager import StorageManager
 from pprint import pprint
 
-rooms = storagemanager.get_rooms()
+storage_manager = StorageManager()
+
+rooms = storage_manager.get_rooms()
 
 print(rooms.keys())
 pprint(rooms["Road"])
 # for room in rooms.values():
 #    print(room["name"])
-#    storagemanager.save_new_room_on_cloud(room, "wibbleroom", "wibbledir")
+#    storage_manager.save_new_room_on_cloud(room, "wibbleroom", "wibbledir")
 #    exit()

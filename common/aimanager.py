@@ -296,7 +296,7 @@ class AIManager:
         # Create image
         if self.get_model_api() == "GPT":
             response = self.model_client.images.generate(
-                prompt=description, n=1, size="1024x1024"
+                prompt=description, n=1, size="512x512"
             )
             image = response.data[0]
             url = image.url

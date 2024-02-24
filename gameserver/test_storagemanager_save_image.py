@@ -1,3 +1,4 @@
-import storagemanager
+from storagemanager import StorageManager
 
-storagemanager.save_image_on_cloud("test.png", "test.png")
+storage_manager = StorageManager()
+storage_manager.save_image_on_cloud("test.png", "test.png")

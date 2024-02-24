@@ -1,6 +1,6 @@
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.data.tables import TableServiceClient, TableClient
-import storagemanager
+from storagemanager import StorageManager
 from pprint import pprint
 
 credential = AzureNamedKeyCredential(
@@ -24,8 +24,8 @@ for entity in entities:
     # for key in entity.keys():
     #    print("Key: {}, Value: {}".format(key, entity[key]))
 
-
-rooms = storagemanager.get_rooms()
+storage_manager = StorageManager()
+rooms = storage_manager.get_rooms()
 for room in rooms.values():
     room["PartitionKey"] = "jaysgame"
     room["RowKey"] = room["name"]
