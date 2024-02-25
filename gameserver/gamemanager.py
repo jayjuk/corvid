@@ -22,143 +22,155 @@ from aimanager import AIManager
 
 
 class GameManager:
-    _instance = None
 
-    def __new__(cls, sio):
-        if cls._instance is None:
-            cls._instance = super(GameManager, cls).__new__(cls)
+    # Singleton constructor
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, "instance"):
+            cls.instance = super(GameManager, cls).__new__(cls)
+            cls.instance.__initialized = False
+        return cls.instance
 
-            # Static variables
-            cls._instance.max_inactive_time = 300  # 5 minutes
-            cls._instance.background_loop_active = False
+    # Constructor
+    def __init__(self, sio):
+        if self.__initialized:
+            return
+        self.__initialized = True
 
-            # Set up game state
-            cls._instance.sio = sio
-            cls._instance.players = {}
-            cls._instance.player_sid_to_name_map = {}
-            cls._instance.ai_manager = AIManager()
-            cls._instance.world = World(mode=None, ai_manager=cls._instance.ai_manager)
+        # Static variables
+        self.max_inactive_time = 300  # 5 minutes
+        self.background_loop_active = False
 
-            # TODO: move all this out of the constructor into a dedicated function
-            # TODO: resolve this from the rooms document
-            cls._instance.synonyms = {
-                "n": "north",
-                "e": "east",
-                "s": "south",
-                "w": "west",
-                # "exit": "quit", #AI tries exit to leave a room :-(
-                "pick": "get",
-                "head": "go",
-                "walk": "go",
-                "run": "go",
-                "enter": "go",
-                "hi": "greet",
-                "talk": "say",
-                "inv": "inventory",
-                "haggle": "trade",
-                "purchase": "buy",
-                "examine": "look",
-                "inspect": "look",
-            }
-            cls._instance.directions = ["north", "east", "south", "west"]
+        # Set up game language
+        self.setup_commands()
 
-            # Define a dictionary to map commands to functions
-            cls._instance.command_functions = {
-                # TODO: limit this action to admins with the right permissions
-                "look": {
-                    "function": cls._instance.do_look,
-                    "description": "Get a description of your current location",
-                },
-                "say": {
-                    "function": cls._instance.do_say,
-                    "description": "Say something to all other players in your *current* location, e.g. say which way shall we go?",
-                },
-                "shout": {
-                    "function": cls._instance.do_shout,
-                    "description": "Shout something to everyone in the game, e.g. shout Where is everyone?",
-                },
-                "greet": {
-                    "function": cls._instance.do_greet,
-                    "description": "Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!",
-                },
-                "wait": {
-                    "function": cls._instance.do_wait,
-                    "description": "Do nothing for now",
-                },
-                "jump": {
-                    "function": cls._instance.do_jump,
-                    "description": "Jump to location of another player named in rest_of_response",
-                },
-                "quit": {
-                    "function": cls._instance.do_quit,
-                    "description": "",  # Don't encourage the AI to quit! TODO: make this only appear in the help to human players
-                },
-                "get": {
-                    "function": cls._instance.do_get,
-                    "description": "Pick up an object in your current location",
-                },
-                "drop": {
-                    "function": cls._instance.do_drop,
-                    "description": "Drop an object in your current location",
-                },
-                "go": {
-                    "function": cls._instance.do_go,
-                    "description": "Head in a direction e.g. go north (you can also use n, e, s, w))",
-                },
-                "go": {
-                    "function": cls._instance.do_go,
-                    "description": "Head in a direction e.g. go north (you can also use n, e, s, w))",
-                },
-                "build": {
-                    "function": cls._instance.do_build,
-                    "description": "Build a new location. Specify the direction, name and description using single quotes "
-                    + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'",
-                },
-                "buy": {
-                    "function": cls._instance.do_buy,
-                    "description": "Buy an object from a character (e.g. a Merchant) in your current location.",
-                },
-                "sell": {
-                    "function": cls._instance.do_sell,
-                    "description": "Sell an object to a character (e.g. a Merchant) in your current location.",
-                },
-                "trade": {
-                    "function": cls._instance.do_trade,
-                    "description": "Enter into trading negotiations with a Merchant in your current location.",
-                },
-                "help": {
-                    "function": cls._instance.do_help,
-                    "description": "Get game instructions",
-                },
-                "inventory": {
-                    "function": cls._instance.do_inventory,
-                    "description": "List the objects you are carrying",
-                },
-                "xox": {
-                    "function": cls._instance.do_shutdown,
-                    # Keep this one hidden - it shuts down the game server and AI broker!
-                    "description": "",
-                },
-            }
+        # Set up game state
+        self.sio = sio
+        self.players = {}
+        self.player_sid_to_name_map = {}
+        self.ai_manager = AIManager()
+        self.world = World(mode=None, ai_manager=self.ai_manager)
 
-            # Build the commands description field from directions, synonyms and command functions
-            cls._instance.commands_description = (
-                "Valid directions: " + ", ".join(cls._instance.directions) + ".\n"
-            )
-            cls._instance.commands_description += "Synonyms: "
-            for key, value in cls._instance.synonyms.items():
-                cls._instance.commands_description += f"{key} = {value}, "
-            cls._instance.commands_description = cls._instance.commands_description[:-2]
-            cls._instance.commands_description += ".\nValid commands: "
-            for command, data in cls._instance.command_functions.items():
-                # Only add commands with descriptions
-                if data.get("description"):
-                    cls._instance.commands_description += (
-                        f"{command} = {data['description']}; "
-                    )
-            cls._instance.commands_description = cls._instance.commands_description[:-2]
+    def setup_commands(self):
+        self.synonyms = {
+            "n": "north",
+            "e": "east",
+            "s": "south",
+            "w": "west",
+            # "exit": "quit", #AI tries exit to leave a room :-(
+            "pick": "get",
+            "head": "go",
+            "walk": "go",
+            "run": "go",
+            "enter": "go",
+            "hi": "greet",
+            "talk": "say",
+            "inv": "inventory",
+            "haggle": "trade",
+            "purchase": "buy",
+            "examine": "look",
+            "inspect": "look",
+        }
+        self.directions = ["north", "east", "south", "west"]
 
-        return cls._instance
+        # Define a dictionary to map commands to functions
+        self.command_functions = {
+            # TODO: limit this action to admins with the right permissions
+            "look": {
+                "function": self.do_look,
+                "description": "Get a description of your current location",
+            },
+            "say": {
+                "function": self.do_say,
+                "description": "Say something to all other players in your *current* location, e.g. say which way shall we go?",
+            },
+            "shout": {
+                "function": self.do_shout,
+                "description": "Shout something to everyone in the game, e.g. shout Where is everyone?",
+            },
+            "greet": {
+                "function": self.do_greet,
+                "description": "Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!",
+            },
+            "wait": {
+                "function": self.do_wait,
+                "description": "Do nothing for now",
+            },
+            "jump": {
+                "function": self.do_jump,
+                "description": "Jump to location of another player named in rest_of_response",
+            },
+            "quit": {
+                "function": self.do_quit,
+                "description": "",  # Don't encourage the AI to quit! TODO: make this only appear in the help to human players
+            },
+            "get": {
+                "function": self.do_get,
+                "description": "Pick up an object in your current location",
+            },
+            "drop": {
+                "function": self.do_drop,
+                "description": "Drop an object in your current location",
+            },
+            "go": {
+                "function": self.do_go,
+                "description": "Head in a direction e.g. go north (you can also use n, e, s, w))",
+            },
+            "go": {
+                "function": self.do_go,
+                "description": "Head in a direction e.g. go north (you can also use n, e, s, w))",
+            },
+            "build": {
+                "function": self.do_build,
+                "description": "Build a new location. Specify the direction, name and description using single quotes "
+                + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'",
+            },
+            "buy": {
+                "function": self.do_buy,
+                "description": "Buy an object from a character (e.g. a Merchant) in your current location.",
+            },
+            "sell": {
+                "function": self.do_sell,
+                "description": "Sell an object to a character (e.g. a Merchant) in your current location.",
+            },
+            "trade": {
+                "function": self.do_trade,
+                "description": "Enter into trading negotiations with a Merchant in your current location.",
+            },
+            "push": {
+                "function": self.do_push,
+                "description": "",
+            },
+            "help": {
+                "function": self.do_help,
+                "description": "Get game instructions",
+            },
+            "inventory": {
+                "function": self.do_inventory,
+                "description": "List the objects you are carrying",
+            },
+            "xox": {
+                "function": self.do_shutdown,
+                # Keep this one hidden - it shuts down the game server and AI broker!
+                "description": "",
+            },
+        }
+
+        # Build the commands description field from directions, synonyms and command functions
+        self.commands_description = (
+            "Valid directions: " + ", ".join(self.directions) + ".\n"
+        )
+        self.commands_description += "Synonyms: "
+        for key, value in self.synonyms.items():
+            self.commands_description += f"{key} = {value}, "
+        self.commands_description = self.commands_description[:-2]
+        self.commands_description += ".\nValid commands: "
+        for command, data in self.command_functions.items():
+            # Only add commands with descriptions
+            if data.get("description"):
+                self.commands_description += (
+                    f"{command} = {data['description']}; "
+                )
+        self.commands_description = self.commands_description[:-2]
 
     # All these 'do_' functions are for processing commands from the player.
     # They all take the player object and the rest of the response as arguments,
@@ -166,6 +178,26 @@ class GameManager:
 
     def do_go(self, player, rest_of_response):
         return self.move_player(player, rest_of_response, "")
+
+    def do_push(self, player, rest_of_response):
+        object_name = self.get_object_name_from_response(rest_of_response)
+        if "button" in object_name:
+            #Check red button in inventory
+            object = None
+            for inv_object in player.get_inventory():
+                if object_name.lower() in inv_object.get_name().lower():
+                    object = inv_object
+                    break
+            if object:
+                message=f"The Button has been pressed!!! Congratulations to {player.get_name()}!!! The game will restart in 10 seconds..."
+                self.tell_everyone(message)
+                for i in range(9, 0, -1):
+                    eventlet.sleep(1)
+                    self.tell_everyone(f"{i}...")
+                eventlet.sleep(1)
+                self.sio.emit("shutdown", message)
+                #TODO: restart without actually restarting the process
+                sys.exit(1)
 
     def do_look(self, player, rest_of_response):
         # Strip off at and the
@@ -396,12 +428,15 @@ class GameManager:
             if action == "sell":
                 for object in player.get_inventory():
                     if object.get_name().lower() == object_name.lower():
-                        # Add the money to the player's inventory
-                        player.add_money(object.get_price())
-                        # NOTE: Merchant has unlimited money for now at least
                         # Change object ownership
-                        object.transfer(player, merchant)
-                        return f"You sell {object.get_name(article='the')} to {merchant.get_name()} for {self.world.get_currency(object.get_price())}."
+                        transfer_outcome = object.transfer(player, merchant)
+                        if not transfer_outcome:
+                            # Add the money to the player's inventory
+                            player.add_money(object.get_price())
+                            # NOTE: Merchant has unlimited money for now at least
+                            return f"You sell {object.get_name(article='the')} to {merchant.get_name()} for {self.world.get_currency(object.get_price())}."
+                        else:
+                            return "The sale fell through: " + transfer_outcome
                 return "That object is not in your inventory."
             else:
                 # Don't go any further if pockets are full!

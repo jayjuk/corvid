@@ -373,7 +373,7 @@ class World:
         banana = Object(self, "banana", "A yellowy banana.", price=2)
         pear = Object(self, "pear", "A peary pear.", price=3)
         # TODO: refactor so game content is separate from engine code
-        the_button = Object(self, "button", "OMG, it's The Button!", price=999)
+        the_button = Object(self, "red button", "OMG, it's The Button!", price=999)
         gambinos_stuff = [apple, banana, pear, the_button]
         Merchant(self, "Gambino", "Road", gambinos_stuff)
         # TODO: more stuff with merchant

@@ -4,6 +4,7 @@
 set -e
 
 echo 'export PYTHONPATH=\"/usr/local/python/current:/workspaces/jaysgame/common"' >> ~/.bashrc
+export PYTHONPATH=\"/usr/local/python/current:/workspaces/jaysgame/common
 
 echo $GEMINI_DOT_KEY > ./gameserver/gemini.key
 
