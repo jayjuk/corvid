@@ -1,0 +1,5 @@
+{
+    "name": "JaysGame_CodeSpace",
+    "postCreateCommand": "./.devcontainer/codespace_setup.sh",
+    // Other settings...
+}

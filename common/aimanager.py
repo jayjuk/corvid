@@ -318,6 +318,7 @@ class AIManager:
         logger.error(error_message)
         # Write chat_history to file
         with open("exit_chat_history_dump.txt", "w") as f:
-            for key, value in self.chat_history.items():
-                f.write(f"{key}: {value}\n")
+            for item in self.chat_history:
+                for key, value in item.items():
+                    f.write(f"{key}: {value}\n")
         sys.exit(1)
