@@ -8,4 +8,7 @@ module.exports = nextConfig;
 module.exports = {
   // ... rest of the configuration.
   output: "standalone",
+  images: {
+    domains: ['http://jaysgame.westeurope.azurecontainer.io/','https://jaysgame.westeurope.azurecontainer.io/'],
+  },
 };

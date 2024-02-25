@@ -6,23 +6,11 @@ from object import Object
 from dotenv import load_dotenv
 import sys
 from azure.core.credentials import AzureNamedKeyCredential
-from azure.data.tables import TableServiceClient, TableClient
-from azure.storage.blob import (
-    BlobServiceClient,
-    BlobClient,
-    ContainerClient,
-    generate_blob_sas,
-    BlobSasPermissions,
-)
-from datetime import datetime, timedelta
-from azure.core.exceptions import ResourceExistsError
+from azure.data.tables import TableServiceClient
+from azure.storage.blob import BlobServiceClient
 
 # Set up logger
 logger = setup_logger()
-
-from flask import Flask
-from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
-from datetime import datetime, timedelta
 
 
 class StorageManager:
