@@ -10,3 +10,5 @@ temp_*
 backup_the_oldfashioned_way.py
 temp-deploy-aci-ai.yaml
 temp-deploy-aci.yaml
+gameserver/Gemini_response_log.txt
+gameserver/rooms_dump.json
