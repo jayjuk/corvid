@@ -27,7 +27,7 @@ class AIManager:
 
         self.chat_history = []
         self.event_log = []
-        self.max_history = 10
+        self.max_history = 40
         self.max_wait = 7  # secs
         self.last_time = time.time()
         self.active = True
@@ -51,7 +51,9 @@ class AIManager:
         }
 
         # Get model choice from env variable if possible
-        self.model_name = os.environ.get("MODEL_NAME") or "gpt-3.5-turbo"
+        self.model_name = (
+            os.environ.get("MODEL_NAME") or "gemini-pro"
+        )  # "gpt-3.5-turbo"
         self.max_tokens = 200  # adjust the max_tokens based on desired response length
         self.ai_name = None
 
