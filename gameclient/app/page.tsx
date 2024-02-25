@@ -82,6 +82,7 @@ export default function HomePage() {
     // Listen for the room update event from the server
     socket.current.on("room_update", (message) => {
       setRoomImageURL(message["image"]);
+      console.log(message["image"]);
       setRoomTitle(message["title"]);
       //Strip curly backets out (they tell the AI broker what is superfluous to the LLM)
       setRoomDescription(message["description"].replace(/[{|}]/g, ""));

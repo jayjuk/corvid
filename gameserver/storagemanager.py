@@ -20,6 +20,10 @@ from azure.core.exceptions import ResourceExistsError
 # Set up logger
 logger = setup_logger()
 
+from flask import Flask
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
+from datetime import datetime, timedelta
+
 
 class StorageManager:
 
@@ -180,36 +184,34 @@ class StorageManager:
         # Move file name to full path
         return True
 
-    def generate_sas_url(
-        self,
-        blob_name: str,
-    ):
-        # Check expiry time
-        if not (
-            self.sas_token
-            and self.sas_token_expiry_time
-            # 5 minutes before expiry
-            and self.sas_token_expiry_time > datetime.utcnow() + timedelta(minutes=5)
-        ):
-            logger.info(f"Refreshing SAS token")
-            # Refresh token
-            self.sas_token = generate_blob_sas(
-                account_name=self.blob_service_client.account_name,
-                container_name=self.image_container_name,
-                blob_name=blob_name,
-                account_key=self.blob_service_client.credential.account_key,
-                permission=BlobSasPermissions(read=True),
-                expiry=datetime.utcnow() + timedelta(hours=1),
-            )
-        return f"https://{self.blob_service_client.account_name}.blob.core.windows.net/{self.image_container_name}/{blob_name}?{self.sas_token}"
-
-    def get_image_url_from_cloud(self, image_name):
-        # Generate a SAS URL for the blob
-        return self.generate_sas_url(image_name)
+    # def generate_sas_url(
+    #     self,
+    #     blob_name: str,
+    # ):
+    #     # Check expiry time
+    #     if not (
+    #         self.sas_token
+    #         and self.sas_token_expiry_time
+    #         # 5 minutes before expiry
+    #         and self.sas_token_expiry_time > datetime.utcnow() + timedelta(minutes=5)
+    #     ):
+    #         logger.info(f"Refreshing SAS token")
+    #         # Refresh token
+    #         self.sas_token = generate_blob_sas(
+    #             account_name=self.blob_service_client.account_name,
+    #             container_name=self.image_container_name,
+    #             blob_name=blob_name,
+    #             account_key=self.blob_service_client.credential.account_key,
+    #             permission=BlobSasPermissions(read=True),
+    #             expiry=datetime.utcnow() + timedelta(hours=1),
+    #         )
+    #     return f"https://{self.blob_service_client.account_name}.blob.core.windows.net/{self.image_container_name}/{blob_name}?{self.sas_token}"
 
     def get_image_url(self, image_name):
         logger.info(f"Resolving image URL for image {image_name}")
-        return self.get_image_url_from_cloud(image_name)
+        hostname = os.environ.get("GAMESERVER_HOSTNAME") or "localhost"
+        # TODO: 5000 is hardcoded
+        return "http://" + hostname + ":5000/image/" + image_name
 
     def save_new_room_on_cloud(self, new_room, new_exit_direction, changed_room):
         # Get Azure storage client

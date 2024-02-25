@@ -247,7 +247,10 @@ class AIManager:
                     model_response = model_response.text.strip("*").strip()
                     # If the response contains newline(s) followed by some info in parentheses, strip all this out
                     if "\n(" in model_response and model_response.endswith(")"):
-                        model_response = model_response.split("\n")[0].strip()
+                        logger.info(
+                            f"Stripping out extra info from Gemini response. Full response: {model_response}"
+                        )
+                        model_response = model_response.split("\n(")[0].strip()
                     # Convert all-upper-case response to natural case
                     if model_response.isupper():
                         model_response = model_response.title()

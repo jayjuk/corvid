@@ -159,7 +159,7 @@ class AIBroker:
 # Connect to SocketIO server, trying again if it fails
 def connect_to_server(hostname):
     connected = False
-    max_wait = 120  # 2 minutes
+    max_wait = 240  # 4 minutes
     wait_time = 1
     while not connected and wait_time <= max_wait:
         try:
@@ -170,7 +170,7 @@ def connect_to_server(hostname):
                 f"Could not connect to server. Retrying in {wait_time} seconds..."
             )
             eventlet.sleep(wait_time)
-            wait_time *= 2
+            wait_time = int(wait_time * 1.5)
 
     if not connected:
         logger.info("Could not connect to server. Exiting.")

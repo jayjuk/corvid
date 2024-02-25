@@ -28,6 +28,22 @@ properties:
             memoryInGb: 1.5
         ports:
           - port: 3001
+    - name: imageserver
+      properties:
+        environmentVariables:
+          - name: "GAMESERVER_HOSTNAME"
+            value: "jaysgame.westeurope.azurecontainer.io"
+          - name: "AZURE_STORAGE_ACCOUNT_NAME"
+            value: "${AZURE_STORAGE_ACCOUNT_NAME}"
+          - name: "AZURE_STORAGE_ACCOUNT_KEY"
+            value: "${AZURE_STORAGE_ACCOUNT_KEY}"
+        image: jayjuk/imageserver
+        resources:
+          requests:
+            cpu: 1
+            memoryInGb: 1.5
+        ports:
+          - port: 5000
     - name: aibroker
       properties:
         environmentVariables:
