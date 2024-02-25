@@ -1,2 +1,2 @@
-# Model input and response log for <vertexai.preview.generative_models.GenerativeModel object at 0x7f4b39472cf0>
+# Model input and response log for <vertexai.preview.generative_models.GenerativeModel object at 0x7f888a889af0>
 
