@@ -1,2 +1,49 @@
-# Model input and response log for <vertexai.preview.generative_models.GenerativeModel object at 0x7f888a889af0>
+# Model input and response log for <vertexai.preview.generative_models._PreviewGenerativeModel object at 0x000002BEE8A56B10>
+
+Request: You are playing an adventure game.
+Help me to translate my user's input into a valid adventure game command.
+Valid commands:Valid directions: north, east, south, west.
+Synonyms: n = north, e = east, s = south, w = west, pick = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an object in your current location; drop = Drop an object in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an object from a character (e.g. a Merchant) in your current location.; sell = Sell an object to a character (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; help = Get game instructions; inventory = List the objects you are carrying
+Respond with only a valid command, nothing else.
+Some history of what the user has seen for context:
+Welcome to the game, Jay. The aim of this game is to earn enough money to buy The Button. You don't know what will happen when you press The Button, but you know it will be good. The first player to press the button (in their possession) wins the game! Hint: earn money buy exploring the game world, finding items and selling them to a merchant.You are the first player to join the game.
+
+Available commands:
+Valid directions: north, east, south, west.
+Synonyms: n = north, e = east, s = south, w = west, pick = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an object in your current location; drop = Drop an object in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an object from a character (e.g. a Merchant) in your current location.; sell = Sell an object to a character (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; help = Get game instructions; inventory = List the objects you are carrying
+You start in the road.  Available exits: east: Frozen Moorland.  north: North Road.  west: Driveway.   There is a rock here. There is a Traveler's Backpack here. Gambino The Merchant is here. They have the following available for sale: an apple (1p), a banana (2p), a pear (3p), a red button (999p).
+You: j
+
+Their input: j
+Response: look
+
+Request: Generate a description for a new room in my adventure game. Pre-existing room descriptions for inspiration:
+An old, stone structure stands in solitude amid the vast emptiness. Its weather-worn façade whispers secrets of forgotten tales. Icy gusts howl through the post's dark crevices. Eastwards, the Forgotten Pathway beckons.
+,
+At the end of the Forgotten Pathway, an imposing stone gatehouse towers overhead. Vines march across its forgotten surface, and a heavy iron gate creaks in the steady wind, guarding the entrance to an unseen realm.
+,
+The corridor continues towards more bedrooms. Soft carpet cushions each step, with doors leading off to various chambers of sanctuary and rest.
+,
+A circular room filled with antique celestial maps and artifact-laden bookshelves. A nearby spyglass peers into the inky void, revealing shimmering constellations.
+,
+Adorned with constellations of glowing flora, this shimmering sanctuary booms with stellar symphonies, echoing with cosmic whisperings and bathed in an otherworldly glow.
+,
+Bathed in ethereal light, this auditorium radiates an aura of the cosmos. Its circular stage is lined with celestial stones, each pulsating with mysterious cosmic energy.
+,
+A bewildering array of reflective surfaces amplify the glow of distant stars, creating a shifting, starlit labyrinth that distorts space and time.
+,
+An ancient and mystical stone observatory, bathed in the mesmerizing cosmic glow, where time feels irrelevant against the eternal cosmic dance.
+,
+This cozy corner offers a tranquil respite, with shelves of astral artifacts, a telescope peering into the abyss of space, and plush bean bags for lounging stargazers.
+,
+The corridor takes you from the hall to bedrooms and living rooms. Soft carpet cushions each step, with doors leading off to various chambers of sanctuary and rest.
+This room is called 'Silent Gorge'
+
+Respond with only a description of similar length to the ones above, nothing else.
+
+Response: Silent Gorge
+
+Lying within a vast chasm, Silent Gorge is a haunting and desolate place. Its towering stone walls are etched with ancient glyphs, and the air hangs heavy with an oppressive silence. The only sound comes from the eerie echo of forgotten whispers carried on the icy wind.
 

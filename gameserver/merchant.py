@@ -25,7 +25,7 @@ class Merchant(Character):
 
         for object in inventory:
             # Add object to merchant's inventory
-            object.set_player(self)
+            object.set_possession(self)
 
     # Get inventory description
     def get_inventory_description(self):

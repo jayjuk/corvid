@@ -47,7 +47,9 @@ class GameManager:
         self.sio = sio
         self.players = {}
         self.player_sid_to_name_map = {}
+        # General AI manager
         self.ai_manager = AIManager()
+
         self.world = World(mode=None, ai_manager=self.ai_manager)
 
     def setup_commands(self):
@@ -167,9 +169,7 @@ class GameManager:
         for command, data in self.command_functions.items():
             # Only add commands with descriptions
             if data.get("description"):
-                self.commands_description += (
-                    f"{command} = {data['description']}; "
-                )
+                self.commands_description += f"{command} = {data['description']}; "
         self.commands_description = self.commands_description[:-2]
 
     # All these 'do_' functions are for processing commands from the player.
@@ -182,21 +182,21 @@ class GameManager:
     def do_push(self, player, rest_of_response):
         object_name = self.get_object_name_from_response(rest_of_response)
         if "button" in object_name:
-            #Check red button in inventory
+            # Check red button in inventory
             object = None
             for inv_object in player.get_inventory():
                 if object_name.lower() in inv_object.get_name().lower():
                     object = inv_object
                     break
             if object:
-                message=f"The Button has been pressed!!! Congratulations to {player.get_name()}!!! The game will restart in 10 seconds..."
+                message = f"The Button has been pressed!!! Congratulations to {player.get_name()}!!! The game will restart in 10 seconds..."
                 self.tell_everyone(message)
                 for i in range(9, 0, -1):
                     eventlet.sleep(1)
                     self.tell_everyone(f"{i}...")
                 eventlet.sleep(1)
                 self.sio.emit("shutdown", message)
-                #TODO: restart without actually restarting the process
+                # TODO: restart without actually restarting the process
                 sys.exit(1)
 
     def do_look(self, player, rest_of_response):
@@ -234,7 +234,7 @@ class GameManager:
             character = self.is_character(object_name)
             if character:
                 return character.get_description()
-            return f"Sorry, there is no '{object_name}' here."
+            return f"There is no '{object_name}' here."
         else:
             # Looking at the room
             message = (
@@ -310,7 +310,7 @@ class GameManager:
         if other_character_location:
             return self.move_player(player, "jump", other_character_location)
         else:
-            return f"Sorry, '{other_character_name}' is not a valid player name."
+            return f"'{other_character_name}' is not a valid player name."
 
     def do_shutdown(self, player, rest_of_response):
         message = f"{player.name} has shut down the server."
@@ -339,9 +339,9 @@ class GameManager:
 
         # Check direction is valid and not taken
         if direction not in self.directions:
-            return f"Sorry, '{direction}' is not a valid direction."
+            return f"'{direction}' is not a valid direction."
         if direction in self.world.rooms[player.get_current_room()]["exits"]:
-            return f"Sorry, there is already a room to the {direction}."
+            return f"There is already a room to the {direction}."
 
         # Remove the direction from the response
         rest_of_response = " ".join(rest_of_response.split()[1:])
@@ -352,7 +352,7 @@ class GameManager:
             quote_char = rest_of_response[0]
             end_quote_index = rest_of_response.find(quote_char, 1)
             if end_quote_index == -1:
-                return "Sorry, invalid input. Room name is not properly quoted."
+                return "Invalid input: room name is not properly quoted."
             # Extract the room name from the quoted string
             room_name = rest_of_response[1:end_quote_index]
             # Remove the room name and any extra spaces from the response
@@ -368,21 +368,37 @@ class GameManager:
 
         # Check the room name is valid
         if room_name == "":
-            return "Sorry, invalid input. Room name is empty."
+            return "Invalid input: room name is empty."
         # Check room name is not a reserved word
         if room_name in self.synonyms or room_name in self.command_functions:
-            return f"Sorry, '{room_name}' is a reserved word."
+            return f"'{room_name}' is a reserved word."
 
         # Now take the room description, which must be in quotes
-        if not rest_of_response.startswith("'") and not rest_of_response.startswith(
+        if not rest_of_response:
+            # Get existing room descriptions into a list for inspiration
+            existing_room_descriptions = [
+                self.world.rooms[room]["description"]
+                for room in self.world.rooms.keys()
+            ]
+
+            room_description = self.ai_manager.submit_request(
+                "Generate a description for a new room in my adventure game. Pre-existing room descriptions for inspiration:\n"
+                + "\n,\n".join(existing_room_descriptions[0:10])
+                + f"\nThis room is called '{room_name}'\n"
+                + "\nRespond with only a description of similar length to the ones above, nothing else.\n"
+            )
+            logger.info(f"AI-generated room description: {room_description}")
+        elif not rest_of_response.startswith("'") and not rest_of_response.startswith(
             '"'
         ):
-            return "Sorry, invalid input. Room description must be in quotes."
-        quote_char = rest_of_response[0]
-        end_quote_index = rest_of_response.find(quote_char, 1)
-        if end_quote_index == -1:
-            return "Sorry, invalid input. Room description is not properly quoted."
-        room_description = rest_of_response[1:end_quote_index]
+            return "Invalid input: room description must be in quotes."
+        else:
+            # Quoted room description given by user
+            quote_char = rest_of_response[0]
+            end_quote_index = rest_of_response.find(quote_char, 1)
+            if end_quote_index == -1:
+                return "Invalid input: room description is not properly quoted."
+            room_description = rest_of_response[1:end_quote_index]
 
         error_message = self.world.add_room(
             player.get_current_room(),
@@ -424,7 +440,12 @@ class GameManager:
 
     # Check if an object is in a merchant's possession
     def transact_object(self, object_name, player, action="get"):
-        for merchant in self.get_merchants(player.get_current_room()):
+        merchants = self.get_merchants(player.get_current_room())
+        if not merchants:
+            return f"There is no merchant here to trade with."
+
+        # Try each merchant in the room
+        for merchant in merchants:
             if action == "sell":
                 for object in player.get_inventory():
                     if object.get_name().lower() == object_name.lower():
@@ -441,7 +462,7 @@ class GameManager:
             else:
                 # Don't go any further if pockets are full!
                 if not player.can_add_object():
-                    return f"Sorry, you can't carry any more."
+                    return f"You can't carry any more."
                 for object in merchant.get_inventory():
                     if object.get_name().lower() == object_name.lower():
                         if action == "get":
@@ -463,9 +484,10 @@ class GameManager:
                                 return issue
 
                             else:
-                                return f"Sorry, you do not have enough money to buy {object.get_name(article='the')}."
+                                return f"You do not have enough money to buy {object.get_name(article='the')}."
+
         # If we get here, the object is not in any merchant's possession
-        return ""
+        return f"You are unable to {action} '{object_name}' here."
 
     # Get / pick up an object
     def do_get(self, player, rest_of_response):
@@ -480,13 +502,13 @@ class GameManager:
 
         # Check the object name is valid
         if object_name == "":
-            return "Sorry, invalid input. Object name is empty."
+            return "Invalid input: object name is empty."
 
         # Check if the object is in the room
         object = self.world.search_object(object_name, player.get_current_room())
         if object:
             # Setting player will remove the object from the room
-            result = object.set_player(player)
+            result = object.set_possession(player)
             if not result:
                 return f"You pick up {object.get_name(article='the')}."
             return result
@@ -498,7 +520,7 @@ class GameManager:
             outcome = self.transact_object(object_name, player, "get")
             if outcome:
                 return outcome
-            return f"Sorry, there is no '{object_name}' here."
+            return f"There is no '{object_name}' here."
 
     def do_inventory(self, player, rest_of_response):
         # Not used, next line is to avoid warnings
@@ -525,11 +547,17 @@ class GameManager:
 
         # Check the object name is valid
         if object_name == "":
-            return "Sorry, invalid input. Object name is empty."
-
+            return "Invalid input: object name is empty."
+        if (
+            self.world.get_currency(amount=None, short=False, plural=True)
+            in object_name
+            or self.world.get_currency(amount=None, short=False, plural=False)
+            in object_name
+        ):
+            return "You can't drop your money, you might need it!"
         # Check if the object is in the player's inventory, if so, drop it
         # "all" is a special case to drop everything
-        objects = player.drop_object(object_name)
+        objects = player.drop_objects(object_name)
         if objects:
             drop_list_text = self.get_object_list_text(objects)
             # Tell the others about the drop
@@ -542,7 +570,7 @@ class GameManager:
             if object_name == "all":
                 return f"You are not carrying anything."
             else:
-                return f"Sorry, you are not carrying '{object_name}'."
+                return f"You are not carrying '{object_name}'."
 
     def do_buy(self, player, rest_of_response):
         # Get object name by calling a function to parse the response
@@ -550,7 +578,7 @@ class GameManager:
 
         # Check the object name is valid
         if object_name == "":
-            return "Sorry, invalid input. Object name is empty."
+            return "Invalid input: object name is empty."
 
         # Check if the object is in the room
         object = self.world.search_object(object_name, player.get_current_room())
@@ -560,19 +588,22 @@ class GameManager:
         # Check if they named a character
         elif self.is_character(object_name):
             return f"That character is not for sale!"
-        # Check if the object is in the possession of a merchant
-        else:
-            outcome = self.transact_object(object_name, player, "buy")
-            if outcome:
-                return outcome
-            return f"Sorry, there is no '{object_name}' here."
+        # Otherwise proceed to try to buy it
+        return self.transact_object(object_name, player, "buy")
 
     def do_sell(self, player, rest_of_response):
         # Get object name by calling a function to parse the response
         object_name = self.get_object_name_from_response(rest_of_response)
         # Check the object name is valid
         if object_name == "":
-            return "Sorry, invalid input. Object name is empty."
+            return "Invalid input: object name is empty."
+        if (
+            self.world.get_currency(amount=None, short=False, plural=True)
+            in object_name
+            or self.world.get_currency(amount=None, short=False, plural=False)
+            in object_name
+        ):
+            return "You can't sell money!"
 
         # Check if the object is in the player's inventory
         for object in player.get_inventory():
@@ -583,11 +614,9 @@ class GameManager:
                 if not object.get_price():
                     return f"You can't sell {object.get_name(article='the')}."
                 # Try to sell it to a merchant
-                outcome = self.transact_object(object_name, player, "sell")
-                if outcome:
-                    return outcome
-                return f"Sorry, there is no merchant here to sell {object.get_name(article='the')} to."
-        return f"Sorry, you are not carrying '{object_name}'."
+                return self.transact_object(object_name, player, "sell")
+
+        return f"You are not carrying '{object_name}'."
 
     def do_trade(self, player, rest_of_response):
         # TODO - support this :-)
@@ -653,10 +682,13 @@ class GameManager:
         # Check uniqueness here, other checks are done in the player class
         if self.is_existing_player_name(player_name):
             # Issue with player name setting
-            return "game_update", "Sorry, that name is already taken."
+            return "game_update", "That name is already in use."
         if player_name == "system":
             # Do not let any player be called system
-            return "game_update", "Sorry, that name is reserved."
+            return (
+                "game_update",
+                "That name is a reserved word, it would be confusing to be called that.",
+            )
 
         # Create the player
         try:
@@ -743,13 +775,13 @@ class GameManager:
                 else:
                     # Invalid command
                     player_response = (
-                        "Sorry, that is not a recognised command. Available commands:\n"
+                        "That is not a recognised command. Available commands:\n"
                         + self.get_commands_description()
                     )
 
         else:
             # Empty command
-            player_response = "Sorry, you need to enter a command."
+            player_response = "You need to enter a command."
         logger.info(f"Player response: {player_response}")
         return player_response
 
@@ -770,7 +802,7 @@ class GameManager:
             arrival_message = f"{player.name} arrives from the {previous_room.lower()}."
         elif direction in self.directions:
             # Valid direction but no exit
-            return f"Sorry, you can't go {direction}." + self.world.get_room_exits(
+            return f"You can't go {direction}." + self.world.get_room_exits(
                 player.get_current_room()
             )
         else:

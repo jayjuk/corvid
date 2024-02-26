@@ -8,4 +8,5 @@
   border: none;
   outline: none;
   background-color: black; /* This is the background color for the input field */
+  width: 512px;
 }

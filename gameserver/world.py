@@ -49,11 +49,16 @@ class World:
             self.room_objects = self.load_room_objects()
             self.load_merchants()
 
-        # Instantiate AI manager
+        # Instantiate or inherit AI manager
         if ai_manager:
             self.ai_manager = ai_manager
         else:
             self.ai_manager = aimanager.AIManager()
+        # Image AI manager
+        self.image_ai_manager = aimanager.AIManager(
+            system_message="You are helping to create an adventure game.",
+            model_name="gpt-3.5-turbo",
+        )
 
     # Get the objective of the game
     def get_objective(self):
@@ -289,7 +294,7 @@ class World:
         # TODO: review whether we can avoid using a temporary file like this
         image_file_name = None
         try:
-            image_file_name = self.ai_manager.create_image(
+            image_file_name = self.image_ai_manager.create_image(
                 new_room_name, room_description
             )
             self.storage_manager.save_image(image_file_name)
@@ -382,7 +387,7 @@ class World:
     def register_npc(self, npc):
         self.npcs.append(npc)
 
-    def get_currency(self, amount=None, short=False):
+    def get_currency(self, amount=None, short=False, plural=False):
         if short:
             return f"{amount}p"
         if amount == 1:
@@ -391,4 +396,6 @@ class World:
             return str(amount) + " pennies"
         else:
             # Currency name alone
+            if plural:
+                return "pennies"
             return "penny"

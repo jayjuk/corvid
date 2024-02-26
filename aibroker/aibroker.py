@@ -44,7 +44,7 @@ class AIBroker:
             )
 
             # Set up the AI manager
-            cls._instance.ai_manager = AIManager(mode=mode, system_message=intro_text)
+            cls._instance.ai_manager = AIManager(system_message=intro_text)
 
             # Get the AI's name
             cls._instance.ai_name = cls._instance.get_ai_name()

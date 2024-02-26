@@ -76,14 +76,15 @@ class Player(Character):
 
     # Get inventory description
     def get_inventory_description(self):
-        description = "You are carrying: "
-        for object in self.get_inventory():
-            description += object.get_name("a") + ", "
-        # Add money to inventory description
-        description = (
-            description[:-2]
-            + f".\nYou also have {self.world.get_currency(self.money)} in your pocket."
-        )
+        if not self.get_inventory():
+            description = "You are not carrying any objects. You "
+        else:
+            description = "You are carrying: "
+            for object in self.get_inventory():
+                description += object.get_name("a") + ", "
+            # Add money to inventory description
+            description = description[:-2] + f".\nYou also "
+        description += f"have {self.world.get_currency(self.money)} in your pocket."
         return description
 
     def deduct_money(self, amount):

@@ -50,8 +50,15 @@ class Character:
     def add_object(self, object):
         self.inventory.append(object)
 
-    # Setter for player dropping an object
-    def drop_object(self, object_name):
+    # Setter for player dropping object by reference
+    def drop_object(self, object, dropped_objects=[]):
+        self.inventory.remove(object)
+        object.set_room(self.current_room)
+        dropped_objects.append(object)
+        return dropped_objects
+
+    # Setter for player dropping objects by name
+    def drop_objects(self, object_name):
         # Check if object is a string
         # TODO: decide whether caller of this function should already have object reference not name.
         # That could be done by building a dictionary of all objects perhaps under the world class
@@ -64,9 +71,7 @@ class Character:
                     object_name.lower() in object.get_name().lower()
                     or object_name.lower() == "all"
                 ):
-                    self.inventory.remove(object)
-                    object.set_room(self.current_room)
-                    dropped_objects.append(object)
+                    self.drop_object(object, dropped_objects)
         return dropped_objects
 
     def get_inventory(self):

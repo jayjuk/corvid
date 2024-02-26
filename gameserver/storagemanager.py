@@ -127,6 +127,24 @@ class StorageManager:
         conn.commit()
         conn.close()
 
+    # Function to delete room locally
+    def delete_room_locally(self, room_name):
+        # Check if schema exists, if not create it
+        conn = self.get_local_db_connection()
+        self.create_sql_schema(conn)
+
+        # Delete room and exits
+        c = conn.cursor()
+        c.execute("DELETE FROM rooms WHERE name=?", (room_name,))
+        c.execute("DELETE FROM exits WHERE room=?", (room_name,))
+        # Also delete where direction is this room
+        c.execute("DELETE FROM exits WHERE destination=?", (room_name,))
+        c.close()
+        logger.info(f"Deleted room {room_name} from local storage, if it was there.")
+
+        conn.commit()
+        conn.close()
+
     def check_rowkey(self, table_client, query_filter_rowkey):
         parameters = {"pk": "jaysgame", "rk": query_filter_rowkey}
         query_filter = "PartitionKey eq @pk and RowKey eq @rk"
@@ -196,10 +214,12 @@ class StorageManager:
     #     return f"https://{self.blob_service_client.account_name}.blob.core.windows.net/{self.image_container_name}/{blob_name}?{self.sas_token}"
 
     def get_image_url(self, image_name):
-        logger.info(f"Resolving image URL for image {image_name}")
-        hostname = os.environ.get("GAMESERVER_HOSTNAME") or "localhost"
-        # TODO: 5000 is hardcoded
-        return "http://" + hostname + ":5000/image/" + image_name
+        if image_name:
+            logger.info(f"Resolving image URL for image {image_name}")
+            hostname = os.environ.get("GAMESERVER_HOSTNAME") or "localhost"
+            # TODO: 5000 is hardcoded
+            return "http://" + hostname + ":5000/image/" + image_name
+        return None
 
     def save_new_room_on_cloud(self, new_room, new_exit_direction, changed_room):
         # Get Azure storage client
@@ -250,6 +270,39 @@ class StorageManager:
             exits_client.create_entity(entity=exit_dict)
         else:
             logger.warn(f"Exit {exit_dict['RowKey']} already stored")
+
+    # Utility function to delete room from cloud (not used in game)
+    def delete_room_on_cloud(self, room_name):
+        # Get Azure storage client
+        credential = self.get_azure_credential()
+        service_client = self.get_azure_storage_service_client(credential)
+        rooms_client = service_client.get_table_client("rooms")
+        exits_client = service_client.get_table_client("exits")
+
+        # Delete exits from Azure
+        # Should just loop once
+        for direction in ["north", "east", "south", "west"]:
+            exit_name = f"{room_name}_{direction}"
+            if self.check_rowkey(exits_client, exit_name):
+                logger.info(f"Deleting {exit_name}")
+                exits_client.delete_entity(partition_key="jaysgame", row_key=exit_name)
+            else:
+                logger.warn(f"Exit {exit_name} not found")
+
+        # Also delete where direction is this room
+        for entity in exits_client.query_entities(f"destination eq '{room_name}'"):
+            logger.info(f"Deleting {entity['RowKey']}")
+            exits_client.delete_entity(
+                partition_key="jaysgame", row_key=entity["RowKey"]
+            )
+
+        # Delete room from Azure
+        # First check if key exists
+        if self.check_rowkey(rooms_client, room_name):
+            logger.info(f"Deleting {room_name}")
+            rooms_client.delete_entity(partition_key="jaysgame", row_key=room_name)
+        else:
+            logger.warn(f"Room {room_name} not found")
 
     # Store the rooms from the dict format in the database
     def store_rooms(self, rooms, new_room_name, changed_room, new_exit_direction):
@@ -304,7 +357,7 @@ class StorageManager:
                 rooms[entity["RowKey"]] = {
                     "name": entity["RowKey"],
                     "description": entity["description"],
-                    "image": entity["image"],
+                    "image": entity.get("image", None),
                     "exits": {},
                 }
             exits_client = service_client.get_table_client("exits")

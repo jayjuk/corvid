@@ -23,7 +23,7 @@ load_dotenv()
 
 
 class AIManager:
-    def __init__(self, mode="player", system_message=None):
+    def __init__(self, system_message=None, model_name=None):
 
         self.chat_history = []
         self.event_log = []
@@ -31,7 +31,6 @@ class AIManager:
         self.max_wait = 7  # secs
         self.last_time = time.time()
         self.active = True
-        self.mode = mode
         self.input_token_count = 0
         self.output_token_count = 0
 
@@ -52,7 +51,7 @@ class AIManager:
 
         # Get model choice from env variable if possible
         self.model_name = (
-            os.environ.get("MODEL_NAME") or "gemini-pro"
+            model_name or os.environ.get("MODEL_NAME") or "gemini-pro"
         )  # "gpt-3.5-turbo"
         self.max_tokens = 200  # adjust the max_tokens based on desired response length
         self.ai_name = None
@@ -62,7 +61,6 @@ class AIManager:
         # Set up openAI connection
         # We are going to use the chat interface to get AI To play our text adventure game
         self.model_api_connect()
-        self.mode = mode
 
         # Set system message
         self.system_message = system_message or "You are playing an adventure game."
@@ -198,8 +196,6 @@ class AIManager:
                             )
 
                         messages.append({"role": "user", "content": request})
-
-                    pprint(messages)
 
                     response = self.model_client.chat.completions.create(
                         model=(model_name or self.model_name),
