@@ -211,11 +211,30 @@ class GameManager:
     def find_object_in_merchant_inventory(self, player, object_name):
         for merchant in self.get_merchants(player.get_current_room()):
             for merchant_object in merchant.get_inventory():
-                if object_name.lower() in merchant_object.get_name().lower():
+                if (
+                    object_name
+                    and object_name.lower() in merchant_object.get_name().lower()
+                ):
                     return merchant_object
         return None
 
     def do_look(self, player, rest_of_response):
+        if not rest_of_response:
+            # Looking at the room
+            message = (
+                f"You look again at the "
+                + str(player.get_current_room()).lower()
+                + ": "
+                + self.world.get_room_description(
+                    player.get_current_room(), brief=False, role=player.get_role()
+                )
+            )
+            # Add buildable directions if player is a builder
+            if player.role == "builder":
+                message += "\n" + self.world.get_room_exits(player.get_current_room())
+            return message
+
+        # They are looking at something
         outcome = self.remove_at_the(rest_of_response)
         if outcome:
             return outcome
@@ -421,12 +440,13 @@ class GameManager:
         return f"You build {direction} and make a new location, {room_name}: {room_description}"
 
     def is_character(self, object_name):
-        for other_character in self.get_other_characters():
-            if (
-                str(other_character.name).lower() == str(object_name).lower()
-                or other_character.get_role() == object_name.lower()
-            ):
-                return other_character
+        if object_name:
+            for other_character in self.get_other_characters():
+                if (
+                    str(other_character.name).lower() == str(object_name).lower()
+                    or other_character.get_role() == object_name.lower()
+                ):
+                    return other_character
         return False
 
     def get_merchants(self, room=None):

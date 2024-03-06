@@ -21,33 +21,39 @@ class StorageManager:
         self.sas_token = None
 
         self.credential = self.get_azure_credential()
-
-        # Get Azure storage client
-        self.blob_service_client = BlobServiceClient(
-            account_url="https://"
-            + os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
-            + ".blob.core.windows.net",
-            credential=self.credential,
-        )
-        self.image_container_name = "jaysgameimages"
+        if self.credential:
+            # Get Azure storage client
+            self.blob_service_client = BlobServiceClient(
+                account_url="https://"
+                + os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
+                + ".blob.core.windows.net",
+                credential=self.credential,
+            )
+            self.image_container_name = "jaysgameimages"
+        else:
+            self.blob_service_client = None
+            self.image_container_name = None
 
     # Utility to check env variable is set
     def check_env_var(self, var_name):
         if not os.environ.get(var_name):
-            logger.info(f"ERROR: {var_name} not set. Exiting.")
-            sys.exit(1)
+            logger.warn(f"{var_name} not set.")
+            return False
+        return True
 
     # Return Azure credential
     def get_azure_credential(self):
-        # TODO: error handling
         if not os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"):
             load_dotenv()
-        self.check_env_var("AZURE_STORAGE_ACCOUNT_NAME")
-        self.check_env_var("AZURE_STORAGE_ACCOUNT_KEY")
-        return AzureNamedKeyCredential(
-            os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"),
-            os.environ.get("AZURE_STORAGE_ACCOUNT_KEY"),
-        )
+        if self.check_env_var("AZURE_STORAGE_ACCOUNT_NAME") and self.check_env_var(
+            "AZURE_STORAGE_ACCOUNT_KEY"
+        ):
+            return AzureNamedKeyCredential(
+                os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"),
+                os.environ.get("AZURE_STORAGE_ACCOUNT_KEY"),
+            )
+        else:
+            return None
 
     # Return Azure table service client
     # Assumes if we have a credential, we have AZURE_STORAGE_ACCOUNT_NAME set
@@ -214,9 +220,12 @@ class StorageManager:
 
     def save_new_room_on_cloud(self, new_room, new_exit_direction, changed_room):
         # Get Azure storage client
-        credential = self.get_azure_credential()
-        service_client = self.get_azure_storage_service_client(credential)
-        rooms_client = service_client.create_table_if_not_exists("rooms")
+        service_client = self.get_azure_storage_service_client(self.credential)
+        if service_client:
+            rooms_client = service_client.create_table_if_not_exists("rooms")
+        else:
+            logger.error("Could not get service client")
+            return
 
         # Store room in Azure
         # First check if key exists
@@ -265,8 +274,11 @@ class StorageManager:
     # Utility function to delete room from cloud (not used in game)
     def delete_room_on_cloud(self, room_name):
         # Get Azure storage client
-        credential = self.get_azure_credential()
-        service_client = self.get_azure_storage_service_client(credential)
+        service_client = self.get_azure_storage_service_client(self.credential)
+        if not service_client:
+            logger.error("Could not get service client")
+            return
+
         rooms_client = service_client.get_table_client("rooms")
         exits_client = service_client.get_table_client("exits")
 
@@ -303,7 +315,8 @@ class StorageManager:
         )
         # Save room both locally and in cloud
         self.save_new_room_locally(new_room, new_exit_direction, changed_room)
-        self.save_new_room_on_cloud(new_room, new_exit_direction, changed_room)
+        if self.credential:
+            self.save_new_room_on_cloud(new_room, new_exit_direction, changed_room)
 
         # Check subfolder exists for saving user generated maps
         # TODO: for now this is saving every version, and this is really just a temporary backup
@@ -331,8 +344,10 @@ class StorageManager:
         return schema_exists
 
     def cloud_enabled(self):
+        if not self.credential:
+            return False
         try:
-            self.get_azure_storage_service_client(self.get_azure_credential())
+            self.get_azure_storage_service_client(self.credential)
             return True
         except Exception as e:
             logger.warn(f"Cloud not enabled: {e}")
@@ -340,8 +355,10 @@ class StorageManager:
 
     def get_rooms_from_cloud(self):
         # Get Azure storage client
-        credential = self.get_azure_credential()
-        service_client = self.get_azure_storage_service_client(credential)
+        service_client = self.get_azure_storage_service_client(self.credential)
+        if not service_client:
+            logger.error("Could not get service client")
+            return None
         rooms_client = service_client.get_table_client("rooms")
         if rooms_client:
             rooms = {}

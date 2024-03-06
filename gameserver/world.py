@@ -318,8 +318,9 @@ class World:
             logger.info(f"  Checking {object.get_name()}")
             # Return the first object that includes the given object name
             # So "get clock" will find "dusty clock" and "grandfather clock"
-            if (
-                object_name.lower() in object.get_name().lower()
+            if object_name and (
+                object_name
+                and object_name.lower() in object.get_name().lower()
                 or object_name.lower() == "all"
             ):
                 return object
