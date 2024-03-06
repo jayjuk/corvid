@@ -15,18 +15,8 @@ logger = setup_logger()
 
 class StorageManager:
 
-    # Singleton constructor
-    def __new__(cls, *args, **kwargs):
-        if not hasattr(cls, "instance"):
-            cls.instance = super(StorageManager, cls).__new__(cls)
-            cls.instance.__initialized = False
-        return cls.instance
-
     # Constructor
     def __init__(self):
-        if self.__initialized:
-            return
-        self.__initialized = True
         self.sas_token_expiry_time = None
         self.sas_token = None
 
@@ -111,15 +101,16 @@ class StorageManager:
             "INSERT INTO rooms VALUES (?,?,?)",
             (new_room["name"], new_room["description"], new_room["image"]),
         )
+        exits_insert_sql = "INSERT INTO exits VALUES (?,?,?)"
         for direction in new_room["exits"]:
             c.execute(
-                "INSERT INTO exits VALUES (?,?,?)",
+                exits_insert_sql,
                 (new_room["name"], direction, new_room["exits"][direction]),
             )
 
         # Store the new exit to the new room
         c.execute(
-            "INSERT INTO exits VALUES (?,?,?)",
+            exits_insert_sql,
             (changed_room, new_exit_direction, new_room["name"]),
         )
         c.close()
@@ -148,7 +139,7 @@ class StorageManager:
     def check_rowkey(self, table_client, query_filter_rowkey):
         parameters = {"pk": "jaysgame", "rk": query_filter_rowkey}
         query_filter = "PartitionKey eq @pk and RowKey eq @rk"
-        for row in table_client.query_entities(query_filter, parameters=parameters):
+        for _ in table_client.query_entities(query_filter, parameters=parameters):
             return True
         return False
 
@@ -343,7 +334,8 @@ class StorageManager:
         try:
             self.get_azure_storage_service_client(self.get_azure_credential())
             return True
-        except:
+        except Exception as e:
+            logger.warn(f"Cloud not enabled: {e}")
             return False
 
     def get_rooms_from_cloud(self):

@@ -15,7 +15,7 @@ def is_debug_mode():
     return len(sys.argv) > 1 and sys.argv[1].lower() == "debug"
 
 
-def setup_logger(file_name="unit_testing.log", debug_mode=False):
+def setup_logger(file_name="unit_testing.log"):
     # If logger already set up, return it
     if logging.getLogger().hasHandlers():
         return logging.getLogger()

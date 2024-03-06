@@ -8,7 +8,32 @@ import random
 logger = setup_logger()
 
 
+def generate_name_and_description(ai_manager, room, room_exit, data):
+    prompt = (
+        'Generate a name and description of about 20 words for a new location (AKA "room") in a text adventure game. '
+        + f"Do not use any of these names as they are already in use: {','.join(list(world.rooms.keys()))}. "
+        + f"For context, the room to the {world.get_opposite_direction(room_exit)} of the new room is '{room}: {data['description']}'. Return only the name and description separated by a colon."
+    )
+    logger.info(prompt)
+    try:
+        response = ai_manager.submit_request(
+            prompt,
+            model_name="gpt-3.5-turbo",
+            max_tokens=300,
+            temperature=0.7,
+        )
+    except Exception as e:
+        response = ""
+        logger.error(f"Model submission exception: {e}")
+        return ("", "")
+    # Parse the response into name and description
+    logger.info(response)
+    name, description = response.split(":")
+    return (name.strip(), description.strip())
+
+
 def explore_room(ai_manager, room, data, done_rooms):
+
     print(room)
     build_options = world.get_room_build_options(room)
     print("    ", build_options)
@@ -16,42 +41,23 @@ def explore_room(ai_manager, room, data, done_rooms):
     if "Available directions in which you can build:" in build_options:
         # Pick one random build option, don't built in every direction as you need to check options each time
         options = build_options.split(":")[1].split(",")
-        exit = random.choice(options)
-        try:
-            exit = exit.strip()
-            # remove . from last exit
-            if exit[-1] == ".":
-                exit = exit[:-1]
-            prompt = (
-                'Generate a name and description of about 20 words for a new location (AKA "room") in a text adventure game. '
-                + f"Do not use any of these names as they are already in use: {','.join(list(world.rooms.keys()))}. "
-                + f"For context, the room to the {world.get_opposite_direction(exit)} of the new room is '{room}: {data['description']}'. Return only the name and description separated by a colon."
-            )
-            print("     ", prompt)
-            response = ai_manager.submit_request(
-                prompt,
-                model_name="gpt-3.5-turbo"",
-                max_tokens=300,
-                temperature=0.7,
-            )
-            print("     ", response)
-            # Parse the response into name and description
-            name, description = response.split(":")
-            name = name.strip()
-            description = description.strip()
-            # Add the new room to the world
-            if name and description:
-                error = world.add_room(room, exit, name, description)
-                if error:
-                    logger.error(f"{error}")
-                else:
-                    logger.info(f"Added room {name} to the world")
-
+        room_exit = random.choice(options).strip()
+        # remove . from last exit
+        if room_exit[-1] == ".":
+            room_exit = room_exit[:-1]
+        (name, description) = generate_name_and_description(
+            ai_manager, room, room_exit, data
+        )
+        # Add the new room to the world
+        if name and description:
+            error = world.add_room(room, room_exit, name, description)
+            if error:
+                logger.error(f"{error}")
             else:
-                logger.info(f"Invalid response: {response}")
-        except Exception as e:
-            logger.error(f"{e}")
-            # If an error comes up, it's probably from OpenAI, keep going to the next room
+                logger.info(f"Added room {name} to the world")
+
+        else:
+            logger.error("Invalid response from model!")
 
     done_rooms[room] = True
     for direction, next_room in data["exits"].items():
@@ -76,5 +82,5 @@ if __name__ == "__main__":
 
         logger.info(f"Finished iteration {i} of generating rooms.")
         if i < max_iterations:
-            logger.info(f"Sleeping for 10 seconds")
+            logger.info("Sleeping for 10 seconds")
             time.sleep(10)

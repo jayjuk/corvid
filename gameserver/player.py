@@ -83,7 +83,7 @@ class Player(Character):
             for object in self.get_inventory():
                 description += object.get_name("a") + ", "
             # Add money to inventory description
-            description = description[:-2] + f".\nYou also "
+            description = description[:-2] + ".\nYou also "
         description += f"have {self.world.get_currency(self.money)} in your pocket."
         return description
 

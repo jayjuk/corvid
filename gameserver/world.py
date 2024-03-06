@@ -9,11 +9,8 @@ from merchant import Merchant
 from object import Object
 import test_objects
 
-# TODO: support many worlds, each with different objectives, rooms, objects etc
-
 
 class World:
-    _instance = None
     directions = {
         "north": (0, 1),
         "south": (0, -1),
@@ -26,23 +23,13 @@ class World:
     done_path = {}
     starting_room = "Road"
 
-    # Singleton pattern
-    def __new__(cls, *args, **kwargs):
-        if not hasattr(cls, "instance"):
-            cls.instance = super(World, cls).__new__(cls)
-            cls.instance.__initialized = False
-        return cls.instance
-
     # Constructor
     def __init__(self, mode=None, ai_manager=None):
-        if self.__initialized:
-            return
-        self.__initialized = True
 
         # Instantiate storage manager
         self.storage_manager = StorageManager()
 
-        self.rooms = self.load_rooms(mode)
+        self.rooms = self.load_rooms()
 
         # Only load objects and merchants if not in any special mode
         if not mode:
@@ -69,7 +56,7 @@ class World:
             + "Hint: earn money buy exploring the game world, finding items and selling them to a merchant."
         )
 
-    def load_rooms(self, mode):
+    def load_rooms(self):
         # Get rooms from storage
         rooms = self.storage_manager.get_rooms()
 
@@ -141,7 +128,7 @@ class World:
     def generate_map(self, rooms, mode="grid"):
         # Generate a map of the world in text form
         if mode == "grid":
-            map = ""
+            world_map = ""
             # Get the min and max x and y
             min_x = 0
             max_x = 0
@@ -164,16 +151,18 @@ class World:
             # Generate the map
             for y in range(max_y, min_y - 1, -1):
                 for x in range(min_x, max_x + 1):
-                    map += "&".join(self.grid_references.get(f"{x},{y}", [])) + "\t"
-                map += "\n"
-            return map
+                    world_map += (
+                        "&".join(self.grid_references.get(f"{x},{y}", [])) + "\t"
+                    )
+                world_map += "\n"
+            return world_map
         else:
-            map = ""
+            world_map = ""
             for room in rooms:
-                map += room + ": " + rooms[room]["description"] + "\n"
+                world_map += room + ": " + rooms[room]["description"] + "\n"
                 for exit in rooms[room]["exits"]:
-                    map += "  " + exit + ": " + rooms[room]["exits"][exit] + "\n"
-            return map
+                    world_map += "  " + exit + ": " + rooms[room]["exits"][exit] + "\n"
+            return world_map
 
     def get_room_exits(self, room):
         exits = " Available exits: "
@@ -298,9 +287,9 @@ class World:
                 new_room_name, room_description
             )
             self.storage_manager.save_image(image_file_name)
-        except:
+        except Exception as e:
             logger.error(
-                "Error creating/saving image, this room will be created without one"
+                f"Error creating/saving image ({e}), this room will be created without one"
             )
 
         # Set up new room

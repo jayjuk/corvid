@@ -8,7 +8,7 @@ import urllib.request
 from dotenv import load_dotenv
 from logger import setup_logger
 
-# NOTE: OpenAI and Google specific imports are performed during API connection time, since it is a singleton
+# NOTE: OpenAI and Google specific imports are performed during API connection time
 
 # Set up logger
 logger = setup_logger()
