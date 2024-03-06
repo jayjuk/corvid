@@ -19,7 +19,6 @@ sio = socketio.Client()
 
 class AIBroker:
     time_to_die = False
-    _instance = None
     game_instructions = ""
     event_log = []
     max_history = 50
@@ -27,29 +26,25 @@ class AIBroker:
     last_time = time.time()
     active = True
     mode = None
-    character_name = "TBD"
+    player_name = "TBD"
     input_token_count = 0
     output_token_count = 0
 
-    def __new__(cls, mode="player"):
-        if cls._instance is None:
-            cls._instance = super(AIBroker, cls).__new__(cls)
-            cls._instance.mode = mode
+    def __init__(self, mode="player"):
+        self.mode = mode
 
-            intro_text = (
-                "You have been brought to life in a text adventure game! "
-                + "For now all you can do is move and chat. "
-                + f" Do not apologise to the game! Respond only with one valid command phrase "
-                + f"each time you are contacted.\nInstructions:\n{cls._instance.get_instructions()}"
-            )
+        intro_text = (
+            "You have been brought to life in a text adventure game! "
+            + "For now all you can do is move and chat. "
+            + "Do not apologise to the game! Respond only with one valid command phrase "
+            + f"each time you are contacted.\nInstructions:\n{self.get_instructions()}"
+        )
 
-            # Set up the AI manager
-            cls._instance.ai_manager = AIManager(system_message=intro_text)
+        # Set up the AI manager
+        self.ai_manager = AIManager(system_message=intro_text)
 
-            # Get the AI's name
-            cls._instance.ai_name = cls._instance.get_ai_name()
-
-        return cls._instance
+        # Get the AI's name
+        self.player_name = self.get_ai_name()
 
     # The main processing loop
     def ai_response_loop(self):
@@ -100,10 +95,7 @@ class AIBroker:
         while not ai_name or " " in ai_name:
             # Keep trying til they get the name right
             ai_name = self.ai_manager.submit_request(request).strip(".")
-            # Reset so the intro is done again
-            # TODO - improve this
             logger.info(f"AI chose the name {ai_name}.")
-            self.character_name = ai_name
         return ai_name
 
     def submit_input(self):
@@ -132,7 +124,7 @@ class AIBroker:
         # Strip anything inside curly braces as this is detail human players will enjoy but it will just cost money for the AI
         # There could be stuff after the braces, include that
         event_text = re.sub(
-            r"{.*?}", "", event_text, flags=re.DOTALL
+            r"{[^}]*}", "", event_text, flags=re.DOTALL
         )  # dotall flag is to handle newline
         self.event_log.append(event_text)
 
@@ -165,7 +157,7 @@ def connect_to_server(hostname):
         try:
             sio.connect(hostname)
             connected = True
-        except:
+        except ConnectionError:
             logger.info(
                 f"Could not connect to server. Retrying in {wait_time} seconds..."
             )
@@ -244,7 +236,7 @@ def catch_all(event, data):
 def connect():
     logger.info("Connected to Server.")
     # Emit the AI's chosen name to the server
-    sio.emit("set_player_name", {"name": ai_broker.ai_name, "role": ai_broker.mode})
+    sio.emit("set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode})
 
 
 @sio.event
@@ -288,7 +280,7 @@ if __name__ == "__main__":
         ai_broker = AIBroker(mode=ai_mode)
 
     # Change log file name to include AI name
-    logger = setup_logger(f"ai_broker_{ai_broker.ai_name}.log")
+    logger = setup_logger(f"ai_broker_{ai_broker.player_name}.log")
 
     # Set hostname (default is "localhost" to support local pre container testing)
     # hostname = socket.getfqdn()

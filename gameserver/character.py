@@ -51,7 +51,9 @@ class Character:
         self.inventory.append(object)
 
     # Setter for player dropping object by reference
-    def drop_object(self, object, dropped_objects=[]):
+    def drop_object(self, object, dropped_objects=None):
+        if dropped_objects is None:
+            dropped_objects = []
         self.inventory.remove(object)
         object.set_room(self.current_room)
         dropped_objects.append(object)
@@ -60,8 +62,6 @@ class Character:
     # Setter for player dropping objects by name
     def drop_objects(self, object_name):
         # Check if object is a string
-        # TODO: decide whether caller of this function should already have object reference not name.
-        # That could be done by building a dictionary of all objects perhaps under the world class
         dropped_objects = []
         if isinstance(object_name, str):
             # Check if object is in inventory
