@@ -49,3 +49,7 @@ Operation of the AI broker depends on the existence of a relevant .key file in t
 To deploy to Azure, cd to jaysgame main directory and execute az-deploy.bat or az-deploy-ai.bat . This depends on you having installed the Azure (az) CLI tool, and having logged into your account, with a resource group called (for now) "jay".
 
 Cloud deployment of the AI broker, as with the local execution, depends on the existence of a relevant .key file in the AI broker subdirectory (e.g. openai.key).
+
+### Known Issues & Improvements
+
+These are logged at https://github.com/jayjuk/jaysgame/issues
