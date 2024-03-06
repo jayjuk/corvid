@@ -6,14 +6,14 @@ temperature = 0.7
 
 ai_manager = aimanager.AIManager()
 
-ai_manager.create_image("test", "This is a test")
+# ai_manager.create_image("test", "This is a test")
 
-# prompt = "Hi"
-# print("Prompt:", prompt)
-# response = ai_manager.submit_request(
-#     prompt,
-#     model_name=model_name,
-#     max_tokens=max_tokens,
-#     temperature=temperature,
-# )
-# print(response)
+prompt = "Hi"
+print("Prompt:", prompt)
+response = ai_manager.submit_request(
+    prompt,
+    model_name=model_name,
+    max_tokens=max_tokens,
+    temperature=temperature,
+)
+print(response)
