@@ -24,7 +24,7 @@ class World:
     starting_room = "Road"
 
     # Constructor
-    def __init__(self, mode=None, ai_manager=None):
+    def __init__(self, mode=None, ai_enabled=True):
 
         # Instantiate storage manager
         self.storage_manager = StorageManager()
@@ -36,16 +36,15 @@ class World:
             self.room_objects = self.load_room_objects()
             self.load_merchants()
 
-        # Instantiate or inherit AI manager
-        if ai_manager:
-            self.ai_manager = ai_manager
+        # Separate AI manager for images (can use different model)
+        if ai_enabled:
+            # Image AI manager
+            self.image_ai_manager = aimanager.AIManager(
+                system_message="You are helping to create an adventure game.",
+                model_name="gpt-3.5-turbo",
+            )
         else:
-            self.ai_manager = aimanager.AIManager()
-        # Image AI manager
-        self.image_ai_manager = aimanager.AIManager(
-            system_message="You are helping to create an adventure game.",
-            model_name="gpt-3.5-turbo",
-        )
+            self.image_ai_manager = None
 
     # Get the objective of the game
     def get_objective(self):
@@ -282,15 +281,16 @@ class World:
         # Try to create the image and save it
         # TODO: review whether we can avoid using a temporary file like this
         image_file_name = None
-        try:
-            image_file_name = self.image_ai_manager.create_image(
-                new_room_name, room_description
-            )
-            self.storage_manager.save_image(image_file_name)
-        except Exception as e:
-            logger.error(
-                f"Error creating/saving image ({e}), this room will be created without one"
-            )
+        if self.image_ai_manager:
+            try:
+                image_file_name = self.image_ai_manager.create_image(
+                    new_room_name, room_description
+                )
+                self.storage_manager.save_image(image_file_name)
+            except Exception as e:
+                logger.error(
+                    f"Error creating/saving image ({e}), this room will be created without one"
+                )
 
         # Set up new room
         self.rooms[new_room_name] = {

@@ -24,7 +24,7 @@ from aimanager import AIManager
 class GameManager:
 
     # Constructor
-    def __init__(self, sio):
+    def __init__(self, sio, ai_enabled=True):
 
         # Static variables
         self.max_inactive_time = 300  # 5 minutes
@@ -37,10 +37,14 @@ class GameManager:
         self.sio = sio
         self.players = {}
         self.player_sid_to_name_map = {}
-        # General AI manager
-        self.ai_manager = AIManager()
 
-        self.world = World(mode=None, ai_manager=self.ai_manager)
+        # General AI manager - disabled in unit tests
+        if ai_enabled:
+            self.ai_manager = AIManager()
+        else:
+            self.ai_manager = None
+
+        self.world = World(mode=None, ai_enabled=ai_enabled)
 
         self.object_name_empty_message = "Invalid input: object name is empty."
 
@@ -374,14 +378,17 @@ class GameManager:
                 self.world.rooms[room]["description"]
                 for room in self.world.rooms.keys()
             ]
+            if self.ai_manager:
+                room_description = self.ai_manager.submit_request(
+                    "Generate a description for a new room in my adventure game. Pre-existing room descriptions for inspiration:\n"
+                    + "\n,\n".join(existing_room_descriptions[0:10])
+                    + f"\nThis room is called '{room_name}'\n"
+                    + "\nRespond with only a description of similar length to the ones above, nothing else.\n"
+                )
+                logger.info(f"AI-generated room description: {room_description}")
+            else:
+                return "Invalid input: room description missing and AI is not enabled."
 
-            room_description = self.ai_manager.submit_request(
-                "Generate a description for a new room in my adventure game. Pre-existing room descriptions for inspiration:\n"
-                + "\n,\n".join(existing_room_descriptions[0:10])
-                + f"\nThis room is called '{room_name}'\n"
-                + "\nRespond with only a description of similar length to the ones above, nothing else.\n"
-            )
-            logger.info(f"AI-generated room description: {room_description}")
         elif not rest_of_response.startswith("'") and not rest_of_response.startswith(
             '"'
         ):

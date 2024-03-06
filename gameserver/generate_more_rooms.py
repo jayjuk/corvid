@@ -71,7 +71,7 @@ def explore_room(ai_manager, room, data, done_rooms):
 # Main
 if __name__ == "__main__":
     ai_manager = aimanager.AIManager()
-    world = world.World("builder", ai_manager)
+    world = world.World("builder")
     max_iterations = 1
 
     for i in range(1, max_iterations + 1):
