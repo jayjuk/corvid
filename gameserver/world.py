@@ -378,14 +378,14 @@ class World:
         self.npcs.append(npc)
 
     def get_currency(self, amount=None, short=False, plural=False):
+        if amount is None:
+            # Currency name alone
+            if plural:
+                return "pennies"
+            return "penny"
         if short:
             return f"{amount}p"
         if amount == 1:
             return str(amount) + " penny"
         elif amount > 1 or amount == 0:
             return str(amount) + " pennies"
-        else:
-            # Currency name alone
-            if plural:
-                return "pennies"
-            return "penny"

@@ -1,6 +1,2 @@
-# Model input and response log for <vertexai.preview.generative_models._PreviewGenerativeModel object at 0x00000195ADCE4590>
-
-Request: You are playing an adventure game.
-Hi
-Response: Hello, adventurer! Welcome to the realm of untold stories and epic quests. As you journey through this enigmatic land, know that I, the AI oracle, am here to guide your steps and unravel the mysteries that lie ahead. Ask me questions, seek my advice, and let us embark on this grand adventure together.
+# Model input and response log for <vertexai.preview.generative_models._PreviewGenerativeModel object at 0x0000017E7D889E10>
 

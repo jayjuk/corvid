@@ -3,6 +3,8 @@
 __pycache__
 temp_*
 *.tmp
+*.txt
+*.csv
 *.log
 *.out
 *.db
