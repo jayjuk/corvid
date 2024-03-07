@@ -222,7 +222,7 @@ class GameManager:
         if not rest_of_response:
             # Looking at the room
             message = (
-                f"You look again at the "
+                "You look again at the "
                 + str(player.get_current_room()).lower()
                 + ": "
                 + self.world.get_room_description(

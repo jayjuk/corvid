@@ -4,10 +4,10 @@ import json
 from logger import setup_logger
 from object import Object
 from dotenv import load_dotenv
-import sys
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.data.tables import TableServiceClient
 from azure.storage.blob import BlobServiceClient
+from datetime import datetime
 
 # Set up logger
 logger = setup_logger()
@@ -33,6 +33,17 @@ class StorageManager:
         else:
             self.blob_service_client = None
             self.image_container_name = None
+
+        # Local setup
+        self.setup_local_sqlite()
+
+    def setup_local_sqlite(self):
+        # Set up or default the SQLITE env variable
+        if not os.environ.get("SQLITE_LOCAL_DB_PATH"):
+            load_dotenv()
+        self.sqlite_local_db_path = (
+            os.environ.get("SQLITE_LOCAL_DB_PATH") or "gameserver.db"
+        )
 
     # Utility to check env variable is set
     def check_env_var(self, var_name):
@@ -67,7 +78,15 @@ class StorageManager:
 
     # For now stateless as storage is infrequent
     def get_local_db_connection(self):
-        return sqlite3.connect("gameserver.db")
+        return sqlite3.connect(self.sqlite_local_db_path)
+
+    # Back up - used by utilities
+    def backup_local_db(self):
+        # Back up file with datestamp
+        datestamp = datetime.now().strftime("%Y%m%d")
+        backup_file = f"{self.sqlite_local_db_path}.backup.{datestamp}"
+        logger.info(f"Backing up local DB to {backup_file}")
+        os.system(f"cp {self.sqlite_local_db_path} {backup_file}")
 
     # Create the schema if it doesn't exist
     def create_sql_schema(self, conn_in=None):
