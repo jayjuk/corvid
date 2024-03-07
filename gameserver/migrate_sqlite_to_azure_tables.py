@@ -1,19 +1,11 @@
-from azure.core.credentials import AzureNamedKeyCredential
-from azure.data.tables import TableServiceClient, TableClient
 from storagemanager import StorageManager
 from pprint import pprint
+import os
+from dotenv import load_dotenv
 
 storage_manager = StorageManager()
 
-credential = AzureNamedKeyCredential(
-    "csb10033fff9f716c2d",
-    "I7z/zXfGLCaiKhfJ9pMFLzOJBRnJVo3qOUc+J2IbYuYlkfjl2vU5el9nspdwzHND/6Iisq8vQp/8+ASt0DafXg==",
-)
-
-service_client = TableServiceClient(
-    endpoint="https://csb10033fff9f716c2d.table.core.windows.net/",
-    credential=credential,
-)
+service_client = storage_manager.get_azure_storage_service_client()
 
 
 def get_rowkeys_dict_from_table_client(table_client):

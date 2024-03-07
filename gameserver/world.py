@@ -135,7 +135,7 @@ class World:
             max_y = 0
             for room in rooms:
                 if "grid_reference" not in rooms[room]:
-                    logger.error("No grid reference for", room)
+                    logger.error(f"No grid reference for {room}")
                 else:
                     x = int(rooms[room]["grid_reference"].split(",")[0])
                     y = int(rooms[room]["grid_reference"].split(",")[1])

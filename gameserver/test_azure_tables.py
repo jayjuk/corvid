@@ -2,10 +2,19 @@ from azure.core.credentials import AzureNamedKeyCredential
 from azure.data.tables import TableServiceClient, TableClient
 from storagemanager import StorageManager
 from pprint import pprint
+import os
+from dotenv import load_dotenv
+
+if not os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"):
+    load_dotenv()
+    if not os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"):
+        print("AZURE_STORAGE_ACCOUNT_NAME not set. Exiting.")
+        exit(1)
+
 
 credential = AzureNamedKeyCredential(
-    "csb10033fff9f716c2d",
-    "I7z/zXfGLCaiKhfJ9pMFLzOJBRnJVo3qOUc+J2IbYuYlkfjl2vU5el9nspdwzHND/6Iisq8vQp/8+ASt0DafXg==",
+    os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"),
+    os.environ.get("AZURE_STORAGE_ACCOUNT_KEY"),
 )
 
 service_client = TableServiceClient(
