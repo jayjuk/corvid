@@ -1,2 +1,0 @@
-# Model input and response log for <openai.OpenAI object at 0x0000017E7E031490>
-
