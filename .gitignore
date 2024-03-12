@@ -1,6 +1,5 @@
 *.key
 .env
-__pycache__
 temp_*
 temp-*
 *.tmp
@@ -11,5 +10,6 @@ temp-*
 *.db
 *.sqlite3
 *_dump*.json
+__pycache__
 backup_the_oldfashioned_way.py
 quick_backup_and_old

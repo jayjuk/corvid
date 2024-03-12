@@ -5,7 +5,6 @@ import sys
 from pprint import pprint
 
 import urllib.request
-from dotenv import load_dotenv
 from logger import setup_logger
 
 # NOTE: OpenAI and Google specific imports are performed during API connection time
@@ -13,14 +12,8 @@ from logger import setup_logger
 # Set up logger
 logger = setup_logger()
 
-# Load env variables
-# TODO: figure out how to manage keys in Github? .env is not checked in for obvious reasons
-load_dotenv()
-
 
 # Class to handle interaction with the AI
-
-
 class AIManager:
     def __init__(self, system_message=None, model_name=None):
 
@@ -46,6 +39,8 @@ class AIManager:
 
         # Get model choice from env variable if possible
         self.model_name = model_name or os.environ.get("MODEL_NAME") or "gemini-pro"
+        logger.info(f"Model name set to {self.model_name}")
+
         self.max_tokens = 200  # adjust the max_tokens based on desired response length
         self.ai_name = None
 
@@ -96,43 +91,44 @@ class AIManager:
         ) as f:
             json.dump(data, f, indent=4)
 
+    def check_env_var(self, env_var_name):
+        if not os.environ.get(env_var_name):
+            self.exit(f"{env_var_name} not set. Exiting.")
+
     def model_api_connect(self):
         # Use pre-set variable before dotenv.
         if self.get_model_api() == "GPT":
-            if not os.environ.get("OPENAI_API_KEY"):
-                load_dotenv()
-                if not os.getenv("OPENAI_API_KEY"):
-                    self.exit("OPENAI_API_KEY not set. Exiting.")
+            self.check_env_var("OPENAI_API_KEY")
 
             # Import here so that we don't need to install this module into a Gemini-only runtime
             import openai
 
             openai.api_key = os.getenv("OPENAI_API_KEY")
             self.model_client = openai.OpenAI()
+
         elif self.get_model_api() == "Gemini":
-            # If env variable not set and file exists, set it
-            # set GOOGLE_APPLICATION_CREDENTIALS=
-            gcloud_credentials_file = "gemini.key"
-            if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
-                if not os.path.exists(gcloud_credentials_file):
-                    self.exit(
-                        f"GOOGLE_APPLICATION_CREDENTIALS not set and {gcloud_credentials_file} does not exist"
-                    )
-                else:
-                    logger.info(
-                        "Setting GOOGLE_APPLICATION_CREDENTIALS to {}".format(
-                            gcloud_credentials_file
-                        )
-                    )
-                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-                        gcloud_credentials_file
-                    )
+            self.check_env_var("GOOGLE_GEMINI_KEY")
 
             # Installed from (pip install ) google-cloud-aiplatform
             import vertexai
             from vertexai.preview.generative_models import GenerativeModel
+            from google.oauth2.service_account import Credentials
 
-            vertexai.init(project="jaysgame", location="us-central1")
+            # Other libraries only needed for Google security
+            import base64
+            import json
+
+            # Load Base 64 encoded key JSON from env variable and convert back to JSON
+            credentials_dict = json.loads(
+                base64.b64decode(os.environ["GOOGLE_GEMINI_KEY"])
+            )
+
+            vertexai.init(
+                project="jaysgame",
+                location="us-central1",
+                # This overrides the default use of GOOGLE_APPLICATION_CREDENTIALS containing a file with the key in JSON
+                credentials=Credentials.from_service_account_info(credentials_dict),
+            )
             self.model_client = GenerativeModel("gemini-pro")
             self.gemini_chat = self.model_client.start_chat(history=[])
 

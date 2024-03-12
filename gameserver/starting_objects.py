@@ -1,4 +1,4 @@
-def get_test_objects():
+def get_starting_objects():
     return [
         ["rock", "This is an ordinary rock.", 0, "Road"],
         ["stone", "This is a fairly normal stone.", 1, "North Road"],

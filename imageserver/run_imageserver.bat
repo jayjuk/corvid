@@ -1,3 +1,0 @@
-echo off
-echo Running Image Server...
-python imageserver.py

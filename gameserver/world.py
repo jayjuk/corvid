@@ -7,7 +7,7 @@ import aimanager
 from storagemanager import StorageManager
 from merchant import Merchant
 from object import Object
-import test_objects
+import starting_objects as starting_objects
 
 
 class World:
@@ -39,6 +39,7 @@ class World:
         # Separate AI manager for images (can use different model)
         if ai_enabled:
             # Image AI manager
+            logger.info("Creating separate AI manager for image generation")
             self.image_ai_manager = aimanager.AIManager(
                 system_message="You are helping to create an adventure game.",
                 model_name="gpt-3.5-turbo",
@@ -349,7 +350,7 @@ class World:
     def load_room_objects(self):
         # TODO: Store and reload object state
         # Stubbed test data for now
-        test_object_data = test_objects.get_test_objects()
+        test_object_data = starting_objects.get_starting_objects()
         room_object_map = {}
         for _ in test_object_data:
             (object_name, object_description, price, starting_room) = _
