@@ -34,8 +34,8 @@ class ImageServer:
             return send_from_directory(self.cache_folder, image_name)
 
     def run(self):
-        # TODO: port number to env variable?
-        self.app.run(host="0.0.0.0", port=5000)
+        port = environ.get("IMAGESERVER_PORT", "5000")
+        self.app.run(host="0.0.0.0", port=port)
 
 
 # Main

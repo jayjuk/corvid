@@ -7,6 +7,7 @@ import socket
 import socketio
 import eventlet
 from gamemanager import GameManager
+from os import environ
 
 # This is the main game server file. It sets up the SocketIO server and handles events only
 
@@ -79,6 +80,9 @@ if __name__ == "__main__":
     hostname = socket.getfqdn()
     if hostname.endswith(".lan"):
         hostname = hostname[:-4]
-    logger.info(f"Starting up game server on {hostname}")
+    # TODO: do not allow default port, and make this common
+    port = int(environ.get("GAMESERVER_PORT", "3001"))
+    logger.info("Starting up game manager")
     game_manager = GameManager(sio)
-    eventlet.wsgi.server(eventlet.listen(("0.0.0.0", 3001)), app)
+    logger.info(f"Launching WSGI server on {hostname}:{port}")
+    eventlet.wsgi.server(eventlet.listen(("0.0.0.0", port)), app)

@@ -17,8 +17,16 @@ properties:
         environmentVariables:
           - name: "GAMESERVER_HOSTNAME"
             value: "jaysgame.westeurope.azurecontainer.io"
+          - name: "GAMESERVER_PORT"
+            value: "3001"
+          - name: "IMAGESERVER_HOSTNAME"
+            value: "jaysgame.westeurope.azurecontainer.io"
+          - name: "IMAGESERVER_PORT"
+            value: "3002"
           - name: "OPENAI_API_KEY"
             value: "${OPENAI_API_KEY}"
+          - name: "GOOGLE_GEMINI_KEY"
+            value: "${GOOGLE_GEMINI_KEY}"
           - name: "AZURE_STORAGE_ACCOUNT_NAME"
             value: "${AZURE_STORAGE_ACCOUNT_NAME}"
           - name: "AZURE_STORAGE_ACCOUNT_KEY"
@@ -33,8 +41,10 @@ properties:
     - name: imageserver
       properties:
         environmentVariables:
-          - name: "GAMESERVER_HOSTNAME"
+          - name: "IMAGESERVER_HOSTNAME"
             value: "jaysgame.westeurope.azurecontainer.io"
+          - name: "IMAGESERVER_PORT"
+            value: "3002"
           - name: "AZURE_STORAGE_ACCOUNT_NAME"
             value: "${AZURE_STORAGE_ACCOUNT_NAME}"
           - name: "AZURE_STORAGE_ACCOUNT_KEY"
@@ -55,6 +65,8 @@ properties:
             value: "${OPENAI_API_KEY}"
           - name: "GAMESERVER_HOSTNAME"
             value: "jaysgame.westeurope.azurecontainer.io"
+          - name: "GAMESERVER_PORT"
+            value: "3001"
         image: jayjuk/aibroker
         resources:
           requests:

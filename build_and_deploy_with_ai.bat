@@ -1,2 +1,2 @@
-build_tag_push.bat
-az-deploy-ai.bat
+call build_tag_push.bat
+call az-deploy-ai.bat

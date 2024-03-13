@@ -7,8 +7,7 @@ import eventlet
 import socketio
 import time
 import sys
-from pprint import pprint
-import os
+from os import environ
 import re
 from aimanager import AIManager
 
@@ -255,9 +254,9 @@ if __name__ == "__main__":
     logger.info("Starting up AI Broker")
 
     # Set up AIs according to config
-    ai_count = os.environ.get("AI_COUNT")
+    ai_count = environ.get("AI_COUNT")
 
-    ai_mode = os.environ.get("AI_MODE") or "player"
+    ai_mode = environ.get("AI_MODE") or "player"
     if ai_mode not in ("player", "builder", "observer"):
         logger.info(
             f"ERROR: AI_MODE is set to {ai_mode} but must be either 'player' or 'observer'. Exiting."
@@ -285,10 +284,12 @@ if __name__ == "__main__":
     # hostname = socket.getfqdn()
     # if hostname.endswith(".lan"):
     #     hostname = hostname[:-4]
-    hostname = os.environ.get("GAMESERVER_HOSTNAME") or "localhost"
+    hostname = environ.get("GAMESERVER_HOSTNAME") or "localhost"
+    # TODO: do not allow default port, and make this common
+    port = environ.get("GAMESERVER_PORT", "3001")
     logger.info(f"Starting up AI Broker on hostname {hostname}")
     # Connect to the server
-    connect_to_server(f"http://{hostname}:3001")
+    connect_to_server(f"http://{hostname}:{port}")
 
     # This is where the main processing of inputs happens
     eventlet.spawn(ai_broker.ai_response_loop())

@@ -270,15 +270,7 @@ class GameManager:
         verb = "shouts" if shout else "says"
         # Remove 'to' and player name
         if rest_of_response.startswith("to "):
-            # Split rest of response into player name and message
-            other_player_name, rest_of_response = rest_of_response[3:].split(" ", 1)
-            if self.is_existing_player_name(other_player_name):
-                if rest_of_response == "":
-                    return f"Say what to {other_player_name}?"
-                else:
-                    return "You can't currently speak to just one person in the room. To converse, just use 'say' followed by what you want to say, everyone in the room will hear you."
-            else:
-                return f"{other_player_name} is not in the game!"
+            return "You can't currently speak to just one person in the room. To converse, just use 'say' followed by what you want to say, everyone in the room will hear you."
 
         logger.info(f"User {player.name} {verb}: {rest_of_response}")
         if self.get_player_count() == 1:

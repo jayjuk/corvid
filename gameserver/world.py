@@ -37,7 +37,7 @@ class World:
             self.load_merchants()
 
         # Separate AI manager for images (can use different model)
-        if ai_enabled:
+        if ai_enabled and self.storage_manager.cloud_blobs_enabled():
             # Image AI manager
             logger.info("Creating separate AI manager for image generation")
             self.image_ai_manager = aimanager.AIManager(
@@ -45,6 +45,7 @@ class World:
                 model_name="gpt-3.5-turbo",
             )
         else:
+            logger.warn("AI and/or cloud image storage not enabled.")
             self.image_ai_manager = None
 
     # Get the objective of the game
@@ -281,7 +282,6 @@ class World:
 
         # Try to create the image and save it
         # TODO: review whether we can avoid using a temporary file like this
-        image_file_name = None
         if self.image_ai_manager:
             try:
                 image_file_name = self.image_ai_manager.create_image(
@@ -292,6 +292,8 @@ class World:
                 logger.error(
                     f"Error creating/saving image ({e}), this room will be created without one"
                 )
+        else:
+            logger.warn("Image generation not enabled.")
 
         # Set up new room
         self.rooms[new_room_name] = {

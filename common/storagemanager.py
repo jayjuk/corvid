@@ -1,4 +1,5 @@
-import os
+from os import environ, remove, makedirs, path
+from shutil import copy2
 import sqlite3
 import json
 from logger import setup_logger
@@ -19,6 +20,7 @@ class StorageManager:
         self.sas_token_expiry_time = None
         self.sas_token = None
 
+        # Get and remember credential
         self.credential = self.get_azure_credential()
         if self.credential:
             # Get Azure storage client
@@ -44,22 +46,25 @@ class StorageManager:
                 "Could not get Azure image service client, images will be disabled"
             )
 
-    def cloud_enabled(self):
+    def cloud_tables_enabled(self):
         return self.credential and self.table_service_client
+
+    def cloud_blobs_enabled(self):
+        return self.credential and self.blob_service_client
 
     def setup_local_sqlite(self):
         # Set up or default the SQLITE env variable
-        if not os.environ.get("SQLITE_LOCAL_DB_PATH"):
+        if not environ.get("SQLITE_LOCAL_DB_PATH"):
             load_dotenv()
         self.sqlite_local_db_path = (
-            os.environ.get("SQLITE_LOCAL_DB_PATH") or "gameserver.db"
+            environ.get("SQLITE_LOCAL_DB_PATH") or "gameserver.db"
         )
 
     # Utility to check env variable is set
     def check_env_var(self, var_name):
-        if not os.environ.get(var_name):
+        if not environ.get(var_name):
             logger.warn(f"{var_name} not set.")
-        return os.environ.get(var_name, "")
+        return environ.get(var_name, "")
 
     # Return Azure credential
     def get_azure_credential(self):
@@ -67,8 +72,8 @@ class StorageManager:
             "AZURE_STORAGE_ACCOUNT_KEY"
         ):
             return AzureNamedKeyCredential(
-                os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"),
-                os.environ.get("AZURE_STORAGE_ACCOUNT_KEY"),
+                environ.get("AZURE_STORAGE_ACCOUNT_NAME"),
+                environ.get("AZURE_STORAGE_ACCOUNT_KEY"),
             )
         else:
             return None
@@ -78,7 +83,7 @@ class StorageManager:
     def get_azure_table_service_client(self):
         return TableServiceClient(
             endpoint="https://"
-            + os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
+            + environ.get("AZURE_STORAGE_ACCOUNT_NAME")
             + ".table.core.windows.net/",
             credential=self.credential,
         )
@@ -86,7 +91,7 @@ class StorageManager:
     def get_azure_blob_service_client(self):
         return BlobServiceClient(
             account_url="https://"
-            + os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
+            + environ.get("AZURE_STORAGE_ACCOUNT_NAME")
             + ".blob.core.windows.net",
             credential=self.credential,
         )
@@ -101,7 +106,7 @@ class StorageManager:
         datestamp = datetime.now().strftime("%Y%m%d")
         backup_file = f"{self.sqlite_local_db_path}.backup.{datestamp}"
         logger.info(f"Backing up local DB to {backup_file}")
-        os.system(f"cp {self.sqlite_local_db_path} {backup_file}")
+        copy2(self.sqlite_local_db_path, backup_file)
 
     # Create the schema if it doesn't exist
     def create_sql_schema(self, conn_in=None):
@@ -184,35 +189,41 @@ class StorageManager:
         return False
 
     def save_image_on_cloud(self, image_name):
+        if self.cloud_blobs_enabled():
+            logger.info(f"Uploading image '{image_name}' to cloud")
 
-        logger.info(f"Uploading image '{image_name}' to cloud")
+            # Get a reference to the container
+            container_client = self.blob_service_client.get_container_client(
+                self.image_container_name
+            )
 
-        # Get a reference to the container
-        container_client = self.blob_service_client.get_container_client(
-            self.image_container_name
-        )
-
-        # Create the container if it doesn't exist
-        try:
-            container_client.create_container()
-            logger.info(f"Created container '{self.image_container_name}'")
-        except:
-            logger.error(f"Container '{self.image_container_name}' already exists")
-
-        # Get a reference to the blob
-        blob_client = self.blob_service_client.get_blob_client(
-            self.image_container_name, image_name
-        )
-
-        # Upload the image
-        with open(image_name, "rb") as data:
+            # Create the container if it doesn't exist
             try:
-                blob_client.upload_blob(data)
-                logger.info(f"Uploaded image '{image_name}'")
-                # Delete the image from the local directory
-                os.remove(image_name)
-            except:
-                logger.error(f"Container '{image_name}' already exists")
+                container_client.create_container()
+                logger.info(f"Created container '{self.image_container_name}'")
+            except Exception as e:
+                logger.error(
+                    f"Container '{self.image_container_name}' already exists: {e}"
+                )
+
+            # Get a reference to the blob
+            blob_client = self.blob_service_client.get_blob_client(
+                self.image_container_name, image_name
+            )
+
+            # Upload the image
+            with open(image_name, "rb") as data:
+                try:
+                    blob_client.upload_blob(data)
+                    logger.info(f"Uploaded image '{image_name}'")
+                    # Delete the image from the local directory
+                    remove(image_name)
+                except Exception as e:
+                    logger.error(f"Error uploading image: {e}")
+        else:
+            logger.warn(
+                f"Not uploading image '{image_name}' to cloud as storage not enabled."
+            )
 
     # External function for the world class to use, world doesn't need to know about cloud etc
     def save_image(self, file_name):
@@ -224,19 +235,21 @@ class StorageManager:
     def get_image_url(self, image_name):
         if image_name:
             logger.info(f"Resolving image URL for image {image_name}")
-            hostname = os.environ.get("GAMESERVER_HOSTNAME") or "localhost"
-            # TODO: 5000 is hardcoded
-            return "http://" + hostname + ":5000/image/" + image_name
+            hostname = environ.get("IMAGESERVER_HOSTNAME") or "localhost"
+            port = environ.get("IMAGESERVER_PORT") or "5000"
+            return f"http://{hostname}:{port}/image/{image_name}"
         return None
 
     def get_image_blob(self, image_name):
-        if self.image_container_name:
+        if self.cloud_blobs_enabled() and self.image_container_name:
             logger.info(f"Downloading {image_name} from Azure blob storage")
             blob_client = self.blob_service_client.get_blob_client(
                 self.image_container_name, image_name
             )
             if blob_client:
                 return blob_client.download_blob().readall()
+            else:
+                logger.error("Could not resolve blob client.")
         return None
 
     def save_new_room_on_cloud(self, new_room, new_exit_direction, changed_room):
@@ -327,16 +340,6 @@ class StorageManager:
         if self.credential:
             self.save_new_room_on_cloud(new_room, new_exit_direction, changed_room)
 
-        # Check subfolder exists for saving user generated maps
-        # TODO: for now this is saving every version, and this is really just a temporary backup
-        user_map_folder_path = "user_maps"
-        os.makedirs(user_map_folder_path, exist_ok=True)
-        with open(
-            user_map_folder_path + os.sep + ".user_generated_map_backup.tmp",
-            "w",
-        ) as f:
-            json.dump(rooms, f, indent=4)
-
     # Check if the schema exists but don't create if not
     # Handle that the connection may not exist
     def check_schema(self):
@@ -404,7 +407,7 @@ class StorageManager:
     # Get rooms and return in the dict format expected by the game server
     def get_rooms(self):
         # Try cloud first
-        if self.cloud_enabled():
+        if self.cloud_tables_enabled():
             logger.info("Sourcing rooms from cloud")
             rooms = self.get_rooms_from_cloud()
             if rooms:
