@@ -1,7 +1,7 @@
 import requests
 
 # Make a GET request to the /image/<image_name> endpoint
-response = requests.get("http://localhost:5000/image/test.png")
+response = requests.get("http://localhost:3002/image/test.png")
 
 print(response)
 # Check if the response is an image file

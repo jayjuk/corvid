@@ -5,7 +5,6 @@ import json
 from logger import setup_logger
 from dotenv import load_dotenv
 from azure.core.credentials import AzureNamedKeyCredential
-from azure.data.tables import TableServiceClient
 from azure.storage.blob import BlobServiceClient
 from datetime import datetime
 
@@ -16,7 +15,7 @@ logger = setup_logger()
 class StorageManager:
 
     # Constructor
-    def __init__(self, image_container_name="jaysgameimages"):
+    def __init__(self, image_only=False, image_container_name="jaysgameimages"):
         self.sas_token_expiry_time = None
         self.sas_token = None
 
@@ -24,7 +23,11 @@ class StorageManager:
         self.credential = self.get_azure_credential()
         if self.credential:
             # Get Azure storage client
-            self.table_service_client = self.get_azure_table_service_client()
+            if image_only:
+                self.table_service_client = None
+                logger.info("Running in images only mode - no table storage")
+            else:
+                self.table_service_client = self.get_azure_table_service_client()
 
             # Get Azure storage client
             self.blob_service_client = self.get_azure_blob_service_client()
@@ -34,7 +37,7 @@ class StorageManager:
             self.blob_service_client = None
             self.image_container_name = None
 
-        if not self.table_service_client:
+        if not self.table_service_client and not image_only:
             logger.warn(
                 "Could not get Azure table service client, data storage will be local"
             )
@@ -81,6 +84,8 @@ class StorageManager:
     # Return Azure table service client
     # Assumes if we have a credential, we have AZURE_STORAGE_ACCOUNT_NAME set
     def get_azure_table_service_client(self):
+        from azure.data.tables import TableServiceClient
+
         return TableServiceClient(
             endpoint="https://"
             + environ.get("AZURE_STORAGE_ACCOUNT_NAME")
@@ -235,8 +240,8 @@ class StorageManager:
     def get_image_url(self, image_name):
         if image_name:
             logger.info(f"Resolving image URL for image {image_name}")
-            hostname = environ.get("IMAGESERVER_HOSTNAME") or "localhost"
-            port = environ.get("IMAGESERVER_PORT") or "5000"
+            hostname = environ["IMAGESERVER_HOSTNAME"]
+            port = environ["IMAGESERVER_PORT"]
             return f"http://{hostname}:{port}/image/{image_name}"
         return None
 

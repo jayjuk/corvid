@@ -11,7 +11,7 @@ class ImageServer:
     def __init__(self):
         self.app = Flask(__name__)
         # Get Azure storage client
-        storage_manager = StorageManager()
+        storage_manager = StorageManager(image_only=True)
 
         self.cache_folder = "image_cache"
         # Create a local folder named after the container to store images
@@ -34,11 +34,13 @@ class ImageServer:
             return send_from_directory(self.cache_folder, image_name)
 
     def run(self):
-        port = environ.get("IMAGESERVER_PORT", "5000")
+        port = environ["IMAGESERVER_PORT"]
+        logger.info(f"Starting up Flask server on port {port}")
         self.app.run(host="0.0.0.0", port=port)
 
 
 # Main
 if __name__ == "__main__":
+    logger.info("Starting up Image Server")
     image_server = ImageServer()
     image_server.run()
