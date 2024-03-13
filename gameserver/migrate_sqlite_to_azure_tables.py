@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 storage_manager = StorageManager()
 
-service_client = storage_manager.get_azure_storage_service_client()
+service_client = storage_manager.get_azure_table_service_client()
 
 
 def get_rowkeys_dict_from_table_client(table_client):

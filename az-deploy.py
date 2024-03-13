@@ -4,10 +4,8 @@ from dotenv import load_dotenv
 import os
 import sys
 
-# Load .env file from gameserver subdirectory
-load_dotenv(dotenv_path="./gameserver/.env")
-# Load .env file from aibroker subdirectory (does not overwrite existing env vars)
-load_dotenv(dotenv_path="./aibroker/.env")
+# Load .env file from common subdirectory
+load_dotenv(dotenv_path="./common/.env")
 
 # Read the yaml file and replace the OPENAI_API_KEY placeholder
 with open("deploy-aci.yaml", "r") as f:

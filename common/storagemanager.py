@@ -2,7 +2,6 @@ import os
 import sqlite3
 import json
 from logger import setup_logger
-from object import Object
 from dotenv import load_dotenv
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.data.tables import TableServiceClient
@@ -16,26 +15,37 @@ logger = setup_logger()
 class StorageManager:
 
     # Constructor
-    def __init__(self):
+    def __init__(self, image_container_name="jaysgameimages"):
         self.sas_token_expiry_time = None
         self.sas_token = None
 
         self.credential = self.get_azure_credential()
         if self.credential:
             # Get Azure storage client
-            self.blob_service_client = BlobServiceClient(
-                account_url="https://"
-                + os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
-                + ".blob.core.windows.net",
-                credential=self.credential,
-            )
-            self.image_container_name = "jaysgameimages"
+            self.table_service_client = self.get_azure_table_service_client()
+
+            # Get Azure storage client
+            self.blob_service_client = self.get_azure_blob_service_client()
+            self.image_container_name = image_container_name
         else:
+            self.table_service_client = None
             self.blob_service_client = None
             self.image_container_name = None
 
-        # Local setup
-        self.setup_local_sqlite()
+        if not self.table_service_client:
+            logger.warn(
+                "Could not get Azure table service client, data storage will be local"
+            )
+            # Local setup
+            self.setup_local_sqlite()
+
+        if not self.blob_service_client:
+            logger.warn(
+                "Could not get Azure image service client, images will be disabled"
+            )
+
+    def cloud_enabled(self):
+        return self.credential and self.table_service_client
 
     def setup_local_sqlite(self):
         # Set up or default the SQLITE env variable
@@ -49,13 +59,10 @@ class StorageManager:
     def check_env_var(self, var_name):
         if not os.environ.get(var_name):
             logger.warn(f"{var_name} not set.")
-            return False
-        return True
+        return os.environ.get(var_name, "")
 
     # Return Azure credential
     def get_azure_credential(self):
-        if not os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"):
-            load_dotenv()
         if self.check_env_var("AZURE_STORAGE_ACCOUNT_NAME") and self.check_env_var(
             "AZURE_STORAGE_ACCOUNT_KEY"
         ):
@@ -68,12 +75,20 @@ class StorageManager:
 
     # Return Azure table service client
     # Assumes if we have a credential, we have AZURE_STORAGE_ACCOUNT_NAME set
-    def get_azure_storage_service_client(self, credential):
+    def get_azure_table_service_client(self):
         return TableServiceClient(
             endpoint="https://"
             + os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
             + ".table.core.windows.net/",
-            credential=credential,
+            credential=self.credential,
+        )
+
+    def get_azure_blob_service_client(self):
+        return BlobServiceClient(
+            account_url="https://"
+            + os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
+            + ".blob.core.windows.net",
+            credential=self.credential,
         )
 
     # For now stateless as storage is infrequent
@@ -206,29 +221,6 @@ class StorageManager:
         # Move file name to full path
         return True
 
-    # def generate_sas_url(
-    #     self,
-    #     blob_name: str,
-    # ):
-    #     # Check expiry time
-    #     if not (
-    #         self.sas_token
-    #         and self.sas_token_expiry_time
-    #         # 5 minutes before expiry
-    #         and self.sas_token_expiry_time > datetime.utcnow() + timedelta(minutes=5)
-    #     ):
-    #         logger.info(f"Refreshing SAS token")
-    #         # Refresh token
-    #         self.sas_token = generate_blob_sas(
-    #             account_name=self.blob_service_client.account_name,
-    #             container_name=self.image_container_name,
-    #             blob_name=blob_name,
-    #             account_key=self.blob_service_client.credential.account_key,
-    #             permission=BlobSasPermissions(read=True),
-    #             expiry=datetime.utcnow() + timedelta(hours=1),
-    #         )
-    #     return f"https://{self.blob_service_client.account_name}.blob.core.windows.net/{self.image_container_name}/{blob_name}?{self.sas_token}"
-
     def get_image_url(self, image_name):
         if image_name:
             logger.info(f"Resolving image URL for image {image_name}")
@@ -237,14 +229,18 @@ class StorageManager:
             return "http://" + hostname + ":5000/image/" + image_name
         return None
 
+    def get_image_blob(self, image_name):
+        if self.image_container_name:
+            logger.info(f"Downloading {image_name} from Azure blob storage")
+            blob_client = self.blob_service_client.get_blob_client(
+                self.image_container_name, image_name
+            )
+            if blob_client:
+                return blob_client.download_blob().readall()
+        return None
+
     def save_new_room_on_cloud(self, new_room, new_exit_direction, changed_room):
-        # Get Azure storage client
-        service_client = self.get_azure_storage_service_client(self.credential)
-        if service_client:
-            rooms_client = service_client.create_table_if_not_exists("rooms")
-        else:
-            logger.error("Could not get service client")
-            return
+        rooms_client = self.table_service_client.create_table_if_not_exists("rooms")
 
         # Store room in Azure
         # First check if key exists
@@ -258,7 +254,7 @@ class StorageManager:
         else:
             logger.warn(f"Room {new_room['name']} already stored")
 
-        exits_client = service_client.create_table_if_not_exists("exits")
+        exits_client = self.table_service_client.create_table_if_not_exists("exits")
         # Store exits in Azure
         # Should just loop once
         for direction, destination in new_room["exits"].items():
@@ -292,14 +288,8 @@ class StorageManager:
 
     # Utility function to delete room from cloud (not used in game)
     def delete_room_on_cloud(self, room_name):
-        # Get Azure storage client
-        service_client = self.get_azure_storage_service_client(self.credential)
-        if not service_client:
-            logger.error("Could not get service client")
-            return
-
-        rooms_client = service_client.get_table_client("rooms")
-        exits_client = service_client.get_table_client("exits")
+        rooms_client = self.table_service_client.get_table_client("rooms")
+        exits_client = self.table_service_client.get_table_client("exits")
 
         # Delete exits from Azure
         # Should just loop once
@@ -362,23 +352,8 @@ class StorageManager:
         conn.close()
         return schema_exists
 
-    def cloud_enabled(self):
-        if not self.credential:
-            return False
-        try:
-            self.get_azure_storage_service_client(self.credential)
-            return True
-        except Exception as e:
-            logger.warn(f"Cloud not enabled: {e}")
-            return False
-
     def get_rooms_from_cloud(self):
-        # Get Azure storage client
-        service_client = self.get_azure_storage_service_client(self.credential)
-        if not service_client:
-            logger.error("Could not get service client")
-            return None
-        rooms_client = service_client.get_table_client("rooms")
+        rooms_client = self.table_service_client.get_table_client("rooms")
         if rooms_client:
             rooms = {}
             for entity in rooms_client.query_entities(""):
@@ -388,7 +363,7 @@ class StorageManager:
                     "image": entity.get("image", None),
                     "exits": {},
                 }
-            exits_client = service_client.get_table_client("exits")
+            exits_client = self.table_service_client.get_table_client("exits")
             if exits_client:
                 for entity in exits_client.query_entities(""):
                     rooms[entity["room"]]["exits"][entity["direction"]] = entity[

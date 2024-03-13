@@ -10,7 +10,6 @@ import sys
 from pprint import pprint
 import os
 import re
-from dotenv import load_dotenv
 from aimanager import AIManager
 
 # Register the client with the server
