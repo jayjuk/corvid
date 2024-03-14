@@ -336,7 +336,7 @@ class GameManager:
             quote_char = rest_of_response[0]
             end_quote_index = rest_of_response.find(quote_char, 1)
             if end_quote_index == -1:
-                return "", "Invalid input: room name is not properly quoted."
+                return "", "", "Invalid input: room name is not properly quoted."
             # Extract the room name from the quoted string
             room_name = rest_of_response[1:end_quote_index]
             # Remove the room name and any extra spaces from the response
@@ -349,12 +349,14 @@ class GameManager:
 
         # Check the room name is valid
         if room_name == "":
-            return "", "Invalid input: room name is empty."
+            return "", "", "Invalid input: room name is empty."
         # Check room name is not a reserved word
         if room_name in self.synonyms or room_name in self.command_functions:
-            return "", f"'{room_name}' is a reserved word."
-
-        return room_name, ""
+            return "", "", f"'{room_name}' is a reserved word."
+        logger.info(
+            f"Resolved room name {room_name}, rest of response <{rest_of_response}>"
+        )
+        return room_name, rest_of_response, ""
 
     def do_build(self, player, rest_of_response):
         # Create a new room
@@ -374,11 +376,13 @@ class GameManager:
         # Remove the direction from the response
         rest_of_response = " ".join(rest_of_response.split()[1:])
         if not rest_of_response:
-            # User did not specify what to build
+            # User did not specify name of room to build
             return "Please specify room name in quotes and a description."
 
         # Check if the room name is in quotes
-        room_name, outcome = self.resolve_room_name(rest_of_response)
+        (room_name, rest_of_response, outcome) = self.resolve_room_name(
+            rest_of_response
+        )
         if outcome:
             return outcome
 

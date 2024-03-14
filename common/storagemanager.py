@@ -232,10 +232,13 @@ class StorageManager:
 
     # External function for the world class to use, world doesn't need to know about cloud etc
     def save_image(self, file_name):
-        # For now, only cloud storage
-        self.save_image_on_cloud(file_name)
-        # Move file name to full path
-        return True
+        if file_name:
+            # For now, only cloud storage
+            self.save_image_on_cloud(file_name)
+            # Move file name to full path
+            return True
+        else:
+            logger.error("Missing file name, cannot upload")
 
     def get_image_url(self, image_name):
         if image_name:
@@ -340,10 +343,10 @@ class StorageManager:
         logger.info(
             f"Storing new room {new_room['name']} and adding exit {new_exit_direction} to {changed_room}"
         )
-        # Save room both locally and in cloud
-        self.save_new_room_locally(new_room, new_exit_direction, changed_room)
-        if self.credential:
+        if self.cloud_tables_enabled():
             self.save_new_room_on_cloud(new_room, new_exit_direction, changed_room)
+        else:
+            self.save_new_room_locally(new_room, new_exit_direction, changed_room)
 
     # Check if the schema exists but don't create if not
     # Handle that the connection may not exist

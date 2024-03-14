@@ -42,7 +42,7 @@ class World:
             logger.info("Creating separate AI manager for image generation")
             self.image_ai_manager = aimanager.AIManager(
                 system_message="You are helping to create an adventure game.",
-                model_name="gpt-3.5-turbo",
+                model_name="stable-diffusion-xl-1024-v1-0",  # stable-diffusion-v1-6 or gpt-3.5-turbo
             )
         else:
             logger.warn("AI and/or cloud image storage not enabled.")
@@ -287,7 +287,12 @@ class World:
                 image_file_name = self.image_ai_manager.create_image(
                     new_room_name, room_description
                 )
-                self.storage_manager.save_image(image_file_name)
+                if image_file_name:
+                    self.storage_manager.save_image(image_file_name)
+                else:
+                    logger.error(
+                        "Error creating/saving image - returned no file name, this room will be created without one"
+                    )
             except Exception as e:
                 logger.error(
                     f"Error creating/saving image ({e}), this room will be created without one"

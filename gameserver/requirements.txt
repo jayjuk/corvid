@@ -5,3 +5,4 @@ azure-data-tables
 python-dotenv
 google-cloud-aiplatform
 azure-storage-blob
+stability-sdk
