@@ -193,7 +193,7 @@ class StorageManager:
             return True
         return False
 
-    def save_image_on_cloud(self, image_name):
+    def save_image_on_cloud(self, image_name, image_data):
         if self.cloud_blobs_enabled():
             logger.info(f"Uploading image '{image_name}' to cloud")
 
@@ -217,24 +217,21 @@ class StorageManager:
             )
 
             # Upload the image
-            with open(image_name, "rb") as data:
-                try:
-                    blob_client.upload_blob(data)
-                    logger.info(f"Uploaded image '{image_name}'")
-                    # Delete the image from the local directory
-                    remove(image_name)
-                except Exception as e:
-                    logger.error(f"Error uploading image: {e}")
+            try:
+                blob_client.upload_blob(image_data)
+                logger.info(f"Uploaded image '{image_name}'")
+            except Exception as e:
+                logger.error(f"Error uploading image: {e}")
         else:
             logger.warn(
                 f"Not uploading image '{image_name}' to cloud as storage not enabled."
             )
 
     # External function for the world class to use, world doesn't need to know about cloud etc
-    def save_image(self, file_name):
+    def save_image(self, file_name, image_data):
         if file_name:
             # For now, only cloud storage
-            self.save_image_on_cloud(file_name)
+            self.save_image_on_cloud(file_name, image_data)
             # Move file name to full path
             return True
         else:

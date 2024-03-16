@@ -25,10 +25,9 @@ class ImageServer:
             if not path.exists(full_image_file_path):
                 # Download the image from Azure blob storage to the local folder
                 blob = storage_manager.get_image_blob(image_name)
-                if blob:
-                    with open(full_image_file_path, "wb") as f:
-                        f.write(blob)
-                        logger.info(f"Cached {image_name} in {self.cache_folder}")
+                with open(full_image_file_path, "wb") as f:
+                    f.write(blob)
+                    logger.info(f"Cached {image_name} in {self.cache_folder}")
 
             # Return actual image in the local folder
             return send_from_directory(self.cache_folder, image_name)

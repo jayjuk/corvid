@@ -284,14 +284,14 @@ class World:
         # TODO: review whether we can avoid using a temporary file like this
         if self.image_ai_manager:
             try:
-                image_file_name = self.image_ai_manager.create_image(
+                image_name, image_data = self.image_ai_manager.create_image(
                     new_room_name, room_description
                 )
-                if image_file_name:
-                    self.storage_manager.save_image(image_file_name)
+                if image_data:
+                    self.storage_manager.save_image(image_name, image_data)
                 else:
                     logger.error(
-                        "Error creating/saving image - returned no file name, this room will be created without one"
+                        "Error creating/saving image - returned no data, this room will be created without one"
                     )
             except Exception as e:
                 logger.error(
@@ -305,7 +305,7 @@ class World:
             "name": new_room_name,
             "grid_reference": new_grid_reference,
             "description": room_description,
-            "image": image_file_name,
+            "image": image_name,
             "creator": creator_name,
             "exits": {self.get_opposite_direction(direction): current_room},
         }

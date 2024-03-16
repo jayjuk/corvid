@@ -296,16 +296,10 @@ class AIManager:
 
     # Image creator
     def create_image(self, image_name, description):
-        """Create an image from description and return the file name"""
-        # make file name from image name, replacing spaces with underscores and lowercasing
+
+        # Common filename definition, kept with the image generation to ensure consistency of format.
         file_name = image_name.lower().replace(" ", "_").replace("'", "") + ".png"
-        # TODO: consider whether current directory is right, and whether we can move away from file, passing around blob in memory instead
-        if self.do_not_generate_images or os.path.exists(file_name):
-            # Let the client handle if a file is missing.
-            # Although room name is unique, during testing a room may have been created before
-            # And so the image may already exist
-            return file_name
-        # Create image
+        """Create an image from description and return the data"""
         if self.get_model_api() == "GPT":
             response = self.model_client.images.generate(
                 prompt=description, n=1, size="512x512"
@@ -313,8 +307,12 @@ class AIManager:
             image = response.data[0]
             url = image.url
             # Download URL and save to file
-            urllib.request.urlretrieve(url, file_name)
-            logger.info(f"Generated {file_name}")
+            # urllib.request.urlretrieve(url, file_name)
+            # logger.info(f"Generated {file_name}")
+            from urllib.request import urlopen
+
+            response = urlopen(url)
+            return file_name, response.read()  # Return binary data
         elif self.get_model_api() == "StabilityAI":
             import io
             import warnings
@@ -344,22 +342,22 @@ class AIManager:
             for resp in answers:
                 for artifact in resp.artifacts:
                     if artifact.finish_reason == generation.FILTER:
-                        warnings.warn(
+                        logger.warn(
                             "Your request activated the API's safety filters and could not be processed."
-                            "Please modify the prompt and try again."
+                            + " Please modify the prompt and try again."
                         )
                     if artifact.type == generation.ARTIFACT_IMAGE:
-                        img = Image.open(io.BytesIO(artifact.binary))
-                        img.save(
-                            file_name
-                        )  # Save our generated images with their seed number as the filename.
-            return file_name
+                        return file_name, artifact.binary
+                        # with Image.open(io.BytesIO(artifact.binary)) as img:
+                        #    img.save(
+                        #        file_name
+                        #    )  # Save our generated images with their seed number as the filename.
+            # return file_name
         else:
-            # TODO: support Stability AI and Google image generation
             self.exit(
                 "Image generation using other model APIs than OpenAI and StabilityAI not yet supported!"
             )
-            return None
+        return None, None
 
     # Graceful exit, specific to AI management cases
     def exit(self, error_message):
