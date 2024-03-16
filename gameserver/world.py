@@ -6,6 +6,7 @@ logger = setup_logger()
 import aimanager
 from storagemanager import StorageManager
 from merchant import Merchant
+from animal import Animal
 from object import Object
 import starting_objects as starting_objects
 
@@ -378,7 +379,18 @@ class World:
         the_button = Object(self, "red button", "OMG, it's The Button!", price=999)
         gambinos_stuff = [apple, banana, pear, the_button]
         Merchant(self, "Gambino", "Road", gambinos_stuff)
-        # TODO: more stuff with merchant
+        Merchant(self, "Abel", "Forgotten Pathway", [])
+        Merchant(self, "Danny", "Luminous Glade", [])
+
+        # Animals
+        Animal(
+            self,
+            "fox",
+            "North Road",
+            "A plump, healthy-looking fox with a permanent cheeky smile on its face",
+            ("Yawns", "Stretches", "Hunts down a beetle"),
+            0.5,
+        )
 
     # Static method to register entity in the world
     def register_entity(self, entity):

@@ -209,7 +209,7 @@ class GameManager:
         return None
 
     def find_object_in_merchant_inventory(self, player, object_name):
-        for merchant in self.get_merchants(player.get_current_room()):
+        for merchant in self.get_entities("merchant", player.get_current_room()):
             for merchant_object in merchant.get_inventory():
                 if (
                     object_name
@@ -445,12 +445,12 @@ class GameManager:
                     return other_entity
         return False
 
-    def get_merchants(self, room=None):
+    def get_entities(self, entity_type, room=None):
         # Merchants are entities of a certain type.
         # If a room is specified, only return merchants in that room
         merchants = []
         for entity in self.world.entities:
-            if entity.get_role() == "merchant":
+            if entity.get_role() == entity_type:
                 if room is None or entity.get_current_room() == room:
                     merchants.append(entity)
         return merchants
@@ -499,7 +499,7 @@ class GameManager:
 
     # Check if an object is in a merchant's possession
     def transact_object(self, object_name, player, action="get"):
-        merchants = self.get_merchants(player.get_current_room())
+        merchants = self.get_entities("merchant", player.get_current_room())
         if not merchants:
             return "There is no merchant here to trade with."
 
@@ -1041,8 +1041,12 @@ class GameManager:
             # Time out players who do nothing for too long.
             self.check_players_activity()
 
-            # For now, the only thing happening is broadcast of player count
+            # Broadcast player count
             # So that AI players can pause when there are no human players, saving money
             self.emit_game_data_update()
+
+            # Move animals around
+            for animal in self.get_entities("animal"):
+                animal.move_around()
 
             eventlet.sleep(60)

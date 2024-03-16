@@ -9,17 +9,21 @@ class Object:
     def __init__(
         self, world_ref, object_name, object_description, price=0, starting_room=None
     ):
-        logger.info(
-            f"Creating object {object_name}" + f" starting in {starting_room}"
-            if starting_room is not None
-            else ""
-        )
+        if starting_room is not None:
+            if starting_room in world_ref.rooms:
+                logger.info(
+                    f"Creating object {object_name}" + f" starting in {starting_room}"
+                )
+                self.room = starting_room
+            else:
+                logger.error(
+                    f"Invalid room {starting_room} specified for object {object_name}"
+                )
 
         # An object belongs to a world and has a name, a description and a location
         self.world = world_ref
         self.name = object_name
         self.description = object_description
-        self.room = starting_room
         # An object can be in the player's possession but doesn't start that way
         self.player_possession = None
         self.price = price
