@@ -3,25 +3,21 @@ from logger import setup_logger
 # Set up logger
 logger = setup_logger()
 
-from character import Character
+from entity import Entity
 
 
-# Player class
-class Merchant(Character):
+# Merchant class
+class Merchant(Entity):
     def __init__(
         self, world, merchant_name, starting_room, inventory=[], description=""
     ):
         # First check
         logger.info(f"Creating merchant {merchant_name}")
 
-        # Set up character
-        Character.__init__(
+        # Set up entity
+        Entity.__init__(
             self, world, merchant_name, "merchant", starting_room, description
         )
-
-        # Register NPC in the world
-        # TODO: consider creating a class NPC between Character and Merchant
-        world.register_npc(self)
 
         for object in inventory:
             # Add object to merchant's inventory

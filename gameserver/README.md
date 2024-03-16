@@ -12,23 +12,23 @@ Where almost all the business logic resides, especially the processing of player
 
 ### World
 
-Tracks the characters, players, objects and their state
+Tracks the entities, players, objects and their state
 
 ### Object
 
 Methods and attributes of objects in the game
 
-### Character
+### Entity
 
-A superclass which deals with state and behaviour of both non-player characters (NPCs) such as Merchants and human/AI players
+A superclass which deals with state and behaviour of both non-player characters (entities) such as Merchants and human/AI players
 
 ### Player
 
-A subclass of character which has additional attributes and behaviours only needed by active players of the game
+A subclass of entity which has additional attributes and behaviours only needed by active players of the game
 
 ### Merchant
 
-A subclass of character which has specific abilities (to buy and sell stuff)
+A subclass of entity which has specific abilities (to buy and sell stuff)
 
 ### Storage Manager
 

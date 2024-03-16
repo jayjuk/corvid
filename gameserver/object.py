@@ -39,28 +39,28 @@ class Object:
         self.world.add_object_to_room(self, room_name)
 
     # Setter for player picking up
-    def set_possession(self, character):
+    def set_possession(self, entity):
         self.room = None
         # Set the player possession to the player both ways
-        self.player_possession = character
+        self.player_possession = entity
         # Try to add the object to the player's inventory, if it fails, return an error string, no error means success
-        add_object_error = character.add_object(self)
+        add_object_error = entity.add_object(self)
         if add_object_error:
             return add_object_error
 
         # Remove from room
-        self.world.remove_object_from_room(self, character.get_current_room())
+        self.world.remove_object_from_room(self, entity.get_current_room())
         # Return empty string means it's been picked up without issue
         return ""
 
     # Remove from old player and add to new player
-    def transfer(self, old_character, new_character):
-        if new_character.can_add_object():
-            if old_character.drop_object(self):
-                return self.set_possession(new_character)
+    def transfer(self, old_entity, new_entity):
+        if new_entity.can_add_object():
+            if old_entity.drop_object(self):
+                return self.set_possession(new_entity)
             else:
-                return f"{old_character.get_name()} can't drop {self.name}."
-        return f"{new_character.get_name()} can't carry any more."
+                return f"{old_entity.get_name()} can't drop {self.name}."
+        return f"{new_entity.get_name()} can't carry any more."
 
     # Description of the object
     def get_description(self):

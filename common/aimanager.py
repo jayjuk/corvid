@@ -88,7 +88,7 @@ class AIManager:
         folder_path = "model_io"
         os.makedirs(folder_path, exist_ok=True)
         with open(
-            folder_path + os.sep + f"{self.character_name}_{filename_prefix}.tmp",
+            folder_path + os.sep + f"{self.model_name}_{filename_prefix}.tmp",
             "w",
         ) as f:
             json.dump(data, f, indent=4)

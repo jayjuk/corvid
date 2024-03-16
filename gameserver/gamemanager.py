@@ -120,11 +120,11 @@ class GameManager:
             },
             "buy": {
                 "function": self.do_buy,
-                "description": "Buy an object from a character (e.g. a Merchant) in your current location.",
+                "description": "Buy an object from an entity (e.g. a Merchant) in your current location.",
             },
             "sell": {
                 "function": self.do_sell,
-                "description": "Sell an object to a character (e.g. a Merchant) in your current location.",
+                "description": "Sell an object to an entity (e.g. a Merchant) in your current location.",
             },
             "trade": {
                 "function": self.do_trade,
@@ -252,10 +252,10 @@ class GameManager:
             return (
                 f"You look at {item.get_name(article='the')}: {item.get_description()}"
             )
-        # Check if they named a character
-        character = self.is_character(object_name)
-        if character:
-            return character.get_description()
+        # Check if they named an entity
+        entity = self.is_entity(object_name)
+        if entity:
+            return entity.get_description()
         # If you get here, can't find anything that matches that name
         return f"There is no '{object_name}' here."
 
@@ -298,16 +298,16 @@ class GameManager:
 
     def do_jump(self, player, rest_of_response):
         # Jump to location of another player named in rest_of_response
-        other_character_name = rest_of_response
+        other_entity_name = rest_of_response
         # find location of other player
-        other_character_location = self.get_player_location_by_name(
-            player.sid, other_character_name
+        other_entity_location = self.get_player_location_by_name(
+            player.sid, other_entity_name
         )
         # if found, move player there
-        if other_character_location:
-            return self.move_player(player, "jump", other_character_location)
+        if other_entity_location:
+            return self.move_player(player, "jump", other_entity_location)
         else:
-            return f"'{other_character_name}' is not a valid player name."
+            return f"'{other_entity_name}' is not a valid player name."
 
     def do_shutdown(self, player, rest_of_response):
         message = f"{player.name} has shut down the server."
@@ -435,24 +435,24 @@ class GameManager:
         )
         return f"You build {direction} and make a new location, {room_name}: {room_description}"
 
-    def is_character(self, object_name):
+    def is_entity(self, object_name):
         if object_name:
-            for other_character in self.get_other_characters():
+            for other_entity in self.get_other_entities():
                 if (
-                    str(other_character.name).lower() == str(object_name).lower()
-                    or other_character.get_role() == object_name.lower()
+                    str(other_entity.name).lower() == str(object_name).lower()
+                    or other_entity.get_role() == object_name.lower()
                 ):
-                    return other_character
+                    return other_entity
         return False
 
     def get_merchants(self, room=None):
-        # Merchants are characters of a certain type.
+        # Merchants are entities of a certain type.
         # If a room is specified, only return merchants in that room
         merchants = []
-        for npc in self.world.npcs:
-            if npc.get_role() == "merchant":
-                if room is None or npc.get_current_room() == room:
-                    merchants.append(npc)
+        for entity in self.world.entities:
+            if entity.get_role() == "merchant":
+                if room is None or entity.get_current_room() == room:
+                    merchants.append(entity)
         return merchants
 
     # Sale transaction
@@ -538,8 +538,8 @@ class GameManager:
             if not result:
                 return f"You pick up {item.get_name(article='the')}."
             return result
-        # Check if they named a character
-        elif self.is_character(object_name):
+        # Check if they named an entity
+        elif self.is_entity(object_name):
             return f"I would advise against picking up {object_name}, they will not react well!"
         # Check if the object is in the possession of a merchant
         else:
@@ -610,9 +610,9 @@ class GameManager:
         if item:
             # Can just pick it up
             return "You don't have to buy that, you can just pick it up!"
-        # Check if they named a character
-        elif self.is_character(object_name):
-            return "That character is not for sale!"
+        # Check if they named an entity
+        elif self.is_entity(object_name):
+            return "That entity is not for sale!"
         # Otherwise proceed to try to buy it
         return self.transact_object(object_name, player, "buy")
 
@@ -674,9 +674,9 @@ class GameManager:
 
     # Get location of player given a name
     def get_player_location_by_name(self, sid, player_name):
-        for other_character in self.get_other_characters(sid):
-            if str(other_character.name).lower() == str(player_name).lower():
-                return other_character.get_current_room()
+        for other_entity in self.get_other_entities(sid):
+            if str(other_entity.name).lower() == str(player_name).lower():
+                return other_entity.get_current_room()
         return None
 
     # Get number of players in the game
@@ -695,14 +695,14 @@ class GameManager:
     # Setters etc
 
     # Process player setup request from client
-    def process_player_setup(self, sid, character):
+    def process_player_setup(self, sid, entity):
         # Be defensive as this is coming from either UI or AI broker
-        if "name" not in character:
+        if "name" not in entity:
             logger.error("FATAL ERROR: Player name not specified")
             exit()
 
         # Strip out any whitespace (defensive in case of client bug)
-        player_name = character["name"].strip().title()
+        player_name = entity["name"].strip().title()
 
         # Check uniqueness here, other checks are done in the player class
         if self.is_existing_player_name(player_name):
@@ -717,7 +717,7 @@ class GameManager:
 
         # Create the player
         try:
-            player = Player(self.world, sid, player_name, character.get("role"))
+            player = Player(self.world, sid, player_name, entity.get("role"))
         except ValueError as e:
             # Issue with player creation
             return str(e)
@@ -827,12 +827,12 @@ class GameManager:
             message += f". {self.world.get_room_description(next_room, brief=True, role=player.get_role())}"
         else:
             message += f": {self.world.get_room_description(next_room, role=player.get_role())}"
-        # Check for other characters who are already where you are arriving.
-        for other_character in self.get_other_characters(player.sid):
-            if other_character.get_current_room() == next_room:
-                message += f" {other_character.get_name()} is here."
-                if other_character.get_role() == "merchant":
-                    message += " " + other_character.get_inventory_description()
+        # Check for other entities who are already where you are arriving.
+        for other_entity in self.get_other_entities(player.sid):
+            if other_entity.get_current_room() == next_room:
+                message += f" {other_entity.get_name()} is here."
+                if other_entity.get_role() == "merchant":
+                    message += " " + other_entity.get_inventory_description()
         return message
 
     # Resolve move action
@@ -879,15 +879,15 @@ class GameManager:
             return f"{direction} is not a valid direction or room name."
 
         # Check for other players you are leaving / joining
-        for other_character in self.get_other_characters(player.sid, players_only=True):
-            if other_character.get_current_room() == player.get_current_room():
+        for other_entity in self.get_other_entities(player.sid, players_only=True):
+            if other_entity.get_current_room() == player.get_current_room():
                 self.tell_player(
-                    other_character,
+                    other_entity,
                     departure_message,
                 )
-            elif other_character.get_current_room() == next_room:
+            elif other_entity.get_current_room() == next_room:
                 self.tell_player(
-                    other_character,
+                    other_entity,
                     arrival_message,
                 )
 
@@ -957,14 +957,14 @@ class GameManager:
         player.add_input_history(message)
 
     # Get other players
-    def get_other_characters(self, sid=None, players_only=False):
-        other_characters = []
+    def get_other_entities(self, sid=None, players_only=False):
+        other_entities = []
         for other_game_sid, other_game in self.players.items():
             if sid is None or sid != other_game_sid:
-                other_characters.append(other_game)
+                other_entities.append(other_game)
         if not players_only:
-            other_characters.extend(self.world.npcs)
-        return other_characters
+            other_entities.extend(self.world.entities)
+        return other_entities
 
     # Emit game data update to all players
     def emit_game_data_update(self):

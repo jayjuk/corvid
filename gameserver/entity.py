@@ -4,15 +4,15 @@ from logger import setup_logger
 logger = setup_logger()
 
 
-class Character:
-    # World reference applies to all characters
+class Entity:
+    # World reference applies to all entities
     world = None
 
     def __init__(
         self,
         world,
-        character_name,
-        character_role,
+        entity_name,
+        entity_role,
         starting_room=None,
         description=None,
     ):
@@ -20,8 +20,8 @@ class Character:
         if self.__class__.world is None and world is not None:
             self.__class__.world = world
 
-        self.name = character_name
-        self.role = character_role
+        self.name = entity_name
+        self.role = entity_role
         self.is_player = False
         self.description = description
 
@@ -30,6 +30,9 @@ class Character:
 
         # Inventory
         self.inventory = []
+
+        # Register this entity in the world it belongs in
+        world.register_entity(self)
 
     # Setter for player's location change
     def move_to_room(self, next_room):
@@ -43,7 +46,7 @@ class Character:
         return self.current_room
 
     def can_add_object(self):
-        # Default behaviour for NPCs is to not allow them to pick up objects
+        # Default behaviour for entities is to not allow them to pick up objects
         return False
 
     # Setter for player picking up an object
@@ -78,7 +81,7 @@ class Character:
         return self.inventory
 
     def get_inventory_description(self):
-        # Superclass / default implementation is blank as only certain characters will have an inventory
+        # Superclass / default implementation is blank as only certain entities will have an inventory
         return ""
 
     def get_is_player(self):

@@ -19,7 +19,7 @@ class World:
     }
     grid_references = {}
     room_objects = {}
-    npcs = []
+    entities = []
     done_path = {}
     starting_room = "Road"
 
@@ -380,9 +380,9 @@ class World:
         Merchant(self, "Gambino", "Road", gambinos_stuff)
         # TODO: more stuff with merchant
 
-    # Static method to register NPC in the world
-    def register_npc(self, npc):
-        self.npcs.append(npc)
+    # Static method to register entity in the world
+    def register_entity(self, entity):
+        self.entities.append(entity)
 
     def get_currency(self, amount=None, short=False, plural=False):
         if amount is None:

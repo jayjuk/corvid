@@ -5,11 +5,11 @@ logger = setup_logger()
 
 import os
 import time
-from character import Character
+from entity import Entity
 
 
 # Player class
-class Player(Character):
+class Player(Entity):
     def __init__(self, world, sid, player_name, player_role="player"):
         # First check if player name is valid
         if not (
@@ -26,13 +26,13 @@ class Player(Character):
 
         logger.info(f"Creating player {player_name}, sid {sid}")
 
-        # Set up character
+        # Set up player
         # TODO: Remove this, it's for simulating AI builders
         if player_name == "Doug":
             player_role = "builder"
 
         # Call superclass constructor
-        Character.__init__(self, world, player_name, player_role)
+        Entity.__init__(self, world, player_name, player_role)
 
         # Set flag to indicate this is a player
         self.is_player = True
