@@ -281,7 +281,6 @@ class World:
         logger.info(f"Adding room {new_room_name} to the {direction} of {current_room}")
 
         # Try to create the image and save it
-        # TODO: review whether we can avoid using a temporary file like this
         if self.image_ai_manager:
             try:
                 image_name, image_data = self.image_ai_manager.create_image(
