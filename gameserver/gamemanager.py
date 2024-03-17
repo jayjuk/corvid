@@ -198,8 +198,8 @@ class GameManager:
             if rest_of_response[0:4] == "the ":
                 rest_of_response = rest_of_response[4:]
             if rest_of_response == "":
-                return "Look at what?"
-        return ""
+                return rest_of_response, "Look at what?"
+        return rest_of_response, ""
 
     def find_object_in_player_inventory(self, player, object_name):
         # Try to find the object in the player's inventory
@@ -235,7 +235,7 @@ class GameManager:
             return message
 
         # They are looking at something
-        outcome = self.remove_at_the(rest_of_response)
+        rest_of_response, outcome = self.remove_at_the(rest_of_response)
         if outcome:
             return outcome
 
@@ -773,6 +773,7 @@ class GameManager:
     # Translate player input and try to process it again
     def translate_and_process(self, player, player_input):
         # Try to translate the user input into a valid command using AI :-)
+        self.tell_player(player, "I'm trying to guess what you meant by that...")
         ai_translation = self.ai_manager.submit_request(
             "Help me to translate my user's input into a valid adventure game command.\n"
             + "Valid commands:"
@@ -784,10 +785,11 @@ class GameManager:
         logger.info(f"AI translation: {ai_translation}")
         if ai_translation:
             # Try to process the AI translation as a command, but only try this once
+            self.tell_player(player, f"Perhaps you meant '{ai_translation}'?")
             player_response = self.process_player_input(
                 player, ai_translation, translated=True
             )
-            logger.info(player_response)
+            return player_response
 
     # Process player input
     def process_player_input(self, player, player_input, translated=False):
