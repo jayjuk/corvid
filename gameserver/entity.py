@@ -23,6 +23,7 @@ class Entity:
         self.name = entity_name
         self.role = entity_role
         self.is_player = False
+        self.sid = None  # Overridden for players
         self.description = description
 
         # Default starting location
@@ -38,8 +39,6 @@ class Entity:
     def move_to_room(self, next_room):
         # Set new room
         self.current_room = next_room
-        # Flag this room as seen
-        self.seen_rooms[self.current_room] = True
 
     # Getter for player's current location
     def get_current_room(self):
@@ -87,7 +86,20 @@ class Entity:
     def get_is_player(self):
         return self.is_player
 
-    def get_name(self):
+    def get_name(self, article_type=None):
+        if article_type == "definite":
+            if self.get_role() == "animal":
+                return f"The {self.name}"
+            if self.get_role() == "merchant":
+                return "The merchant"
+        if article_type == "indefinite":
+            if self.get_role() == "animal":
+                return f"a {self.name}"
+            if self.get_role() == "merchant":
+                return "a merchant"
+            return "a player"
+        if self.get_role() == "animal":
+            return f"a {self.name}"
         return (
             f"{self.name}{' The ' + str(self.role).capitalize() if self.role else ''}"
         )

@@ -105,3 +105,10 @@ class Player(Entity):
         if not self.can_add_object():
             return "You can't carry any more items."
         self.inventory.append(object)
+
+    # Override for player's location change
+    def move_to_room(self, next_room):
+        # Superclass behaviour
+        super().move_to_room(next_room)
+        # Also flag this room as seen
+        self.seen_rooms[self.current_room] = True

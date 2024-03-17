@@ -166,7 +166,7 @@ class World:
                     world_map += "  " + exit + ": " + rooms[room]["exits"][exit] + "\n"
             return world_map
 
-    def get_room_exits(self, room):
+    def get_room_exits_description(self, room):
         exits = " Available exits: "
         for exit in self.rooms[room]["exits"]:
             exits += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
@@ -213,7 +213,7 @@ class World:
             description = "{" + self.rooms[room]["description"] + "\n" + "}"
 
         if show_exits:
-            description += self.get_room_exits(room)
+            description += self.get_room_exits_description(room)
 
         # Only show build options to builders
         if role == "builder":
@@ -387,8 +387,16 @@ class World:
             "fox",
             "North Road",
             "A plump, healthy-looking fox with a permanent cheeky smile on its face",
-            ("Yawns", "Stretches", "Hunts down a beetle"),
-            0.5,
+            (
+                "yawns",
+                "stretches",
+                "hunts down a beetle",
+                "licks its paw",
+                "naps",
+                "sneezes",
+                "wags its tail",
+            ),
+            0.3,
         )
 
     # Static method to register entity in the world

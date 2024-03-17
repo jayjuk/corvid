@@ -16,7 +16,7 @@ class Animal(Entity):
         starting_room,
         description="",
         gestures=None,
-        move_chance=0,  # 0 to 1
+        action_chance=0,  # 0 to 1
     ):
         # Note that there can be many instances of the same named animal
 
@@ -25,19 +25,18 @@ class Animal(Entity):
         # Set up entity.
         Entity.__init__(self, world, animal_name, "animal", starting_room, description)
 
-        self.move_chance = move_chance
+        self.action_chance = action_chance
         self.gestures = gestures or []
 
     # Future animal-specific behaviours and attributes coming soon!
-    def make_gesture(self):
-        gesture = random.choice(self.gestures)
-        return f"The {self.name} {gesture}"
+    def maybe_gesture(self):
+        if random.random() < self.action_chance:
+            gesture = random.choice(self.gestures)
+            return f"The {self.name} {gesture}."
 
-    def move_around(self):
-        if random.random() < self.move_chance:
-            self.move_to_room(
-                random.choice(self.world.get_room_exits(self.current_room))
-            )
-
-    def get_name(self):
-        return "A " + self.name
+    def maybe_pick_direction_to_move(self):
+        if random.random() < self.action_chance:
+            possible_exits = list(self.world.rooms[self.current_room]["exits"].keys())
+            direction = random.choice(possible_exits)
+            return direction
+        return ""

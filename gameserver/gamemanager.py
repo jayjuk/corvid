@@ -17,6 +17,7 @@ import eventlet
 import time
 import sys
 from player import Player
+from animal import Animal
 from world import World
 from aimanager import AIManager
 
@@ -169,7 +170,7 @@ class GameManager:
     # Even if they're not needed. This is to keep the command processing simple.
 
     def do_go(self, player, rest_of_response):
-        return self.move_player(player, rest_of_response, "")
+        return self.move_entity(player, rest_of_response, "")
 
     def do_push(self, player, rest_of_response):
         object_name = self.get_object_name_from_response(rest_of_response)
@@ -231,7 +232,9 @@ class GameManager:
             )
             # Add buildable directions if player is a builder
             if player.role == "builder":
-                message += "\n" + self.world.get_room_exits(player.get_current_room())
+                message += "\n" + self.world.get_room_exits_description(
+                    player.get_current_room()
+                )
             return message
 
         # They are looking at something
@@ -305,7 +308,7 @@ class GameManager:
         )
         # if found, move player there
         if other_entity_location:
-            return self.move_player(player, "jump", other_entity_location)
+            return self.move_entity(player, "jump", other_entity_location)
         else:
             return f"'{other_entity_name}' is not a valid player name."
 
@@ -738,7 +741,7 @@ class GameManager:
         self.tell_player(player, instructions, type="instructions")
 
         self.tell_player(
-            player, self.move_player(player, "join", player.get_current_room())
+            player, self.move_entity(player, "join", player.get_current_room())
         )
 
         self.emit_game_data_update()
@@ -810,7 +813,7 @@ class GameManager:
             return self.command_functions[command]["function"](player, rest_of_response)
         # Move the player if the command is a direction
         elif command in self.directions:
-            return self.move_player(player, command, rest_of_response)
+            return self.move_entity(player, command, rest_of_response)
         else:
             # If the command is not recognised, try to translate it using AI (unless this is already a translation)
             if not translated:
@@ -833,7 +836,7 @@ class GameManager:
         logger.info(f"Checking for other entities than {player.sid}")
         for other_entity in self.get_other_entities(player.sid):
             if other_entity.get_current_room() == next_room:
-                message += f" {other_entity.get_name()} is here."
+                message += f" {other_entity.get_name().capitalize()} is here."
                 if other_entity.get_role() == "merchant":
                     message += " " + other_entity.get_inventory_description()
         return message
@@ -847,43 +850,49 @@ class GameManager:
         return f"head {direction} to"
 
     # Handle a player's move
-    def move_player(self, player, direction, next_room=None):
+    def move_entity(self, entity, direction, next_room=None):
         # Set new room
-        previous_room = player.get_current_room()
+        previous_room = entity.get_current_room()
 
         # Resolve arrival and departure messages
         if direction == "jump":
-            departure_message = f"{player.name} has disappeared in a puff of smoke!"
-            arrival_message = f"{player.name} has materialised as if by magic!"
+            departure_message = f"{entity.name} has disappeared in a puff of smoke!"
+            arrival_message = f"{entity.name} has materialised as if by magic!"
         elif direction == "join":
             departure_message = ""
             arrival_message = ""  # Covered elsewhere
-        elif direction in self.world.rooms[player.get_current_room()]["exits"]:
-            next_room = self.world.rooms[player.get_current_room()]["exits"][direction]
-
-            departure_message = f"{player.name} leaves, heading {direction} to the {str(next_room).lower()}."
-            arrival_message = f"{player.name} arrives from the {previous_room.lower()}."
+        elif direction in self.world.rooms[entity.get_current_room()]["exits"]:
+            next_room = self.world.rooms[entity.get_current_room()]["exits"][direction]
+            their_name = entity.name
+            # Describe animals with 'the' when they leave, 'a' when they arrive
+            if entity.get_role() == "animal":
+                their_name = entity.get_name(article_type="definite").capitalize()
+            departure_message = f"{their_name} leaves, heading {direction} to the {str(next_room).lower()}."
+            their_name = entity.name
+            if entity.get_role() == "animal":
+                their_name = entity.get_name(article_type="indefinite").capitalize()
+            arrival_message = f"{their_name} arrives from the {previous_room.lower()}."
         elif direction in self.directions:
             # Valid direction but no exit
-            return f"You can't go {direction}." + self.world.get_room_exits(
-                player.get_current_room()
+            return f"You can't go {direction}." + self.world.get_room_exits_description(
+                entity.get_current_room()
             )
         else:
             # Not a valid direction
 
             # First check in case a room is mentioned
             # Loop through the exits to see if any of them match the room name
-            for exit_dir, exit_room in self.world.rooms[player.get_current_room()][
+            for exit_dir, exit_room in self.world.rooms[entity.get_current_room()][
                 "exits"
             ].items():
                 if exit_room.lower() in direction.lower():
-                    return self.move_player(player, exit_dir)
+                    return self.move_entity(entity, exit_dir)
 
             return f"{direction} is not a valid direction or room name."
 
         # Check for other players you are leaving / joining
-        for other_entity in self.get_other_entities(player.sid, players_only=True):
-            if other_entity.get_current_room() == player.get_current_room():
+        for other_entity in self.get_other_entities(entity.sid, players_only=True):
+            if other_entity.get_current_room() == entity.get_current_room():
                 self.tell_player(
                     other_entity,
                     departure_message,
@@ -894,14 +903,16 @@ class GameManager:
                     arrival_message,
                 )
 
-        message = self.build_move_outcome_message(
-            player, self.resolve_move_action(direction), next_room
-        )
+        message = ""
+        if entity.is_player:
+            message = self.build_move_outcome_message(
+                entity, self.resolve_move_action(direction), next_room
+            )
+            # Emit update to player
+            self.emit_player_room_update(entity, next_room)
 
         # Set new room
-        player.move_to_room(next_room)
-        # Emit update to player
-        self.emit_player_room_update(player, next_room)
+        entity.move_to_room(next_room)
 
         return message
 
@@ -929,7 +940,7 @@ class GameManager:
                     show_objects=False,
                     show_exits=False,
                 ),
-                "exits": self.world.get_room_exits(room),
+                "exits": self.world.get_room_exits_description(room),
             },
             player.sid,
         )
@@ -1032,18 +1043,22 @@ class GameManager:
     def activate_background_loop(self):
         if not self.background_loop_active:
             logger.info("Activating background loop.")
-            self.background_loop_active == True
+            self.background_loop_active = True
+            print("Spawning background loop")
             eventlet.spawn(self.game_background_loop)
 
     # Cause the game background loop to exit
     def deactivate_background_loop(self):
         logger.info("Deactivating background loop.")
-        self.background_loop_active == False
+        self.background_loop_active = False
 
     # This loop runs in the background to do things like broadcast player count
     # It only runs when there are players in the game
     def game_background_loop(self):
         while self.background_loop_active:
+            # Run the loop periodically
+            eventlet.sleep(30)
+
             # Time out players who do nothing for too long.
             self.check_players_activity()
 
@@ -1053,6 +1068,21 @@ class GameManager:
 
             # Move animals around
             for animal in self.get_entities("animal"):
-                animal.move_around()
-
-            eventlet.sleep(60)
+                direction = animal.maybe_pick_direction_to_move()
+                if direction:
+                    self.move_entity(animal, direction)
+                else:
+                    gesture_description = animal.maybe_gesture()
+                    if gesture_description:
+                        # Check for other players who will witness the gesture
+                        for other_entity in self.get_other_entities(
+                            None, players_only=True
+                        ):
+                            if (
+                                other_entity.get_current_room()
+                                == animal.get_current_room()
+                            ):
+                                self.tell_player(
+                                    other_entity,
+                                    gesture_description,
+                                )
