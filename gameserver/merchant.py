@@ -25,10 +25,14 @@ class Merchant(Entity):
 
     # Get inventory description
     def get_inventory_description(self):
-        description = "They have the following available for sale: "
+        description = ""
         for object in self.get_inventory():
             description += f"{object.get_name('a')} ({self.world.get_currency(object.get_price(), short=True)}), "
-        return description[:-2] + "."
+        if description:
+            return (
+                "They have the following available for sale: " + description[:-2] + "."
+            )
+        return "They do not currently have anything to sell."
 
     # Overridden method to get description of merchant including their inventory.
     def get_description(self):

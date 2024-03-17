@@ -827,7 +827,8 @@ class GameManager:
             message += f". {self.world.get_room_description(next_room, brief=True, role=player.get_role())}"
         else:
             message += f": {self.world.get_room_description(next_room, role=player.get_role())}"
-        # Check for other entities who are already where you are arriving.
+            # Check for other entities who are already where you are arriving.
+        logger.info(f"Checking for other entities than {player.sid}")
         for other_entity in self.get_other_entities(player.sid):
             if other_entity.get_current_room() == next_room:
                 message += f" {other_entity.get_name()} is here."
@@ -956,14 +957,17 @@ class GameManager:
         self.sio.emit(type, message, player.sid)
         player.add_input_history(message)
 
-    # Get other players
+    # Get other entities
     def get_other_entities(self, sid=None, players_only=False):
         other_entities = []
-        for other_game_sid, other_game in self.players.items():
-            if sid is None or sid != other_game_sid:
-                other_entities.append(other_game)
+        for other_player_sid, other_player in self.players.items():
+            if sid is None or sid != other_player_sid:
+                other_entities.append(other_player)
         if not players_only:
-            other_entities.extend(self.world.entities)
+            for entity in self.world.entities:
+                # Check if not player
+                if not isinstance(entity, Player):
+                    other_entities.append(entity)
         return other_entities
 
     # Emit game data update to all players
