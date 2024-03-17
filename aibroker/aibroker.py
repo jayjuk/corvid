@@ -140,10 +140,10 @@ class AIBroker:
                 # If response was to exit, exit here (after sending the exit message to the game server)
                 if response == "exit":
                     logger.info("AI has exited the game.")
-                    sys.exit(1)
+                    sys.exit()
             else:
                 logger.info("ERROR: AI returned empty response")
-                sys.exit(1)
+                sys.exit()
 
 
 # Connect to SocketIO server, trying again if it fails
@@ -164,7 +164,7 @@ def connect_to_server(hostname):
 
     if not connected:
         logger.info("Could not connect to server. Exiting.")
-        sys.exit(1)
+        sys.exit()
 
 
 @sio.on("game_update")
@@ -195,7 +195,7 @@ def catch_all(data):
     ai_broker.time_to_die = True
     sio.disconnect()
     sio.eio.disconnect()
-    sys.exit(1)
+    sys.exit()
 
 
 # This might happen if the AI quits!
@@ -203,7 +203,7 @@ def catch_all(data):
 def catch_all(data):
     logger.info(f"Logout event received: {data} did AI quit?")
     sio.disconnect()
-    sys.exit(1)
+    sys.exit()
 
 
 @sio.on("room_update")
@@ -241,7 +241,7 @@ def connect():
 def connect_error(data):
     logger.error("Connection failure!")
     logger.info(data)
-    sys.exit(1)
+    sys.exit()
 
 
 @sio.event
@@ -261,7 +261,7 @@ if __name__ == "__main__":
         logger.info(
             f"ERROR: AI_MODE is set to {ai_mode} but must be either 'player' or 'observer'. Exiting."
         )
-        sys.exit(1)
+        sys.exit()
 
     # If AI_COUNT is not set, sleep forever (if you exit, the container will restart)
     if ai_count in ("""${AI_COUNT}""", "0"):
@@ -274,7 +274,7 @@ if __name__ == "__main__":
             logger.info(
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting."
             )
-            sys.exit(1)
+            sys.exit()
         ai_broker = AIBroker(mode=ai_mode)
 
     # Change log file name to include AI name

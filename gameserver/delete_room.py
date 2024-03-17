@@ -11,4 +11,4 @@ if room_name:
     storage_manager.delete_room_locally(room_name)
 else:
     print("No room name provided (arg 1 in double quotes)")
-    sys.exit(1)
+    sys.exit()

@@ -189,7 +189,7 @@ class GameManager:
                 eventlet.sleep(1)
                 self.sio.emit("shutdown", message)
                 # TODO: restart without actually restarting the process
-                sys.exit(1)
+                sys.exit()
 
     def remove_at_the(self, rest_of_response):
         # Strip off at and the
@@ -319,7 +319,7 @@ class GameManager:
         # TODO: make this restart not die?
         self.sio.emit("shutdown", message)
         eventlet.sleep(1)
-        sys.exit(1)
+        sys.exit()
 
     def do_quit(self, player, rest_of_response):
         self.remove_player(player.sid, "You have left the game.")
@@ -698,8 +698,8 @@ class GameManager:
     def process_player_setup(self, sid, entity):
         # Be defensive as this is coming from either UI or AI broker
         if "name" not in entity:
-            logger.error("FATAL ERROR: Player name not specified")
-            exit()
+            logger.error("FATAL: Player name not specified")
+            sys.exit()
 
         # Strip out any whitespace (defensive in case of client bug)
         player_name = entity["name"].strip().title()

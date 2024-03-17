@@ -367,4 +367,4 @@ class AIManager:
             for item in self.chat_history:
                 for key, value in item.items():
                     f.write(f"{key}: {value}\n")
-        sys.exit(1)
+        sys.exit()

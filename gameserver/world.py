@@ -367,7 +367,6 @@ class World:
                 room_object_map[starting_room].append(o)
             else:
                 room_object_map[starting_room] = [o]
-
         return room_object_map
 
     def load_merchants(self):

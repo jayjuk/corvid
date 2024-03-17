@@ -3,6 +3,8 @@ from logger import setup_logger
 # Set up logger
 logger = setup_logger()
 
+import sys
+
 
 # Player class
 class Object:
@@ -19,6 +21,7 @@ class Object:
                 logger.error(
                     f"Invalid room {starting_room} specified for object {object_name}"
                 )
+                sys.exit()
 
         # An object belongs to a world and has a name, a description and a location
         self.world = world_ref
@@ -36,7 +39,7 @@ class Object:
     def set_room(self, room_name):
         if room_name is None:
             logger.error(f"{self.name} is being dropped in a non-existent room")
-            exit()
+            sys.exit()
         logger.info(f"{self.name} is being dropped in {room_name}")
         self.room = room_name
         self.player_possession = None
