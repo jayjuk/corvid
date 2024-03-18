@@ -13,6 +13,7 @@ jobs:
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
       - run: cd gameserver; python -m unittest tests.unittest_gameserver
+      - run: pip install -r imageserver/requirements.txt
       - run: cd imageserver; python -m unittest tests.unittest_imageserver
   build:
     needs: test
