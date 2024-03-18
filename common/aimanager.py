@@ -342,7 +342,7 @@ class AIManager:
             for resp in answers:
                 for artifact in resp.artifacts:
                     if artifact.finish_reason == generation.FILTER:
-                        logger.warn(
+                        logger.warning(
                             "Your request activated the API's safety filters and could not be processed."
                             + " Please modify the prompt and try again."
                         )

@@ -12,7 +12,7 @@ jobs:
       - run: pip install -r gameserver/requirements.txt
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
-      - run: cd gameserver; python -m unittest tests.test_gameserver
+      - run: cd gameserver; python -m unittest tests.unittest_gameserver
   build:
     needs: test
     runs-on: ubuntu-latest

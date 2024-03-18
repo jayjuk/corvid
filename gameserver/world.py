@@ -46,7 +46,7 @@ class World:
                 model_name="stable-diffusion-xl-1024-v1-0",  # stable-diffusion-v1-6 or gpt-3.5-turbo
             )
         else:
-            logger.warn("AI and/or cloud image storage not enabled.")
+            logger.warning("AI and/or cloud image storage not enabled.")
             self.image_ai_manager = None
 
     # Get the objective of the game
@@ -298,7 +298,7 @@ class World:
                     f"Error creating/saving image ({e}), this room will be created without one"
                 )
         else:
-            logger.warn("Image generation not enabled.")
+            logger.warning("Image generation not enabled.")
 
         # Set up new room
         self.rooms[new_room_name] = {

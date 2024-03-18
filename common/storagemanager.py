@@ -38,14 +38,14 @@ class StorageManager:
             self.image_container_name = None
 
         if not self.table_service_client and not image_only:
-            logger.warn(
+            logger.warning(
                 "Could not get Azure table service client, data storage will be local"
             )
             # Local setup
             self.setup_local_sqlite()
 
         if not self.blob_service_client:
-            logger.warn(
+            logger.warning(
                 "Could not get Azure image service client, images will be disabled"
             )
 
@@ -66,7 +66,7 @@ class StorageManager:
     # Utility to check env variable is set
     def check_env_var(self, var_name):
         if not environ.get(var_name):
-            logger.warn(f"{var_name} not set.")
+            logger.warning(f"{var_name} not set.")
         return environ.get(var_name, "")
 
     # Return Azure credential
@@ -223,7 +223,7 @@ class StorageManager:
             except Exception as e:
                 logger.error(f"Error uploading image: {e}")
         else:
-            logger.warn(
+            logger.warning(
                 f"Not uploading image '{image_name}' to cloud as storage not enabled."
             )
 
@@ -270,7 +270,7 @@ class StorageManager:
             del room_only["exits"]
             rooms_client.create_entity(entity=room_only)
         else:
-            logger.warn(f"Room {new_room['name']} already stored")
+            logger.warning(f"Room {new_room['name']} already stored")
 
         exits_client = self.table_service_client.create_table_if_not_exists("exits")
         # Store exits in Azure
@@ -288,7 +288,7 @@ class StorageManager:
                 logger.info(f"Storing {exit_dict['RowKey']}")
                 exits_client.create_entity(entity=exit_dict)
             else:
-                logger.warn(f"Exit {exit_dict['RowKey']} already stored")
+                logger.warning(f"Exit {exit_dict['RowKey']} already stored")
 
         # Also save the new exit of the changed room
         exit_dict = {
@@ -302,7 +302,7 @@ class StorageManager:
             logger.info(f"Storing {exit_dict['RowKey']}")
             exits_client.create_entity(entity=exit_dict)
         else:
-            logger.warn(f"Exit {exit_dict['RowKey']} already stored")
+            logger.warning(f"Exit {exit_dict['RowKey']} already stored")
 
     # Utility function to delete room from cloud (not used in game)
     def delete_room_on_cloud(self, room_name):
@@ -317,7 +317,7 @@ class StorageManager:
                 logger.info(f"Deleting {exit_name}")
                 exits_client.delete_entity(partition_key="jaysgame", row_key=exit_name)
             else:
-                logger.warn(f"Exit {exit_name} not found")
+                logger.warning(f"Exit {exit_name} not found")
 
         # Also delete where direction is this room
         for entity in exits_client.query_entities(f"destination eq '{room_name}'"):
@@ -332,7 +332,7 @@ class StorageManager:
             logger.info(f"Deleting {room_name}")
             rooms_client.delete_entity(partition_key="jaysgame", row_key=room_name)
         else:
-            logger.warn(f"Room {room_name} not found")
+            logger.warning(f"Room {room_name} not found")
 
     # Store the rooms from the dict format in the database
     def store_rooms(self, rooms, new_room_name, changed_room, new_exit_direction):
@@ -379,7 +379,7 @@ class StorageManager:
                     ]
                 return rooms
             else:
-                logger.warn("No exits found in cloud")
+                logger.warning("No exits found in cloud")
         return None
 
     def get_rooms_from_local_db(self):
@@ -417,7 +417,7 @@ class StorageManager:
             rooms = self.get_rooms_from_cloud()
             if rooms:
                 return rooms
-            logger.warn("No rooms found in cloud")
+            logger.warning("No rooms found in cloud")
         # Fall back to local db
         logger.info("Sourcing rooms from local DB")
         return self.get_rooms_from_local_db()
