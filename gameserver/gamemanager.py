@@ -57,6 +57,7 @@ class GameManager:
             "w": "west",
             # "exit": "quit", #AI tries exit to leave a room :-(
             "pick": "get",
+            "take": "get",
             "head": "go",
             "walk": "go",
             "run": "go",

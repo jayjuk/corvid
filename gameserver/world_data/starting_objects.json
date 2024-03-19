@@ -1,18 +1,18 @@
 [
   {
-    "name": "rock",
-    "description": "This is an ordinary rock.",
+    "name": "Flimsy Branch",
+    "description": "This is a very flimsy branch.",
     "price": 0,
     "starting_room": "Road"
   },
   {
-    "name": "stone",
+    "name": "Little Stone",
     "description": "This is a fairly normal stone.",
     "price": 1,
     "starting_room": "North Road"
   },
   {
-    "name": "pebble",
+    "name": "Tiny Pebble",
     "description": "This is a little shiny pebble.",
     "price": 100,
     "starting_room": "Norther Road"
@@ -204,7 +204,7 @@
     "starting_room": "Factory"
   },
   {
-    "name": "Ice Crystal",
+    "name": "Harmless Crystal",
     "description": "A beautifully formed crystal, forever frozen.",
     "price": 20,
     "starting_room": "Frozen Moorland"

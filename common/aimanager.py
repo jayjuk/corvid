@@ -1,3 +1,4 @@
+import traceback
 import os
 import json
 import time
@@ -219,9 +220,23 @@ class AIManager:
             self.first_request = False
             # this client manages history, it just takes a string as input
             request = self.system_message + "\n" + request
+        else:
+            import pprint
 
-        model_response = self.gemini_chat.send_message(request)
-        model_response = model_response.text.strip("*").strip()
+            pprint.pprint(self.gemini_chat._history)
+        model_response = self.gemini_chat.send_message(request, stream=True)
+
+        r = ""
+        if model_response:
+            for chunk in model_response:
+                print("*", chunk)
+                if chunk.candidates:
+                    for candidate in chunk.candidates:
+                        print("**", candidate)
+                        for part in candidate.content.parts:
+                            r += part.text + "\n"
+
+        model_response = r.strip("*").strip()
         # If the response contains newline(s) followed by some info in parentheses, strip all this out
         if "\n(" in model_response and model_response.endswith(")"):
             logger.info(
@@ -267,18 +282,18 @@ class AIManager:
                 else:
                     self.exit(f"Unsupported model type: {self.model_name}")
             except Exception as e:
+                traceback.print_exc()
+                logger.info(f"Error from model: {str(e)}")
                 if (
                     "server is overloaded" in str(e)
                     or "The response was blocked." in str(e)
                 ) and try_count < max_tries:
-                    logger.info(f"Error from model: {str(e)}")
                     sleep_time = try_count * 5
                     logger.info(
                         f"Retrying in {sleep_time} seconds... (attempt {try_count+1}/{max_tries})"
                     )
                     time.sleep(sleep_time)
                 else:
-                    logger.info(f"Error from model: {str(e)}")
                     return ""
 
         if model_response:

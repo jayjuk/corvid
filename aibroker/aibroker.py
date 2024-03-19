@@ -75,7 +75,7 @@ class AIBroker:
                 + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions and north/south of the Road (don't modify existing houses)\n"
             )
         else:
-            role_specific_instructions = "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
+            role_specific_instructions = "Prioritise finding objects (you can carry up to five in inventory), selling them to merchants, and then buying the red button from Gambino, so you win the game! do not talk to anyone. use the jump command when your inventory is full e.g. jump Gambino, and then type sell [thing]. use inventory command to see your inventory. Good luck."  # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
 
         return self.game_instructions + role_specific_instructions
 
@@ -93,7 +93,10 @@ class AIBroker:
         while not ai_name or " " in ai_name:
             # Keep trying til they get the name right
             ai_name = self.ai_manager.submit_request(request).strip(".")
-            logger.info(f"AI chose the name {ai_name}.")
+            if ai_name:
+                logger.info(f"AI chose the name {ai_name}.")
+            else:
+                eventlet.sleep(3)
         return ai_name
 
     def submit_input(self):
