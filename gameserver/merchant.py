@@ -8,16 +8,12 @@ from entity import Entity
 
 # Merchant class
 class Merchant(Entity):
-    def __init__(
-        self, world, merchant_name, starting_room, inventory=[], description=""
-    ):
+    def __init__(self, world, name, starting_room, inventory=[], description=""):
         # First check
-        logger.info(f"Creating merchant {merchant_name}")
+        logger.info(f"Creating merchant {name}")
 
         # Set up entity
-        Entity.__init__(
-            self, world, merchant_name, "merchant", starting_room, description
-        )
+        Entity.__init__(self, world, name, "merchant", starting_room, description)
 
         for object in inventory:
             # Add object to merchant's inventory

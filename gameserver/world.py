@@ -359,37 +359,40 @@ class World:
     def load_room_objects(self):
         self.room_objects = {}
         with open(path.join("world_data", "starting_objects.json"), "r") as f:
-            for object_name, object_description, price, starting_room in json.load(f):
+            for this_object in json.load(f):
                 # Populate the room_object_map with object versions of the objects
-                o = Object(self, object_name, object_description, price, starting_room)
-                if starting_room in self.room_objects:
-                    self.room_objects[starting_room].append(o)
-                else:
-                    self.room_objects[starting_room] = [o]
-
-    def load_objects(self, objects_json):
-        objects = []
-        for object_json in objects_json:
-            objects.append(
-                Object(
+                o = Object(
                     self,
-                    object_json["name"],
-                    object_json["description"],
-                    object_json["price"],
+                    this_object["name"],
+                    this_object["description"],
+                    this_object["price"],
+                    this_object["starting_room"],
                 )
-            )
-        return objects
+                if this_object["starting_room"] in self.room_objects:
+                    self.room_objects[this_object["starting_room"]].append(o)
+                else:
+                    self.room_objects[this_object["starting_room"]] = [o]
 
     def load_entities(self):
         with open(path.join("world_data", "starting_entities.json"), "r") as f:
             for entity in json.load(f):
                 if entity["type"] == "merchant":
+                    merchant_objects = []
+                    for object_json in entity.get("wares", []):
+                        merchant_objects.append(
+                            Object(
+                                self,
+                                object_json["name"],
+                                object_json["description"],
+                                object_json["price"],
+                            )
+                        )
                     Merchant(
                         self,
-                        entity["name"],
-                        entity["starting_room"],
-                        self.load_objects(entity["stuff"]),
-                        entity.get("description"),
+                        name=entity["name"],
+                        starting_room=entity["starting_room"],
+                        inventory=merchant_objects,
+                        description=entity.get("description", ""),
                     )
                 elif entity["type"] == "animal":
                     Animal(

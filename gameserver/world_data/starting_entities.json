@@ -3,7 +3,7 @@
     "name": "Gambino",
     "type": "merchant",
     "starting_room": "Road",
-    "stuff": [
+    "wares": [
       { "name": "apple", "description": "A juicy apple.", "price": 1 },
       { "name": "banana", "description": "A yellowy banana.", "price": 2 },
       { "name": "pear", "description": "A peary pear.", "price": 3 },
@@ -18,13 +18,13 @@
     "name": "Abel",
     "type": "merchant",
     "starting_room": "Forgotten Pathway",
-    "stuff": []
+    "wares": []
   },
   {
     "name": "Danny",
     "type": "merchant",
     "starting_room": "Luminous Glade",
-    "stuff": []
+    "wares": []
   },
   {
     "name": "Fox",
