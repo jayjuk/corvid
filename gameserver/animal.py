@@ -12,26 +12,26 @@ class Animal(Entity):
     def __init__(
         self,
         world,
-        animal_name,
+        name,
         starting_room,
         description="",
-        gestures=None,
+        actions=None,
         action_chance=0,  # 0 to 1
     ):
         # Note that there can be many instances of the same named animal
 
-        logger.info(f"Creating animal of type {animal_name}")
+        logger.info(f"Creating animal of type {name}")
 
         # Set up entity.
-        Entity.__init__(self, world, animal_name, "animal", starting_room, description)
+        Entity.__init__(self, world, name, "animal", starting_room, description)
 
         self.action_chance = action_chance
-        self.gestures = gestures or []
+        self.actions = actions or []
 
     # Future animal-specific behaviours and attributes coming soon!
     def maybe_gesture(self):
         if random.random() < self.action_chance:
-            gesture = random.choice(self.gestures)
+            gesture = random.choice(self.actions)
             return f"The {self.name} {gesture}."
 
     def maybe_pick_direction_to_move(self):

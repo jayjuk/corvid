@@ -8,7 +8,9 @@ from storagemanager import StorageManager
 from merchant import Merchant
 from animal import Animal
 from object import Object
-import starting_objects as starting_objects
+import json
+from os import path
+import sys
 
 
 class World:
@@ -34,8 +36,8 @@ class World:
 
         # Only load objects and merchants if not in any special mode
         if not mode:
-            self.room_objects = self.load_room_objects()
-            self.load_merchants()
+            self.load_room_objects()
+            self.load_entities()
 
         # Separate AI manager for images (can use different model)
         if ai_enabled and self.storage_manager.cloud_blobs_enabled():
@@ -355,49 +357,52 @@ class World:
 
     # Load objects and return a map of room to objects
     def load_room_objects(self):
-        # TODO: Store and reload object state
-        # Stubbed test data for now
-        test_object_data = starting_objects.get_starting_objects()
-        room_object_map = {}
-        for _ in test_object_data:
-            (object_name, object_description, price, starting_room) = _
-            # Populate the room_object_map with object versions of the objects!
-            o = Object(self, object_name, object_description, price, starting_room)
-            if starting_room in room_object_map:
-                room_object_map[starting_room].append(o)
-            else:
-                room_object_map[starting_room] = [o]
-        return room_object_map
+        self.room_objects = {}
+        with open(path.join("world_data", "starting_objects.json"), "r") as f:
+            for object_name, object_description, price, starting_room in json.load(f):
+                # Populate the room_object_map with object versions of the objects
+                o = Object(self, object_name, object_description, price, starting_room)
+                if starting_room in self.room_objects:
+                    self.room_objects[starting_room].append(o)
+                else:
+                    self.room_objects[starting_room] = [o]
 
-    def load_merchants(self):
-        # Merchant objects have no room
-        apple = Object(self, "apple", "A juicy apple.", price=1)
-        banana = Object(self, "banana", "A yellowy banana.", price=2)
-        pear = Object(self, "pear", "A peary pear.", price=3)
-        # TODO: refactor so game content is separate from engine code
-        the_button = Object(self, "red button", "OMG, it's The Button!", price=999)
-        gambinos_stuff = [apple, banana, pear, the_button]
-        Merchant(self, "Gambino", "Road", gambinos_stuff)
-        Merchant(self, "Abel", "Forgotten Pathway", [])
-        Merchant(self, "Danny", "Luminous Glade", [])
+    def load_objects(self, objects_json):
+        objects = []
+        for object_json in objects_json:
+            objects.append(
+                Object(
+                    self,
+                    object_json["name"],
+                    object_json["description"],
+                    object_json["price"],
+                )
+            )
+        return objects
 
-        # Animals
-        Animal(
-            self,
-            "fox",
-            "North Road",
-            "A plump, healthy-looking fox with a permanent cheeky smile on its face",
-            (
-                "yawns",
-                "stretches",
-                "hunts down a beetle",
-                "licks its paw",
-                "naps",
-                "sneezes",
-                "wags its tail",
-            ),
-            0.3,
-        )
+    def load_entities(self):
+        with open(path.join("world_data", "starting_entities.json"), "r") as f:
+            for entity in json.load(f):
+                if entity["type"] == "merchant":
+                    Merchant(
+                        self,
+                        entity["name"],
+                        entity["starting_room"],
+                        self.load_objects(entity["stuff"]),
+                        entity.get("description"),
+                    )
+                elif entity["type"] == "animal":
+                    Animal(
+                        self,
+                        name=entity["name"],
+                        starting_room=entity["starting_room"],
+                        description=entity["description"],
+                        actions=entity["actions"],
+                        action_chance=entity["action_chance"],
+                    )
+                else:
+                    logger.error(f"Invalid or unsupported entity type {entity['type']}")
+                    sys.exit()
 
     # Static method to register entity in the world
     def register_entity(self, entity):
