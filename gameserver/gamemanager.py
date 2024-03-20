@@ -788,7 +788,12 @@ class GameManager:
         )
 
         # Tell this player about the game
-        instructions = f"Welcome to the game, {player_name}. " + self.do_help()
+        instructions = (
+            f"Welcome to the game, {player_name}. "
+            + self.list_players(sid)
+            + " "
+            + self.do_help()
+        )
 
         self.tell_player(player, instructions, type="instructions")
 
@@ -801,6 +806,16 @@ class GameManager:
         # Spawn the world-wide metadata loop when the first player is created
         # This is to minimise resource usage when no one is playing.
         self.activate_background_loop()
+
+    def list_players(self, sid):
+        if self.get_player_count() == 1:
+            return "You are the only player in the game currently."
+        player_list = "Other players in the game: "
+        for other_sid, player_name in self.player_sid_to_name_map.items():
+            if other_sid != sid:
+                player_list += player_name + ", "
+        player_list = player_list[:-2] + "."
+        return player_list
 
     def strip_outer_quotes(self, some_text):
         if (
@@ -972,14 +987,14 @@ class GameManager:
 
         return message
 
-    def register_player(self, sid, game, player_name):
-        self.players[sid] = game
+    def register_player(self, sid, player, player_name):
+        self.players[sid] = player
         # Keep a log of all player names including those who have left
         # This is so that when a player disconnects (e.g. closes their browser) after 'quitting' we can
         # understand that, and it will allow them to rejoin with the same name later
         self.player_sid_to_name_map[sid] = player_name
         # self.emit_player_room_update(sid, current_room)
-        return game
+        return player
 
     # Emit a message about a room to a specific player
     def emit_player_room_update(self, player, room):
