@@ -20,7 +20,7 @@ class AIBroker:
     game_instructions = ""
     event_log = []
     max_history = 50
-    max_wait = 3  # secs
+    max_wait = 5  # secs
     last_time = time.time()
     active = True
     mode = None
@@ -33,8 +33,7 @@ class AIBroker:
 
         intro_text = (
             "You have been brought to life in a text adventure game! "
-            + "For now all you can do is move and chat. "
-            + "Do not apologise to the game! Respond only with one valid command phrase "
+            + "Do not apologise to the game! Do not try to talk to merchants, they cannot talk. Respond only with one valid command phrase "
             + f"each time you are contacted.\nInstructions:\n{self.get_instructions()}"
         )
 
@@ -92,7 +91,7 @@ class AIBroker:
         ai_name = None
         while not ai_name or " " in ai_name:
             # Keep trying til they get the name right
-            ai_name = self.ai_manager.submit_request(request).strip(".")
+            ai_name = self.ai_manager.submit_request(request, history=False).strip(".")
             if ai_name:
                 logger.info(f"AI chose the name {ai_name}.")
             else:

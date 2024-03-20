@@ -4,3 +4,4 @@ socketio-client
 eventlet
 openai
 google-cloud-aiplatform
+anthropic

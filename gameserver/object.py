@@ -11,6 +11,8 @@ class Object:
     def __init__(
         self, world_ref, object_name, object_description, price=0, starting_room=None
     ):
+        self.check_object_name(object_name)
+
         if starting_room is not None:
             if starting_room in world_ref.rooms:
                 logger.info(
@@ -30,6 +32,14 @@ class Object:
         # An object can be in the player's possession but doesn't start that way
         self.player_possession = None
         self.price = price
+
+    def check_object_name(self, object_name):
+        for reserved_word in (" from ", " up ", " to "):
+            if reserved_word in object_name.lower():
+                logger.error(
+                    "Problems will arise if an object is created that contains '{}'."
+                )
+                sys.exit()
 
     # Getter for player's current location
     def get_room(self):

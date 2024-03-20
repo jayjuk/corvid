@@ -13,6 +13,8 @@ from logger import setup_logger
 # Set up logger
 logger = setup_logger()
 
+import anthropic
+
 # Installed from (pip install ) google-cloud-aiplatform
 import vertexai
 from vertexai.preview.generative_models import (
@@ -72,12 +74,14 @@ class AIManager:
 
         # Model-specific static
         self.content_word = "content"
+        self.model_word = "assistant"
         self.history_abbreviation_content = (
             "(some game transcript history removed for brevity)"
         )
         if self.get_model_api() == "Gemini":
             # Override max history for Gemini for now, as it's free
             self.max_history = 99999
+            self.model_word = "model"
             self.content_word = "parts"
         logger.info("Starting up AI with model " + self.model_name)
 
@@ -102,6 +106,8 @@ class AIManager:
             return "GPT"
         elif self.model_name.startswith("gemini"):
             return "Gemini"
+        elif self.model_name.startswith("claude"):
+            return "Anthropic"
         elif self.model_name.startswith("stable-diffusion"):
             return "StabilityAI"
 
@@ -129,6 +135,10 @@ class AIManager:
 
             openai.api_key = os.getenv("OPENAI_API_KEY")
             self.model_client = openai.OpenAI()
+
+        elif self.get_model_api() == "Anthropic":
+            self.check_env_var("ANTHROPIC_API_KEY")
+            self.model_client = anthropic.Anthropic()
 
         elif self.get_model_api() == "Gemini":
             self.check_env_var("GOOGLE_GEMINI_KEY")
@@ -180,7 +190,7 @@ class AIManager:
                 # Check out the following link for a list of available engines: https://platform.stability.ai/docs/features/api-parameters#engine
             )
         else:
-            self.exit(f"ERROR: Model name {self.model_name} not recognised. Exiting.")
+            self.exit(f"Model name {self.model_name} not recognised.")
 
     def do_gpt_request(self, model_name, max_tokens, temperature, messages):
 
@@ -230,6 +240,19 @@ class AIManager:
             return candidate.content.parts[0].text
         return ""
 
+    def do_anthropic_request(self, messages):
+
+        print(messages)
+
+        model_response = self.model_client.messages.create(
+            model=self.model_name,
+            max_tokens=self.max_tokens,
+            messages=messages,
+            system=self.system_message,
+        )
+        print(model_response)
+        return model_response.content[0].text
+
     def build_message(self, role, content):
         if self.get_model_api() == "Gemini":
             return Content(role=role, parts=[Part.from_text(content)])
@@ -247,14 +270,16 @@ class AIManager:
         try_count = 0
         model_response = None
         max_tries = 10
-        wait_time = 2
+        wait_time = 5
         logger.info(f"Received request to submit: {request}")
 
         # Start with system message
         # Gemini
         if self.get_model_api() == "Gemini":
             messages = [self.build_message("user", self.system_message)]
-            messages.append(self.build_message("model", "OK."))
+            messages.append(self.build_message(self.model_word, "OK."))
+        elif self.get_model_api() == "Anthropic":
+            messages = []
         else:
             messages = [self.build_message("system", self.system_message)]
 
@@ -266,6 +291,7 @@ class AIManager:
                 messages.append(
                     self.build_message("user", self.history_abbreviation_content)
                 )
+                messages.append(self.build_message(self.model_word, "OK."))
             for history_item in self.chat_history[-1 * self.max_history :]:
                 messages.append(
                     self.build_message(
@@ -276,12 +302,13 @@ class AIManager:
         # Now add request
         messages.append(self.build_message("user", request))
 
+        logger.info(
+            f"About to submit to model, with system message: {self.system_message}"
+        )
+
         while not model_response and try_count < max_tries:
             try_count += 1
             try:
-                # Submit request to LLM
-                logger.info("Submitting request to model...")
-
                 # Behaviour varies according to model type.
                 if self.model_name.startswith("gpt"):
 
@@ -291,8 +318,10 @@ class AIManager:
                         temperature=temperature,
                         messages=messages,
                     )
-                elif self.model_name.startswith("gemini"):
+                elif self.get_model_api() == "Gemini":
                     model_response = self.do_gemini_request(messages)
+                elif self.get_model_api() == "Anthropic":
+                    model_response = self.do_anthropic_request(messages)
                 else:
                     self.exit(f"Unsupported model type: {self.model_name}")
 
@@ -303,8 +332,9 @@ class AIManager:
                     "server is overloaded" in str(e)
                     or "The response was blocked." in str(e)
                     or "list index out of range" in str(e)
+                    or "rate_limit_error" in str(e)
                 ) and try_count < max_tries:
-                    wait_time = wait_time * 1.2
+                    wait_time = wait_time * 2
                     logger.info(
                         f"Retrying in {wait_time} seconds... (attempt {try_count+1}/{max_tries})"
                     )
@@ -324,19 +354,20 @@ class AIManager:
             self.log_response_to_file(request, model_response)
 
             # Add request to history
-            self.chat_history.append(
-                {
-                    "role": "user",
-                    self.content_word: request,
-                }
-            )
-            # Add response to history
-            self.chat_history.append(
-                {
-                    "role": "model",
-                    self.content_word: model_response,
-                }
-            )
+            if history:
+                self.chat_history.append(
+                    {
+                        "role": "user",
+                        self.content_word: request,
+                    }
+                )
+                # Add response to history
+                self.chat_history.append(
+                    {
+                        "role": self.model_word,
+                        self.content_word: model_response,
+                    }
+                )
 
         return model_response
 
@@ -407,7 +438,7 @@ class AIManager:
 
     # Graceful exit, specific to AI management cases
     def exit(self, error_message):
-        logger.error(error_message)
+        logger.error(error_message + " Exiting.")
         # Write chat_history to file
         with open("exit_chat_history_dump.txt", "w") as f:
             for item in self.chat_history:

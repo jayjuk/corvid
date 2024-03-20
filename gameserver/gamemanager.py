@@ -281,7 +281,7 @@ class GameManager:
             player_response = "You are the only player in the game currently!"
         else:
             told_count = self.tell_others(
-                player.sid, f'{player.name} says, "{rest_of_response}"', shout
+                player.sid, f'{player.name} {verb}, "{rest_of_response}"', shout
             )
             if not told_count:
                 player_response = "There is no one else here to hear you!"
@@ -291,11 +291,11 @@ class GameManager:
 
     def do_shout(self, player, rest_of_response):
         # Shout is the same as say but to everyone
-        self.do_say(player, rest_of_response, shout=True)
+        return self.do_say(player, rest_of_response, shout=True)
 
     def do_greet(self, player, rest_of_response):
         # Like say hi!
-        self.do_say(player, "Hi " + rest_of_response)
+        return self.do_say(player, "Hi " + rest_of_response)
 
     def do_wait(self, player, rest_of_response):
         return "You decide to just wait a while."
@@ -659,6 +659,10 @@ class GameManager:
     def get_object_name_from_response(self, rest_of_response):
         if rest_of_response == "everything" or rest_of_response == "*":
             return "all"
+
+        if " from " in rest_of_response:
+            rest_of_response = rest_of_response.split(" from ")[0]
+
         # This is now simple because quotes are stripped out earlier
         return rest_of_response
 
