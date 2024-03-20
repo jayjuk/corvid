@@ -31,14 +31,8 @@ class AIBroker:
     def __init__(self, mode="player"):
         self.mode = mode
 
-        intro_text = (
-            "You have been brought to life in a text adventure game! "
-            + "Do not apologise to the game! Do not try to talk to merchants, they cannot talk. Respond only with one valid command phrase "
-            + f"each time you are contacted.\nInstructions:\n{self.get_instructions()}"
-        )
-
         # Set up the AI manager
-        self.ai_manager = AIManager(system_message=intro_text)
+        self.ai_manager = AIManager(system_message=self.get_ai_instructions())
 
         # Get the AI's name
         self.player_name = self.get_ai_name()
@@ -64,19 +58,27 @@ class AIBroker:
         self.game_instructions += data + "\n"
         self.ai_manager.set_system_message(self.game_instructions)
 
-    def get_instructions(self):
+    def get_ai_instructions(self):
+        ai_instructions = (
+            "You have been brought to life in a text adventure game! "
+            + "Do not apologise to the game! "
+            + "Do not try to talk to merchants, they cannot talk. "
+            + "Respond only with one valid command phrase each time you are contacted. "
+            + f"\nPlayer Instructions:\n{self.game_instructions}"
+        )
         # Set up role-specific instructions for the AI
         if self.mode == "builder":
-            role_specific_instructions = (
+            ai_instructions += (
                 "You are a creator of worlds! You can and should create new locations in the game with the 'build' command "
                 + "followed by the direction, location name (quotes for spaces) and the description (in quotes). "
                 + """e.g. build north "Neighbour's House" "A quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke."" \n"""
                 + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions and north/south of the Road (don't modify existing houses)\n"
             )
         else:
-            role_specific_instructions = "Prioritise finding objects (you can carry up to five in inventory), selling them to merchants, and then buying the red button from Gambino, so you win the game! do not talk to anyone. use the jump command when your inventory is full e.g. jump Gambino, and then type sell [thing]. use inventory command to see your inventory. Good luck."  # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
-
-        return self.game_instructions + role_specific_instructions
+            # Experiment to see whether cheaper AIs can do this
+            ai_instructions += "Prioritise exploring, picking up objects ('get all'), selling them to merchants, and then buying the red button (which costs 999p) from Gambino, so you win the game! use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
+            # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
+        return ai_instructions
 
     def get_ai_name(self):
 
