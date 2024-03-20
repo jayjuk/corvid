@@ -112,7 +112,7 @@ class AIBroker:
             message_text += event_text + "\n"
 
         # Now append the command request
-        command_text = "Please enter a valid command phrase:"
+        command_text = "Please enter a single valid command phrase, one line only:"
         message_text += command_text
 
         return self.ai_manager.submit_request(message_text)

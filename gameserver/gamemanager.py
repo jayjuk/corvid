@@ -762,6 +762,7 @@ class GameManager:
 
     # Parse player input
     def parse_player_input(self, player_input):
+        player_input = player_input.strip(".")
         # Special handling of leading apostrophe (means say):
         if player_input.startswith("'"):
             player_input = player_input.strip("'")
@@ -789,7 +790,10 @@ class GameManager:
         logger.info(f"AI translation: {ai_translation}")
         if ai_translation:
             # Try to process the AI translation as a command, but only try this once
-            self.tell_player(player, f"Perhaps you meant '{ai_translation}'?")
+            self.tell_player(
+                player,
+                f"I think you meant '{ai_translation}', and will proceed accordingly. ",
+            )
             player_response = self.process_player_input(
                 player, ai_translation, translated=True
             )

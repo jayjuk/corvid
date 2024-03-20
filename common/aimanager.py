@@ -13,6 +13,22 @@ from logger import setup_logger
 # Set up logger
 logger = setup_logger()
 
+# Installed from (pip install ) google-cloud-aiplatform
+import vertexai
+from vertexai.preview.generative_models import (
+    GenerativeModel,
+    Content,
+    Part,
+    Candidate,
+)
+from google.oauth2.service_account import Credentials
+from google.cloud.aiplatform_v1beta1.types.content import SafetySetting
+from vertexai.preview.generative_models import HarmCategory, HarmBlockThreshold
+
+# Other libraries only needed for Google security
+import base64
+import json
+
 
 # Class to handle interaction with the AI
 class AIManager:
@@ -54,10 +70,15 @@ class AIManager:
         # Set system message
         self.system_message = system_message or "You are playing an adventure game."
 
-        # Override max history for Gemini for now, as it's free
+        # Model-specific static
+        self.content_word = "content"
+        self.history_abbreviation_content = (
+            "(some game transcript history removed for brevity)"
+        )
         if self.get_model_api() == "Gemini":
+            # Override max history for Gemini for now, as it's free
             self.max_history = 99999
-
+            self.content_word = "parts"
         logger.info("Starting up AI with model " + self.model_name)
 
         self.create_model_log_file()
@@ -112,15 +133,6 @@ class AIManager:
         elif self.get_model_api() == "Gemini":
             self.check_env_var("GOOGLE_GEMINI_KEY")
 
-            # Installed from (pip install ) google-cloud-aiplatform
-            import vertexai
-            from vertexai.preview.generative_models import GenerativeModel
-            from google.oauth2.service_account import Credentials
-
-            # Other libraries only needed for Google security
-            import base64
-            import json
-
             # Load Base 64 encoded key JSON from env variable and convert back to JSON
             credentials_dict = json.loads(
                 base64.b64decode(os.environ["GOOGLE_GEMINI_KEY"])
@@ -132,8 +144,28 @@ class AIManager:
                 # This overrides the default use of GOOGLE_APPLICATION_CREDENTIALS containing a file with the key in JSON
                 credentials=Credentials.from_service_account_info(credentials_dict),
             )
-            self.model_client = GenerativeModel("gemini-pro")
-            self.gemini_chat = self.model_client.start_chat(history=[])
+
+            safety_settings = [
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold=HarmBlockThreshold.BLOCK_NONE,
+                ),
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold=HarmBlockThreshold.BLOCK_NONE,
+                ),
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold=HarmBlockThreshold.BLOCK_NONE,
+                ),
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold=HarmBlockThreshold.BLOCK_NONE,
+                ),
+            ]
+            self.model_client = GenerativeModel(
+                "gemini-pro",  # safety_settings=safety_settings
+            )
         elif self.get_model_api() == "StabilityAI":
             from stability_sdk import client
 
@@ -150,36 +182,7 @@ class AIManager:
         else:
             self.exit(f"ERROR: Model name {self.model_name} not recognised. Exiting.")
 
-    def do_gpt_request(self, request, model_name, max_tokens, temperature, history):
-        # Add latest request to history
-        self.chat_history.append(
-            {
-                "role": "user",
-                "content": request,
-            }
-        )
-
-        # Now use history to build the messages for model input
-        # (we have a separate messages list to allow for model-specific truncation without losing the history from our own memory,
-        # for example in case we want to dump it later for diagnostics
-        messages = [{"role": "system", "content": self.system_message}]
-        if history:
-            if len(self.chat_history) > self.max_history:
-                messages.append(
-                    {
-                        "role": "user",
-                        "content": "(some game transcript history removed for brevity))",
-                    }
-                )
-            for history_item in self.chat_history[-1 * self.max_history :]:
-                messages.append(
-                    {
-                        "role": history_item["role"],
-                        "content": history_item["content"],
-                    }
-                )
-
-            messages.append({"role": "user", "content": request})
+    def do_gpt_request(self, model_name, max_tokens, temperature, messages):
 
         # If model not specified, use the default for this object
         this_model = model_name or self.model_name
@@ -197,7 +200,7 @@ class AIManager:
             self.chat_history.append(
                 {
                     "role": "assistant",
-                    "content": model_response,
+                    self.content_word: model_response,
                 }
             )
 
@@ -214,39 +217,24 @@ class AIManager:
         )
         return model_response
 
-    def do_gemini_request(self, request):
-        # Set up if first time
-        if self.first_request:
-            self.first_request = False
-            # this client manages history, it just takes a string as input
-            request = self.system_message + "\n" + request
+    def do_gemini_request(self, messages):
+
+        print(messages)
+
+        model_response = self.model_client.generate_content(messages)
+        print(model_response)
+        candidate = model_response.candidates[0]
+        if candidate.finish_reason.name != "STOP":
+            logger.error(f"Model has issue: {str(model_response)}")
         else:
-            import pprint
+            return candidate.content.parts[0].text
+        return ""
 
-            pprint.pprint(self.gemini_chat._history)
-        model_response = self.gemini_chat.send_message(request, stream=True)
-
-        r = ""
-        if model_response:
-            for chunk in model_response:
-                print("*", chunk)
-                if chunk.candidates:
-                    for candidate in chunk.candidates:
-                        print("**", candidate)
-                        for part in candidate.content.parts:
-                            r += part.text + "\n"
-
-        model_response = r.strip("*").strip()
-        # If the response contains newline(s) followed by some info in parentheses, strip all this out
-        if "\n(" in model_response and model_response.endswith(")"):
-            logger.info(
-                f"Stripping out extra info from Gemini response. Full response: {model_response}"
-            )
-            model_response = model_response.split("\n(")[0].strip()
-        # Convert all-upper-case response to natural case
-        if model_response.isupper():
-            model_response = model_response.title()
-        return model_response
+    def build_message(self, role, content):
+        if self.get_model_api() == "Gemini":
+            return Content(role=role, parts=[Part.from_text(content)])
+        else:
+            return {"role": role, self.content_word: content}
 
     def submit_request(
         self,
@@ -259,6 +247,35 @@ class AIManager:
         try_count = 0
         model_response = None
         max_tries = 10
+        wait_time = 2
+        logger.info(f"Received request to submit: {request}")
+
+        # Start with system message
+        # Gemini
+        if self.get_model_api() == "Gemini":
+            messages = [self.build_message("user", self.system_message)]
+            messages.append(self.build_message("model", "OK."))
+        else:
+            messages = [self.build_message("system", self.system_message)]
+
+        # Now use history to build the messages for model input
+        # (we have a separate messages list to allow for model-specific truncation without losing the history from our own memory,
+        # for example in case we want to dump it later for diagnostics
+        if history:
+            if len(self.chat_history) > self.max_history:
+                messages.append(
+                    self.build_message("user", self.history_abbreviation_content)
+                )
+            for history_item in self.chat_history[-1 * self.max_history :]:
+                messages.append(
+                    self.build_message(
+                        history_item["role"], history_item[self.content_word]
+                    )
+                )
+
+        # Now add request
+        messages.append(self.build_message("user", request))
+
         while not model_response and try_count < max_tries:
             try_count += 1
             try:
@@ -269,30 +286,29 @@ class AIManager:
                 if self.model_name.startswith("gpt"):
 
                     model_response = self.do_gpt_request(
-                        request,
                         model_name=model_name,
                         max_tokens=max_tokens,
                         temperature=temperature,
-                        history=history,
+                        messages=messages,
                     )
                 elif self.model_name.startswith("gemini"):
-                    model_response = self.do_gemini_request(
-                        request,
-                    )
+                    model_response = self.do_gemini_request(messages)
                 else:
                     self.exit(f"Unsupported model type: {self.model_name}")
+
             except Exception as e:
                 traceback.print_exc()
                 logger.info(f"Error from model: {str(e)}")
                 if (
                     "server is overloaded" in str(e)
                     or "The response was blocked." in str(e)
+                    or "list index out of range" in str(e)
                 ) and try_count < max_tries:
-                    sleep_time = try_count * 5
+                    wait_time = wait_time * 1.2
                     logger.info(
-                        f"Retrying in {sleep_time} seconds... (attempt {try_count+1}/{max_tries})"
+                        f"Retrying in {wait_time} seconds... (attempt {try_count+1}/{max_tries})"
                     )
-                    time.sleep(sleep_time)
+                    time.sleep(int(wait_time))
                 else:
                     return ""
 
@@ -303,9 +319,24 @@ class AIManager:
             # self.save_model_data("input", messages)
             # self.save_model_data("response", response)
 
-        logger.info("Model Response: " + str(model_response))
+            logger.info("Model Response: " + str(model_response))
 
-        self.log_response_to_file(request, model_response)
+            self.log_response_to_file(request, model_response)
+
+            # Add request to history
+            self.chat_history.append(
+                {
+                    "role": "user",
+                    self.content_word: request,
+                }
+            )
+            # Add response to history
+            self.chat_history.append(
+                {
+                    "role": "model",
+                    self.content_word: model_response,
+                }
+            )
 
         return model_response
 

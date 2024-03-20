@@ -1,7 +1,7 @@
 [
   {
-    "name": "Flimsy Branch",
-    "description": "This is a very flimsy branch.",
+    "name": "Piece Of Paper",
+    "description": "This is a very small piece of paper.",
     "price": 0,
     "starting_room": "Road"
   },
@@ -210,12 +210,6 @@
     "starting_room": "Frozen Moorland"
   },
   {
-    "name": "Traveler's Backpack",
-    "description": "A sturdy backpack left behind by a traveler.",
-    "price": 35,
-    "starting_room": "Road"
-  },
-  {
     "name": "Lost Compass",
     "description": "A compass, its needle spinning erratically.",
     "price": 25,
@@ -228,8 +222,8 @@
     "starting_room": "Norther Road"
   },
   {
-    "name": "Garden Shears",
-    "description": "Rusty but sharp shears, forgotten in the weeds.",
+    "name": "Trowel",
+    "description": "Rusty round trowel, forgotten in the weeds.",
     "price": 15,
     "starting_room": "Driveway"
   },
@@ -396,8 +390,8 @@
     "starting_room": "Crystal Cave"
   },
   {
-    "name": "Shadow Creature",
-    "description": "A mysterious creature that moves within the shadows.",
+    "name": "Shadow Creature Figurine",
+    "description": "A figurine of a mysterious creature that moves within the shadows.",
     "price": 5,
     "starting_room": "Shadowy Hollow"
   },
