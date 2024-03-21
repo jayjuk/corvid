@@ -290,7 +290,7 @@ class World:
                     new_room_name, room_description
                 )
                 if image_data:
-                    self.storage_manager.save_image(image_name, image_data)
+                    self.storage_manager.store_image(image_name, image_data)
                 else:
                     logger.error(
                         "Error creating/saving image - returned no data, this room will be created without one"
@@ -357,21 +357,19 @@ class World:
 
     # Load objects and return a map of room to objects
     def load_room_objects(self):
-        self.room_objects = {}
-        with open(path.join("world_data", "starting_objects.json"), "r") as f:
-            for this_object in json.load(f):
-                # Populate the room_object_map with object versions of the objects
-                o = Object(
-                    self,
-                    this_object["name"],
-                    this_object["description"],
-                    this_object["price"],
-                    this_object["starting_room"],
-                )
-                if this_object["starting_room"] in self.room_objects:
-                    self.room_objects[this_object["starting_room"]].append(o)
-                else:
-                    self.room_objects[this_object["starting_room"]] = [o]
+        for this_object in self.storage_manager.get_objects():
+            # Populate the room_object_map with object versions of the objects
+            o = Object(
+                self,
+                this_object["name"],
+                this_object["description"],
+                this_object["price"],
+                this_object["starting_room"],
+            )
+            if this_object["starting_room"] in self.room_objects:
+                self.room_objects[this_object["starting_room"]].append(o)
+            else:
+                self.room_objects[this_object["starting_room"]] = [o]
 
     def load_entities(self):
         with open(path.join("world_data", "starting_entities.json"), "r") as f:

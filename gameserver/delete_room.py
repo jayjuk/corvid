@@ -6,7 +6,7 @@ storage_manager = StorageManager()
 room_name = sys.argv[1]
 if room_name:
     print(f"Deleting room {room_name} from cloud")
-    storage_manager.delete_room_on_cloud(room_name)
+    storage_manager.delete_room_in_cloud(room_name)
     print(f"Deleting room {room_name} from local storage")
     storage_manager.delete_room_locally(room_name)
 else:

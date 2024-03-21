@@ -111,7 +111,7 @@ class AIManager:
         elif self.model_name.startswith("stable-diffusion"):
             return "StabilityAI"
 
-    def save_model_data(self, filename_prefix, data):
+    def store_model_data(self, filename_prefix, data):
         logger.info("Saving model data")
         folder_path = "model_io"
         os.makedirs(folder_path, exist_ok=True)
@@ -346,8 +346,8 @@ class AIManager:
             # Save response to file for fine-tuning purposes
             pass
             # TODO: TBD whether we want the input or the output or both
-            # self.save_model_data("input", messages)
-            # self.save_model_data("response", response)
+            # self.store_model_data("input", messages)
+            # self.store_model_data("response", response)
 
             logger.info("Model Response: " + str(model_response))
 

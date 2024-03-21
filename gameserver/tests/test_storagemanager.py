@@ -9,5 +9,5 @@ print(rooms.keys())
 pprint(rooms["Road"])
 # for room in rooms.values():
 #    print(room["name"])
-#    storage_manager.save_new_room_on_cloud(room, "wibbleroom", "wibbledir")
+#    storage_manager.store_new_room_in_cloud(room, "wibbleroom", "wibbledir")
 #    exit()

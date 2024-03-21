@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pprint import pprint
 
 
-def save_room_locally(conn, room):
+def store_room_locally(conn, room):
 
     # Store new room and exits
     c = conn.cursor()
@@ -53,7 +53,7 @@ def main():
 
     for room_name, room in rooms.items():
         print(room_name)
-        save_room_locally(conn, room)
+        store_room_locally(conn, room)
 
     conn.close()
 

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.storage.blob import BlobServiceClient
 from datetime import datetime
+import sys
 
 # Set up logger
 logger = setup_logger()
@@ -62,6 +63,7 @@ class StorageManager:
         self.sqlite_local_db_path = (
             environ.get("SQLITE_LOCAL_DB_PATH") or "gameserver.db"
         )
+        self.create_sql_schema()
 
     # Utility to check env variable is set
     def check_env_var(self, var_name):
@@ -103,7 +105,11 @@ class StorageManager:
 
     # For now stateless as storage is infrequent
     def get_local_db_connection(self):
-        return sqlite3.connect(self.sqlite_local_db_path)
+        conn = sqlite3.connect(self.sqlite_local_db_path)
+        if not conn:
+            logger.error("Could not get SQL DB connection.")
+            sys.exit()
+        return conn
 
     # Back up - used by utilities
     def backup_local_db(self):
@@ -127,23 +133,29 @@ class StorageManager:
         )
         # Create index on name
         c.execute("CREATE INDEX IF NOT EXISTS room_name ON rooms (name)")
-
         # Create child of rooms table to store the exits per room
         c.execute(
             """CREATE TABLE IF NOT EXISTS exits
                     (room text, direction text, destination text)"""
         )
-        c.close()
+        # Create index on exits
+        c.execute("CREATE INDEX IF NOT EXISTS exit_room_dir ON exits (room, direction)")
+        # Objects
+        c.execute(
+            """CREATE TABLE IF NOT EXISTS objects
+                    (name text, description text, price integer, starting_room text, starting_merchant text)"""
+        )
+        # Create index on name
+        c.execute("CREATE INDEX IF NOT EXISTS object_name ON objects (name)")
 
-        conn.commit()
+        c.close()
         # Only close if not passed in
         if not conn_in:
             conn.close()
 
-    def save_new_room_locally(self, new_room, new_exit_direction, changed_room):
+    def store_new_room_locally(self, new_room, new_exit_direction, changed_room):
         # Check if schema exists, if not create it
         conn = self.get_local_db_connection()
-        self.create_sql_schema(conn)
 
         # Store new room and exits
         c = conn.cursor()
@@ -172,7 +184,6 @@ class StorageManager:
     def delete_room_locally(self, room_name):
         # Check if schema exists, if not create it
         conn = self.get_local_db_connection()
-        self.create_sql_schema(conn)
 
         # Delete room and exits
         c = conn.cursor()
@@ -193,7 +204,7 @@ class StorageManager:
             return True
         return False
 
-    def save_image_on_cloud(self, image_name, image_data):
+    def store_image_in_cloud(self, image_name, image_data):
         if self.cloud_blobs_enabled():
             logger.info(f"Uploading image '{image_name}' to cloud")
 
@@ -228,10 +239,10 @@ class StorageManager:
             )
 
     # External function for the world class to use, world doesn't need to know about cloud etc
-    def save_image(self, file_name, image_data):
+    def store_image(self, file_name, image_data):
         if file_name:
             # For now, only cloud storage
-            self.save_image_on_cloud(file_name, image_data)
+            self.store_image_in_cloud(file_name, image_data)
             # Move file name to full path
             return True
         else:
@@ -257,7 +268,7 @@ class StorageManager:
                 logger.error("Could not resolve blob client.")
         return None
 
-    def save_new_room_on_cloud(self, new_room, new_exit_direction, changed_room):
+    def store_new_room_in_cloud(self, new_room, new_exit_direction, changed_room):
         rooms_client = self.table_service_client.create_table_if_not_exists("rooms")
 
         # Store room in Azure
@@ -305,7 +316,7 @@ class StorageManager:
             logger.warning(f"Exit {exit_dict['RowKey']} already stored")
 
     # Utility function to delete room from cloud (not used in game)
-    def delete_room_on_cloud(self, room_name):
+    def delete_room_in_cloud(self, room_name):
         rooms_client = self.table_service_client.get_table_client("rooms")
         exits_client = self.table_service_client.get_table_client("exits")
 
@@ -341,9 +352,121 @@ class StorageManager:
             f"Storing new room {new_room['name']} and adding exit {new_exit_direction} to {changed_room}"
         )
         if self.cloud_tables_enabled():
-            self.save_new_room_on_cloud(new_room, new_exit_direction, changed_room)
+            self.store_new_room_in_cloud(new_room, new_exit_direction, changed_room)
         else:
-            self.save_new_room_locally(new_room, new_exit_direction, changed_room)
+            self.store_new_room_locally(new_room, new_exit_direction, changed_room)
+
+    # Store all objects (expects list of object dicts)
+    def store_objects(self, objects):
+        logger.info("Storing all objects")
+        for object in objects:
+            self.store_object(object)
+
+    # Store all objects
+    def store_object(self, object):
+        logger.info(f"Storing object: {object['name']}")
+        if self.cloud_tables_enabled():
+            self.store_object_in_cloud(object)
+        else:
+            self.store_object_locally(object)
+
+    def store_object_in_cloud(self, object):
+        objects_client = self.table_service_client.create_table_if_not_exists("objects")
+
+        # Store object in Azure
+        # First check if key exists
+        if not self.check_rowkey(objects_client, object["name"]):
+            object["PartitionKey"] = "jaysgame"
+            object["RowKey"] = object["name"]
+            logger.info(f"Storing {object['name']}")
+            objects_client.create_entity(entity=object)
+        else:
+            logger.warning(f"Object {object['name']} already stored")
+
+    def execute_sql(self, conn, sql, params):
+        c = conn.cursor()
+        c.execute(sql, params)
+        c.close()
+
+    def store_object_locally(self, object):
+        # Check if schema exists, if not create it
+        conn = self.get_local_db_connection()
+        # Store object
+        self.execute_sql(
+            conn,
+            "INSERT INTO objects (name, description, price, starting_room, starting_merchant) VALUES (?,?,?,?,?)",
+            (
+                object["name"],
+                object["description"],
+                object.get("price"),
+                object.get("starting_room"),
+                object.get("starting_merchant"),
+            ),
+        )
+        conn.commit()
+        conn.close()
+
+    def get_objects_from_cloud(self):
+        objects_client = self.table_service_client.get_table_client("objects")
+        if objects_client:
+            objects = []
+            for entity in objects_client.query_entities(""):
+                objects.append(
+                    {
+                        "name": entity["RowKey"],
+                        "description": entity["description"],
+                        "price": entity.get("price", None),
+                        "starting_room": entity.get("starting_room", None),
+                        "starting_merchant": entity.get("starting_merchant", None),
+                    }
+                )
+            return objects
+        logger.error("No objects found in cloud")
+        sys.exit()
+
+    def get_objects_from_local_db(self):
+        conn = self.get_local_db_connection()
+        # Check schema
+        if conn is None or not self.check_schema():
+            return self.get_default_objects()
+        # Get objects and exits
+        c = conn.cursor()
+        c.execute("SELECT * FROM objects")
+        objects = c.fetchall()
+        # Convert to dict
+        objects_list = []
+        for object in objects:
+            objects_list.append(
+                {
+                    "name": object[0],
+                    "description": object[1],
+                    "price": object[2],
+                    "starting_room": object[3],
+                    "starting_merchant": object[4],
+                }
+            )
+        conn.close()
+        if not objects_list:
+            return self.get_default_objects()
+        return objects_list
+
+    # Get objects and return in the dict format expected by the game server
+    def get_objects(self):
+        # Try cloud first
+        if self.cloud_tables_enabled():
+            logger.info("Sourcing objects from cloud")
+            objects = self.get_objects_from_cloud()
+            if objects:
+                return objects
+            logger.warning("No objects found in cloud")
+        # Fall back to local db
+        logger.info("Sourcing objects from local DB")
+        return self.get_objects_from_local_db()
+
+    def get_default_objects(self):
+        with open(path.join("world_data", "starting_objects.json"), "r") as f:
+            default_objects = json.load(f)
+        return default_objects
 
     # Check if the schema exists but don't create if not
     # Handle that the connection may not exist
@@ -379,8 +502,10 @@ class StorageManager:
                     ]
                 return rooms
             else:
-                logger.warning("No exits found in cloud")
-        return None
+                logger.error("No exits found in cloud")
+        else:
+            logger.error("No rooms found in cloud")
+        sys.exit()
 
     def get_rooms_from_local_db(self):
         conn = self.get_local_db_connection()
@@ -439,7 +564,6 @@ class StorageManager:
         with open(default_map_file, "r") as f:
             rooms = json.load(f)
         # Check if schema exists, if not create it
-        self.create_sql_schema()
         conn = self.get_local_db_connection()
         c = conn.cursor()
 
