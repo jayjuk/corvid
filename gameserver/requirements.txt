@@ -6,3 +6,4 @@ python-dotenv
 google-cloud-aiplatform
 azure-storage-blob
 stability-sdk
+anthropic
