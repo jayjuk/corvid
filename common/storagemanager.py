@@ -2,7 +2,7 @@ from os import environ, remove, makedirs, path
 from shutil import copy2
 import sqlite3
 import json
-from logger import setup_logger
+from logger import setup_logger, exit
 from dotenv import load_dotenv
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.storage.blob import BlobServiceClient
@@ -34,36 +34,19 @@ class StorageManager:
             self.blob_service_client = self.get_azure_blob_service_client()
             self.image_container_name = image_container_name
         else:
-            self.table_service_client = None
-            self.blob_service_client = None
-            self.image_container_name = None
+            exit("Could not get Azure credential.")
 
         if not self.table_service_client and not image_only:
-            logger.warning(
-                "Could not get Azure table service client, data storage will be local"
-            )
-            # Local setup
-            self.setup_local_sqlite()
+            exit("Could not get Azure table service client.")
 
         if not self.blob_service_client:
-            logger.warning(
-                "Could not get Azure image service client, images will be disabled"
-            )
+            exit("Could not get Azure image service client.")
 
     def cloud_tables_enabled(self):
         return self.credential and self.table_service_client
 
     def cloud_blobs_enabled(self):
         return self.credential and self.blob_service_client
-
-    def setup_local_sqlite(self):
-        # Set up or default the SQLITE env variable
-        if not environ.get("SQLITE_LOCAL_DB_PATH"):
-            load_dotenv()
-        self.sqlite_local_db_path = (
-            environ.get("SQLITE_LOCAL_DB_PATH") or "gameserver.db"
-        )
-        self.create_sql_schema()
 
     # Utility to check env variable is set
     def check_env_var(self, var_name):
@@ -102,100 +85,6 @@ class StorageManager:
             + ".blob.core.windows.net",
             credential=self.credential,
         )
-
-    # For now stateless as storage is infrequent
-    def get_local_db_connection(self):
-        conn = sqlite3.connect(self.sqlite_local_db_path)
-        if not conn:
-            logger.error("Could not get SQL DB connection.")
-            sys.exit()
-        return conn
-
-    # Back up - used by utilities
-    def backup_local_db(self):
-        # Back up file with datestamp
-        datestamp = datetime.now().strftime("%Y%m%d")
-        backup_file = f"{self.sqlite_local_db_path}.backup.{datestamp}"
-        logger.info(f"Backing up local DB to {backup_file}")
-        copy2(self.sqlite_local_db_path, backup_file)
-
-    # Create the schema if it doesn't exist
-    def create_sql_schema(self, conn_in=None):
-        if conn_in:
-            conn = conn_in
-        else:
-            conn = self.get_local_db_connection()
-        # Check if schema exists, if not create it
-        c = conn.cursor()
-        c.execute(
-            """CREATE TABLE IF NOT EXISTS rooms
-                    (name text, description text, image text)"""
-        )
-        # Create index on name
-        c.execute("CREATE INDEX IF NOT EXISTS room_name ON rooms (name)")
-        # Create child of rooms table to store the exits per room
-        c.execute(
-            """CREATE TABLE IF NOT EXISTS exits
-                    (room text, direction text, destination text)"""
-        )
-        # Create index on exits
-        c.execute("CREATE INDEX IF NOT EXISTS exit_room_dir ON exits (room, direction)")
-        # Objects
-        c.execute(
-            """CREATE TABLE IF NOT EXISTS objects
-                    (name text, description text, price integer, starting_room text, starting_merchant text)"""
-        )
-        # Create index on name
-        c.execute("CREATE INDEX IF NOT EXISTS object_name ON objects (name)")
-
-        c.close()
-        # Only close if not passed in
-        if not conn_in:
-            conn.close()
-
-    def store_new_room_locally(self, new_room, new_exit_direction, changed_room):
-        # Check if schema exists, if not create it
-        conn = self.get_local_db_connection()
-
-        # Store new room and exits
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO rooms VALUES (?,?,?)",
-            (new_room["name"], new_room["description"], new_room["image"]),
-        )
-        exits_insert_sql = "INSERT INTO exits VALUES (?,?,?)"
-        for direction in new_room["exits"]:
-            c.execute(
-                exits_insert_sql,
-                (new_room["name"], direction, new_room["exits"][direction]),
-            )
-
-        # Store the new exit to the new room
-        c.execute(
-            exits_insert_sql,
-            (changed_room, new_exit_direction, new_room["name"]),
-        )
-        c.close()
-
-        conn.commit()
-        conn.close()
-
-    # Function to delete room locally
-    def delete_room_locally(self, room_name):
-        # Check if schema exists, if not create it
-        conn = self.get_local_db_connection()
-
-        # Delete room and exits
-        c = conn.cursor()
-        c.execute("DELETE FROM rooms WHERE name=?", (room_name,))
-        c.execute("DELETE FROM exits WHERE room=?", (room_name,))
-        # Also delete where direction is this room
-        c.execute("DELETE FROM exits WHERE destination=?", (room_name,))
-        c.close()
-        logger.info(f"Deleted room {room_name} from local storage, if it was there.")
-
-        conn.commit()
-        conn.close()
 
     def check_rowkey(self, table_client, query_filter_rowkey):
         parameters = {"pk": "jaysgame", "rk": query_filter_rowkey}
@@ -268,7 +157,12 @@ class StorageManager:
                 logger.error("Could not resolve blob client.")
         return None
 
-    def store_new_room_in_cloud(self, new_room, new_exit_direction, changed_room):
+    # Store the rooms from the dict format in the database
+    def store_room(self, rooms, new_room_name, changed_room, new_exit_direction):
+        new_room = rooms[new_room_name]
+        logger.info(
+            f"Storing new room {new_room['name']} and adding exit {new_exit_direction} to {changed_room}"
+        )
         rooms_client = self.table_service_client.create_table_if_not_exists("rooms")
 
         # Store room in Azure
@@ -316,7 +210,7 @@ class StorageManager:
             logger.warning(f"Exit {exit_dict['RowKey']} already stored")
 
     # Utility function to delete room from cloud (not used in game)
-    def delete_room_in_cloud(self, room_name):
+    def delete_room(self, room_name):
         rooms_client = self.table_service_client.get_table_client("rooms")
         exits_client = self.table_service_client.get_table_client("exits")
 
@@ -345,17 +239,6 @@ class StorageManager:
         else:
             logger.warning(f"Room {room_name} not found")
 
-    # Store the rooms from the dict format in the database
-    def store_rooms(self, rooms, new_room_name, changed_room, new_exit_direction):
-        new_room = rooms[new_room_name]
-        logger.info(
-            f"Storing new room {new_room['name']} and adding exit {new_exit_direction} to {changed_room}"
-        )
-        if self.cloud_tables_enabled():
-            self.store_new_room_in_cloud(new_room, new_exit_direction, changed_room)
-        else:
-            self.store_new_room_locally(new_room, new_exit_direction, changed_room)
-
     # Store all objects (expects list of object dicts)
     def store_objects(self, objects):
         logger.info("Storing all objects")
@@ -365,12 +248,7 @@ class StorageManager:
     # Store all objects
     def store_object(self, object):
         logger.info(f"Storing object: {object['name']}")
-        if self.cloud_tables_enabled():
-            self.store_object_in_cloud(object)
-        else:
-            self.store_object_locally(object)
 
-    def store_object_in_cloud(self, object):
         objects_client = self.table_service_client.create_table_if_not_exists("objects")
 
         # Store object in Azure
@@ -382,29 +260,6 @@ class StorageManager:
             objects_client.create_entity(entity=object)
         else:
             logger.warning(f"Object {object['name']} already stored")
-
-    def execute_sql(self, conn, sql, params):
-        c = conn.cursor()
-        c.execute(sql, params)
-        c.close()
-
-    def store_object_locally(self, object):
-        # Check if schema exists, if not create it
-        conn = self.get_local_db_connection()
-        # Store object
-        self.execute_sql(
-            conn,
-            "INSERT INTO objects (name, description, price, starting_room, starting_merchant) VALUES (?,?,?,?,?)",
-            (
-                object["name"],
-                object["description"],
-                object.get("price"),
-                object.get("starting_room"),
-                object.get("starting_merchant"),
-            ),
-        )
-        conn.commit()
-        conn.close()
 
     def get_objects_from_cloud(self):
         objects_client = self.table_service_client.get_table_client("objects")
@@ -421,67 +276,23 @@ class StorageManager:
                     }
                 )
             return objects
-        logger.error("No objects found in cloud")
-        sys.exit()
-
-    def get_objects_from_local_db(self):
-        conn = self.get_local_db_connection()
-        # Check schema
-        if conn is None or not self.check_schema():
-            return self.get_default_objects()
-        # Get objects and exits
-        c = conn.cursor()
-        c.execute("SELECT * FROM objects")
-        objects = c.fetchall()
-        # Convert to dict
-        objects_list = []
-        for object in objects:
-            objects_list.append(
-                {
-                    "name": object[0],
-                    "description": object[1],
-                    "price": object[2],
-                    "starting_room": object[3],
-                    "starting_merchant": object[4],
-                }
-            )
-        conn.close()
-        if not objects_list:
-            return self.get_default_objects()
-        return objects_list
+        exit("No objects found in cloud!")
 
     # Get objects and return in the dict format expected by the game server
     def get_objects(self):
         # Try cloud first
-        if self.cloud_tables_enabled():
-            logger.info("Sourcing objects from cloud")
-            objects = self.get_objects_from_cloud()
-            if objects:
-                return objects
-            logger.warning("No objects found in cloud")
+        logger.info("Sourcing objects from cloud")
+        objects = self.get_objects_from_cloud()
+        if objects:
+            return objects
         # Fall back to local db
-        logger.info("Sourcing objects from local DB")
-        return self.get_objects_from_local_db()
+        logger.info("Sourcing objects from static file")
+        return self.get_default_objects()
 
     def get_default_objects(self):
         with open(path.join("world_data", "starting_objects.json"), "r") as f:
             default_objects = json.load(f)
         return default_objects
-
-    # Check if the schema exists but don't create if not
-    # Handle that the connection may not exist
-    def check_schema(self):
-        conn = self.get_local_db_connection()
-        if not conn:
-            return False
-        c = conn.cursor()
-        # Check if schema exists, if not create it
-        c.execute(
-            """SELECT name FROM sqlite_master WHERE type='table' AND name='rooms'"""
-        )
-        schema_exists = c.fetchone()
-        conn.close()
-        return schema_exists
 
     def get_rooms_from_cloud(self):
         rooms_client = self.table_service_client.get_table_client("rooms")
@@ -502,50 +313,19 @@ class StorageManager:
                     ]
                 return rooms
             else:
-                logger.error("No exits found in cloud")
+                exit("No exits found in cloud")
         else:
-            logger.error("No rooms found in cloud")
-        sys.exit()
-
-    def get_rooms_from_local_db(self):
-        conn = self.get_local_db_connection()
-        # Check schema
-        if conn is None or not self.check_schema():
-            return self.get_default_rooms()
-        # Get rooms and exits
-        c = conn.cursor()
-        c.execute("SELECT * FROM rooms")
-        rooms = c.fetchall()
-        c.execute("SELECT * FROM exits")
-        exits = c.fetchall()
-        # Convert to dict
-        rooms_dict = {}
-        for room in rooms:
-            rooms_dict[room[0]] = {
-                "name": room[0],
-                "description": room[1],
-                "image": room[2],
-                "exits": {},
-            }
-        for exit in exits:
-            rooms_dict[exit[0]]["exits"][exit[1]] = exit[2]
-        conn.close()
-        if not rooms:
-            return self.get_default_rooms()
-        return rooms_dict
+            exit("No rooms found in cloud")
 
     # Get rooms and return in the dict format expected by the game server
     def get_rooms(self):
         # Try cloud first
-        if self.cloud_tables_enabled():
-            logger.info("Sourcing rooms from cloud")
-            rooms = self.get_rooms_from_cloud()
-            if rooms:
-                return rooms
-            logger.warning("No rooms found in cloud")
-        # Fall back to local db
-        logger.info("Sourcing rooms from local DB")
-        return self.get_rooms_from_local_db()
+        logger.info("Sourcing rooms from cloud")
+        rooms = self.get_rooms_from_cloud()
+        if rooms:
+            return rooms
+        logger.warning("No rooms found in cloud - sourcing from static")
+        return self.get_default_rooms()
 
     def get_default_rooms(self):
         # This is the built-in static rooms file
@@ -556,34 +336,3 @@ class StorageManager:
         for room in rooms:
             rooms[room]["name"] = room
         return rooms
-
-    # This is only called from a setup script
-    def store_default_rooms(self):
-        # This is the built-in static rooms file
-        default_map_file = "map.json"
-        with open(default_map_file, "r") as f:
-            rooms = json.load(f)
-        # Check if schema exists, if not create it
-        conn = self.get_local_db_connection()
-        c = conn.cursor()
-
-        for room in rooms:
-            # Store room and exits
-            c.execute(
-                "INSERT INTO rooms VALUES (?,?,?)",
-                (room, rooms[room]["description"], rooms[room]["image"]),
-            )
-            for direction in rooms[room]["exits"]:
-                c.execute(
-                    "INSERT INTO exits VALUES (?,?,?)",
-                    (room, direction, rooms[room]["exits"][direction]),
-                )
-        logger.info("Stored default rooms")
-        conn.commit()
-        conn.close()
-
-
-# Main runs store default rooms
-if __name__ == "__main__":
-    storage_manager = StorageManager()
-    storage_manager.store_default_rooms()

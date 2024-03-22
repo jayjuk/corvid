@@ -314,7 +314,7 @@ class World:
         # Add the new room to the exits of the current room
         self.rooms[current_room]["exits"][direction] = new_room_name
         # Store current and new room (current has changed in that exit has been added)
-        self.storage_manager.store_rooms(
+        self.storage_manager.store_room(
             self.rooms,
             new_room_name,
             current_room,

@@ -47,3 +47,14 @@ def setup_logger(file_name="unit_testing.log"):
     )
     logger = logging.getLogger()
     return logger
+
+
+# Default common exit logic which logs a critical error and exits at the same time.
+def exit(logger, error_message=None):
+    if error_message:
+        logger.critical(error_message)
+        exit_code = 1
+    else:
+        # If no message, assume normal exit.
+        exit_code = 0
+    sys.exit(exit_code)
