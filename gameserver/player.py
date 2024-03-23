@@ -47,7 +47,7 @@ class Player(Entity):
 
         # Register of rooms this player has visited before (so they don't get long descriptions again)
         self.seen_rooms = {}
-        self.seen_rooms[self.current_room] = True
+        self.seen_rooms[self.location] = True
 
         # SID is the unique identifier for this player used by SocketIO
         self.sid = sid
@@ -111,4 +111,4 @@ class Player(Entity):
         # Superclass behaviour
         super().move_to_room(next_room)
         # Also flag this room as seen
-        self.seen_rooms[self.current_room] = True
+        self.seen_rooms[self.location] = True

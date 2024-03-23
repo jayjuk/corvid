@@ -25,7 +25,7 @@ from aimanager import AIManager
 class GameManager:
 
     # Constructor
-    def __init__(self, sio, ai_enabled=True):
+    def __init__(self, sio, ai_enabled=True, world_name="jaysgame"):
 
         # Static variables
         self.max_inactive_time = 300  # 5 minutes
@@ -45,7 +45,7 @@ class GameManager:
         else:
             self.ai_manager = None
 
-        self.world = World(mode=None, ai_enabled=ai_enabled)
+        self.world = World(mode=None, ai_enabled=ai_enabled, name=world_name)
 
         self.object_name_empty_message = "Invalid input: object name is empty."
 
@@ -473,7 +473,7 @@ class GameManager:
         # Merchants are entities of a certain type.
         # If a room is specified, only return merchants in that room
         merchants = []
-        for entity in self.world.entities:
+        for entity in self.world.entities.values():
             if entity.get_role() == entity_type:
                 if room is None or entity.get_current_room() == room:
                     merchants.append(entity)
@@ -547,6 +547,7 @@ class GameManager:
 
     # Get / pick up an object
     def do_get(self, player, rest_of_response):
+        logger.info("Doing get command.")
         # First check in case they wrote 'pick up'. If so, remove the 'up'.
         if rest_of_response.startswith("up "):
             rest_of_response = rest_of_response[3:]
@@ -1048,7 +1049,7 @@ class GameManager:
             if sid is None or sid != other_player_sid:
                 other_entities.append(other_player)
         if not players_only:
-            for entity in self.world.entities:
+            for entity in self.world.entities.values():
                 # Check if not player
                 if not isinstance(entity, Player):
                     other_entities.append(entity)
@@ -1139,6 +1140,7 @@ class GameManager:
 
             # Move animals around
             for animal in self.get_entities("animal"):
+                logger.info(f"Checking animal {animal.name}")
                 direction = animal.maybe_pick_direction_to_move()
                 if direction:
                     self.move_entity(animal, direction)

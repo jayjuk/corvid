@@ -6,11 +6,15 @@ from logger import setup_logger, exit
 from dotenv import load_dotenv
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.storage.blob import BlobServiceClient
+from azure.data.tables import TableServiceClient, UpdateMode
 from datetime import datetime
 import sys
 
 # Set up logger
 logger = setup_logger()
+
+# This is for Azure
+import logging
 
 
 class StorageManager:
@@ -34,13 +38,16 @@ class StorageManager:
             self.blob_service_client = self.get_azure_blob_service_client()
             self.image_container_name = image_container_name
         else:
-            exit("Could not get Azure credential.")
+            exit(logger, "Could not get Azure credential.")
 
         if not self.table_service_client and not image_only:
-            exit("Could not get Azure table service client.")
+            exit(logger, "Could not get Azure table service client.")
 
         if not self.blob_service_client:
-            exit("Could not get Azure image service client.")
+            exit(logger, "Could not get Azure image service client.")
+
+        # Set the log level to WARNING to suppress INFO and DEBUG logs
+        logging.getLogger("azure").setLevel(logging.WARNING)
 
     def cloud_tables_enabled(self):
         return self.credential and self.table_service_client
@@ -69,7 +76,6 @@ class StorageManager:
     # Return Azure table service client
     # Assumes if we have a credential, we have AZURE_STORAGE_ACCOUNT_NAME set
     def get_azure_table_service_client(self):
-        from azure.data.tables import TableServiceClient
 
         return TableServiceClient(
             endpoint="https://"
@@ -271,12 +277,12 @@ class StorageManager:
                         "name": entity["RowKey"],
                         "description": entity["description"],
                         "price": entity.get("price", None),
-                        "starting_room": entity.get("starting_room", None),
+                        "location": entity.get("starting_room", None),
                         "starting_merchant": entity.get("starting_merchant", None),
                     }
                 )
             return objects
-        exit("No objects found in cloud!")
+        exit(logger, "No objects found in cloud!")
 
     # Get objects and return in the dict format expected by the game server
     def get_objects(self):
@@ -313,18 +319,18 @@ class StorageManager:
                     ]
                 return rooms
             else:
-                exit("No exits found in cloud")
+                exit(logger, "No exits found in cloud")
         else:
-            exit("No rooms found in cloud")
+            exit(logger, "No rooms found in cloud")
 
     # Get rooms and return in the dict format expected by the game server
     def get_rooms(self):
         # Try cloud first
-        logger.info("Sourcing rooms from cloud")
+        logger.info("Loading rooms from cloud")
         rooms = self.get_rooms_from_cloud()
         if rooms:
             return rooms
-        logger.warning("No rooms found in cloud - sourcing from static")
+        logger.warning("No rooms found in cloud - loading from static")
         return self.get_default_rooms()
 
     def get_default_rooms(self):
@@ -336,3 +342,56 @@ class StorageManager:
         for room in rooms:
             rooms[room]["name"] = room
         return rooms
+
+    # Store all Python objects (expects list of object dicts)
+    def store_python_objects(self, game_name, objects):
+        logger.info("Storing all Python objects")
+        for object in objects:
+            self.store_python_object(game_name, object)
+
+    # Store all Python objects, received as actual objects
+    def store_python_object(self, game_name, object):
+        logger.info(f"Storing python object in game {game_name}: {object.__dict__}")
+
+        objects_client = self.table_service_client.create_table_if_not_exists(
+            "PythonObjects"
+        )
+
+        # Store object in Azure
+        # Convert to dict
+        entity = object.__dict__.copy()
+        entity["PartitionKey"] = game_name + "__" + type(object).__name__
+        entity["RowKey"] = entity["name"]
+        if "id" in entity:
+            entity["RowKey"] += "__" + entity["id"]
+
+        # Override fields that contain object values lists etc
+
+        # 1. World - use the game/world name just for supportability
+        entity["world"] = game_name
+        # 2. Inventory - reconstituted from location
+        if "inventory" in entity:
+            del entity["inventory"]
+        # TODO: improve this
+        if "actions" in entity:
+            entity["actions"] = "_".join(entity["actions"])
+
+        logger.info(f"Storing {entity['name']}")
+        objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
+
+    # Returns all instances of a type of object, as a dict
+    def get_python_objects(self, game_name, object_type):
+        objects_client = self.table_service_client.get_table_client("PythonObjects")
+        if objects_client:
+            objects = []
+            parameters = {"pk": game_name + "__" + object_type}
+            query_filter = "PartitionKey eq @pk"
+            for entity in objects_client.query_entities(
+                query_filter, parameters=parameters
+            ):
+                # TODO: improve this
+                if "actions" in entity:
+                    entity["actions"] = entity["actions"].split("_")
+                objects.append(entity.copy())
+            return objects
+        exit(logger, "No objects found in cloud!")

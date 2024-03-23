@@ -229,10 +229,7 @@ class AIManager:
 
     def do_gemini_request(self, messages):
 
-        print(messages)
-
         model_response = self.model_client.generate_content(messages)
-        print(model_response)
         candidate = model_response.candidates[0]
         if candidate.finish_reason.name != "STOP":
             logger.error(f"Model has issue: {str(model_response)}")
@@ -242,15 +239,12 @@ class AIManager:
 
     def do_anthropic_request(self, messages):
 
-        print(messages)
-
         model_response = self.model_client.messages.create(
             model=self.model_name,
             max_tokens=self.max_tokens,
             messages=messages,
             system=self.system_message,
         )
-        print(model_response)
         return model_response.content[0].text
 
     def build_message(self, role, content):

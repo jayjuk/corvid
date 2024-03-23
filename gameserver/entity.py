@@ -13,7 +13,7 @@ class Entity:
         world,
         entity_name,
         entity_role,
-        starting_room=None,
+        location=None,
         description=None,
     ):
         # Register game server reference in player object to help with testing and minimise use of globals
@@ -27,7 +27,7 @@ class Entity:
         self.description = description
 
         # Default starting location
-        self.current_room = starting_room or world.get_starting_room()
+        self.location = location or world.get_location()
 
         # Inventory
         self.inventory = []
@@ -38,11 +38,11 @@ class Entity:
     # Setter for player's location change
     def move_to_room(self, next_room):
         # Set new room
-        self.current_room = next_room
+        self.location = next_room
 
     # Getter for player's current location
     def get_current_room(self):
-        return self.current_room
+        return self.location
 
     def can_add_object(self):
         # Default behaviour for entities is to not allow them to pick up objects
@@ -57,7 +57,7 @@ class Entity:
         if dropped_objects is None:
             dropped_objects = []
         self.inventory.remove(object)
-        object.set_room(self.current_room)
+        object.set_room(self.location)
         dropped_objects.append(object)
         return dropped_objects
 

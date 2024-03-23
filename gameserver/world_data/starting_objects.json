@@ -1,626 +1,650 @@
 [
   {
+    "name": "Apple",
+    "description": "A juicy apple.",
+    "price": 1,
+    "location": "Gambino"
+  },
+  {
+    "name": "Banana",
+    "description": "A medium-sized, moderately curved, ripe banana.",
+    "price": 2,
+    "location": "Gambino"
+  },
+  {
+    "name": "Pear",
+    "description": "A nice, ripe Conference pear.",
+    "price": 3,
+    "location": "Gambino"
+  },
+  {
+    "name": "Red Button",
+    "description": "OMG, it's The Red Button!",
+    "price": 999,
+    "location": "Gambino"
+  },
+  {
     "name": "Piece Of Paper",
     "description": "This is a very small piece of paper.",
     "price": 0,
-    "starting_room": "Road"
+    "location": "Road"
   },
   {
     "name": "Little Stone",
     "description": "This is a fairly normal stone.",
     "price": 1,
-    "starting_room": "North Road"
+    "location": "North Road"
   },
   {
     "name": "Tiny Pebble",
     "description": "This is a little shiny pebble.",
     "price": 100,
-    "starting_room": "Norther Road"
+    "location": "Norther Road"
   },
   {
     "name": "Ancient Manuscript",
     "description": "A dusty old manuscript containing forgotten knowledge.",
     "price": 75,
-    "starting_room": "Study"
+    "location": "Study"
   },
   {
     "name": "Rusty Key",
     "description": "An old key, covered in rust. It looks like it could open an ancient lock.",
     "price": 15,
-    "starting_room": "Forgotten Pathway"
+    "location": "Forgotten Pathway"
   },
   {
     "name": "Stargazer's Telescope",
     "description": "An antique telescope, used for observing the stars and planets.",
     "price": 60,
-    "starting_room": "Stellar Conservatory"
+    "location": "Stellar Conservatory"
   },
   {
     "name": "Glowing Mushroom",
     "description": "A rare mushroom that emits a soft, magical glow.",
     "price": 25,
-    "starting_room": "Enchanted Forest"
+    "location": "Enchanted Forest"
   },
   {
     "name": "Crystal Pebble",
     "description": "A small, shiny pebble that seems to be made entirely of crystal.",
     "price": 30,
-    "starting_room": "Moonlit Meadow"
+    "location": "Moonlit Meadow"
   },
   {
     "name": "Ghostly Painting",
     "description": "A painting that eerily seems to watch you as you move.",
     "price": 50,
-    "starting_room": "Starstruck Sanctuary"
+    "location": "Starstruck Sanctuary"
   },
   {
     "name": "Ancient Artifact",
     "description": "An artifact from a long-lost civilization, its use and significance unknown.",
     "price": 80,
-    "starting_room": "Lunar Gaze Pond"
+    "location": "Lunar Gaze Pond"
   },
   {
     "name": "Dragon Scale",
     "description": "A scale from the hide of a dragon, tough and shimmering.",
     "price": 70,
-    "starting_room": "Twilight Thicket"
+    "location": "Twilight Thicket"
   },
   {
     "name": "Crystal Cluster",
     "description": "A cluster of brightly shining crystals, still embedded in the rock.",
     "price": 55,
-    "starting_room": "Crystal Cave"
+    "location": "Crystal Cave"
   },
   {
     "name": "Enchanted Flower",
     "description": "A beautiful flower with petals that change colors.",
     "price": 40,
-    "starting_room": "Moonlit Meadow"
+    "location": "Moonlit Meadow"
   },
   {
     "name": "Ancient Scroll",
     "description": "A scroll containing mysterious, ancient symbols.",
     "price": 70,
-    "starting_room": "Planetary Parlor"
+    "location": "Planetary Parlor"
   },
   {
     "name": "Mystical Lantern",
     "description": "An old lantern that emits a strange, ethereal glow.",
     "price": 60,
-    "starting_room": "Sunset Bridge"
+    "location": "Sunset Bridge"
   },
   {
     "name": "Silver Key",
     "description": "A small, intricate key made of pure silver.",
     "price": 25,
-    "starting_room": "Forgotten Pathway"
+    "location": "Forgotten Pathway"
   },
   {
     "name": "Herbal Elixir",
     "description": "A bottle of rare elixir made from exotic herbs.",
     "price": 45,
-    "starting_room": "Enchanted Forest"
+    "location": "Enchanted Forest"
   },
   {
     "name": "Golden Compass",
     "description": "An ornate compass that always points to an unknown location.",
     "price": 75,
-    "starting_room": "Mysterious Forest"
+    "location": "Mysterious Forest"
   },
   {
     "name": "Rune Stone",
     "description": "A stone tablet engraved with powerful runes.",
     "price": 50,
-    "starting_room": "Ancient Gatehouse"
+    "location": "Ancient Gatehouse"
   },
   {
     "name": "Phantom Cloak",
     "description": "A cloak that seems to flicker and blend into the shadows.",
     "price": 80,
-    "starting_room": "Odd Cave"
+    "location": "Odd Cave"
   },
   {
     "name": "Emerald Amulet",
     "description": "A beautiful amulet with a glowing green emerald.",
     "price": 65,
-    "starting_room": "Quasar Quarters"
+    "location": "Quasar Quarters"
   },
   {
     "name": "Wizard's Tome",
     "description": "A large book filled with arcane knowledge and spells.",
     "price": 85,
-    "starting_room": "Nova Nook"
+    "location": "Nova Nook"
   },
   {
     "name": "Dragon Egg",
     "description": "A rare, un-hatched dragon egg, warm to the touch.",
     "price": 90,
-    "starting_room": "Twilight Thicket"
+    "location": "Twilight Thicket"
   },
   {
     "name": "Glowing Mushroom",
     "description": "A rare mushroom that emits a soft, eerie glow.",
     "price": 15,
-    "starting_room": "Mysterious Forest"
+    "location": "Mysterious Forest"
   },
   {
     "name": "Rusty Sword",
     "description": "An old sword, its blade corroded but still sharp.",
     "price": 20,
-    "starting_room": "Shadowy Hollow"
+    "location": "Shadowy Hollow"
   },
   {
     "name": "Spectral Glasses",
     "description": "Glasses that allow you to see into the spirit realm.",
     "price": 35,
-    "starting_room": "Hall"
+    "location": "Hall"
   },
   {
     "name": "Ancient Coin",
     "description": "A coin from a long-lost civilization, covered in strange symbols.",
     "price": 30,
-    "starting_room": "Home Office"
+    "location": "Home Office"
   },
   {
     "name": "Magician's Wand",
     "description": "A wand said to have belonged to a powerful magician.",
     "price": 50,
-    "starting_room": "Living Room"
+    "location": "Living Room"
   },
   {
     "name": "Enchanted Harp",
     "description": "A harp that plays melodies by itself when the moon is full.",
     "price": 45,
-    "starting_room": "Kitchen"
+    "location": "Kitchen"
   },
   {
     "name": "Pirate's Map",
     "description": "An old, tattered map showing the location of hidden treasure.",
     "price": 40,
-    "starting_room": "Luminous Glade"
+    "location": "Luminous Glade"
   },
   {
     "name": "Mystic Orb",
     "description": "A mysterious orb that changes color with your mood.",
     "price": 55,
-    "starting_room": "Inside The Cave"
+    "location": "Inside The Cave"
   },
   {
     "name": "Talking Parrot",
     "description": "A colorful parrot that can mimic human speech.",
     "price": 25,
-    "starting_room": "Stellar Staircase"
+    "location": "Stellar Staircase"
   },
   {
     "name": "Timeless Clock",
     "description": "A clock that seems to tick backwards.",
     "price": 35,
-    "starting_room": "Twilight Thicket"
+    "location": "Twilight Thicket"
   },
   {
     "name": "Old Machine Part",
     "description": "A part from an old machine, its purpose unknown.",
     "price": 10,
-    "starting_room": "Factory"
+    "location": "Factory"
   },
   {
     "name": "Harmless Crystal",
     "description": "A beautifully formed crystal, forever frozen.",
     "price": 20,
-    "starting_room": "Frozen Moorland"
+    "location": "Frozen Moorland"
   },
   {
     "name": "Lost Compass",
     "description": "A compass, its needle spinning erratically.",
     "price": 25,
-    "starting_room": "North Road"
+    "location": "North Road"
   },
   {
     "name": "Weathered Statue",
     "description": "A statue, eroded by time, depicting an unknown figure.",
     "price": 30,
-    "starting_room": "Norther Road"
+    "location": "Norther Road"
   },
   {
     "name": "Trowel",
     "description": "Rusty round trowel, forgotten in the weeds.",
     "price": 15,
-    "starting_room": "Driveway"
+    "location": "Driveway"
   },
   {
     "name": "Vintage Chandelier",
     "description": "An elegant chandelier, its crystals dimmed by time.",
     "price": 55,
-    "starting_room": "Hall"
+    "location": "Hall"
   },
   {
     "name": "Old Photo Album",
     "description": "An album filled with photos of unknown people.",
     "price": 40,
-    "starting_room": "Living Room"
+    "location": "Living Room"
   },
   {
     "name": "Whispering Mirror",
     "description": "A mirror that seems to whisper when no one is looking.",
     "price": 45,
-    "starting_room": "Corridor"
+    "location": "Corridor"
   },
   {
     "name": "Flickering Lantern",
     "description": "An old lantern, its light flickering mysteriously.",
     "price": 20,
-    "starting_room": "Another Corridor"
+    "location": "Another Corridor"
   },
   {
     "name": "Silk Bedspread",
     "description": "A luxurious bedspread with an intricate design.",
     "price": 50,
-    "starting_room": "Master Bedroom"
+    "location": "Master Bedroom"
   },
   {
     "name": "Toy Soldier",
     "description": "An antique toy soldier, still standing guard.",
     "price": 10,
-    "starting_room": "Kids' Bedroom"
+    "location": "Kids' Bedroom"
   },
   {
     "name": "Recipe Book",
     "description": "A book of old family recipes, some pages stained.",
     "price": 25,
-    "starting_room": "Kitchen"
+    "location": "Kitchen"
   },
   {
     "name": "Dusty Globe",
     "description": "An old globe, with many countries bearing different names.",
     "price": 30,
-    "starting_room": "Study"
+    "location": "Study"
   },
   {
     "name": "Worn Hammock",
     "description": "A hammock, frayed but still inviting.",
     "price": 15,
-    "starting_room": "Patio"
+    "location": "Patio"
   },
   {
     "name": "Enchanted Rose",
     "description": "A rose that never seems to wilt.",
     "price": 40,
-    "starting_room": "Garden"
+    "location": "Garden"
   },
   {
     "name": "Toolbox",
     "description": "An old toolbox, filled with various worn tools.",
     "price": 35,
-    "starting_room": "Garage"
+    "location": "Garage"
   },
   {
     "name": "Antique Typewriter",
     "description": "A typewriter from another era, keys still polished.",
     "price": 45,
-    "starting_room": "Home Office"
+    "location": "Home Office"
   },
   {
     "name": "Garden Gnome",
     "description": "A gnome statue, its paint chipped and faded.",
     "price": 5,
-    "starting_room": "Front Garden"
+    "location": "Front Garden"
   },
   {
     "name": "Neighbour's Cat",
     "description": "A friendly cat that seems to belong to the neighbour.",
     "price": 0,
-    "starting_room": "Neighbour's House"
+    "location": "Neighbour's House"
   },
   {
     "name": "Mystical Lantern",
     "description": "An old lantern that emits a strange, ethereal glow.",
     "price": 60,
-    "starting_room": "Enchanted Forest"
+    "location": "Enchanted Forest"
   },
   {
     "name": "Gardening Gloves",
     "description": "A pair of gloves, caked with soil.",
     "price": 5,
-    "starting_room": "Garden Shed"
+    "location": "Garden Shed"
   },
   {
     "name": "Secret Key",
     "description": "A small key, hidden beneath a loose stone.",
     "price": 35,
-    "starting_room": "Secret Garden"
+    "location": "Secret Garden"
   },
   {
     "name": "Stone Fountain",
     "description": "An ornate fountain, dry and covered in vines.",
     "price": 45,
-    "starting_room": "Courtyard"
+    "location": "Courtyard"
   },
   {
     "name": "Old Lantern",
     "description": "An ancient lantern, flickering with a ghostly light.",
     "price": 10,
-    "starting_room": "Strange Shed"
+    "location": "Strange Shed"
   },
   {
     "name": "Fairy Ring",
     "description": "A ring of mushrooms, said to be a gateway to another realm.",
     "price": 35,
-    "starting_room": "Mysterious Forest"
+    "location": "Mysterious Forest"
   },
   {
     "name": "Hidden Treasure Chest",
     "description": "An old chest, covered in moss and vines.",
     "price": 50,
-    "starting_room": "Hidden Grove"
+    "location": "Hidden Grove"
   },
   {
     "name": "Magic Crystal",
     "description": "A crystal that pulses with a mysterious energy.",
     "price": 40,
-    "starting_room": "Enchanted Clearing"
+    "location": "Enchanted Clearing"
   },
   {
     "name": "Talking Tree",
     "description": "An old tree that whispers secrets when the wind blows.",
     "price": 30,
-    "starting_room": "Whispering Woods"
+    "location": "Whispering Woods"
   },
   {
     "name": "Abandoned Car",
     "description": "A rusty old car with a story to tell.",
     "price": 15,
-    "starting_room": "Deserted Gas Station"
+    "location": "Deserted Gas Station"
   },
   {
     "name": "Fading Map",
     "description": "A map that shows different paths at sunset.",
     "price": 25,
-    "starting_room": "Sunset Bridge"
+    "location": "Sunset Bridge"
   },
   {
     "name": "Forgotten Sword",
     "description": "A sword stuck in stone, waiting for its owner.",
     "price": 45,
-    "starting_room": "Forgotten Pathway"
+    "location": "Forgotten Pathway"
   },
   {
     "name": "Crystal Cluster",
     "description": "A bright cluster of crystals, glowing in the dark.",
     "price": 55,
-    "starting_room": "Crystal Cave"
+    "location": "Crystal Cave"
   },
   {
     "name": "Shadow Creature Figurine",
     "description": "A figurine of a mysterious creature that moves within the shadows.",
     "price": 5,
-    "starting_room": "Shadowy Hollow"
+    "location": "Shadowy Hollow"
   },
   {
     "name": "Ancient Scroll",
     "description": "A scroll containing secrets of the past.",
     "price": 60,
-    "starting_room": "Ancient Gatehouse"
+    "location": "Ancient Gatehouse"
   },
   {
     "name": "Radio Equipment",
     "description": "Old radio equipment, still crackling with static.",
     "price": 20,
-    "starting_room": "Abandoned Outpost"
+    "location": "Abandoned Outpost"
   },
   {
     "name": "Glowworm Jar",
     "description": "A jar full of glowworms, lighting up the dark.",
     "price": 35,
-    "starting_room": "Glowworm Grotto"
+    "location": "Glowworm Grotto"
   },
   {
     "name": "Dusty Diary",
     "description": "An old diary, filled with the cabin owner's memories.",
     "price": 25,
-    "starting_room": "Deserted Cabin"
+    "location": "Deserted Cabin"
   },
   {
     "name": "Luminous Flower",
     "description": "A flower that glows softly in the dark.",
     "price": 40,
-    "starting_room": "Luminous Glade"
+    "location": "Luminous Glade"
   },
   {
     "name": "Astronomer's Telescope",
     "description": "A telescope, aimed at the stars.",
     "price": 70,
-    "starting_room": "Stargazer's Summit"
+    "location": "Stargazer's Summit"
   },
   {
     "name": "Star Chart",
     "description": "A chart mapping out constellations and celestial bodies.",
     "price": 45,
-    "starting_room": "Celestial Observatory"
+    "location": "Celestial Observatory"
   },
   {
     "name": "Observatory Key",
     "description": "A key to unlock the secrets of the universe.",
     "price": 30,
-    "starting_room": "Observatory Tower"
+    "location": "Observatory Tower"
   },
   {
     "name": "Meteorite Fragment",
     "description": "A piece of a meteorite that fell from the sky.",
     "price": 55,
-    "starting_room": "Stargazing Plateau"
+    "location": "Stargazing Plateau"
   },
   {
     "name": "Moonstone",
     "description": "A stone that seems to hold the essence of the moon.",
     "price": 50,
-    "starting_room": "Lunar Gaze Pond"
+    "location": "Lunar Gaze Pond"
   },
   {
     "name": "Twilight Flower",
     "description": "A flower that blooms only in the moonlight.",
     "price": 35,
-    "starting_room": "Moonlit Meadow"
+    "location": "Moonlit Meadow"
   },
   {
     "name": "Thicket Crown",
     "description": "A crown made from the twigs of the twilight thicket.",
     "price": 20,
-    "starting_room": "Twilight Thicket"
+    "location": "Twilight Thicket"
   },
   {
     "name": "Eclipse Apple",
     "description": "An apple that grows only during an eclipse.",
     "price": 30,
-    "starting_room": "Eclipse Orchard"
+    "location": "Eclipse Orchard"
   },
   {
     "name": "Galactic Seed",
     "description": "A seed that glows with a light like distant stars.",
     "price": 40,
-    "starting_room": "Galactic Greenhouse"
+    "location": "Galactic Greenhouse"
   },
   {
     "name": "Stellar Gem",
     "description": "A gem that shines like a star.",
     "price": 65,
-    "starting_room": "Stellar Conservatory"
+    "location": "Stellar Conservatory"
   },
   {
     "name": "Cosmic Leaf",
     "description": "A leaf that changes colors like the cosmos.",
     "price": 15,
-    "starting_room": "Cosmic Canopy"
+    "location": "Cosmic Canopy"
   },
   {
     "name": "Astral Flower",
     "description": "A beautiful flower that seems to shimmer with starlight.",
     "price": 35,
-    "starting_room": "Astral Arboretum"
+    "location": "Astral Arboretum"
   },
   {
     "name": "Celestial Lyre",
     "description": "A lyre that plays the music of the spheres.",
     "price": 70,
-    "starting_room": "Celestial Amphitheatre"
+    "location": "Celestial Amphitheatre"
   },
   {
     "name": "Star Crystal",
     "description": "A crystal that shines with the light of a thousand stars.",
     "price": 55,
-    "starting_room": "Starstruck Sanctuary"
+    "location": "Starstruck Sanctuary"
   },
   {
     "name": "Comet Dust",
     "description": "Dust from a comet, sparkling with potential.",
     "price": 45,
-    "starting_room": "Cosmic Conservatory"
+    "location": "Cosmic Conservatory"
   },
   {
     "name": "Interstellar Book",
     "description": "A book containing knowledge of distant galaxies.",
     "price": 50,
-    "starting_room": "Interstellar Library"
+    "location": "Interstellar Library"
   },
   {
     "name": "Meteor Shard",
     "description": "A shard from a comet, radiating energy.",
     "price": 60,
-    "starting_room": "Comet's Alcove"
+    "location": "Comet's Alcove"
   },
   {
     "name": "Planetary Globe",
     "description": "A globe representing distant planets and their moons.",
     "price": 40,
-    "starting_room": "Planetary Parlor"
+    "location": "Planetary Parlor"
   },
   {
     "name": "Shooting Star Telescope",
     "description": "A telescope for viewing meteor showers.",
     "price": 75,
-    "starting_room": "Meteor Shower Balcony"
+    "location": "Meteor Shower Balcony"
   },
   {
     "name": "Cosmic Staircase Model",
     "description": "A model of a staircase that spirals like a galaxy.",
     "price": 30,
-    "starting_room": "Cosmic Stairwell"
+    "location": "Cosmic Stairwell"
   },
   {
     "name": "Astral Map",
     "description": "A map of the astral plane.",
     "price": 55,
-    "starting_room": "Astral Antechamber"
+    "location": "Astral Antechamber"
   },
   {
     "name": "Stellar Lens",
     "description": "A lens that magnifies distant stars.",
     "price": 25,
-    "starting_room": "Stellar Staircase"
+    "location": "Stellar Staircase"
   },
   {
     "name": "Nebula Bottle",
     "description": "A bottle that seems to contain a tiny nebula.",
     "price": 35,
-    "starting_room": "Nebula Nexus"
+    "location": "Nebula Nexus"
   },
   {
     "name": "Quasar Crystal",
     "description": "A crystal that pulsates with immense power.",
     "price": 65,
-    "starting_room": "Quasar Quarters"
+    "location": "Quasar Quarters"
   },
   {
     "name": "Supernova Shard",
     "description": "A shard from a supernova explosion.",
     "price": 70,
-    "starting_room": "Supernova Sanctuary"
+    "location": "Supernova Sanctuary"
   },
   {
     "name": "Galactic Painting",
     "description": "A painting that seems to capture the entire galaxy.",
     "price": 55,
-    "starting_room": "Galaxy Gallery"
+    "location": "Galaxy Gallery"
   },
   {
     "name": "Mirror of Truth",
     "description": "A mirror that shows more than just reflections.",
     "price": 50,
-    "starting_room": "Celestial Hall Of Mirrors"
+    "location": "Celestial Hall Of Mirrors"
   },
   {
     "name": "Time Capsule",
     "description": "A capsule containing items from a different era.",
     "price": 40,
-    "starting_room": "Infinity Attic"
+    "location": "Infinity Attic"
   },
   {
     "name": "Satellite Model",
     "description": "A detailed model of an orbiting satellite.",
     "price": 45,
-    "starting_room": "Orbiting Observatory"
+    "location": "Orbiting Observatory"
   },
   {
     "name": "Stardust Bottle",
     "description": "A bottle containing dust from a distant star.",
     "price": 35,
-    "starting_room": "Stardust Saloon"
+    "location": "Stardust Saloon"
   },
   {
     "name": "Miniature Black Hole",
     "description": "A safe, miniature black hole for study.",
     "price": 60,
-    "starting_room": "Nova Nook"
+    "location": "Nova Nook"
   },
   {
     "name": "Meteorite Knife",
     "description": "A knife made from a meteorite, sharp and durable.",
     "price": 50,
-    "starting_room": "Cosmic Kitchen"
+    "location": "Cosmic Kitchen"
   },
   {
     "name": "Alien Spice Jar",
     "description": "A jar of spice from an unknown planet.",
     "price": 30,
-    "starting_room": "Plutonian Pantry"
+    "location": "Plutonian Pantry"
   }
 ]

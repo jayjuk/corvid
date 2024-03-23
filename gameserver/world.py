@@ -1,4 +1,4 @@
-from logger import setup_logger
+from logger import setup_logger, exit
 
 # Set up logger
 logger = setup_logger()
@@ -22,12 +22,16 @@ class World:
     }
     grid_references = {}
     room_objects = {}
-    entities = []
+    # Register of entities with name as key
+    entities = {}
     done_path = {}
-    starting_room = "Road"
+    default_location = "Road"
 
     # Constructor
-    def __init__(self, mode=None, ai_enabled=True):
+    def __init__(self, mode=None, ai_enabled=True, name="jaysgame"):
+
+        # TODO: support many worlds by making this a parameter
+        self.name = name
 
         # Instantiate storage manager
         self.storage_manager = StorageManager()
@@ -36,8 +40,8 @@ class World:
 
         # Only load objects and merchants if not in any special mode
         if not mode:
-            self.load_room_objects()
             self.load_entities()
+            self.load_room_objects()
 
         # Separate AI manager for images (can use different model)
         if ai_enabled and self.storage_manager.cloud_blobs_enabled():
@@ -67,17 +71,8 @@ class World:
         # Add a grid reference for each room. This is used to validate that rooms don't overlap
         # Start with the first room found, grid references can go negative
         self.add_grid_references(
-            rooms, self.get_starting_room(), rooms[self.get_starting_room()], 0, 0
+            rooms, self.get_location(), rooms[self.get_location()], 0, 0
         )
-        # Write map to file
-        with open("rooms_dump.json", "w") as f:
-            f.write(str(rooms))
-
-        try:
-            with open("map.csv", "w") as f:
-                f.write(self.generate_map(rooms))
-        except Exception as e:
-            logger.error(f"Error writing map: {e}")
         return rooms
 
     def add_grid_references(
@@ -126,8 +121,8 @@ class World:
     def get_rooms(self):
         return self.rooms
 
-    def get_starting_room(self):
-        return self.starting_room
+    def get_location(self):
+        return self.default_location
 
     def generate_map(self, rooms, mode="grid"):
         # Generate a map of the world in text form
@@ -357,57 +352,111 @@ class World:
 
     # Load objects and return a map of room to objects
     def load_room_objects(self):
-        for this_object in self.storage_manager.get_objects():
+        logger.info("Loading room objects...")
+        object_load_count = 0
+        for this_object in self.storage_manager.get_python_objects(self.name, "Object"):
             # Populate the room_object_map with object versions of the objects
-            o = Object(
-                self,
-                this_object["name"],
-                this_object["description"],
-                this_object["price"],
-                this_object["starting_room"],
-            )
-            if this_object["starting_room"] in self.room_objects:
-                self.room_objects[this_object["starting_room"]].append(o)
+            o = Object(world_ref=self, init_dict=this_object)
+            self.register_object(o)
+            object_load_count += 1
+        if not object_load_count:
+            logger.info("No objects found, loading from file instead")
+            self.load_default_objects()
+
+    def load_default_objects(self):
+        for object_data in self.storage_manager.get_default_objects():
+            logger.info(f"Loading and storing object {object_data['name']}")
+            o = Object(world_ref=self, init_dict=object_data)
+            self.storage_manager.store_python_object("jaysgame", o)
+            self.register_object(o)
+
+    def register_object(self, object):
+        # Is it a room or an entity?
+        if object.location in self.entities:
+            self.entities[object.location].inventory.append(object)
+        else:
+            if object.location not in self.rooms:
+                # TODO: will happen if player picks up an object and its location is them, and then the world is restarted! Need to save players.
+                logger.info(
+                    f"Object location {object.location} for object {object.name} does not correspond to a room or entity. Resetting it to default location."
+                )
+                # This will also register the object with the room, and store the update
+                object.set_room(self.default_location)
             else:
-                self.room_objects[this_object["starting_room"]] = [o]
+                # Add object to list of objects for its starting room
+                self.add_object_to_room(object, object.location)
 
     def load_entities(self):
+        if self.entities:
+            exit("Load_entities called when entities are already registered!")
+        logger.info("Loading entities...")
+        for entity_role in ("Animal", "Merchant"):
+            for this_object in self.storage_manager.get_python_objects(
+                self.name, entity_role
+            ):
+                logger.info(f"Loading entity {this_object['name']}")
+                # Populate the room_object_map with object versions of the objects
+                # TODO: make this dynamic? first set up init_dict support for these objects
+                if this_object.get("role") == "merchant":
+                    entity_object = Merchant(
+                        self,
+                        name=this_object["name"],
+                        location=this_object["location"],
+                        inventory=[],
+                        description=this_object.get("description", ""),
+                    )
+                elif this_object.get("role") == "animal":
+                    entity_object = Animal(
+                        self,
+                        name=this_object["name"],
+                        location=this_object["location"],
+                        description=this_object.get("description", ""),
+                        actions=this_object.get("description", []),
+                    )
+                self.register_entity(entity_object)
+            if not self.entities:
+                # Storage empties - load from file
+                # TODO: move this to storage manager
+                logger.info("No stored entities - loading from file instead")
+                self.load_default_entities()
+
+    def load_default_entities(self):
+        logger.info("Loading default entities from file")
         with open(path.join("world_data", "starting_entities.json"), "r") as f:
             for entity in json.load(f):
+                logger.info(f"Loading {entity['name']}")
                 if entity["type"] == "merchant":
-                    merchant_objects = []
-                    for object_json in entity.get("wares", []):
-                        merchant_objects.append(
-                            Object(
-                                self,
-                                object_json["name"],
-                                object_json["description"],
-                                object_json["price"],
-                            )
-                        )
-                    Merchant(
+                    entity_object = Merchant(
                         self,
                         name=entity["name"],
-                        starting_room=entity["starting_room"],
-                        inventory=merchant_objects,
+                        location=entity["location"],
+                        inventory=[],
                         description=entity.get("description", ""),
                     )
                 elif entity["type"] == "animal":
-                    Animal(
+                    entity_object = Animal(
                         self,
                         name=entity["name"],
-                        starting_room=entity["starting_room"],
+                        location=entity["location"],
                         description=entity["description"],
                         actions=entity["actions"],
                         action_chance=entity["action_chance"],
                     )
                 else:
-                    logger.error(f"Invalid or unsupported entity type {entity['type']}")
-                    sys.exit()
+                    exit(logger, f"Invalid or unsupported entity type {entity['type']}")
+                self.storage_manager.store_python_object(self.name, entity_object)
 
     # Static method to register entity in the world
     def register_entity(self, entity):
-        self.entities.append(entity)
+        # TODO: unique ID to allow ants etc
+        self.entities[entity.name] = entity
+
+    # Return list of entity names (e.g. for checking valid object starting locations)
+    def get_entity_names(self):
+        entity_names = []
+        for entity in self.entities.values():
+            entity_names.append(entity.name)
+        return entity_names
 
     def get_currency(self, amount=None, short=False, plural=False):
         if amount is None:

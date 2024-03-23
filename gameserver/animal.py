@@ -13,7 +13,7 @@ class Animal(Entity):
         self,
         world,
         name,
-        starting_room,
+        location,
         description="",
         actions=None,
         action_chance=0,  # 0 to 1
@@ -23,7 +23,7 @@ class Animal(Entity):
         logger.info(f"Creating animal of type {name}")
 
         # Set up entity.
-        Entity.__init__(self, world, name, "animal", starting_room, description)
+        Entity.__init__(self, world, name, "animal", location, description)
 
         self.action_chance = action_chance
         self.actions = actions or []
@@ -36,7 +36,7 @@ class Animal(Entity):
 
     def maybe_pick_direction_to_move(self):
         if random.random() < self.action_chance:
-            possible_exits = list(self.world.rooms[self.current_room]["exits"].keys())
+            possible_exits = list(self.world.rooms[self.location]["exits"].keys())
             direction = random.choice(possible_exits)
             return direction
         return ""

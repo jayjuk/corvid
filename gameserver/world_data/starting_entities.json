@@ -2,34 +2,22 @@
   {
     "name": "Gambino",
     "type": "merchant",
-    "starting_room": "Road",
-    "wares": [
-      { "name": "apple", "description": "A juicy apple.", "price": 1 },
-      { "name": "banana", "description": "A yellowy banana.", "price": 2 },
-      { "name": "pear", "description": "A peary pear.", "price": 3 },
-      {
-        "name": "red button",
-        "description": "OMG, it's The Button!",
-        "price": 999
-      }
-    ]
+    "location": "Road"
   },
   {
     "name": "Abel",
     "type": "merchant",
-    "starting_room": "Forgotten Pathway",
-    "wares": []
+    "location": "Forgotten Pathway"
   },
   {
     "name": "Danny",
     "type": "merchant",
-    "starting_room": "Luminous Glade",
-    "wares": []
+    "location": "Luminous Glade"
   },
   {
     "name": "Fox",
     "type": "animal",
-    "starting_room": "Norther Road",
+    "location": "Norther Road",
     "description": "A plump, healthy-looking fox with a permanent cheeky smile on its face",
     "actions": [
       "yawns",

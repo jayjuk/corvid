@@ -55,6 +55,11 @@ def exit(logger, error_message=None):
         logger.critical(error_message)
         exit_code = 1
     else:
+        # Check logger not a string
+        if isinstance(logger, str):
+            print(
+                f"I suspect an error message was passed into the logger parameter: {logger}"
+            )
         # If no message, assume normal exit.
         exit_code = 0
     sys.exit(exit_code)
