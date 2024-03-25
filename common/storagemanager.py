@@ -165,175 +165,10 @@ class StorageManager:
                 logger.error("Could not resolve blob client.")
         return None
 
-    # Store the rooms from the dict format in the database
-    def store_room(self, rooms, new_room_name, changed_room, new_exit_direction):
-        new_room = rooms[new_room_name]
-        logger.info(
-            f"Storing new room {new_room['name']} and adding exit {new_exit_direction} to {changed_room}"
-        )
-        rooms_client = self.table_service_client.create_table_if_not_exists("rooms")
-
-        # Store room in Azure
-        # First check if key exists
-        if not self.check_rowkey(rooms_client, new_room["name"]):
-            new_room["PartitionKey"] = "jaysgame"
-            new_room["RowKey"] = new_room["name"]
-            logger.info(f"Storing {new_room['name']}")
-            room_only = new_room.copy()
-            del room_only["exits"]
-            rooms_client.create_entity(entity=room_only)
-        else:
-            logger.warning(f"Room {new_room['name']} already stored")
-
-        exits_client = self.table_service_client.create_table_if_not_exists("exits")
-        # Store exits in Azure
-        # Should just loop once
-        for direction, destination in new_room["exits"].items():
-            exit_dict = {
-                "PartitionKey": "jaysgame",
-                "RowKey": f"{new_room['name']}_{direction}",
-                "room": new_room["name"],
-                "direction": direction,
-                "destination": destination,
-            }
-
-            if not self.check_rowkey(exits_client, exit_dict["RowKey"]):
-                logger.info(f"Storing {exit_dict['RowKey']}")
-                exits_client.create_entity(entity=exit_dict)
-            else:
-                logger.warning(f"Exit {exit_dict['RowKey']} already stored")
-
-        # Also save the new exit of the changed room
-        exit_dict = {
-            "PartitionKey": "jaysgame",
-            "RowKey": f"{changed_room}_{new_exit_direction}",
-            "room": changed_room,
-            "direction": new_exit_direction,
-            "destination": new_room["name"],
-        }
-        if not self.check_rowkey(exits_client, exit_dict["RowKey"]):
-            logger.info(f"Storing {exit_dict['RowKey']}")
-            exits_client.create_entity(entity=exit_dict)
-        else:
-            logger.warning(f"Exit {exit_dict['RowKey']} already stored")
-
-    # Utility function to delete room from cloud (not used in game)
-    def delete_room(self, room_name):
-        rooms_client = self.table_service_client.get_table_client("rooms")
-        exits_client = self.table_service_client.get_table_client("exits")
-
-        # Delete exits from Azure
-        # Should just loop once
-        for direction in ["north", "east", "south", "west"]:
-            exit_name = f"{room_name}_{direction}"
-            if self.check_rowkey(exits_client, exit_name):
-                logger.info(f"Deleting {exit_name}")
-                exits_client.delete_entity(partition_key="jaysgame", row_key=exit_name)
-            else:
-                logger.warning(f"Exit {exit_name} not found")
-
-        # Also delete where direction is this room
-        for entity in exits_client.query_entities(f"destination eq '{room_name}'"):
-            logger.info(f"Deleting {entity['RowKey']}")
-            exits_client.delete_entity(
-                partition_key="jaysgame", row_key=entity["RowKey"]
-            )
-
-        # Delete room from Azure
-        # First check if key exists
-        if self.check_rowkey(rooms_client, room_name):
-            logger.info(f"Deleting {room_name}")
-            rooms_client.delete_entity(partition_key="jaysgame", row_key=room_name)
-        else:
-            logger.warning(f"Room {room_name} not found")
-
-    # Store all objects (expects list of object dicts)
-    def store_objects(self, objects):
-        logger.info("Storing all objects")
-        for object in objects:
-            self.store_object(object)
-
-    # Store all objects
-    def store_object(self, object):
-        logger.info(f"Storing object: {object['name']}")
-
-        objects_client = self.table_service_client.create_table_if_not_exists("objects")
-
-        # Store object in Azure
-        # First check if key exists
-        if not self.check_rowkey(objects_client, object["name"]):
-            object["PartitionKey"] = "jaysgame"
-            object["RowKey"] = object["name"]
-            logger.info(f"Storing {object['name']}")
-            objects_client.create_entity(entity=object)
-        else:
-            logger.warning(f"Object {object['name']} already stored")
-
-    def get_objects_from_cloud(self):
-        objects_client = self.table_service_client.get_table_client("objects")
-        if objects_client:
-            objects = []
-            for entity in objects_client.query_entities(""):
-                objects.append(
-                    {
-                        "name": entity["RowKey"],
-                        "description": entity["description"],
-                        "price": entity.get("price", None),
-                        "location": entity.get("starting_room", None),
-                        "starting_merchant": entity.get("starting_merchant", None),
-                    }
-                )
-            return objects
-        exit(logger, "No objects found in cloud!")
-
-    # Get objects and return in the dict format expected by the game server
-    def get_objects(self):
-        # Try cloud first
-        logger.info("Sourcing objects from cloud")
-        objects = self.get_objects_from_cloud()
-        if objects:
-            return objects
-        # Fall back to local db
-        logger.info("Sourcing objects from static file")
-        return self.get_default_objects()
-
     def get_default_objects(self):
         with open(path.join("world_data", "starting_objects.json"), "r") as f:
             default_objects = json.load(f)
         return default_objects
-
-    def get_rooms_from_cloud(self):
-        rooms_client = self.table_service_client.get_table_client("rooms")
-        if rooms_client:
-            rooms = {}
-            for entity in rooms_client.query_entities(""):
-                rooms[entity["RowKey"]] = {
-                    "name": entity["RowKey"],
-                    "description": entity["description"],
-                    "image": entity.get("image", None),
-                    "exits": {},
-                }
-            exits_client = self.table_service_client.get_table_client("exits")
-            if exits_client:
-                for entity in exits_client.query_entities(""):
-                    rooms[entity["room"]]["exits"][entity["direction"]] = entity[
-                        "destination"
-                    ]
-                return rooms
-            else:
-                exit(logger, "No exits found in cloud")
-        else:
-            exit(logger, "No rooms found in cloud")
-
-    # Get rooms and return in the dict format expected by the game server
-    def get_rooms(self):
-        # Try cloud first
-        logger.info("Loading rooms from cloud")
-        rooms = self.get_rooms_from_cloud()
-        if rooms:
-            return rooms
-        logger.warning("No rooms found in cloud - loading from static")
-        return self.get_default_rooms()
 
     def get_default_rooms(self):
         # This is the built-in static rooms file
@@ -380,7 +215,7 @@ class StorageManager:
 
     # Store all Python objects, received as actual objects
     def store_python_object(self, game_name, object):
-        logger.info(f"Storing python object in game {game_name}: {object.__dict__}")
+        logger.debug(f"Storing python object in game {game_name}: {object.__dict__}")
 
         objects_client = self.table_service_client.create_table_if_not_exists(
             "PythonObjects"
@@ -427,3 +262,8 @@ class StorageManager:
                 objects.append(entity.copy())
             return objects
         exit(logger, "No objects found in cloud!")
+
+    # Explicitly get one object by its key
+    def get_python_object(self, game_name, object_type, rowkey_value):
+        for object in self.get_python_objects(game_name, object_type, rowkey_value):
+            return object

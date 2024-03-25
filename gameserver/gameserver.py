@@ -27,11 +27,11 @@ def connect(sid, environ):
 
 # Player setup
 @sio.event
-def set_player_name(sid, entity):
+def set_player_name(sid, player):
     logger.info(
-        f"Client requesting player setup: {sid}, {entity.get('name')}, {entity.get('role')}"
+        f"Client requesting player setup: {sid}, {player.get('name')}, {player.get('role')}"
     )
-    outcome = game_manager.process_player_setup(sid, entity)
+    outcome = game_manager.process_player_setup(sid, player)
     # Blank outcome = success
     if outcome:
         # Issue with player name setting - log out client with error message

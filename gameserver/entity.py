@@ -46,7 +46,7 @@ class Entity:
         self.world.storage_manager.store_python_object(self.world.name, self)
 
     # Getter for player's current location
-    def get_current_room(self):
+    def get_current_location(self):
         return self.location
 
     def can_add_object(self):

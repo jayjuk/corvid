@@ -6,7 +6,7 @@ from object import Object
 
 for object_data in storage_manager.get_objects():
     print(object_data)
-    o = Object(world_ref=None, init_dict=object_data)
+    o = Object(world=None, init_dict=object_data)
     storage_manager.store_python_object("jaysgame", o)
 
 for object_data in storage_manager.get_python_objects("jaysgame", "Object"):

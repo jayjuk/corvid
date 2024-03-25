@@ -8,44 +8,34 @@ logger = setup_logger()
 class Object:
     def __init__(
         self,
-        world_ref,
-        object_name=None,
-        object_description=None,
+        world,
+        name=None,
+        description=None,
         price=0,
         location=None,
         init_dict=None,
     ):
         if init_dict:
             self.__dict__.update(init_dict)
-            # Override world (in DB it is the game name, we need a pointer to the world object)
-            self.world = world_ref
-            # TODO: remove this once migration from old objects is complete
-            # if hasattr(self, "starting_room"):
-            #    self.location = self.starting_room
-            #    del self.starting_room
-        else:
-            if object_name:
-                self.name = object_name
-                self.description = object_description
-                self.location = location
-                self.price = price
+        elif name:
+            self.name = name
+            self.description = description
+            self.location = location
+            self.price = price
 
         # An object belongs to a world
-        self.world = world_ref
+        self.world = world
 
         self.check_object_name(self.name)
-        # if (
-        #     hasattr(self, "location")
-        #     and world_ref
-        #     and self.location is not None
-        #     and self.location != "None"
-        #     and self.location not in world_ref.rooms
-        #     and self.location not in world_ref.get_entity_names()
-        # ):
-        #     exit(
-        #         logger,
-        #         f"Invalid location {location} specified for object {self.name}",
-        #     )
+        if (
+            hasattr(self, "location")
+            and self.location not in world.rooms
+            and self.location not in world.get_entity_names()
+        ):
+            exit(
+                logger,
+                f"Invalid location {location} specified for object {self.name}",
+            )
 
         logger.info(f"Creating object {self.name}" + f" starting in {self.location}")
 
@@ -97,7 +87,7 @@ class Object:
                     # Remove from room
                     # TODO: review if this is right way to do it
                     self.world.remove_object_from_room(
-                        self, new_entity.get_current_room()
+                        self, new_entity.get_current_location()
                     )
 
             else:

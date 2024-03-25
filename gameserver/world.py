@@ -6,8 +6,10 @@ logger = setup_logger()
 import aimanager
 from storagemanager import StorageManager
 from merchant import Merchant
+from room import Room
 from animal import Animal
 from object import Object
+from player import Player
 import json
 from os import path
 import sys
@@ -36,6 +38,7 @@ class World:
         # Instantiate storage manager
         self.storage_manager = StorageManager()
 
+        # Populate dictionary of room objects, keyed off room name (aka location)
         self.rooms = self.load_rooms()
 
         # Only load objects and merchants if not in any special mode
@@ -66,14 +69,24 @@ class World:
 
     def load_rooms(self):
         # Get rooms from storage
-        rooms = self.storage_manager.get_rooms()
+        rooms = self.storage_manager.get_python_objects(self.name, "Room")
+
+        if not rooms:
+            logger.warning("No rooms found in cloud - loading from static")
+            rooms = self.storage_manager.get_default_rooms()
+
+        rooms_dict = {}
+        for room in rooms:
+            print(room)
+            r = Room(world=self, init_dict=room)
+            rooms_dict[r.name] = r
 
         # Add a grid reference for each room. This is used to validate that rooms don't overlap
         # Start with the first room found, grid references can go negative
         self.add_grid_references(
-            rooms, self.get_location(), rooms[self.get_location()], 0, 0
+            rooms_dict, self.get_location(), rooms_dict[self.get_location()], 0, 0
         )
-        return rooms
+        return rooms_dict
 
     def add_grid_references(
         self, rooms, room_name, room, x, y, prv_direction=None, indent=0
@@ -82,7 +95,7 @@ class World:
         logger.debug(
             " " * indent + f"Checking grid reference {grid_ref_str} at {room_name}"
         )
-        room["grid_reference"] = grid_ref_str
+        room.grid_reference = grid_ref_str
         if grid_ref_str in self.grid_references:
             if room_name not in self.grid_references[grid_ref_str]:
                 logger.error(
@@ -93,7 +106,7 @@ class World:
             # logger.info(f"Adding grid reference {grid_ref_str} to {room_name}")
             self.grid_references[grid_ref_str] = [room_name]
         # Go through each exit and recursively add grid references
-        for direction, next_room in room["exits"].items():
+        for direction, next_room in room.exits.items():
             # Get the next x and y
             next_x = x + self.directions[direction][0]
             next_y = y + self.directions[direction][1]
@@ -134,11 +147,11 @@ class World:
             min_y = 0
             max_y = 0
             for room in rooms:
-                if "grid_reference" not in rooms[room]:
+                if not hasattr(rooms[room], "grid_reference"):
                     logger.error(f"No grid reference for {room}")
                 else:
-                    x = int(rooms[room]["grid_reference"].split(",")[0])
-                    y = int(rooms[room]["grid_reference"].split(",")[1])
+                    x = int(rooms[room].grid_reference.split(",")[0])
+                    y = int(rooms[room].grid_reference.split(",")[1])
                     if x < min_x:
                         min_x = x
                     if x > max_x:
@@ -158,25 +171,31 @@ class World:
         else:
             world_map = ""
             for room in rooms:
-                world_map += room + ": " + rooms[room]["description"] + "\n"
-                for exit in rooms[room]["exits"]:
-                    world_map += "  " + exit + ": " + rooms[room]["exits"][exit] + "\n"
+                world_map += room + ": " + rooms[room].description + "\n"
+                for exit in rooms[room].exits:
+                    world_map += "  " + exit + ": " + rooms[room].exits[exit] + "\n"
             return world_map
+
+    def get_exits(self, location):
+        return list(self.rooms[location].exits.keys())
+
+    def get_next_room(self, location, direction):
+        return self.rooms[location].exits[direction]
 
     def get_room_exits_description(self, room):
         exits = " Available exits: "
-        for exit in self.rooms[room]["exits"]:
-            exits += exit + ": " + self.rooms[room]["exits"][exit] + ".  "
+        for exit in self.rooms[room].exits:
+            exits += exit + ": " + self.rooms[room].exits[exit] + ".  "
         return exits
 
     def get_room_build_options(self, room):
         # Check that there is not already a room in this location based on the grid reference
         # Get the grid reference of the current room
-        current_room_grid_reference = self.rooms[room]["grid_reference"]
+        current_room_grid_reference = self.rooms[room].grid_reference
 
         build_directions = []
         for direction in self.directions:
-            if direction not in self.rooms[room]["exits"]:
+            if direction not in self.rooms[room].exits:
                 # Get the hypothetical x and y of this direction
                 x = (
                     int(current_room_grid_reference.split(",")[0])
@@ -207,7 +226,7 @@ class World:
         if not brief:
             # Contents of curly brackets removed from AI description,
             # Actual brackets removed in UI
-            description = "{" + self.rooms[room]["description"] + "\n" + "}"
+            description = "{" + self.rooms[room].description + "\n" + "}"
 
         if show_exits:
             description += self.get_room_exits_description(room)
@@ -222,8 +241,8 @@ class World:
         return description
 
     def get_room_image_url(self, room_name):
-        url = self.storage_manager.get_image_url(self.rooms[room_name]["image"])
-        logger.info(f"URL for {self.rooms[room_name]['name']}: {url}")
+        url = self.storage_manager.get_image_url(self.rooms[room_name].image)
+        logger.info(f"URL for {self.rooms[room_name].name}: {url}")
         return url
 
     def get_opposite_direction(self, direction):
@@ -237,7 +256,7 @@ class World:
 
     def add_room(
         self,
-        current_room,
+        current_location,
         direction,
         new_room_name,
         room_description,
@@ -249,26 +268,27 @@ class World:
                 return f"Sorry, there is already a room called '{new_room_name}'."
 
         # Check that the current room does not already have  an exit in the specified direction
-        if direction in self.rooms[current_room]["exits"]:
-            return f"Sorry, there is already an exit in the {direction} from {current_room}."
+        if direction in self.get_exits(current_location):
+            return f"Sorry, there is already an exit in the {direction} from {current_location}."
+
+        # Resolve pointer to current room object
+        current_room = self.rooms[current_location]
 
         # Check that there is not already a room in this location based on the grid reference
-        # Get the grid reference of the current room
-        current_room_grid_reference = self.rooms[current_room]["grid_reference"]
         # Get the next x and y
         next_x = (
-            int(current_room_grid_reference.split(",")[0])
+            int(current_room.grid_reference.split(",")[0])
             + self.directions[direction][0]
         )
         next_y = (
-            int(current_room_grid_reference.split(",")[1])
+            int(current_room.grid_reference.split(",")[1])
             + self.directions[direction][1]
         )
         # Check if there is already a room in this location
         new_grid_reference = f"{next_x},{next_y}"
         if new_grid_reference in self.grid_references:
             return (
-                f"Sorry, there is already a room to the {direction} of {current_room}, "
+                f"Sorry, there is already a room to the {direction} of {current_location}, "
                 + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else. "
                 + self.get_room_build_options(current_room)
             )
@@ -276,7 +296,9 @@ class World:
         # Format the room name to be title case
         new_room_name = new_room_name.title()
 
-        logger.info(f"Adding room {new_room_name} to the {direction} of {current_room}")
+        logger.info(
+            f"Adding room {new_room_name} to the {direction} of {current_location}"
+        )
 
         # Try to create the image and save it
         if self.image_ai_manager:
@@ -304,22 +326,25 @@ class World:
             "description": room_description,
             "image": image_name,
             "creator": creator_name,
-            "exits": {self.get_opposite_direction(direction): current_room},
+            "exits": {self.get_opposite_direction(direction): current_location},
         }
         # Add the new room to the exits of the current room
-        self.rooms[current_room]["exits"][direction] = new_room_name
-        # Store current and new room (current has changed in that exit has been added)
-        self.storage_manager.store_room(
-            self.rooms,
+        current_room.exits[direction] = new_room_name
+        self.storage_manager.store_python_object(self.name, current_room)
+
+        # Create and store room
+        new_room_object = Room(
+            self,
             new_room_name,
-            current_room,
-            direction,
+            room_description,
+            exits={self.get_opposite_direction(direction): current_location},
         )
+        self.storage_manager.store_python_object(self.name, new_room_object)
 
     # Search room for object by name and return reference to it if found
-    def search_object(self, object_name, room):
-        logger.info(f"Searching for object {object_name} in {room}")
-        for object in self.room_objects.get(room, []):
+    def search_object(self, object_name, location):
+        logger.info(f"Searching for object {object_name} in {location}")
+        for object in self.room_objects.get(location, []):
             logger.info(f"  Checking {object.get_name()}")
             # Return the first object that includes the given object name
             # So "get clock" will find "dusty clock" and "grandfather clock"
@@ -332,8 +357,8 @@ class World:
         return None
 
     # Room objects getter
-    def get_room_objects(self, room):
-        return self.room_objects.get(room, [])
+    def get_room_objects(self, location):
+        return self.room_objects.get(location, [])
 
     # Room objects setter
     def add_object_to_room(self, object, room_name):
@@ -356,7 +381,7 @@ class World:
         object_load_count = 0
         for this_object in self.storage_manager.get_python_objects(self.name, "Object"):
             # Populate the room_object_map with object versions of the objects
-            o = Object(world_ref=self, init_dict=this_object)
+            o = Object(world=self, init_dict=this_object)
             self.register_object(o)
             object_load_count += 1
         if not object_load_count:
@@ -366,7 +391,7 @@ class World:
     def load_default_objects(self):
         for object_data in self.storage_manager.get_default_objects():
             logger.info(f"Loading and storing object {object_data['name']}")
-            o = Object(world_ref=self, init_dict=object_data)
+            o = Object(world=self, init_dict=object_data)
             self.storage_manager.store_python_object("jaysgame", o)
             self.register_object(o)
 
@@ -471,3 +496,15 @@ class World:
             return str(amount) + " penny"
         elif amount > 1 or amount == 0:
             return str(amount) + " pennies"
+
+    def create_player(self, sid, name, role):
+        # Access player's initial state if they have played before.
+        stored_player_data = self.storage_manager.get_python_object(
+            self.name, object_type="Player", rowkey_value=name
+        )
+        p = Player(self, sid, name, role, stored_player_data=stored_player_data)
+        # Store player's data again (updates last login timestamp if nothing else)
+        self.storage_manager.store_python_object(self.name, p)
+
+        # TODO: handle issues and return outcome if so
+        return "", p

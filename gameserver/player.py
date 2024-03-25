@@ -10,7 +10,9 @@ from entity import Entity
 
 # Player class
 class Player(Entity):
-    def __init__(self, world, sid, player_name, player_role="player"):
+    def __init__(
+        self, world, sid, player_name, player_role="player", stored_player_data=None
+    ):
         # First check if player name is valid
         if not (
             player_name
@@ -32,16 +34,9 @@ class Player(Entity):
         # Call superclass constructor
         Entity.__init__(self, world, player_name, player_role)
 
-        # Store player's initial state
-        stored_player_data = world.storage_manager.get_python_objects(
-            world.name, object_type="Player", rowkey_value=player_name
-        )
         if stored_player_data:
             logger.info(f"Retrieved player {player_name} data from database")
-            print(self.__dict__)
-            print("new:")
-            print(stored_player_data[0])
-            self.__dict__.update(stored_player_data[0])
+            self.__dict__.update(stored_player_data)
             # But use latest sid and make world object
             self.sid = sid
             self.world = world
@@ -68,8 +63,7 @@ class Player(Entity):
             # Define inventory limit for players
             self.max_inventory = 5
 
-            # Store player's initial state
-            world.storage_manager.store_python_object(world.name, self)
+        self.last_login = time.time()
 
         # Last action time is used to check for idle players, always refresh this
         self.last_action_time = time.time()
