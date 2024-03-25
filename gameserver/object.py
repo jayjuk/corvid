@@ -65,7 +65,6 @@ class Object:
 
     def set_location(self, location):
         self.location = location
-        # TODO: Is this a bit gross? if so, where should this live?
         self.world.storage_manager.store_python_object(self.world.name, self)
 
     # Setter (i.e. player drops it)

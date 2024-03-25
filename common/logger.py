@@ -1,6 +1,7 @@
 import logging
 import sys
 import os
+import time
 
 # INSTRUCTIONS TO USE THIS MODULE
 # At the top of your module, add the following:
@@ -11,10 +12,24 @@ import os
 # (e.g. gameserver.log)
 
 
+# Shortest  way to quickly output some content, whatever the mode, easy to then find these statements and remove them later
+def debug(
+    debug_content,
+    debug_content2="",
+    debug_content3="",
+):
+    print(f"*** DEBUG: {debug_content} {debug_content2} {debug_content3} ***")
+    sleep_time = 1
+    print(f"Sleeping {sleep_time} seconds...")
+    time.sleep(sleep_time)
+
+
+# Flag for regular/semipermanent debug logging to be made visible at runtime
 def is_debug_mode():
     return len(sys.argv) > 1 and sys.argv[1].lower() == "debug"
 
 
+# Function invoked by most modules for shared and common logging
 def setup_logger(file_name="unit_testing.log"):
     # If logger already set up, return it
     if logging.getLogger().hasHandlers():

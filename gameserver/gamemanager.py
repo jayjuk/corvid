@@ -30,6 +30,7 @@ class GameManager:
         # Static variables
         self.max_inactive_time = 300  # 5 minutes
         self.background_loop_active = False
+        self.game_loop_time_secs = 5  # Animals etc move on this cycle
 
         # Set up game language
         self.setup_commands()
@@ -772,11 +773,13 @@ class GameManager:
             )
 
         # Create the player
-        try:
-            player = Player(self.world, sid, player_name, entity.get("role"))
-        except ValueError as e:
-            # Issue with player creation
-            return str(e)
+        # try:
+        player = Player(self.world, sid, player_name, entity.get("role"))
+        # except ValueError as e:
+        #    # Issue with player creation
+        #    traceback.print_stack()
+        #    traceback.print_exc()
+        #    return "Error creating Player object:" + str(e)
 
         # Register this player with the game server
         self.register_player(sid, player, player_name)
@@ -921,7 +924,7 @@ class GameManager:
             return "start in"
         return f"head {direction} to"
 
-    # Handle a player's move
+    # Handle an entity's move
     def move_entity(self, entity, direction, next_room=None):
         # Set new room
         previous_room = entity.get_current_room()
@@ -984,7 +987,7 @@ class GameManager:
             self.emit_player_room_update(entity, next_room)
 
         # Set new room
-        entity.move_to_room(next_room)
+        entity.set_location(next_room)
 
         return message
 
@@ -1129,7 +1132,7 @@ class GameManager:
     def game_background_loop(self):
         while self.background_loop_active:
             # Run the loop periodically
-            eventlet.sleep(30)
+            eventlet.sleep(self.game_loop_time_secs)
 
             # Time out players who do nothing for too long.
             self.check_players_activity()
@@ -1143,10 +1146,12 @@ class GameManager:
                 logger.info(f"Checking animal {animal.name}")
                 direction = animal.maybe_pick_direction_to_move()
                 if direction:
+                    logger.info(f"Moving {animal.name} {direction}")
                     self.move_entity(animal, direction)
                 else:
                     gesture_description = animal.maybe_gesture()
                     if gesture_description:
+                        logger.info(f"{animal.name} will gesture {gesture_description}")
                         # Check for other players who will witness the gesture
                         for other_entity in self.get_other_entities(
                             None, players_only=True

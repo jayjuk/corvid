@@ -1,4 +1,4 @@
-from logger import setup_logger
+from logger import setup_logger, debug
 
 # Set up logger
 logger = setup_logger()
@@ -30,12 +30,16 @@ class Animal(Entity):
 
     # Future animal-specific behaviours and attributes coming soon!
     def maybe_gesture(self):
-        if random.random() < self.action_chance:
+        r = random.random()
+        debug(r, self.action_chance)
+        if r < self.action_chance:
             gesture = random.choice(self.actions)
             return f"The {self.name} {gesture}."
 
     def maybe_pick_direction_to_move(self):
-        if random.random() < self.action_chance:
+        r = random.random()
+        debug(r, self.action_chance)
+        if r < self.action_chance:
             possible_exits = list(self.world.rooms[self.location]["exits"].keys())
             direction = random.choice(possible_exits)
             return direction

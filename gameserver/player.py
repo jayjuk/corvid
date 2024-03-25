@@ -24,8 +24,6 @@ class Player(Entity):
                 "Sorry, that name is not valid, it should be up to 20 alphabetical characters only. Please try again."
             )
 
-        logger.info(f"Creating player {player_name}, sid {sid}")
-
         # Set up player
         # TODO: Remove this, it's for simulating AI builders
         if player_name == "Doug":
@@ -34,30 +32,47 @@ class Player(Entity):
         # Call superclass constructor
         Entity.__init__(self, world, player_name, player_role)
 
-        # Set flag to indicate this is a player
-        self.is_player = True
-
-        # Set default score
-        self.money = (
-            100  # TODO: change this to 0 once other ways to earn money are implemented
+        # Store player's initial state
+        stored_player_data = world.storage_manager.get_python_objects(
+            world.name, object_type="Player", rowkey_value=player_name
         )
+        if stored_player_data:
+            logger.info(f"Retrieved player {player_name} data from database")
+            print(self.__dict__)
+            print("new:")
+            print(stored_player_data[0])
+            self.__dict__.update(stored_player_data[0])
+            # But use latest sid and make world object
+            self.sid = sid
+            self.world = world
+        else:
+            logger.info(f"Creating player {player_name}, sid {sid}")
 
-        # Last action time is used to check for idle players
+            # Set flag to indicate this is a player
+            self.is_player = True
+
+            # Set default score
+            self.money = 100  # TODO: change this to 0 once other ways to earn money are implemented
+
+            # Register of rooms this player has visited before (so they don't get long descriptions again)
+            self.seen_rooms = {}
+            self.seen_rooms[self.location] = True
+
+            # SID is the unique identifier for this player used by SocketIO
+            self.sid = sid
+
+            # Define history
+            self.max_input_history_length = 1000
+            self.input_history = []
+
+            # Define inventory limit for players
+            self.max_inventory = 5
+
+            # Store player's initial state
+            world.storage_manager.store_python_object(world.name, self)
+
+        # Last action time is used to check for idle players, always refresh this
         self.last_action_time = time.time()
-
-        # Register of rooms this player has visited before (so they don't get long descriptions again)
-        self.seen_rooms = {}
-        self.seen_rooms[self.location] = True
-
-        # SID is the unique identifier for this player used by SocketIO
-        self.sid = sid
-
-        # Define history
-        self.max_input_history_length = 1000
-        self.input_history = []
-
-        # Define inventory limit for players
-        self.max_inventory = 5
 
     # Getter for input history (optional input of number of entries to return)
     def get_input_history(self, number_of_entries=1):
@@ -92,10 +107,14 @@ class Player(Entity):
             return False
         else:
             self.money -= amount
+            # Store change
+            self.world.storage_manager.store_python_object(self.world.name, self)
             return True
 
     def add_money(self, amount):
         self.money += amount
+        # Store change
+        self.world.storage_manager.store_python_object(self.world.name, self)
 
     def can_add_object(self):
         return len(self.inventory) < self.max_inventory
@@ -107,8 +126,8 @@ class Player(Entity):
         self.inventory.append(object)
 
     # Override for player's location change
-    def move_to_room(self, next_room):
+    def set_location(self, next_room):
         # Superclass behaviour
-        super().move_to_room(next_room)
+        super().set_location(next_room)
         # Also flag this room as seen
         self.seen_rooms[self.location] = True

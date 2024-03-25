@@ -2,8 +2,7 @@ from os import environ, remove, makedirs, path
 from shutil import copy2
 import sqlite3
 import json
-from logger import setup_logger, exit
-from dotenv import load_dotenv
+from logger import setup_logger, exit, debug
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.storage.blob import BlobServiceClient
 from azure.data.tables import TableServiceClient, UpdateMode
@@ -48,6 +47,9 @@ class StorageManager:
 
         # Set the log level to WARNING to suppress INFO and DEBUG logs
         logging.getLogger("azure").setLevel(logging.WARNING)
+
+        # Cache of data types to convert to/from JSON to strings when storing
+        self.complexVariableCache = {}
 
     def cloud_tables_enabled(self):
         return self.credential and self.table_service_client
@@ -343,6 +345,33 @@ class StorageManager:
             rooms[room]["name"] = room
         return rooms
 
+    # Learn the list of variables containing dicts and strings for a type of object
+    def check_complex_variable_cache(self, entity):
+        if entity["PartitionKey"] not in self.complexVariableCache:
+            self.complexVariableCache[entity["PartitionKey"]] = []
+            for key, value in entity.items():
+                print(key, value)
+                print(isinstance(value, str))
+                if isinstance(value, (list, dict)) or (
+                    isinstance(value, str)
+                    and len(value) > 1
+                    and (
+                        (value[0] == "[" and value[-1] == "]")
+                        or (value[0] == "{" and value[-1] == "}")
+                    )
+                ):
+                    self.complexVariableCache[entity["PartitionKey"]].append(key)
+
+    # Turn lists and dicts into strings and back again
+    def stringify_object(self, entity, action="stringify"):
+        self.check_complex_variable_cache(entity)
+        for variable in self.complexVariableCache[entity["PartitionKey"]]:
+            if variable in entity:
+                if action == "stringify":
+                    entity[variable] = json.dumps(entity[variable])
+                else:  # destringify
+                    entity[variable] = json.loads(entity[variable])
+
     # Store all Python objects (expects list of object dicts)
     def store_python_objects(self, game_name, objects):
         logger.info("Storing all Python objects")
@@ -372,26 +401,29 @@ class StorageManager:
         # 2. Inventory - reconstituted from location
         if "inventory" in entity:
             del entity["inventory"]
-        # TODO: improve this
-        if "actions" in entity:
-            entity["actions"] = "_".join(entity["actions"])
+        # Convert fields containing lists/dicts to strings
+        # This keeps the database readable/editable, simple, and cheap (can use Azure Table Storage in other words)
+
+        # First, learn and cache the list of fields to convert for this type of object (partition key can be used for this)
+        self.stringify_object(entity)
 
         logger.info(f"Storing {entity['name']}")
         objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
 
     # Returns all instances of a type of object, as a dict
-    def get_python_objects(self, game_name, object_type):
+    def get_python_objects(self, game_name, object_type, rowkey_value=None):
         objects_client = self.table_service_client.get_table_client("PythonObjects")
         if objects_client:
             objects = []
             parameters = {"pk": game_name + "__" + object_type}
             query_filter = "PartitionKey eq @pk"
+            if rowkey_value:
+                parameters["rk"] = rowkey_value
+                query_filter += " and RowKey eq @rk"
             for entity in objects_client.query_entities(
                 query_filter, parameters=parameters
             ):
-                # TODO: improve this
-                if "actions" in entity:
-                    entity["actions"] = entity["actions"].split("_")
+                self.stringify_object(entity, action="destringify")
                 objects.append(entity.copy())
             return objects
         exit(logger, "No objects found in cloud!")

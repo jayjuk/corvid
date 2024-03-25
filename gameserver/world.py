@@ -411,7 +411,8 @@ class World:
                         name=this_object["name"],
                         location=this_object["location"],
                         description=this_object.get("description", ""),
-                        actions=this_object.get("description", []),
+                        actions=this_object.get("actions", []),
+                        action_chance=this_object.get("action_chance", 0.5),
                     )
                 self.register_entity(entity_object)
             if not self.entities:

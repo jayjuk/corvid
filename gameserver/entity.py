@@ -35,10 +35,15 @@ class Entity:
         # Register this entity in the world it belongs in
         world.register_entity(self)
 
+        # Save reference to the world this entity is in
+        self.world = world
+
     # Setter for player's location change
-    def move_to_room(self, next_room):
+    def set_location(self, next_room):
         # Set new room
         self.location = next_room
+        # Store change of location
+        self.world.storage_manager.store_python_object(self.world.name, self)
 
     # Getter for player's current location
     def get_current_room(self):
@@ -68,7 +73,6 @@ class Entity:
         if isinstance(object_name, str):
             # Check if object is in inventory
             for object in self.inventory.copy():
-                logger.debug("you have " + object.get_name().lower())
                 if (
                     object_name.lower() in object.get_name().lower()
                     or object_name.lower() == "all"
