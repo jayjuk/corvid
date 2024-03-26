@@ -82,7 +82,8 @@ if __name__ == "__main__":
         hostname = hostname[:-4]
     # TODO: do not allow default port, and make this common
     port = int(environ.get("GAMESERVER_PORT", "3001"))
-    logger.info("Starting up game manager")
-    game_manager = GameManager(sio)
+    world_name = environ.get("GAMESERVER_WORLD_NAME", "jaysgame")
+    logger.info(f"Starting up game manager - world '{world_name}'")
+    game_manager = GameManager(sio, world_name=world_name)
     logger.info(f"Launching WSGI server on {hostname}:{port}")
     eventlet.wsgi.server(eventlet.listen(("0.0.0.0", port)), app)
