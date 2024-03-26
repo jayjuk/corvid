@@ -31,14 +31,12 @@ class Animal(Entity):
     # Future animal-specific behaviours and attributes coming soon!
     def maybe_gesture(self):
         r = random.random()
-        debug(r, self.action_chance)
         if r < self.action_chance:
             gesture = random.choice(self.actions)
             return f"The {self.name} {gesture}."
 
     def maybe_pick_direction_to_move(self):
         r = random.random()
-        debug(r, self.action_chance)
         if r < self.action_chance:
             possible_exits = self.world.get_exits(self.location)
             direction = random.choice(possible_exits)

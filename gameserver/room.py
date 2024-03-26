@@ -6,6 +6,7 @@ logger = setup_logger()
 
 # Player class
 class Room:
+
     def __init__(
         self,
         world,
@@ -13,6 +14,9 @@ class Room:
         description=None,
         exits=None,
         init_dict=None,
+        creator=None,
+        image=None,
+        grid_reference=None,
     ):
         if init_dict:
             self.__dict__.update(init_dict)
@@ -21,6 +25,9 @@ class Room:
             self.name = name
             self.description = description
             self.exits = exits
+            self.creator = creator
+            self.image = image
+            self.grid_reference = grid_reference
 
         # An object belongs to a world
         self.world = world

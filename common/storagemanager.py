@@ -19,7 +19,7 @@ import logging
 class StorageManager:
 
     # Constructor
-    def __init__(self, image_only=False, image_container_name="jaysgameimages"):
+    def __init__(self, image_only=False):
         self.sas_token_expiry_time = None
         self.sas_token = None
 
@@ -35,7 +35,7 @@ class StorageManager:
 
             # Get Azure storage client
             self.blob_service_client = self.get_azure_blob_service_client()
-            self.image_container_name = image_container_name
+            self.image_container_name = "jaysgameimages"
         else:
             exit(logger, "Could not get Azure credential.")
 
@@ -49,7 +49,7 @@ class StorageManager:
         logging.getLogger("azure").setLevel(logging.WARNING)
 
         # Cache of data types to convert to/from JSON to strings when storing
-        self.complexVariableCache = {}
+        self.complex_variable_cache = {}
 
     def cloud_tables_enabled(self):
         return self.credential and self.table_service_client
@@ -101,7 +101,12 @@ class StorageManager:
             return True
         return False
 
-    def store_image_in_cloud(self, image_name, image_data):
+    def get_blob_name(self, world_name, image_name):
+        if world_name:
+            return world_name + "." + image_name
+        return image_name
+
+    def store_image_in_cloud(self, world_name, image_name, image_data):
         if self.cloud_blobs_enabled():
             logger.info(f"Uploading image '{image_name}' to cloud")
 
@@ -111,17 +116,18 @@ class StorageManager:
             )
 
             # Create the container if it doesn't exist
-            try:
-                container_client.create_container()
-                logger.info(f"Created container '{self.image_container_name}'")
-            except Exception as e:
-                logger.error(
-                    f"Container '{self.image_container_name}' already exists: {e}"
-                )
+            if not container_client:
+                try:
+                    container_client.create_container()
+                    logger.info(f"Created container '{self.image_container_name}'")
+                except Exception as e:
+                    logger.error(
+                        f"Container '{self.image_container_name}' already exists: {e}"
+                    )
 
             # Get a reference to the blob
             blob_client = self.blob_service_client.get_blob_client(
-                self.image_container_name, image_name
+                self.image_container_name, self.get_blob_name(world_name, image_name)
             )
 
             # Upload the image
@@ -136,28 +142,30 @@ class StorageManager:
             )
 
     # External function for the world class to use, world doesn't need to know about cloud etc
-    def store_image(self, file_name, image_data):
+    def store_image(self, world_name, file_name, image_data):
         if file_name:
             # For now, only cloud storage
-            self.store_image_in_cloud(file_name, image_data)
+            self.store_image_in_cloud(world_name, file_name, image_data)
             # Move file name to full path
             return True
         else:
             logger.error("Missing file name, cannot upload")
 
-    def get_image_url(self, image_name):
+    def get_image_url(self, world_name, image_name):
         if image_name:
-            logger.info(f"Resolving image URL for image {image_name}")
+            logger.info(
+                f"Resolving image URL for world {world_name} / image {image_name}"
+            )
             hostname = environ["IMAGESERVER_HOSTNAME"]
             port = environ["IMAGESERVER_PORT"]
-            return f"http://{hostname}:{port}/image/{image_name}"
+            return f"http://{hostname}:{port}/image/{self.get_blob_name(world_name, image_name)}"
         return None
 
-    def get_image_blob(self, image_name):
+    def get_image_blob(self, blob_name):
         if self.cloud_blobs_enabled() and self.image_container_name:
-            logger.info(f"Downloading {image_name} from Azure blob storage")
+            logger.info(f"Downloading {blob_name} from Azure blob storage")
             blob_client = self.blob_service_client.get_blob_client(
-                self.image_container_name, image_name
+                self.image_container_name, blob_name
             )
             if blob_client:
                 return blob_client.download_blob().readall()
@@ -166,16 +174,16 @@ class StorageManager:
         return None
 
     # Resolve path for static data a given object type
-    def get_default_world_data(self, object_type):
-        full_path = path.join("world_data", self.name, f"{object_type.lower()}.json")
+    def get_default_world_data(self, world_name, object_type):
+        full_path = path.join("world_data", world_name, f"{object_type.lower()}.json")
         with open(full_path, "r") as f:
             default_data = json.load(f)
         return default_data
 
     # Learn the list of variables containing dicts and strings for a type of object
     def check_complex_variable_cache(self, entity):
-        if entity["PartitionKey"] not in self.complexVariableCache:
-            self.complexVariableCache[entity["PartitionKey"]] = []
+        if entity["PartitionKey"] not in self.complex_variable_cache:
+            self.complex_variable_cache[entity["PartitionKey"]] = []
             for key, value in entity.items():
                 if isinstance(value, (list, dict)) or (
                     isinstance(value, str)
@@ -185,12 +193,12 @@ class StorageManager:
                         or (value[0] == "{" and value[-1] == "}")
                     )
                 ):
-                    self.complexVariableCache[entity["PartitionKey"]].append(key)
+                    self.complex_variable_cache[entity["PartitionKey"]].append(key)
 
     # Turn lists and dicts into strings and back again
     def stringify_object(self, entity, action="stringify"):
         self.check_complex_variable_cache(entity)
-        for variable in self.complexVariableCache[entity["PartitionKey"]]:
+        for variable in self.complex_variable_cache[entity["PartitionKey"]]:
             if variable in entity:
                 if action == "stringify":
                     entity[variable] = json.dumps(entity[variable])
@@ -236,11 +244,11 @@ class StorageManager:
         objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
 
     # Returns all instances of a type of object, as a dict
-    def get_python_objects(self, game_name, object_type, rowkey_value=None):
+    def get_python_objects(self, world_name, object_type, rowkey_value=None):
         objects_client = self.table_service_client.get_table_client("PythonObjects")
         if objects_client:
             objects = []
-            parameters = {"pk": game_name + "__" + object_type}
+            parameters = {"pk": world_name + "__" + object_type}
             query_filter = "PartitionKey eq @pk"
             if rowkey_value:
                 parameters["rk"] = rowkey_value

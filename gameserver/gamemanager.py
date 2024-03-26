@@ -376,12 +376,15 @@ class GameManager:
         if room_name == "":
             return "", "", "Invalid input: room name is empty."
         # Check room name is not a reserved word
-        if room_name in self.synonyms or room_name in self.command_functions:
+        if (
+            room_name.lower() in self.synonyms
+            or room_name.lower() in self.command_functions
+        ):
             return "", "", f"'{room_name}' is a reserved word."
         logger.info(
             f"Resolved room name {room_name}, rest of response <{rest_of_response}>"
         )
-        return room_name, rest_of_response, ""
+        return room_name.capitalize(), rest_of_response, ""
 
     def do_build(self, player, rest_of_response):
         # Create a new room

@@ -10,9 +10,6 @@ from room import Room
 from animal import Animal
 from object import Object
 from player import Player
-import json
-from os import path
-import sys
 
 
 class World:
@@ -27,7 +24,6 @@ class World:
     # Register of entities with name as key
     entities = {}
     done_path = {}
-    default_location = "Road"
 
     # Constructor
     def __init__(self, mode=None, ai_enabled=True, name="jaysgame"):
@@ -70,20 +66,33 @@ class World:
     def load_rooms(self):
         # Get rooms from storage
         rooms_list = self.storage_manager.get_python_objects(self.name, "Room")
+        store_default_rooms = False
         if not rooms_list:
             logger.warning("No rooms found in cloud - loading from static")
-            rooms_list = self.get_default_world_data("rooms")
+            rooms_list = self.storage_manager.get_default_world_data(self.name, "rooms")
+            store_default_rooms = True
         # Add room name to each room
         rooms_dict = {}
         for room in rooms_list:
             r = Room(world=self, init_dict=room)
             rooms_dict[r.name] = r
+        # Set default room
+        self.default_location = "Road"
+        if self.default_location not in rooms_dict:
+            # Default to alphabetically first room
+            # TODO: make this part of the per world data / configurable
+            self.default_location = list(sorted(rooms_dict.keys()))[0]
 
         # Add a grid reference for each room. This is used to validate that rooms don't overlap
         # Start with the first room found, grid references can go negative
         self.add_grid_references(
             rooms_dict, self.get_location(), rooms_dict[self.get_location()], 0, 0
         )
+        if store_default_rooms:
+            logger.info(f"Storing default rooms in database for new world {self.name}")
+            self.storage_manager.store_python_objects(
+                self.name, list(rooms_dict.values())
+            )
         return rooms_dict
 
     def add_grid_references(
@@ -239,7 +248,7 @@ class World:
         return description
 
     def get_room_image_url(self, room_name):
-        url = self.storage_manager.get_image_url(self.rooms[room_name].image)
+        url = self.storage_manager.get_image_url(self.name, self.rooms[room_name].image)
         logger.info(f"URL for {self.rooms[room_name].name}: {url}")
         return url
 
@@ -258,7 +267,7 @@ class World:
         direction,
         new_room_name,
         room_description,
-        creator_name="system",
+        creator="system",
     ):
         # Check room name is not taken in any case (case insensitive)
         for room in self.rooms:
@@ -305,7 +314,7 @@ class World:
                     new_room_name, room_description
                 )
                 if image_data:
-                    self.storage_manager.store_image(image_name, image_data)
+                    self.storage_manager.store_image(self.name, image_name, image_data)
                 else:
                     logger.error(
                         "Error creating/saving image - returned no data, this room will be created without one"
@@ -317,15 +326,6 @@ class World:
         else:
             logger.warning("Image generation not enabled.")
 
-        # Set up new room
-        self.rooms[new_room_name] = {
-            "name": new_room_name,
-            "grid_reference": new_grid_reference,
-            "description": room_description,
-            "image": image_name,
-            "creator": creator_name,
-            "exits": {self.get_opposite_direction(direction): current_location},
-        }
         # Add the new room to the exits of the current room
         current_room.exits[direction] = new_room_name
         self.storage_manager.store_python_object(self.name, current_room)
@@ -336,8 +336,12 @@ class World:
             new_room_name,
             room_description,
             exits={self.get_opposite_direction(direction): current_location},
+            grid_reference=new_grid_reference,
+            image=image_name,
+            creator=creator,
         )
         self.storage_manager.store_python_object(self.name, new_room_object)
+        self.rooms[new_room_name] = new_room_object
 
     # Search room for object by name and return reference to it if found
     def search_object(self, object_name, location):
@@ -387,7 +391,9 @@ class World:
             self.load_default_objects()
 
     def load_default_objects(self):
-        for object_data in self.get_default_world_data("objects"):
+        for object_data in self.storage_manager.get_default_world_data(
+            self.name, "objects"
+        ):
             logger.info(f"Loading and storing object {object_data['name']}")
             o = Object(world=self, init_dict=object_data)
             self.storage_manager.store_python_object("jaysgame", o)
@@ -446,7 +452,9 @@ class World:
 
     def load_default_entities(self):
         logger.info("Loading default entities from file")
-        for entity in self.storage_manager.get_default_world_data("entities"):
+        for entity in self.storage_manager.get_default_world_data(
+            self.name, "entities"
+        ):
             logger.info(f"Loading {entity['name']}")
             if entity["type"] == "merchant":
                 entity_object = Merchant(
