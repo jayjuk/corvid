@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Hall",
+    "description": "Elegant wooden flooring reflects soft light, creating a welcoming ambiance in this spacious entrance hall. Subtle artwork graces the walls, telling stories of a home filled with memories.",
+    "image": "hall.png",
+    "exits": {
+      "north": "Kitchen"
+    }
+  },
+  {
+    "name": "Kitchen",
+    "description": "A symphony of culinary magic, the kitchen boasts wooden countertops aged by time. The aroma of baked goods once lingered, now waiting for new memories.",
+    "image": "kitchen.png",
+    "exits": {
+      "south": "Hall"
+    }
+  }
+]

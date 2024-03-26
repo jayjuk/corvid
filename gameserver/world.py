@@ -69,15 +69,13 @@ class World:
 
     def load_rooms(self):
         # Get rooms from storage
-        rooms = self.storage_manager.get_python_objects(self.name, "Room")
-
-        if not rooms:
+        rooms_list = self.storage_manager.get_python_objects(self.name, "Room")
+        if not rooms_list:
             logger.warning("No rooms found in cloud - loading from static")
-            rooms = self.storage_manager.get_default_rooms()
-
+            rooms_list = self.get_default_world_data("rooms")
+        # Add room name to each room
         rooms_dict = {}
-        for room in rooms:
-            print(room)
+        for room in rooms_list:
             r = Room(world=self, init_dict=room)
             rooms_dict[r.name] = r
 
@@ -389,7 +387,7 @@ class World:
             self.load_default_objects()
 
     def load_default_objects(self):
-        for object_data in self.storage_manager.get_default_objects():
+        for object_data in self.get_default_world_data("objects"):
             logger.info(f"Loading and storing object {object_data['name']}")
             o = Object(world=self, init_dict=object_data)
             self.storage_manager.store_python_object("jaysgame", o)
@@ -448,29 +446,28 @@ class World:
 
     def load_default_entities(self):
         logger.info("Loading default entities from file")
-        with open(path.join("world_data", "starting_entities.json"), "r") as f:
-            for entity in json.load(f):
-                logger.info(f"Loading {entity['name']}")
-                if entity["type"] == "merchant":
-                    entity_object = Merchant(
-                        self,
-                        name=entity["name"],
-                        location=entity["location"],
-                        inventory=[],
-                        description=entity.get("description", ""),
-                    )
-                elif entity["type"] == "animal":
-                    entity_object = Animal(
-                        self,
-                        name=entity["name"],
-                        location=entity["location"],
-                        description=entity["description"],
-                        actions=entity["actions"],
-                        action_chance=entity["action_chance"],
-                    )
-                else:
-                    exit(logger, f"Invalid or unsupported entity type {entity['type']}")
-                self.storage_manager.store_python_object(self.name, entity_object)
+        for entity in self.storage_manager.get_default_world_data("entities"):
+            logger.info(f"Loading {entity['name']}")
+            if entity["type"] == "merchant":
+                entity_object = Merchant(
+                    self,
+                    name=entity["name"],
+                    location=entity["location"],
+                    inventory=[],
+                    description=entity.get("description", ""),
+                )
+            elif entity["type"] == "animal":
+                entity_object = Animal(
+                    self,
+                    name=entity["name"],
+                    location=entity["location"],
+                    description=entity["description"],
+                    actions=entity["actions"],
+                    action_chance=entity["action_chance"],
+                )
+            else:
+                exit(logger, f"Invalid or unsupported entity type {entity['type']}")
+            self.storage_manager.store_python_object(self.name, entity_object)
 
     # Static method to register entity in the world
     def register_entity(self, entity):

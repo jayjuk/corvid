@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Potato",
+    "description": "A Maris Piper potato.",
+    "price": 1,
+    "location": "Bob"
+  },
+  {
+    "name": "Jar",
+    "description": "A jar that used to contain jam or marmalade.",
+    "price": 2,
+    "location": "Kitchen"
+  }
+]

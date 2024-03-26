@@ -165,28 +165,18 @@ class StorageManager:
                 logger.error("Could not resolve blob client.")
         return None
 
-    def get_default_objects(self):
-        with open(path.join("world_data", "starting_objects.json"), "r") as f:
-            default_objects = json.load(f)
-        return default_objects
-
-    def get_default_rooms(self):
-        # This is the built-in static rooms file
-        default_map_file = "map.json"
-        with open(default_map_file, "r") as f:
-            rooms = json.load(f)
-        # Add room name to each room
-        for room in rooms:
-            rooms[room]["name"] = room
-        return rooms
+    # Resolve path for static data a given object type
+    def get_default_world_data(self, object_type):
+        full_path = path.join("world_data", self.name, f"{object_type.lower()}.json")
+        with open(full_path, "r") as f:
+            default_data = json.load(f)
+        return default_data
 
     # Learn the list of variables containing dicts and strings for a type of object
     def check_complex_variable_cache(self, entity):
         if entity["PartitionKey"] not in self.complexVariableCache:
             self.complexVariableCache[entity["PartitionKey"]] = []
             for key, value in entity.items():
-                print(key, value)
-                print(isinstance(value, str))
                 if isinstance(value, (list, dict)) or (
                     isinstance(value, str)
                     and len(value) > 1

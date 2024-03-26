@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Bob",
+    "type": "merchant",
+    "location": "Hall"
+  },
+  {
+    "name": "Aardvark",
+    "type": "animal",
+    "location": "Kitchen",
+    "description": "Just your average aardvark.",
+    "actions": ["looks around", "scratches"],
+    "action_chance": 0.3
+  }
+]
