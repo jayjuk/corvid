@@ -27,7 +27,7 @@ class Player(Entity):
             )
 
         # Set up player
-        # TODO: Remove this, it's for simulating AI builders
+        # TODO #74 Remove this, it's for simulating AI builders
         if player_name == "Doug":
             player_role = "builder"
 
@@ -47,7 +47,8 @@ class Player(Entity):
             self.is_player = True
 
             # Set default score
-            self.money = 100  # TODO: change this to 0 once other ways to earn money are implemented
+            # TODO #75 Change starting money to 0 once other ways to earn money are implemented
+            self.money = 100
 
             # Register of rooms this player has visited before (so they don't get long descriptions again)
             self.seen_rooms = {}

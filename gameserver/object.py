@@ -85,7 +85,7 @@ class Object:
                 outcome = self.set_possession(new_entity)
                 if not outcome:
                     # Remove from room
-                    # TODO: review if this is right way to do it
+                    # TODO #73 Review and improve object transfer going up from object to world
                     self.world.remove_object_from_room(
                         self, new_entity.get_current_location()
                     )

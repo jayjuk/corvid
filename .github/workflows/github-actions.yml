@@ -93,4 +93,5 @@ jobs:
   #         #registry-password: ${{ secrets.REGISTRY_PASSWORD }}
   #         location: "west europe"
   #         secure-environment-variables: OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-  #         environment-variables: AI_COUNT="0" #TODO - make this dynamic
+  #         # TODO #54 make AI count dynamic
+  #         environment-variables: AI_COUNT="0"

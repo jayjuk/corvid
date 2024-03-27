@@ -68,7 +68,7 @@ def user_action(sid, player_input):
 @sio.event
 def disconnect(sid):
     logger.info(f"Client disconnected: {sid}")
-    # TODO: allow players to reconnect (for now disconnect is same as quit)
+    # TODO #72 Allow players to reconnect (for now disconnect is same as quit)
     game_manager.remove_player(
         sid, "You have been logged out as your client disconnected."
     )
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     hostname = socket.getfqdn()
     if hostname.endswith(".lan"):
         hostname = hostname[:-4]
-    # TODO: do not allow default port, and make this common
+    # TODO #65 Do not allow default port, and make this common
     port = int(environ.get("GAMESERVER_PORT", "3001"))
     world_name = environ.get("GAMESERVER_WORLD_NAME", "jaysgame")
     logger.info(f"Starting up game manager - world '{world_name}'")

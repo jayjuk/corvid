@@ -101,7 +101,7 @@ class AIBroker:
         return ai_name
 
     def submit_input(self):
-        # TODO: review this in case there is a better way (https://github.com/jayjuk/jaysgame/issues/60)
+        # TODO #60 Improve transactionality of event log management when submitting to AI
         # Grab and clear the log quickly to minimise threading issue risk
         tmp_log = self.event_log.copy()
         self.event_log = []
@@ -134,7 +134,7 @@ class AIBroker:
         if self.event_log and self.active:
             # OK, time to process the events that have built up
             response = self.submit_input()
-            # TODO: clean this up
+            # TODO #64 improve AI event log polling
             # Check again we are still running (due to wait on model)
             if self.time_to_die:
                 return
@@ -289,7 +289,7 @@ if __name__ == "__main__":
     # if hostname.endswith(".lan"):
     #     hostname = hostname[:-4]
     hostname = environ.get("GAMESERVER_HOSTNAME") or "localhost"
-    # TODO: do not allow default port, and make this common
+    # TODO #65 Do not allow default port, and make this common
     port = environ.get("GAMESERVER_PORT", "3001")
     logger.info(f"Starting up AI Broker on hostname {hostname}")
     # Connect to the server

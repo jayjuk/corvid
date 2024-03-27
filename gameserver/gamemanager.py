@@ -79,7 +79,7 @@ class GameManager:
 
         # Define a dictionary to map commands to functions
         self.command_functions = {
-            # TODO: limit this action to admins with the right permissions
+            # TODO #66 Limit certain actions to players with the right permissions rather than just hiding from help
             "look": {
                 "function": self.do_look,
                 "description": "Get a description of your current location",
@@ -204,12 +204,12 @@ class GameManager:
                 eventlet.sleep(1)
                 self.create_restart_file()
                 self.sio.emit("shutdown", message)
-                # TODO: restart without actually restarting the process
+                # TODO #15 Restart game without actually restarting the process
                 sys.exit()
 
     def create_restart_file(self):
         # Temporary flag file checked by the local 'run' script.
-        # TODO: On the cloud, this will be space junk as the restart is handled by the container service. See above.
+        # TODO #15 On the cloud, this will be space junk as the restart is handled by the container service. See above.
         with open("restart.tmp", "w") as f:
             f.write("DELETE ME\n")
 
@@ -341,8 +341,8 @@ class GameManager:
             message = message[:-1] + ", saying '{rest_of_response}'."
         logger.info(message)
         self.tell_everyone(message)
-        # TODO: web client should do something when the back end is down, can we terminate the client too?
-        # TODO: make this restart not die?
+        # TODO #68 Web client should do something when the back end is down, can we terminate the client too?
+        # TODO #69 Make shutdown command restart process not shut down
         self.sio.emit("shutdown", message)
         eventlet.sleep(1)
         sys.exit()
@@ -555,8 +555,7 @@ class GameManager:
         # First check in case they wrote 'pick up'. If so, remove the 'up'.
         if rest_of_response.startswith("up "):
             rest_of_response = rest_of_response[3:]
-        # TODO: If in future pick is a verb e.g. pick a lock, select,
-        # we will need to pass the original verb into the functions
+        # TODO #70 If in future pick is a verb e.g. pick a lock, select, we will need to pass the original verb into the functions
 
         # Get object name by calling a function to parse the response
         object_name = self.get_object_name_from_response(rest_of_response)
@@ -697,7 +696,7 @@ class GameManager:
             return f"You are not carrying '{object_name}'."
 
     def do_trade(self, player, rest_of_response):
-        # TODO - support this :-)
+        # TODO #71 Implement trade command
         return "Support for this command coming soon!"
 
     def do_attack(self, player, rest_of_response):
@@ -1089,7 +1088,7 @@ class GameManager:
             player = self.players[sid]
             # Make player drop all objects in their inventory
             self.tell_player(player, self.do_drop(player, "all"))
-            # TODO: create coin objects corresponding to their money
+            # TODO #6 Create coin objects corresponding to their money
             self.tell_player(
                 player,
                 reason,

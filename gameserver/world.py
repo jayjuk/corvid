@@ -84,7 +84,7 @@ class World:
         self.default_location = "Road"
         if self.default_location not in rooms_dict:
             # Default to alphabetically first room
-            # TODO: make this part of the per world data / configurable
+            # TODO #76 Make starting room per world data / configurable
             self.default_location = list(sorted(rooms_dict.keys()))[0]
 
         # Add a grid reference for each room. This is used to validate that rooms don't overlap
@@ -235,7 +235,7 @@ class World:
     def get_room_description(
         self, room, brief=False, role=None, show_objects=True, show_exits=True
     ):
-        # TODO: decide when to show build options
+        # TODO #77 Review logic around deciding when to show build options in room description
         description = ""
         if not brief:
             # Contents of curly brackets removed from AI description,
@@ -412,7 +412,7 @@ class World:
             self.entities[object.location].inventory.append(object)
         else:
             if object.location not in self.rooms:
-                # TODO: will happen if player picks up an object and its location is them, and then the world is restarted! Need to save players.
+                # TODO #78 Improve robustness of object location on restart, possibly recording default / starting location per object in data and JSON
                 logger.info(
                     f"Object location {object.location} for object {object.name} does not correspond to a room or entity. Resetting it to default location."
                 )
@@ -432,7 +432,7 @@ class World:
             ):
                 logger.info(f"Loading entity {this_object['name']}")
                 # Populate the room_object_map with object versions of the objects
-                # TODO: make this dynamic? first set up init_dict support for these objects
+                # TODO #79 Streamline merchant and animal DB->object loading
                 if this_object.get("role") == "merchant":
                     entity_object = Merchant(
                         self,
@@ -453,7 +453,7 @@ class World:
                 self.register_entity(entity_object)
             if not self.entities:
                 # Storage empties - load from file
-                # TODO: move this to storage manager
+                # TODO #80 Consider moving default data loading from file down from world to storage manager
                 logger.info("No stored entities - loading from file instead")
                 self.load_default_entities()
 
@@ -486,7 +486,7 @@ class World:
 
     # Static method to register entity in the world
     def register_entity(self, entity):
-        # TODO: unique ID to allow ants etc
+        # TODO #81 Implement unique entity and object ID to allow ants coins etc
         self.entities[entity.name] = entity
 
     # Return list of entity names (e.g. for checking valid object starting locations)
@@ -518,5 +518,5 @@ class World:
         # Store player's data again (updates last login timestamp if nothing else)
         self.storage_manager.store_game_object(self.name, p)
 
-        # TODO: handle issues and return outcome if so
+        # TODO #82 Improve error handling around player creation
         return "", p

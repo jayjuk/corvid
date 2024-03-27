@@ -339,7 +339,7 @@ class AIManager:
         if model_response:
             # Save response to file for fine-tuning purposes
             pass
-            # TODO: TBD whether we want the input or the output or both
+            # TODO #24 Store log input/output better
             # self.store_model_data("input", messages)
             # self.store_model_data("response", response)
 
