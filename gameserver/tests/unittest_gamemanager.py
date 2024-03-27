@@ -30,23 +30,23 @@ class TestGameManager(unittest.TestCase):
                 command, description, f"Command {command} missing from description"
             )
 
-    # def test_do_look(self):
-    #     description = self.game_manager.do_look(self.player, None)
-    #     # Check begins with "You are in"
-    #     self.assertTrue(
-    #         description.startswith("You look again at the"), "Look command not working"
-    #     )
-    #     # Check min length of description
-    #     self.assertGreater(len(description), 28, "Description too short")
+    def test_do_look(self):
+        description = self.game_manager.do_look(self.player, None)
+        # Check begins with "You are in"
+        self.assertTrue(
+            description.startswith("You look again at the"), "Look command not working"
+        )
+        # Check min length of description
+        self.assertGreater(len(description), 28, "Description too short")
 
-    # def test_do_say(self):
-    #     player = Player(self.game_manager.world, 0, "TestPlayer")
-    #     description = self.game_manager.do_say(player, "Hello")
-    #     self.assertEqual(
-    #         description,
-    #         "There is no one else here to hear you!",
-    #         "Say command not working as expected",
-    #     )
+    def test_do_say(self):
+        player = Player(self.game_manager.world, 0, "TestPlayer")
+        description = self.game_manager.do_say(player, "Hello")
+        self.assertEqual(
+            description,
+            "There is no one else here to hear you!",
+            "Say command not working as expected",
+        )
 
 
 if __name__ == "__main__":
