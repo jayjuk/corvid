@@ -13,26 +13,30 @@ from player import Player
 
 
 class World:
-    directions = {
-        "north": (0, 1),
-        "south": (0, -1),
-        "east": (1, 0),
-        "west": (-1, 0),
-    }
-    grid_references = {}
-    room_objects = {}
-    # Register of entities with name as key
-    entities = {}
-    done_path = {}
 
     # Constructor
-    def __init__(self, mode=None, ai_enabled=True, name="jaysgame"):
+    def __init__(
+        self,
+        storage_manager,
+        mode=None,
+        ai_enabled=True,
+        name="jaysgame",
+        images_enabled=True,
+    ):
 
-        # TODO: support many worlds by making this a parameter
         self.name = name
-
-        # Instantiate storage manager
-        self.storage_manager = StorageManager()
+        self.storage_manager = storage_manager
+        self.directions = {
+            "north": (0, 1),
+            "south": (0, -1),
+            "east": (1, 0),
+            "west": (-1, 0),
+        }
+        self.grid_references = {}
+        self.room_objects = {}
+        # Register of entities with name as key
+        self.entities = {}
+        self.done_path = {}
 
         # Populate dictionary of room objects, keyed off room name (aka location)
         self.rooms = self.load_rooms()
@@ -43,7 +47,7 @@ class World:
             self.load_room_objects()
 
         # Separate AI manager for images (can use different model)
-        if ai_enabled and self.storage_manager.cloud_blobs_enabled():
+        if ai_enabled and images_enabled:
             # Image AI manager
             logger.info("Creating separate AI manager for image generation")
             self.image_ai_manager = aimanager.AIManager(
@@ -143,6 +147,9 @@ class World:
 
     def get_location(self):
         return self.default_location
+
+    def get_directions(self):
+        return list(self.directions.keys())
 
     def generate_map(self, rooms, mode="grid"):
         # Generate a map of the world in text form

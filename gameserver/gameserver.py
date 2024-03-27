@@ -6,6 +6,7 @@ logger = setup_logger("gameserver")
 import socket
 import socketio
 import eventlet
+from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager
 from os import environ
 
@@ -84,6 +85,7 @@ if __name__ == "__main__":
     port = int(environ.get("GAMESERVER_PORT", "3001"))
     world_name = environ.get("GAMESERVER_WORLD_NAME", "jaysgame")
     logger.info(f"Starting up game manager - world '{world_name}'")
-    game_manager = GameManager(sio, world_name=world_name)
+    storage_manager = AzureStorageManager()
+    game_manager = GameManager(sio, storage_manager, world_name=world_name)
     logger.info(f"Launching WSGI server on {hostname}:{port}")
     eventlet.wsgi.server(eventlet.listen(("0.0.0.0", port)), app)

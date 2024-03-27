@@ -25,15 +25,12 @@ from aimanager import AIManager
 class GameManager:
 
     # Constructor
-    def __init__(self, sio, ai_enabled=True, world_name="jaysgame"):
+    def __init__(self, sio, storage_manager, ai_enabled=True, world_name="jaysgame"):
 
         # Static variables
         self.max_inactive_time = 300  # 5 minutes
         self.background_loop_active = False
         self.game_loop_time_secs = 30  # Animals etc move on this cycle
-
-        # Set up game language
-        self.setup_commands()
 
         # Set up game state
         self.sio = sio
@@ -46,9 +43,14 @@ class GameManager:
         else:
             self.ai_manager = None
 
-        self.world = World(mode=None, ai_enabled=ai_enabled, name=world_name)
+        self.world = World(
+            storage_manager, mode=None, ai_enabled=ai_enabled, name=world_name
+        )
 
         self.object_name_empty_message = "Invalid input: object name is empty."
+
+        # Set up game language
+        self.setup_commands()
 
     def setup_commands(self):
         self.synonyms = {
@@ -74,7 +76,6 @@ class GameManager:
             "kill": "attack",
             "hit": "attack",
         }
-        self.directions = ["north", "east", "south", "west"]
 
         # Define a dictionary to map commands to functions
         self.command_functions = {
@@ -161,7 +162,7 @@ class GameManager:
 
         # Build the commands description field from directions, synonyms and command functions
         self.commands_description = (
-            "Valid directions: " + ", ".join(self.directions) + ".\n"
+            "Valid directions: " + ", ".join(self.world.get_directions()) + ".\n"
         )
         self.commands_description += ".\nValid commands: "
         for command, data in self.command_functions.items():
@@ -350,7 +351,7 @@ class GameManager:
         self.remove_player(player.sid, "You have left the game.")
 
     def check_direction(self, direction, player):
-        if direction not in self.directions:
+        if direction not in self.world.get_directions():
             return f"'{direction}' is not a valid direction."
         if direction in self.world.get_exits(player.get_current_location()):
             return f"There is already a room to the {direction}."
@@ -886,7 +887,7 @@ class GameManager:
         if command in self.command_functions:
             return self.command_functions[command]["function"](player, rest_of_response)
         # Move the player if the command is a direction
-        elif command in self.directions:
+        elif command in self.world.get_directions():
             return self.move_entity(player, command, rest_of_response)
         else:
             # If the command is not recognised, try to translate it using AI (unless this is already a translation)
@@ -948,7 +949,7 @@ class GameManager:
             if entity.get_role() == "animal":
                 their_name = entity.get_name(article_type="indefinite").capitalize()
             arrival_message = f"{their_name} arrives from the {previous_room.lower()}."
-        elif direction in self.directions:
+        elif direction in self.world.get_directions():
             # Valid direction but no exit
             return f"You can't go {direction}." + self.world.get_room_exits_description(
                 entity.get_current_location()
