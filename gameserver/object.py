@@ -55,7 +55,7 @@ class Object:
 
     def set_location(self, location):
         self.location = location
-        self.world.storage_manager.store_python_object(self.world.name, self)
+        self.world.storage_manager.store_game_object(self.world.name, self)
 
     # Setter (i.e. player drops it)
     def set_room(self, room_name):

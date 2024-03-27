@@ -9,4 +9,4 @@ w = World()
 
 for o in w.entities.values():
     if o.role == "animal":
-        storage_manager.store_python_object("jaysgame", o)
+        storage_manager.store_game_object("jaysgame", o)

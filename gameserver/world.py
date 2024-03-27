@@ -65,7 +65,7 @@ class World:
 
     def load_rooms(self):
         # Get rooms from storage
-        rooms_list = self.storage_manager.get_python_objects(self.name, "Room")
+        rooms_list = self.storage_manager.get_game_objects(self.name, "Room")
         store_default_rooms = False
         if not rooms_list:
             logger.warning("No rooms found in cloud - loading from static")
@@ -90,7 +90,7 @@ class World:
         )
         if store_default_rooms:
             logger.info(f"Storing default rooms in database for new world {self.name}")
-            self.storage_manager.store_python_objects(
+            self.storage_manager.store_game_objects(
                 self.name, list(rooms_dict.values())
             )
         return rooms_dict
@@ -328,7 +328,7 @@ class World:
 
         # Add the new room to the exits of the current room
         current_room.exits[direction] = new_room_name
-        self.storage_manager.store_python_object(self.name, current_room)
+        self.storage_manager.store_game_object(self.name, current_room)
 
         # Create and store room
         new_room_object = Room(
@@ -340,7 +340,7 @@ class World:
             image=image_name,
             creator=creator,
         )
-        self.storage_manager.store_python_object(self.name, new_room_object)
+        self.storage_manager.store_game_object(self.name, new_room_object)
         self.rooms[new_room_name] = new_room_object
 
     # Search room for object by name and return reference to it if found
@@ -381,7 +381,7 @@ class World:
     def load_room_objects(self):
         logger.info("Loading room objects...")
         object_load_count = 0
-        for this_object in self.storage_manager.get_python_objects(self.name, "Object"):
+        for this_object in self.storage_manager.get_game_objects(self.name, "Object"):
             # Populate the room_object_map with object versions of the objects
             o = Object(world=self, init_dict=this_object)
             self.register_object(o)
@@ -396,7 +396,7 @@ class World:
         ):
             logger.info(f"Loading and storing object {object_data['name']}")
             o = Object(world=self, init_dict=object_data)
-            self.storage_manager.store_python_object("jaysgame", o)
+            self.storage_manager.store_game_object("jaysgame", o)
             self.register_object(o)
 
     def register_object(self, object):
@@ -420,7 +420,7 @@ class World:
             exit("Load_entities called when entities are already registered!")
         logger.info("Loading entities...")
         for entity_role in ("Animal", "Merchant"):
-            for this_object in self.storage_manager.get_python_objects(
+            for this_object in self.storage_manager.get_game_objects(
                 self.name, entity_role
             ):
                 logger.info(f"Loading entity {this_object['name']}")
@@ -475,7 +475,7 @@ class World:
                 )
             else:
                 exit(logger, f"Invalid or unsupported entity type {entity['type']}")
-            self.storage_manager.store_python_object(self.name, entity_object)
+            self.storage_manager.store_game_object(self.name, entity_object)
 
     # Static method to register entity in the world
     def register_entity(self, entity):
@@ -504,12 +504,12 @@ class World:
 
     def create_player(self, sid, name, role):
         # Access player's initial state if they have played before.
-        stored_player_data = self.storage_manager.get_python_object(
+        stored_player_data = self.storage_manager.get_game_object(
             self.name, object_type="Player", rowkey_value=name
         )
         p = Player(self, sid, name, role, stored_player_data=stored_player_data)
         # Store player's data again (updates last login timestamp if nothing else)
-        self.storage_manager.store_python_object(self.name, p)
+        self.storage_manager.store_game_object(self.name, p)
 
         # TODO: handle issues and return outcome if so
         return "", p

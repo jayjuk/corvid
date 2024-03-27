@@ -43,7 +43,7 @@ class Entity:
         # Set new room
         self.location = next_room
         # Store change of location
-        self.world.storage_manager.store_python_object(self.world.name, self)
+        self.world.storage_manager.store_game_object(self.world.name, self)
 
     # Getter for player's current location
     def get_current_location(self):

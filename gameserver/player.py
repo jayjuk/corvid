@@ -102,13 +102,13 @@ class Player(Entity):
         else:
             self.money -= amount
             # Store change
-            self.world.storage_manager.store_python_object(self.world.name, self)
+            self.world.storage_manager.store_game_object(self.world.name, self)
             return True
 
     def add_money(self, amount):
         self.money += amount
         # Store change
-        self.world.storage_manager.store_python_object(self.world.name, self)
+        self.world.storage_manager.store_game_object(self.world.name, self)
 
     def can_add_object(self):
         return len(self.inventory) < self.max_inventory

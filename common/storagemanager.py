@@ -60,7 +60,7 @@ class StorageManager:
     # Utility to check env variable is set
     def check_env_var(self, var_name):
         if not environ.get(var_name):
-            logger.warning(f"{var_name} not set.")
+            exit(f"{var_name} not set.")
         return environ.get(var_name, "")
 
     # Return Azure credential
@@ -206,13 +206,13 @@ class StorageManager:
                     entity[variable] = json.loads(entity[variable])
 
     # Store all Python objects (expects list of object dicts)
-    def store_python_objects(self, game_name, objects):
+    def store_game_objects(self, game_name, objects):
         logger.info("Storing all Python objects")
         for object in objects:
-            self.store_python_object(game_name, object)
+            self.store_game_object(game_name, object)
 
     # Store all Python objects, received as actual objects
-    def store_python_object(self, game_name, object):
+    def store_game_object(self, game_name, object):
         logger.debug(f"Storing python object in game {game_name}: {object.__dict__}")
 
         objects_client = self.table_service_client.create_table_if_not_exists(
@@ -244,7 +244,7 @@ class StorageManager:
         objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
 
     # Returns all instances of a type of object, as a dict
-    def get_python_objects(self, world_name, object_type, rowkey_value=None):
+    def get_game_objects(self, world_name, object_type, rowkey_value=None):
         objects_client = self.table_service_client.get_table_client("PythonObjects")
         if objects_client:
             objects = []
@@ -262,6 +262,6 @@ class StorageManager:
         exit(logger, "No objects found in cloud!")
 
     # Explicitly get one object by its key
-    def get_python_object(self, game_name, object_type, rowkey_value):
-        for object in self.get_python_objects(game_name, object_type, rowkey_value):
+    def get_game_object(self, game_name, object_type, rowkey_value):
+        for object in self.get_game_objects(game_name, object_type, rowkey_value):
             return object
