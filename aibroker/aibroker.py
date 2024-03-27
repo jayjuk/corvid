@@ -101,7 +101,7 @@ class AIBroker:
         return ai_name
 
     def submit_input(self):
-        # TODO: review this in case there is a better way
+        # TODO: review this in case there is a better way (https://github.com/jayjuk/jaysgame/issues/60)
         # Grab and clear the log quickly to minimise threading issue risk
         tmp_log = self.event_log.copy()
         self.event_log = []
