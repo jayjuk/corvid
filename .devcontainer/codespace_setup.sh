@@ -6,8 +6,6 @@ set -e
 echo 'export PYTHONPATH=\"/usr/local/python/current:/workspaces/jaysgame/common"' >> ~/.bashrc
 export PYTHONPATH=\"/usr/local/python/current:/workspaces/jaysgame/common
 
-echo $GEMINI_DOT_KEY > ./gameserver/gemini.key
-
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
 pip install -r ./gameserver/requirements.txt
