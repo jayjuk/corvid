@@ -155,26 +155,35 @@ class AIManager:
                 credentials=Credentials.from_service_account_info(credentials_dict),
             )
 
-            safety_settings = [
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                    threshold=HarmBlockThreshold.BLOCK_NONE,
-                ),
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                    threshold=HarmBlockThreshold.BLOCK_NONE,
-                ),
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                    threshold=HarmBlockThreshold.BLOCK_NONE,
-                ),
-                SafetySetting(
-                    category=HarmCategory.HARM_CATEGORY_HARASSMENT,
-                    threshold=HarmBlockThreshold.BLOCK_NONE,
-                ),
-            ]
+            if os.environ.get("GOOGLE_GEMINI_SAFETY_OVERRIDE").startswith("Y"):
+                logger.info(
+                    "Overriding safety controls (recommended with Gemini to avoid false alarms)"
+                )
+                safety_settings = [
+                    SafetySetting(
+                        category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                        threshold=HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                    SafetySetting(
+                        category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                        threshold=HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                    SafetySetting(
+                        category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                        threshold=HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                    SafetySetting(
+                        category=HarmCategory.HARM_CATEGORY_HARASSMENT,
+                        threshold=HarmBlockThreshold.BLOCK_NONE,
+                    ),
+                ]
+            else:
+                safety_settings = None  # Default
+                logger.warn(
+                    "NOT Overriding safety controls - this is recommended with Gemini to avoid false alarms"
+                )
             self.model_client = GenerativeModel(
-                "gemini-pro",  # safety_settings=safety_settings
+                "gemini-pro", safety_settings=safety_settings
             )
         elif self.get_model_api() == "StabilityAI":
             from stability_sdk import client

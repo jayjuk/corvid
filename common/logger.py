@@ -30,7 +30,7 @@ def is_debug_mode():
 
 
 # Function invoked by most modules for shared and common logging
-def setup_logger(file_name="unit_testing.log"):
+def setup_logger(file_name="unit_testing.log", logging_level_override=""):
     # If logger already set up, return it
     if logging.getLogger().hasHandlers():
         return logging.getLogger()
@@ -46,10 +46,14 @@ def setup_logger(file_name="unit_testing.log"):
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
 
+    # Set logging level based on waterfall of settings
+    logging_level = logging.INFO
     if is_debug_mode():
         logging_level = logging.DEBUG
-    else:
-        logging_level = logging.INFO
+    elif logging_level_override:
+        logging_level = logging.getLevelName(logging_level_override)
+    elif os.environ.get("LOGGER_LOG_LEVEL"):
+        logging_level = logging.getLevelName(os.environ.get("LOGGER_LOG_LEVEL"))
 
     # Set up logging to file and console
     logging.basicConfig(
