@@ -172,6 +172,7 @@ class AzureStorageManager(StorageManager):
         if "id" in entity:
             entity["RowKey"] += "__" + entity["id"]
 
+        # TODO #85 Don't hard-code attributes to remove on storage
         # Override fields that contain object values lists etc
 
         # 1. World - use the game/world name just for supportability
