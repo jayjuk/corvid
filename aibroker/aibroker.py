@@ -1,8 +1,5 @@
 from logger import setup_logger
-
-# Set up logger
-logger = setup_logger("aibroker")
-
+from typing import List, Dict, Optional
 import eventlet
 import socketio
 import time
@@ -11,24 +8,29 @@ from os import environ
 import re
 from aimanager import AIManager
 
+# Set up logger
+logger = setup_logger("aibroker")
+
 # Register the client with the server
 sio = socketio.Client()
 
 
+# Class to manage the AI's interaction with the game server
 class AIBroker:
-    time_to_die = False
-    game_instructions = ""
-    event_log = []
-    max_history = 50
-    max_wait = 5  # secs
-    last_time = time.time()
-    active = True
-    mode = None
-    player_name = "TBD"
-    input_token_count = 0
-    output_token_count = 0
+    time_to_die: bool = False
+    game_instructions: str = ""
+    event_log: List[str] = []
+    max_history: int = 50
+    max_wait: int = 5  # secs
+    last_time: float = time.time()
+    active: bool = True
+    mode: Optional[str] = None
+    player_name: str = "TBD"
+    input_token_count: int = 0
+    output_token_count: int = 0
 
-    def __init__(self, mode="player"):
+    # Constructor
+    def __init__(self, mode: str = "player"):
         self.mode = mode
 
         # Set up the AI manager
@@ -38,12 +40,13 @@ class AIBroker:
         self.player_name = self.get_ai_name()
 
     # The main processing loop
-    def ai_response_loop(self):
+    def ai_response_loop(self) -> None:
         while True:
             # Exit own thread when time comes
             if self.time_to_die:
                 return
 
+            # Check if we need to wait before polling the event log
             wait_time = self.max_wait - (time.time() - self.last_time)
             if wait_time > 0:
                 # don't do anything for now
@@ -54,12 +57,13 @@ class AIBroker:
 
     # AI manager will record instructions from the game server
     # Which are given to each player at the start of the game
-    def record_instructions(self, data):
+    def record_instructions(self, data: str) -> None:
         self.game_instructions += data + "\n"
         self.ai_manager.set_system_message(self.game_instructions)
 
-    def get_ai_instructions(self):
-        ai_instructions = (
+    # AI manager will get instructions from the game server
+    def get_ai_instructions(self) -> str:
+        ai_instructions: str = (
             "You have been brought to life in a text adventure game! "
             + "Do not apologise to the game! "
             + "Do not try to talk to merchants, they cannot talk. "
@@ -80,7 +84,8 @@ class AIBroker:
             # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
         return ai_instructions
 
-    def get_ai_name(self):
+    # Get AI name from the LLM using the AI manager
+    def get_ai_name(self) -> str:
 
         mode_name_hints = {
             "builder": "You are a creator of worlds! You can add new locations in the game. "
@@ -100,7 +105,8 @@ class AIBroker:
                 eventlet.sleep(3)
         return ai_name
 
-    def submit_input(self):
+    # Submit the game's updates as input to the AI manager
+    def submit_input(self) -> str:
         # TODO #60 Improve transactionality of event log management when submitting to AI
         # Grab and clear the log quickly to minimise threading issue risk
         tmp_log = self.event_log.copy()
@@ -118,7 +124,8 @@ class AIBroker:
 
         return self.ai_manager.submit_request(message_text)
 
-    def log_event(self, event_text):
+    # Log the game events for the AI to process
+    def log_event(self, event_text: str) -> None:
         # If the input is just echoing back what you said, do nothing
         if str(event_text).startswith("You say") or str(event_text).startswith("You:"):
             return
@@ -130,7 +137,8 @@ class AIBroker:
         )  # dotall flag is to handle newline
         self.event_log.append(event_text)
 
-    def poll_event_log(self):
+    # Check the event log for new events to process
+    def poll_event_log(self) -> None:
         if self.event_log and self.active:
             # OK, time to process the events that have built up
             response = self.submit_input()
@@ -150,8 +158,11 @@ class AIBroker:
                 sys.exit()
 
 
+# Non-class functions below here (SocketIO event handlers etc.)
+
+
 # Connect to SocketIO server, trying again if it fails
-def connect_to_server(hostname):
+def connect_to_server(hostname: str) -> None:
     connected = False
     max_wait = 240  # 4 minutes
     wait_time = 1
@@ -171,8 +182,12 @@ def connect_to_server(hostname):
         sys.exit()
 
 
+# SocketIO event handlers
+
+
+# Game update event handler
 @sio.on("game_update")
-def catch_all(data):
+def catch_all(data: Dict) -> None:
     if data:
         logger.info(f"Received game update event: {data}")
         ai_broker.log_event(data)
@@ -181,20 +196,15 @@ def catch_all(data):
         sys.exit()
 
 
+# Instructions event handler
 @sio.on("instructions")
-def catch_all(data):
+def catch_all(data: Dict) -> None:
     ai_broker.record_instructions(data)
 
 
-@sio.on("heartbeat")
-def catch_all(data):
-    # logger.info(f"HEARTBEAT INFO (NOT SENT TO AI): {data}")
-    # for now nothing
-    pass
-
-
+# Shutdown event handler
 @sio.on("shutdown")
-def catch_all(data):
+def catch_all(data: Dict) -> None:
     logger.info(f"Shutdown event received: {data}. Exiting immediately.")
     ai_broker.time_to_die = True
     sio.disconnect()
@@ -204,21 +214,22 @@ def catch_all(data):
 
 # This might happen if the AI quits!
 @sio.on("logout")
-def catch_all(data):
+def catch_all(data: Dict) -> None:
     logger.info(f"Logout event received: {data} did AI quit?")
     sio.disconnect()
     sys.exit()
 
 
+# Room update event handler
 @sio.on("room_update")
-def catch_all(data):
-    # logger.info(f"Received room update event: {data}")
-    # for now nothing
+def catch_all(data: Dict) -> None:
+    # For now nothing, do not even log - this consists of the room description, and the image URL, not relevant to AI
     pass
 
 
+# Player update event handler
 @sio.on("game_data_update")
-def catch_all(data):
+def catch_all(data: Dict) -> None:
     if "player_count" in data:
         if data["player_count"] == 1 and ai_broker.mode != "builder":
             logger.info("No players apart from me, so I won't do anything.")
@@ -229,38 +240,49 @@ def catch_all(data):
                 ai_broker.active = True
 
 
+# Catch all other events
 @sio.on("*")
-def catch_all(event, data):
-    logger.info(f"Received other event '{event}': {data}")
+def catch_all(event, data: Dict) -> None:
+    logger.warn(f"Received other unexpected event '{event}': {data}")
 
 
+# SocketIO connection handlers
+
+
+# Connection event handler
 @sio.event
-def connect():
+def connect() -> None:
     logger.info("Connected to Server.")
     # Emit the AI's chosen name to the server
     sio.emit("set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode})
 
 
+# Connection error event handler
 @sio.event
-def connect_error(data):
+def connect_error(data: Dict) -> None:
     logger.error("Connection failure!")
     logger.info(data)
     sys.exit()
 
 
+# Disconnection event handler
 @sio.event
-def disconnect():
+def disconnect() -> None:
     logger.info("Disconnected from Server.")
 
 
+# Main function to start the AI Broker
 if __name__ == "__main__":
     # Set up logging to file and console
     logger.info("Starting up AI Broker")
 
     # Set up AIs according to config
-    ai_count = environ.get("AI_COUNT")
+    # Keep string in case not set properly
+    ai_count: str = environ.get("AI_COUNT")
 
-    ai_mode = environ.get("AI_MODE") or "player"
+    # If AI_MODE is not set, default to "player"
+    ai_mode: str = environ.get("AI_MODE") or "player"
+    # Check AI_MODE is set to a valid value
     if ai_mode not in ("player", "builder", "observer"):
         logger.info(
             f"ERROR: AI_MODE is set to {ai_mode} but must be either 'player' or 'observer'. Exiting."
@@ -288,9 +310,9 @@ if __name__ == "__main__":
     # hostname = socket.getfqdn()
     # if hostname.endswith(".lan"):
     #     hostname = hostname[:-4]
-    hostname = environ.get("GAMESERVER_HOSTNAME") or "localhost"
+    hostname: str = environ.get("GAMESERVER_HOSTNAME") or "localhost"
     # TODO #65 Do not allow default port, and make this common
-    port = environ.get("GAMESERVER_PORT", "3001")
+    port: str = environ.get("GAMESERVER_PORT", "3001")
     logger.info(f"Starting up AI Broker on hostname {hostname}")
     # Connect to the server
     connect_to_server(f"http://{hostname}:{port}")
