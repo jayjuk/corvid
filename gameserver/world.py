@@ -335,6 +335,7 @@ class World:
 
         # Add the new room to the exits of the current room
         current_room.exits[direction] = new_room_name
+        #  TODO #86 Effect transactionality around storage of new room
         self.storage_manager.store_game_object(self.name, current_room)
 
         # Create and store room
