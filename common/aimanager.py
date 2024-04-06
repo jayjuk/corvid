@@ -35,14 +35,19 @@ from vertexai.preview.generative_models import HarmCategory, HarmBlockThreshold
 class AIManager:
     def __init__(self, system_message: str = None, model_name: str = None):
 
-        self.chat_history: List[Dict[str, Union[str, List[Dict[str, str]]]]] = []
-        self.event_log: List[str] = []
+        # Static variables
         self.max_history: int = 40
         self.max_wait: int = 7  # secs
         self.last_time: float = time.time()
         self.active: bool = True
         self.input_token_count: int = 0
         self.output_token_count: int = 0
+
+        # Chat history / context
+        self.chat_history: List[Dict[str, Union[str, List[Dict[str, str]]]]] = []
+
+        # Event log = feedback from game manager, to be included in next request
+        self.event_log: List[str] = []
 
         # Flag to keep track of whether we have sent a system message for Gemini
         self.first_request: bool = True
@@ -59,9 +64,11 @@ class AIManager:
         self.model_name: str = model_name or os.environ.get("MODEL_NAME") or "gemini-pro"
         logger.info(f"Model name set to {self.model_name}")
 
-        self.max_tokens: int = 200  # adjust the max_tokens based on desired response length
+        #  Adjust the max_tokens based on desired response length
+        self.max_tokens: int = 200
         self.ai_name: Optional[str] = None
 
+        # Flag to prevent image generation
         self.do_not_generate_images: bool = os.environ.get("DO_NOT_GENERATE_IMAGES", False)
 
         # Set up openAI connection
@@ -83,24 +90,29 @@ class AIManager:
             self.model_word: str = "model"
             self.content_word: str = "parts"
         logger.info("Starting up AI with model " + self.model_name)
-
+        # Create specific log file for model responses
         self.create_model_log_file()
 
+    # Set system message
     def set_system_message(self, system_message: str) -> None:
         if system_message:
             logger.info(f"Updating system message to: {system_message}")
             self.system_message = system_message
 
+    # Create a log file for model responses
     def create_model_log_file(self) -> None:
-        with open(f"{self.get_model_api()}_response_log.txt", "w") as f:
+        self.model_log_file: str = f"{self.get_model_api()}_response_log.txt"
+        with open(self.model_log_file, "w") as f:
             f.write(f"# Model input and response log for {self.get_model_api()}\n\n")
 
+    # Log model response to file
     def log_response_to_file(self, request: str, response: str) -> None:
-        with open(f"{self.get_model_api()}_response_log.txt", "a") as f:
+        with open(self.model_log_file, "a") as f:
             f.write(f"Request: {request}\nResponse: {response}\n\n")
 
+    # Get the model API name
+    # We use the specific model name to generalise which class/company we are using
     def get_model_api(self) -> str:
-        # Use the specific model name to generalise which class/company we are using
         if self.model_name.startswith("gpt"):
             return "GPT"
         elif self.model_name.startswith("gemini"):
@@ -110,6 +122,7 @@ class AIManager:
         elif self.model_name.startswith("stable-diffusion"):
             return "StabilityAI"
 
+    # Store model data to file (for investigating issues with model responses)
     def store_model_data(self, filename_prefix: str, data: Any) -> None:
         logger.info("Saving model data")
         folder_path: str = "model_io"
@@ -120,15 +133,16 @@ class AIManager:
         ) as f:
             json.dump(data, f, indent=4)
 
+    # Check if mandatory environment variable is set
     def check_env_var(self, env_var_name: str) -> None:
         if not os.environ.get(env_var_name):
             self.exit(f"{env_var_name} not set. Exiting.")
 
+    # Connect to the LLM API
     def model_api_connect(self) -> None:
         # Use pre-set variable before dotenv.
         if self.get_model_api() == "GPT":
             self.check_env_var("OPENAI_API_KEY")
-
 
             openai.api_key = os.getenv("OPENAI_API_KEY")
             self.model_client = openai.OpenAI()
@@ -198,7 +212,8 @@ class AIManager:
         else:
             self.exit(f"Model name {self.model_name} not recognised.")
 
-    def do_gpt_request(
+    # Get the model response (OpenAI specific)
+    def do_openai_request(
         self, model_name: Optional[str], max_tokens: Optional[int], temperature: float, messages: List[Dict[str, str]]
     ) -> str:
 
@@ -235,6 +250,7 @@ class AIManager:
         )
         return model_response
 
+    # Get the model response (Gemini specific)
     def do_gemini_request(self, messages: List[Dict[str, str]]) -> str:
 
         model_response = self.model_client.generate_content(messages)
@@ -245,6 +261,7 @@ class AIManager:
             return candidate.content.parts[0].text
         return ""
 
+    # Get the model response (Anthropic specific)
     def do_anthropic_request(self, messages: List[Dict[str, str]]) -> str:
 
         model_response = self.model_client.messages.create(
@@ -255,12 +272,14 @@ class AIManager:
         )
         return model_response.content[0].text
 
+    # Build a message for the model
     def build_message(self, role: str, content: str) -> Union[Dict[str, str], Content]:
         if self.get_model_api() == "Gemini":
             return Content(role=role, parts=[Part.from_text(content)])
         else:
             return {"role": role, self.content_word: content}
 
+    # Submit a request to the model
     def submit_request(
         self,
         request: str,
@@ -308,6 +327,7 @@ class AIManager:
             f"About to submit to model, with system message: {self.system_message}"
         )
 
+        # Get model response, retrying if necessary
         model_response: Optional[str] = None
         while not model_response and try_count < max_tries:
             try_count += 1
@@ -315,7 +335,7 @@ class AIManager:
                 # Behaviour varies according to model type.
                 if self.model_name.startswith("gpt"):
 
-                    model_response = self.do_gpt_request(
+                    model_response = self.do_openai_request(
                         model_name=model_name,
                         max_tokens=max_tokens,
                         temperature=temperature,
