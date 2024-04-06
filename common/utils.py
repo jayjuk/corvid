@@ -1,4 +1,5 @@
 from os import environ
+from typing import Optional
 import sys
 
 # Graceful exit, specific to AI management cases
