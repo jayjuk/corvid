@@ -1,34 +1,17 @@
+from typing import List, Dict, Union, Tuple, Optional, Any
 import traceback
 import os
 import json
 import time
-import sys
-from pprint import pprint
-from typing import List, Dict, Union, Tuple, Optional, Any
-import base64
-import json
 from logger import setup_logger
-
+import utils
+import openai_client
+import gemini_client
+import anthropic_client
+import stability_client
 
 # Set up logger
 logger = setup_logger()
-
-# TODO #87 Separate different LLMs into subclasses so libraries aren't imported unnecessarily
-import openai
-from stability_sdk import client
-from urllib.request import urlopen
-import anthropic
-import vertexai
-from vertexai.preview.generative_models import (
-    GenerativeModel,
-    Content,
-    Part,
-    Candidate,
-)
-from google.oauth2.service_account import Credentials
-from google.cloud.aiplatform_v1beta1.types.content import SafetySetting
-from vertexai.preview.generative_models import HarmCategory, HarmBlockThreshold
-
 
 
 # Class to handle interaction with the AI
@@ -133,151 +116,27 @@ class AIManager:
         ) as f:
             json.dump(data, f, indent=4)
 
-    # Check if mandatory environment variable is set
-    def check_env_var(self, env_var_name: str) -> None:
-        if not os.environ.get(env_var_name):
-            self.exit(f"{env_var_name} not set. Exiting.")
-
     # Connect to the LLM API
     def model_api_connect(self) -> None:
         # Use pre-set variable before dotenv.
         if self.get_model_api() == "GPT":
-            self.check_env_var("OPENAI_API_KEY")
-
-            openai.api_key = os.getenv("OPENAI_API_KEY")
-            self.model_client = openai.OpenAI()
+            self.model_client = openai_client.get_model_client()
 
         elif self.get_model_api() == "Anthropic":
-            self.check_env_var("ANTHROPIC_API_KEY")
-            self.model_client = anthropic.Anthropic()
+            self.model_client = anthropic_client.get_model_client()
 
         elif self.get_model_api() == "Gemini":
-            self.check_env_var("GOOGLE_GEMINI_KEY")
+            self.model_client = gemini_client.get_model_client()
 
-            # Load Base 64 encoded key JSON from env variable and convert back to JSON
-            credentials: Dict = json.loads(
-                base64.b64decode(os.environ["GOOGLE_GEMINI_KEY"])
-            )
-
-            vertexai.init(
-                project="jaysgame",
-                location="us-central1",
-                # This overrides the default use of GOOGLE_APPLICATION_CREDENTIALS containing a file with the key in JSON
-                credentials=Credentials.from_service_account_info(credentials),
-            )
-
-            safety_settings : Optional[List[SafetySetting]] = None
-
-            if os.environ.get("GOOGLE_GEMINI_SAFETY_OVERRIDE").startswith("Y"):
-                logger.info(
-                    "Overriding safety controls (recommended with Gemini to avoid false alarms)"
-                )
-                safety_settings = [
-                    SafetySetting(
-                        category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                        threshold=HarmBlockThreshold.BLOCK_NONE,
-                    ),
-                    SafetySetting(
-                        category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                        threshold=HarmBlockThreshold.BLOCK_NONE,
-                    ),
-                    SafetySetting(
-                        category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                        threshold=HarmBlockThreshold.BLOCK_NONE,
-                    ),
-                    SafetySetting(
-                        category=HarmCategory.HARM_CATEGORY_HARASSMENT,
-                        threshold=HarmBlockThreshold.BLOCK_NONE,
-                    ),
-                ]
-            else:
-                logger.warn(
-                    "NOT Overriding safety controls - this is recommended with Gemini to avoid false alarms"
-                )
-            self.model_client = GenerativeModel(
-                "gemini-pro", safety_settings=safety_settings
-            )
         elif self.get_model_api() == "StabilityAI":
-
-            # From https://platform.stability.ai/docs/features/text-to-image#Python
-            os.environ["STABILITY_HOST"] = "grpc.stability.ai:443"
-            # os.environ["STABILITY_KEY"] - must already be set
-            # Set up our connection to the API.
-            self.stability_api = client.StabilityInference(
-                key=os.environ["STABILITY_KEY"],  # API Key reference.
-                verbose=True,  # Print debug messages.
-                engine=self.model_name,  # Set the engine to use for generation.
-                # Check out the following link for a list of available engines: https://platform.stability.ai/docs/features/api-parameters#engine
-            )
+            self.model_client = stability_client.get_model_client(model_name=self.model_name)
         else:
-            self.exit(f"Model name {self.model_name} not recognised.")
+            utils.exit(f"Model name {self.model_name} not recognised.")
 
-    # Get the model response (OpenAI specific)
-    def do_openai_request(
-        self, model_name: Optional[str], max_tokens: Optional[int], temperature: float, messages: List[Dict[str, str]]
-    ) -> str:
 
-        # If model not specified, use the default for this object
-        this_model: str = model_name or self.model_name
-
-        response = self.model_client.chat.completions.create(
-            model=this_model,
-            messages=messages,
-            max_tokens=(max_tokens or self.max_tokens),
-            temperature=temperature,
-        )
-        # Extract response content
-        for choice in response.choices:
-            model_response = choice.message.content
-
-            self.chat_history.append(
-                {
-                    "role": "assistant",
-                    self.content_word: model_response,
-                }
-            )
-
-            break
-        # Get tokens and calculate cost
-        self.input_token_count += response.usage.prompt_tokens
-        self.output_token_count += response.usage.completion_tokens
-        session_cost : float = (
-            (self.model_cost.get(this_model, [0])[0] * self.input_token_count / 1000)
-            + (self.model_cost.get(this_model, [0])[1] * self.output_token_count / 1000)
-        ) / 1.27  # To £
-        logger.info(
-            f"Tokens used: {response.usage.total_tokens} (input {response.usage.prompt_tokens}, output {response.usage.completion_tokens}). Running total cost: £{session_cost:.2f}"
-        )
-        return model_response
-
-    # Get the model response (Gemini specific)
-    def do_gemini_request(self, messages: List[Dict[str, str]]) -> str:
-
-        model_response = self.model_client.generate_content(messages)
-        candidate = model_response.candidates[0]
-        if candidate.finish_reason.name != "STOP":
-            logger.error(f"Model has issue: {str(model_response)}")
-        else:
-            return candidate.content.parts[0].text
-        return ""
-
-    # Get the model response (Anthropic specific)
-    def do_anthropic_request(self, messages: List[Dict[str, str]]) -> str:
-
-        model_response = self.model_client.messages.create(
-            model=self.model_name,
-            max_tokens=self.max_tokens,
-            messages=messages,
-            system=self.system_message,
-        )
-        return model_response.content[0].text
-
-    # Build a message for the model
-    def build_message(self, role: str, content: str) -> Union[Dict[str, str], Content]:
-        if self.get_model_api() == "Gemini":
-            return Content(role=role, parts=[Part.from_text(content)])
-        else:
-            return {"role": role, self.content_word: content}
+    # Build a message for the model (everyone but Gemini)
+    def build_message(self, role: str, content: str):
+        return {"role": role, self.content_word: content}
 
     # Submit a request to the model
     def submit_request(
@@ -293,11 +152,14 @@ class AIManager:
         wait_time: int = 5
         logger.info(f"Received request to submit: {request}")
 
+        model_name = model_name or self.model_name
+        max_tokens or self.max_tokens
+
         # Start with system message
         # Gemini
         messages: List = []
         if self.get_model_api() == "Gemini":
-            messages = [self.build_message("user", self.system_message)]
+            messages = [gemini_client.build_message("user", self.system_message)]
             messages.append(self.build_message(self.model_word, "OK."))
         elif self.get_model_api() == "Anthropic":
             pass #Leave empty
@@ -329,24 +191,28 @@ class AIManager:
 
         # Get model response, retrying if necessary
         model_response: Optional[str] = None
+        prompt_tokens: int = 0
+        response_tokens: int = 0
         while not model_response and try_count < max_tries:
             try_count += 1
             try:
                 # Behaviour varies according to model type.
                 if self.model_name.startswith("gpt"):
 
-                    model_response = self.do_openai_request(
+                    model_response, prompt_tokens, response_tokens = openai_client.do_model_request(
+                        model_client=self.model_client,
                         model_name=model_name,
                         max_tokens=max_tokens,
                         temperature=temperature,
                         messages=messages,
                     )
                 elif self.get_model_api() == "Gemini":
-                    model_response = self.do_gemini_request(messages)
+                    model_response = gemini_client.do_request(model_client=self.model_client, messages=messages)
                 elif self.get_model_api() == "Anthropic":
-                    model_response = self.do_anthropic_request(messages)
+                    model_response = anthropic_client.do_model_request(model_client=self.model_client, 
+                                                                       messages=messages, model_name=model_name, max_tokens=max_tokens, system_message=self.system_message)
                 else:
-                    self.exit(f"Unsupported model type: {self.model_name}")
+                    utils.exit(f"Unsupported model type: {self.model_name}")
 
             except Exception as e:
                 traceback.print_exc()
@@ -367,7 +233,6 @@ class AIManager:
 
         if model_response:
             # Save response to file for fine-tuning purposes
-            pass
             # TODO #24 Store log input/output better
             # self.store_model_data("input", messages)
             # self.store_model_data("response", response)
@@ -391,7 +256,22 @@ class AIManager:
                         self.content_word: model_response,
                     }
                 )
+            
+            # Get tokens and calculate cost
+            if prompt_tokens or response_tokens:
+                self.input_token_count += prompt_tokens
+                self.output_token_count += response_tokens
+                session_cost : float = (
+                    (self.model_cost.get(model_name, [0])[0] * self.input_token_count / 1000)
+                    + (self.model_cost.get(model_name, [0])[1] * self.output_token_count / 1000)
+                ) / 1.27  # To £
+                logger.info(
+                    f"Tokens used: {prompt_tokens + response_tokens} (input {prompt_tokens}, output {response_tokens}). Running total cost: £{session_cost:.2f}"
+                )
 
+        else:
+            logger.error("Model response is empty")
+            self.dump_chat_history()
         return model_response
 
     # Image creator
@@ -401,59 +281,24 @@ class AIManager:
         file_name: str = image_name.lower().replace(" ", "_").replace("'", "") + ".png"
         """Create an image from description and return the data"""
         if self.get_model_api() == "GPT":
-            response = self.model_client.images.generate(
-                prompt=description, n=1, size="512x512"
+            response = openai_client.do_image_request(model_client=self.model_client, prompt=description
             )
-            image = response.data[0]
-            url: str = image.url
-
-            response = urlopen(url)
-            return file_name, response.read()  # Return binary data
+            return file_name, response
         elif self.get_model_api() == "StabilityAI":
-            import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
-
-            # Set up our initial generation parameters.
-            answers = self.stability_api.generate(
-                prompt=description,
-                # seed=4253978046,  # If a seed is provided, the resulting generated image will be deterministic.
-                # What this means is that as long as all generation parameters remain the same, you can always recall the same image simply by generating it again.
-                # Note: This isn't quite the case for Clip Guided generations, which we'll tackle in a future example notebook.
-                steps=50,  # Amount of inference steps performed on image generation. Defaults to 30.
-                cfg_scale=8.0,  # Influences how strongly your generation is guided to match your prompt.
-                # Setting this value higher increases the strength in which it tries to match your prompt.
-                # Defaults to 7.0 if not specified.
-                width=512,  # Generation width, defaults to 512 if not included.
-                height=512,  # Generation height, defaults to 512 if not included.
-                samples=1,  # Number of images to generate, defaults to 1 if not included.
-                sampler=generation.SAMPLER_K_DPMPP_2M,  # Choose which sampler we want to denoise our generation with.
-                # Defaults to k_dpmpp_2m if not specified. Clip Guidance only supports ancestral samplers.
-                # (Available Samplers: ddim, plms, k_euler, k_euler_ancestral, k_heun, k_dpm_2, k_dpm_2_ancestral, k_dpmpp_2s_ancestral, k_lms, k_dpmpp_2m, k_dpmpp_sde)
+            return file_name, stability_client.do_image_request(
+                model_client=self.model_client, prompt=description
             )
-
-            # Set up our warning to print to the console if the adult content classifier is tripped.
-            # If adult content classifier is not tripped, save generated images.
-            for resp in answers:
-                for artifact in resp.artifacts:
-                    if artifact.finish_reason == generation.FILTER:
-                        logger.warning(
-                            "Your request activated the API's safety filters and could not be processed."
-                            + " Please modify the prompt and try again."
-                        )
-                    if artifact.type == generation.ARTIFACT_IMAGE:
-                        return file_name, artifact.binary
         else:
-            self.exit(
+            utils.exit(
                 "Image generation using other model APIs than OpenAI and StabilityAI not yet supported!"
             )
         return None, None
 
     # Graceful exit, specific to AI management cases
-    def exit(self, error_message: str) -> None:
-        logger.error(error_message + " Exiting.")
+    def dump_chat_history(self) -> None:
         # Write chat_history to file
         with open("exit_chat_history_dump.txt", "w") as f:
             for item in self.chat_history:
                 for key, value in item.items():
                     f.write(f"{key}: {value}\n")
-        sys.exit()
 

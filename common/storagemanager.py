@@ -12,10 +12,7 @@ import sys
 # Set up logger
 logger = setup_logger()
 
-# This is for Azure
-import logging
-
-
+# Superclass for storage managers
 class StorageManager:
 
     # Constructor
