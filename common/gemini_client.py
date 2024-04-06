@@ -74,7 +74,7 @@ def build_message(role: str, content: str) -> Union[Dict[str, str], Content]:
 
 # Get the model response (Gemini specific)
 def do_request(model_client, messages: List[Dict[str, str]]) -> str:
-
+    print(messages)
     model_response = model_client.generate_content(messages)
     candidate: Candidate = model_response.candidates[0]
     if candidate.finish_reason.name != "STOP":

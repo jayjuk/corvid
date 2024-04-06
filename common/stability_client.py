@@ -17,7 +17,7 @@ def get_model_client(model_name: str):
     # From https://platform.stability.ai/docs/features/text-to-image#Python
     os.environ["STABILITY_HOST"] = "grpc.stability.ai:443"
     # Set up our connection to the API.
-    self.stability_api = client.StabilityInference(
+    return client.StabilityInference(
         key=utils.get_critical_env_variable("STABILITY_KEY"),  # API Key reference.
         verbose=True,  # Print debug messages.
         engine=model_name,  # Set the engine to use for generation.

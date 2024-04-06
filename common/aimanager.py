@@ -175,7 +175,7 @@ class AIManager:
                     self.build_message("user", self.history_abbreviation_content)
                 )
                 messages.append(self.build_message(self.model_word, "OK."))
-            for history_item in self.chat_history[-1 * self.max_history]:
+            for history_item in self.chat_history[-1 * self.max_history:]:
                 messages.append(
                     self.build_message(
                         history_item["role"], history_item[self.content_word]
