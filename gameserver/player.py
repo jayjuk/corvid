@@ -1,4 +1,4 @@
-from logger import setup_logger
+from logger import setup_logger, exit
 
 # Set up logger
 logger = setup_logger()
@@ -6,7 +6,6 @@ logger = setup_logger()
 import os
 import time
 from entity import Entity
-
 
 # Player class
 class Player(Entity):
@@ -57,21 +56,28 @@ class Player(Entity):
             # SID is the unique identifier for this player used by SocketIO
             self.sid = sid
 
-            # Define history
-            self.max_input_history_length = 1000
-            self.input_history = []
+        # Define history - this resets each time the player logs in
+        self.max_input_history_length = 1000
+        self.input_history = []
 
-            # Define inventory limit for players
-            self.max_inventory = 5
+        # Define inventory limit for players
+        self.max_inventory = 5
+
 
         self.last_login = time.time()
 
         # Last action time is used to check for idle players, always refresh this
         self.last_action_time = time.time()
 
-    # Getter for input history (optional input of number of entries to return)
-    def get_input_history(self, number_of_entries=1):
-        return "\n".join(self.input_history[-number_of_entries:]) + "\n"
+    def get_input_history(self, number_of_entries=1, prefix=""):
+        """Return some input history (optional input of number of entries to return)."""
+        output: str = prefix + ("\n" if prefix else "")
+        # Resolve start index of array: do not show the first entry which will be the instructions
+        if len(self.input_history) < 2:
+            return ""
+        number_of_entries = min(number_of_entries,len(self.input_history)-1)
+        output += "\n".join(self.input_history[-number_of_entries:]) + "\n"
+        return output
 
     # Setter for input history - add a new entry but don't let it get above a certain length
     def add_input_history(self, input):

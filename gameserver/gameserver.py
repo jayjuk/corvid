@@ -49,7 +49,6 @@ def user_action(sid, player_input):
     if sid in game_manager.players:
         player = game_manager.players[sid]
         logger.info(f"Received user action: {player_input} from {sid} ({player.name})")
-        player.add_input_history(f"You: {player_input}")
         sio.emit("game_update", f"You: {player_input}", sid)
         player_response = game_manager.process_player_input(player, player_input)
         # Respond to player

@@ -155,16 +155,21 @@ class AIManager:
         model_name = model_name or self.model_name
         max_tokens or self.max_tokens
 
-        # Start with system message
-        # Gemini
+        # Gemini has special message builder
         messages: List = []
         if self.get_model_api() == "Gemini":
-            messages = [gemini_client.build_message("user", self.system_message)]
-            messages.append(self.build_message(self.model_word, "OK."))
+            build_message = gemini_client.build_message
+        else:
+            build_message = self.build_message
+        
+        # Start with system message
+        if self.get_model_api() == "Gemini":
+            messages = [build_message("user", self.system_message),
+                        build_message(self.model_word, "OK.")]
         elif self.get_model_api() == "Anthropic":
             pass #Leave empty
         else:
-            messages = [self.build_message("system", self.system_message)]
+            messages = [build_message("system", self.system_message)]
 
         # Now use history to build the messages for model input
         # (we have a separate messages list to allow for model-specific truncation without losing the history from our own memory,
@@ -172,18 +177,18 @@ class AIManager:
         if history:
             if len(self.chat_history) > self.max_history:
                 messages.append(
-                    self.build_message("user", self.history_abbreviation_content)
+                    build_message("user", self.history_abbreviation_content)
                 )
-                messages.append(self.build_message(self.model_word, "OK."))
+                messages.append(build_message(self.model_word, "OK."))
             for history_item in self.chat_history[-1 * self.max_history:]:
                 messages.append(
-                    self.build_message(
+                    build_message(
                         history_item["role"], history_item[self.content_word]
                     )
                 )
 
         # Now add request
-        messages.append(self.build_message("user", request))
+        messages.append(build_message("user", request))
 
         logger.info(
             f"About to submit to model, with system message: {self.system_message}"

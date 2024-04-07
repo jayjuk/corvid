@@ -3,16 +3,7 @@ from logger import setup_logger
 # Set up logger
 logger = setup_logger()
 
-
-# Cheeky little debug function
-def dbg(thing=None):
-    import traceback
-
-    # print stack trace
-    traceback.print_stack()
-    print(f" <{str(thing)}>")
-
-
+from typing import Any
 import eventlet
 import time
 import sys
@@ -20,9 +11,18 @@ from player import Player
 from animal import Animal
 from world import World
 from aimanager import AIManager
+import traceback
+
+def dbg(thing=None):
+    """Cheeky little debug function."""
+    # print stack trace
+    traceback.print_stack()
+    print(f" <{str(thing)}>")
+
 
 
 class GameManager:
+    """Manage the game state and process player input & responses."""
 
     # Constructor
     def __init__(self, sio, storage_manager, ai_enabled=True, world_name="jaysgame"):
@@ -162,7 +162,7 @@ class GameManager:
 
         # Build the commands description field from directions, synonyms and command functions
         self.commands_description = (
-            "Valid directions: " + ", ".join(self.world.get_directions()) + ".\n"
+            "Valid directions: " + ", ".join(self.world.get_directions())
         )
         self.commands_description += ".\nValid commands: "
         for command, data in self.command_functions.items():
@@ -226,7 +226,7 @@ class GameManager:
         return rest_of_response, ""
 
     def find_object_in_player_inventory(self, player, object_name):
-        # Try to find the object in the player's inventory
+        """Try to find the object in the player's inventory."""
         for inv_object in player.get_inventory():
             if object_name.lower() in inv_object.get_name().lower():
                 return inv_object
@@ -845,18 +845,16 @@ class GameManager:
         return verb, rest
 
     # Translate player input and try to process it again
-    def translate_and_process(self, player, player_input):
+    def translate_and_process(self, player:  Player, player_input: str) -> str:
         # Try to translate the user input into a valid command using AI :-)
         self.tell_player(player, "I'm trying to guess what you meant by that...")
-        ai_translation = self.ai_manager.submit_request(
-            "Help me to translate my user's input into a valid adventure game command.\n"
-            + "Valid commands:"
+        prompt: str = ("Help me to translate my user's input into a valid adventure game command.\n"
             + self.get_commands_description()
             + "\nRespond with only a valid command, nothing else.\n"
-            + f"Some history of what the user has seen for context:\n{player.get_input_history(10)}\n"
-            + f"Their input: {player_input}",
-        )
-        logger.info(f"AI translation: {ai_translation}")
+            + player.get_input_history(10, "Some history of what the user has seen for context:")
+            + f"Their latest input to translate: {player_input}")
+        ai_translation = self.ai_manager.submit_request(prompt)
+        logger.info("AI translation: %s", ai_translation)
         if ai_translation:
             # Try to process the AI translation as a command, but only try this once
             self.tell_player(
@@ -875,6 +873,8 @@ class GameManager:
             # Empty command
             return "You need to enter a command."
 
+        player.add_input_history(f"You: {player_input}")
+
         # get the rest of the response apart from the first word
         command, rest_of_response = self.parse_player_input(player_input)
 
@@ -884,19 +884,23 @@ class GameManager:
 
         # Call the function associated with a command
         if command in self.command_functions:
-            return self.command_functions[command]["function"](player, rest_of_response)
+            player_response = self.command_functions[command]["function"](player, rest_of_response)
         # Move the player if the command is a direction
         elif command in self.world.get_directions():
-            return self.move_entity(player, command, rest_of_response)
+            player_response = self.move_entity(player, command, rest_of_response)
         else:
             # If the command is not recognised, try to translate it using AI (unless this is already a translation)
             if not translated:
-                return self.translate_and_process(player, player_input)
-            # Invalid command
-            return (
-                "That is not a recognised command. Available commands:\n"
-                + self.get_commands_description()
-            )
+                player_response = self.translate_and_process(player, player_input)
+            else:
+                # Invalid command
+                player_response = (
+                    "That is not a recognised command. Available commands:\n"
+                    + self.get_commands_description()
+                )
+        player.add_input_history(f"Game: {player_response}")
+        return player_response
+
 
     # Build move message back to player
     def build_move_outcome_message(self, player, action, next_room):
@@ -1044,7 +1048,7 @@ class GameManager:
     def tell_player(self, player, message, type="game_update"):
         message = message.strip()
         self.sio.emit(type, message, player.sid)
-        player.add_input_history(message)
+        player.add_input_history(f"Game: {message}")
 
     # Get other entities
     def get_other_entities(self, sid=None, players_only=False):

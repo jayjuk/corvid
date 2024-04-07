@@ -180,6 +180,9 @@ class AzureStorageManager(StorageManager):
         # 2. Inventory - reconstituted from location
         if "inventory" in entity:
             del entity["inventory"]
+        # 3. Input history - not needed, we want to start fresh each session
+        if "input_history" in entity:
+            del entity["input_history"]
         # Convert fields containing lists/dicts to strings
         # This keeps the database readable/editable, simple, and cheap (can use Azure Table Storage in other words)
 
