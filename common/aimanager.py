@@ -44,7 +44,9 @@ class AIManager:
         }
 
         # Get model choice from env variable if possible
-        self.model_name: str = model_name or os.environ.get("MODEL_NAME") or "gemini-pro"
+        self.model_name: str = (
+            model_name or os.environ.get("MODEL_NAME") or "gemini-pro"
+        )
         logger.info(f"Model name set to {self.model_name}")
 
         #  Adjust the max_tokens based on desired response length
@@ -52,14 +54,18 @@ class AIManager:
         self.ai_name: Optional[str] = None
 
         # Flag to prevent image generation
-        self.do_not_generate_images: bool = os.environ.get("DO_NOT_GENERATE_IMAGES", False)
+        self.do_not_generate_images: bool = os.environ.get(
+            "DO_NOT_GENERATE_IMAGES", False
+        )
 
         # Set up openAI connection
         # We are going to use the chat interface to get AI To play our text adventure game
         self.model_api_connect()
 
         # Set system message
-        self.system_message: str = system_message or "You are playing an adventure game."
+        self.system_message: str = (
+            system_message or "You are playing an adventure game."
+        )
 
         # Model-specific static
         self.content_word: str = "content"
@@ -129,10 +135,11 @@ class AIManager:
             self.model_client = gemini_client.get_model_client()
 
         elif self.get_model_api() == "StabilityAI":
-            self.model_client = stability_client.get_model_client(model_name=self.model_name)
+            self.model_client = stability_client.get_model_client(
+                model_name=self.model_name
+            )
         else:
             utils.exit(f"Model name {self.model_name} not recognised.")
-
 
     # Build a message for the model (everyone but Gemini)
     def build_message(self, role: str, content: str):
@@ -161,13 +168,15 @@ class AIManager:
             build_message = gemini_client.build_message
         else:
             build_message = self.build_message
-        
+
         # Start with system message
         if self.get_model_api() == "Gemini":
-            messages = [build_message("user", self.system_message),
-                        build_message(self.model_word, "OK.")]
+            messages = [
+                build_message("user", self.system_message),
+                build_message(self.model_word, "OK."),
+            ]
         elif self.get_model_api() == "Anthropic":
-            pass #Leave empty
+            pass  # Leave empty
         else:
             messages = [build_message("system", self.system_message)]
 
@@ -180,11 +189,9 @@ class AIManager:
                     build_message("user", self.history_abbreviation_content)
                 )
                 messages.append(build_message(self.model_word, "OK."))
-            for history_item in self.chat_history[-1 * self.max_history:]:
+            for history_item in self.chat_history[-1 * self.max_history :]:
                 messages.append(
-                    build_message(
-                        history_item["role"], history_item[self.content_word]
-                    )
+                    build_message(history_item["role"], history_item[self.content_word])
                 )
 
         # Now add request
@@ -204,20 +211,33 @@ class AIManager:
                 # Behaviour varies according to model type.
                 if self.model_name.startswith("gpt"):
 
-                    model_response, prompt_tokens, response_tokens = openai_client.do_model_request(
-                        model_client=self.model_client,
-                        model_name=model_name,
-                        max_tokens=max_tokens,
-                        temperature=temperature,
-                        messages=messages,
+                    model_response, prompt_tokens, response_tokens = (
+                        openai_client.do_model_request(
+                            model_client=self.model_client,
+                            model_name=model_name,
+                            max_tokens=max_tokens,
+                            temperature=temperature,
+                            messages=messages,
+                        )
                     )
                 elif self.get_model_api() == "Gemini":
-                    model_response = gemini_client.do_request(model_client=self.model_client, messages=messages)
+                    model_response = gemini_client.do_request(
+                        model_client=self.model_client, messages=messages
+                    )
                 elif self.get_model_api() == "Anthropic":
-                    model_response = anthropic_client.do_model_request(model_client=self.model_client, 
-                                                                       messages=messages, model_name=model_name, max_tokens=max_tokens, system_message=self.system_message)
+                    model_response = anthropic_client.do_model_request(
+                        model_client=self.model_client,
+                        messages=messages,
+                        model_name=model_name,
+                        max_tokens=max_tokens,
+                        system_message=self.system_message,
+                    )
                 else:
                     utils.exit(f"Unsupported model type: {self.model_name}")
+
+                # Clean up response
+                if "```" in model_response:
+                    model_response = model_response.split("```")[0].strip()
 
             except Exception as e:
                 traceback.print_exc()
@@ -261,14 +281,22 @@ class AIManager:
                         self.content_word: model_response,
                     }
                 )
-            
+
             # Get tokens and calculate cost
             if prompt_tokens or response_tokens:
                 self.input_token_count += prompt_tokens
                 self.output_token_count += response_tokens
-                session_cost : float = (
-                    (self.model_cost.get(model_name, [0])[0] * self.input_token_count / 1000)
-                    + (self.model_cost.get(model_name, [0])[1] * self.output_token_count / 1000)
+                session_cost: float = (
+                    (
+                        self.model_cost.get(model_name, [0])[0]
+                        * self.input_token_count
+                        / 1000
+                    )
+                    + (
+                        self.model_cost.get(model_name, [0])[1]
+                        * self.output_token_count
+                        / 1000
+                    )
                 ) / 1.27  # To £
                 logger.info(
                     f"Tokens used: {prompt_tokens + response_tokens} (input {prompt_tokens}, output {response_tokens}). Running total cost: £{session_cost:.2f}"
@@ -286,7 +314,8 @@ class AIManager:
         file_name: str = image_name.lower().replace(" ", "_").replace("'", "") + ".png"
         """Create an image from description and return the data"""
         if self.get_model_api() == "GPT":
-            response = openai_client.do_image_request(model_client=self.model_client, prompt=description
+            response = openai_client.do_image_request(
+                model_client=self.model_client, prompt=description
             )
             return file_name, response
         elif self.get_model_api() == "StabilityAI":
@@ -306,4 +335,3 @@ class AIManager:
             for item in self.chat_history:
                 for key, value in item.items():
                     f.write(f"{key}: {value}\n")
-

@@ -98,41 +98,36 @@ class AzureStorageManager(StorageManager):
         return False
 
     def store_image_in_cloud(self, world_name, image_name, image_data):
-        if self.cloud_blobs_enabled():
-            logger.info(f"Uploading image '{image_name}' to cloud")
+        logger.info(f"Uploading image '{image_name}' to cloud")
 
-            # Get a reference to the container
-            container_client = self.blob_service_client.get_container_client(
-                self.image_container_name
-            )
+        # Get a reference to the container
+        container_client = self.blob_service_client.get_container_client(
+            self.image_container_name
+        )
 
-            # Create the container if it doesn't exist
-            if not container_client:
-                try:
-                    container_client.create_container()
-                    logger.info(f"Created container '{self.image_container_name}'")
-                except Exception as e:
-                    logger.error(
-                        f"Container '{self.image_container_name}' already exists: {e}"
-                    )
-
-            # Get a reference to the blob
-            blob_client = self.blob_service_client.get_blob_client(
-                self.image_container_name, self.get_blob_name(world_name, image_name)
-            )
-
-            # Upload the image
+        # Create the container if it doesn't exist
+        if not container_client:
             try:
-                blob_client.upload_blob(image_data)
-                logger.info(f"Uploaded image '{image_name}'")
-                return True
+                container_client.create_container()
+                logger.info(f"Created container '{self.image_container_name}'")
             except Exception as e:
-                logger.error(f"Error uploading image: {e}")
-            return False
-        else:
-            logger.warning(
-                f"Not uploading image '{image_name}' to cloud as storage not enabled."
-            )
+                logger.error(
+                    f"Container '{self.image_container_name}' already exists: {e}"
+                )
+
+        # Get a reference to the blob
+        blob_client = self.blob_service_client.get_blob_client(
+            self.image_container_name, self.get_blob_name(world_name, image_name)
+        )
+
+        # Upload the image
+        try:
+            blob_client.upload_blob(image_data)
+            logger.info(f"Uploaded image '{image_name}'")
+            return True
+        except Exception as e:
+            logger.error(f"Error uploading image: {e}")
+        return False
 
     def get_image_url(self, world_name, image_name):
         if image_name:
@@ -145,7 +140,7 @@ class AzureStorageManager(StorageManager):
         return None
 
     def get_image_blob(self, blob_name):
-        if self.cloud_blobs_enabled() and self.image_container_name:
+        if self.image_container_name:
             logger.info(f"Downloading {blob_name} from Azure blob storage")
             blob_client = self.blob_service_client.get_blob_client(
                 self.image_container_name, blob_name
@@ -168,6 +163,11 @@ class AzureStorageManager(StorageManager):
         # Convert to dict
         entity = object.__dict__.copy()
         entity["PartitionKey"] = game_name + "__" + type(object).__name__
+
+        # Don't store objects named "system" - they are transient
+        if entity["name"] == "system":
+            return False
+
         entity["RowKey"] = entity["name"]
         if "id" in entity:
             entity["RowKey"] += "__" + entity["id"]
@@ -191,6 +191,9 @@ class AzureStorageManager(StorageManager):
 
         logger.info(f"Storing {entity['name']}")
         objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
+
+        # Return true if successful
+        return True
 
     # Returns all instances of a type of object, as a dict
     def get_game_objects(self, world_name, object_type, rowkey_value=None):

@@ -7,6 +7,7 @@ import os
 import time
 from entity import Entity
 
+
 # Player class
 class Player(Entity):
     def __init__(
@@ -22,7 +23,7 @@ class Player(Entity):
         ):
             # Issue with player name setting
             raise ValueError(
-                "Sorry, that name is not valid, it should be up to 20 alphabetical characters only. Please try again."
+                f"Sorry, name {player_name} is not valid, it should be up to 20 alphabetical characters only. Please try again."
             )
 
         # Set up player
@@ -63,7 +64,6 @@ class Player(Entity):
         # Define inventory limit for players
         self.max_inventory = 5
 
-
         self.last_login = time.time()
 
         # Last action time is used to check for idle players, always refresh this
@@ -75,7 +75,7 @@ class Player(Entity):
         # Resolve start index of array: do not show the first entry which will be the instructions
         if len(self.input_history) < 2:
             return ""
-        number_of_entries = min(number_of_entries,len(self.input_history)-1)
+        number_of_entries = min(number_of_entries, len(self.input_history) - 1)
         output += "\n".join(self.input_history[-number_of_entries:]) + "\n"
         return output
 
