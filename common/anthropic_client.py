@@ -1,7 +1,6 @@
 from logger import setup_logger
 from typing import List, Dict
 import utils
-from urllib.request import urlopen
 
 # Set up logger
 logger = setup_logger()
