@@ -1,6 +1,6 @@
 from typing import List, Dict, Union, Tuple, Optional, Any
 import traceback
-import os
+from os import path, makedirs, environ, sep
 import json
 import time
 from logger import setup_logger
@@ -44,9 +44,7 @@ class AIManager:
         }
 
         # Get model choice from env variable if possible
-        self.model_name: str = (
-            model_name or os.environ.get("MODEL_NAME") or "gemini-pro"
-        )
+        self.model_name: str = model_name or environ.get("MODEL_NAME") or "gemini-pro"
         logger.info(f"Model name set to {self.model_name}")
 
         #  Adjust the max_tokens based on desired response length
@@ -54,9 +52,7 @@ class AIManager:
         self.ai_name: Optional[str] = None
 
         # Flag to prevent image generation
-        self.do_not_generate_images: bool = os.environ.get(
-            "DO_NOT_GENERATE_IMAGES", False
-        )
+        self.do_not_generate_images: bool = environ.get("DO_NOT_GENERATE_IMAGES", False)
 
         # Set up openAI connection
         # We are going to use the chat interface to get AI To play our text adventure game
@@ -90,8 +86,10 @@ class AIManager:
 
     # Create a log file for model responses
     def create_model_log_file(self) -> None:
+        logs_folder: str = "logs"
+        makedirs(logs_folder, exist_ok=True)
         self.model_log_file: str = f"{self.get_model_api()}_response_log.txt"
-        with open(self.model_log_file, "w") as f:
+        with open(path.join(logs_folder, self.model_log_file), "w") as f:
             f.write(f"# Model input and response log for {self.get_model_api()}\n\n")
 
     # Log model response to file
@@ -115,9 +113,9 @@ class AIManager:
     def store_model_data(self, filename_prefix: str, data: Any) -> None:
         logger.info("Saving model data")
         folder_path: str = "model_io"
-        os.makedirs(folder_path, exist_ok=True)
+        makedirs(folder_path, exist_ok=True)
         with open(
-            folder_path + os.sep + f"{self.model_name}_{filename_prefix}.tmp",
+            folder_path + sep + f"{self.model_name}_{filename_prefix}.tmp",
             "w",
         ) as f:
             json.dump(data, f, indent=4)
@@ -159,8 +157,9 @@ class AIManager:
         wait_time: int = 5
         logger.info(f"Received request to submit: {request}")
 
+        # Use default values if not provided
         model_name = model_name or self.model_name
-        max_tokens or self.max_tokens
+        max_tokens = max_tokens or self.max_tokens
 
         # Gemini has special message builder
         messages: List = []
