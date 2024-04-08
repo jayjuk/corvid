@@ -52,7 +52,13 @@ class AzureStorageManager(StorageManager):
         # Cache of data types to convert to/from JSON to strings when storing
         self.complex_variable_cache: dict = {}
 
-    # Return Azure table service client
+    # Return Azure credential
+    def get_azure_credential(self):
+        return AzureNamedKeyCredential(
+            get_critical_env_variable("AZURE_STORAGE_ACCOUNT_NAME"),
+            get_critical_env_variable("AZURE_STORAGE_ACCOUNT_KEY"),
+        )  # Return Azure table service client
+
     # Assumes if we have a credential, we have AZURE_STORAGE_ACCOUNT_NAME set
     def get_azure_table_service_client(self) -> TableServiceClient:
 
