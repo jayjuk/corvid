@@ -13,24 +13,22 @@ import time
 
 
 # Shortest  way to quickly output some content, whatever the mode, easy to then find these statements and remove them later
-def debug(
-    debug_content,
-    debug_content2="",
-    debug_content3="",
-):
-    print(f"*** DEBUG: {debug_content} {debug_content2} {debug_content3} ***")
-    sleep_time = 1
+def debug(*args):
+    print(f"*** DEBUG: {' '.join(str(arg) for arg in args)} ***")
+    sleep_time: int = 1
     print(f"Sleeping {sleep_time} seconds...")
     time.sleep(sleep_time)
 
 
 # Flag for regular/semipermanent debug logging to be made visible at runtime
-def is_debug_mode():
+def is_debug_mode() -> bool:
     return len(sys.argv) > 1 and sys.argv[1].lower() == "debug"
 
 
 # Function invoked by most modules for shared and common logging
-def setup_logger(file_name="unit_testing.log", logging_level_override=""):
+def setup_logger(
+    file_name: str = "unit_testing.log", logging_level_override: str = ""
+) -> logging.Logger:
     # If logger already set up, return it
     if logging.getLogger().hasHandlers():
         return logging.getLogger()
@@ -42,12 +40,11 @@ def setup_logger(file_name="unit_testing.log", logging_level_override=""):
         file_name = file_name + ".log"
 
     # Create logs directory if it doesn't exist
-    logs_dir = "logs"
-    if not os.path.exists(logs_dir):
-        os.makedirs(logs_dir)
+    logs_dir: str = "logs"
+    os.makedirs(logs_dir, exist_ok=True)
 
     # Set logging level based on waterfall of settings
-    logging_level = logging.INFO
+    logging_level: int = logging.INFO
     if is_debug_mode():
         logging_level = logging.DEBUG
     elif logging_level_override:
@@ -64,15 +61,14 @@ def setup_logger(file_name="unit_testing.log", logging_level_override=""):
             logging.StreamHandler(),
         ],
     )
-    logger = logging.getLogger()
-    return logger
+    return logging.getLogger()
 
 
 # Default common exit logic which logs a critical error and exits at the same time.
-def exit(logger, error_message=None):
+def exit(logger: logging.Logger, error_message: str = None) -> None:
     if error_message:
         logger.critical(error_message)
-        exit_code = 1
+        exit_code: int = 1
     else:
         # Check logger not a string
         if isinstance(logger, str):
@@ -80,5 +76,5 @@ def exit(logger, error_message=None):
                 f"I suspect an error message was passed into the logger parameter: {logger}"
             )
         # If no message, assume normal exit.
-        exit_code = 0
+        exit_code: int = 0
     sys.exit(exit_code)
