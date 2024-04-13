@@ -1,4 +1,4 @@
-from logger import setup_logger
+from logger import setup_logger, exit
 
 # Set up logger
 logger = setup_logger()
@@ -13,12 +13,12 @@ from world import World
 from aimanager import AIManager
 import traceback
 
+
 def dbg(thing=None):
     """Cheeky little debug function."""
     # print stack trace
     traceback.print_stack()
     print(f" <{str(thing)}>")
-
 
 
 class GameManager:
@@ -161,8 +161,8 @@ class GameManager:
         }
 
         # Build the commands description field from directions, synonyms and command functions
-        self.commands_description = (
-            "Valid directions: " + ", ".join(self.world.get_directions())
+        self.commands_description = "Valid directions: " + ", ".join(
+            self.world.get_directions()
         )
         self.commands_description += ".\nValid commands: "
         for command, data in self.command_functions.items():
@@ -205,7 +205,7 @@ class GameManager:
                 self.create_restart_file()
                 self.sio.emit("shutdown", message)
                 # TODO #15 Restart game without actually restarting the process
-                sys.exit()
+                exit("Game ended by player pushing The Button!")
 
     def create_restart_file(self):
         # Temporary flag file checked by the local 'run' script.
@@ -345,7 +345,7 @@ class GameManager:
         # TODO #69 Make shutdown command restart process not shut down
         self.sio.emit("shutdown", message)
         eventlet.sleep(1)
-        sys.exit()
+        exit("Shutdown command invoked")
 
     def do_quit(self, player, rest_of_response):
         self.remove_player(player.sid, "You have left the game.")
@@ -845,14 +845,18 @@ class GameManager:
         return verb, rest
 
     # Translate player input and try to process it again
-    def translate_and_process(self, player:  Player, player_input: str) -> str:
+    def translate_and_process(self, player: Player, player_input: str) -> str:
         # Try to translate the user input into a valid command using AI :-)
         self.tell_player(player, "I'm trying to guess what you meant by that...")
-        prompt: str = ("Help me to translate my user's input into a valid adventure game command.\n"
+        prompt: str = (
+            "Help me to translate my user's input into a valid adventure game command.\n"
             + self.get_commands_description()
             + "\nRespond with only a valid command, nothing else.\n"
-            + player.get_input_history(10, "Some history of what the user has seen for context:")
-            + f"Their latest input to translate: {player_input}")
+            + player.get_input_history(
+                10, "Some history of what the user has seen for context:"
+            )
+            + f"Their latest input to translate: {player_input}"
+        )
         ai_translation = self.ai_manager.submit_request(prompt)
         logger.info("AI translation: %s", ai_translation)
         if ai_translation:
@@ -884,7 +888,9 @@ class GameManager:
 
         # Call the function associated with a command
         if command in self.command_functions:
-            player_response = self.command_functions[command]["function"](player, rest_of_response)
+            player_response = self.command_functions[command]["function"](
+                player, rest_of_response
+            )
         # Move the player if the command is a direction
         elif command in self.world.get_directions():
             player_response = self.move_entity(player, command, rest_of_response)
@@ -900,7 +906,6 @@ class GameManager:
                 )
         player.add_input_history(f"Game: {player_response}")
         return player_response
-
 
     # Build move message back to player
     def build_move_outcome_message(self, player, action, next_room):

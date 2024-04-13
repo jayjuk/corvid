@@ -1,8 +1,9 @@
-from os import environ
 from typing import Any, Dict, List, Optional, Union
 from logger import setup_logger
 import json
+from os import path
 from abc import ABC, abstractmethod
+from utils import get_critical_env_variable
 
 # Set up logger
 logger = setup_logger()
@@ -38,8 +39,8 @@ class StorageManager(ABC):
             logger.info(
                 f"Resolving image URL for world {world_name} / image {image_name}"
             )
-            hostname = environ["IMAGESERVER_HOSTNAME"]
-            port = environ["IMAGESERVER_PORT"]
+            hostname = get_critical_env_variable("IMAGESERVER_HOSTNAME")
+            port = get_critical_env_variable("IMAGESERVER_PORT")
             return f"http://{hostname}:{port}/image/{self.get_blob_name(world_name, image_name)}"
         return None
 
