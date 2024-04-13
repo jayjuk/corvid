@@ -1,6 +1,6 @@
 from logger import setup_logger
 from typing import List, Dict, Tuple, Union
-import utils
+from utils import get_critical_env_variable
 from urllib.request import urlopen
 
 # Set up logger
@@ -13,7 +13,7 @@ import openai
 # Connect to the LLM API
 def get_model_client() -> openai.OpenAI:
     # Use pre-set variable before dotenv.
-    openai.api_key = utils.get_critical_env_variable("OPENAI_API_KEY")
+    openai.api_key = get_critical_env_variable("OPENAI_API_KEY")
     return openai.OpenAI()
 
 

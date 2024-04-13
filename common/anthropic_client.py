@@ -1,6 +1,7 @@
 from logger import setup_logger
 from typing import List, Dict
-import utils
+from utils import get_critical_env_variable
+
 
 # Set up logger
 logger = setup_logger()
@@ -12,7 +13,7 @@ from anthropic import Anthropic
 # Connect to the LLM API
 def get_model_client() -> Anthropic:
     # Use pre-set variable before dotenv.
-    utils.get_critical_env_variable("ANTHROPIC_API_KEY")
+    get_critical_env_variable("ANTHROPIC_API_KEY")
     return Anthropic()
 
 

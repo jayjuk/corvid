@@ -1,8 +1,8 @@
 from logger import setup_logger
-from typing import List, Dict, Union
+from typing import Union
 import os
-from urllib.request import urlopen
-import utils
+from utils import get_critical_env_variable
+
 
 # Set up logger
 logger = setup_logger()
@@ -16,7 +16,7 @@ import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 def get_model_client(model_name: str) -> client.StabilityInference:
     os.environ["STABILITY_HOST"] = "grpc.stability.ai:443"
     return client.StabilityInference(
-        key=utils.get_critical_env_variable("STABILITY_KEY"),
+        key=get_critical_env_variable("STABILITY_KEY"),
         verbose=True,
         engine=model_name,
     )
