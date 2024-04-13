@@ -6,6 +6,7 @@
 *_log.txt
 *.out
 *.png
+*.pyc
 *.sqlite3
 *.tmp
 *_dump*.json
