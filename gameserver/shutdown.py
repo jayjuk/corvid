@@ -14,7 +14,7 @@ if __name__ == "__main__":
     hostname = environ.get("GAMESERVER_HOSTNAME") or "localhost"
     port = environ.get("GAMESERVER_PORT", "3001")
     sio.connect(f"http://{hostname}:{port}")
-    sio.emit("set_player_name", {"name": "ShutdownScript", "role": "player"})
+    sio.emit("set_player_name", {"name": "system", "role": "player"})
     eventlet.sleep(1)
     sio.emit("user_action", "xox")
     eventlet.sleep(1)

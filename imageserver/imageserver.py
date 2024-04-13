@@ -1,7 +1,7 @@
 from os import path, environ, makedirs
 from logger import setup_logger
 from flask import Flask, send_from_directory
-from storagemanager import StorageManager
+from azurestoragemanager import AzureStorageManager
 
 # Set up logger
 logger = setup_logger()
@@ -11,7 +11,7 @@ class ImageServer:
     def __init__(self):
         self.app = Flask(__name__)
         # Get Azure storage client
-        self.storage_manager = StorageManager(image_only=True)
+        self.storage_manager = AzureStorageManager(image_only=True)
 
         self.cache_folder = "image_cache"
         # Create a local folder named after the container to store images
