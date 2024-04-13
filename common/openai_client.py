@@ -1,5 +1,5 @@
 from logger import setup_logger
-from typing import List, Dict
+from typing import List, Dict, Tuple, Union
 import utils
 from urllib.request import urlopen
 
@@ -9,18 +9,24 @@ logger = setup_logger()
 # Avoid mixing up loggers by importing third party modules after logger
 import openai
 
+
 # Connect to the LLM API
-def get_model_client():
+def get_model_client() -> openai.OpenAI:
     # Use pre-set variable before dotenv.
     openai.api_key = utils.get_critical_env_variable("OPENAI_API_KEY")
     return openai.OpenAI()
 
-# Get the model response (OpenAI specific)
-def do_model_request(model_client, 
-    model_name: str, max_tokens: int, temperature: float, messages: List[Dict[str, str]],
-) -> str:
 
-    response = model_client.chat.completions.create(
+# Get the model response (OpenAI specific)
+def do_model_request(
+    model_client: openai.OpenAI,
+    model_name: str,
+    max_tokens: int,
+    temperature: float,
+    messages: List[Dict[str, str]],
+) -> Tuple[str, int, int]:
+
+    response: openai.Response = model_client.chat.completions.create(
         model=model_name,
         messages=messages,
         max_tokens=max_tokens,
@@ -28,11 +34,16 @@ def do_model_request(model_client,
     )
     # Extract response content
     for choice in response.choices:
-        return choice.message.content, response.usage.prompt_tokens, response.usage.completion_tokens
+        return (
+            choice.message.content,
+            response.usage.prompt_tokens,
+            response.usage.completion_tokens,
+        )
 
-# Image creator
-def do_image_request(model_client, prompt: str):
-    response = model_client.images.generate(
+
+# Execute image generation request
+def do_image_request(model_client: openai.OpenAI, prompt: str) -> Union[bytes, None]:
+    response: openai.Response = model_client.images.generate(
         prompt=prompt, n=1, size="512x512"
     )
     if response:
