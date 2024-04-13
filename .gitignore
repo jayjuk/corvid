@@ -15,3 +15,4 @@ __pycache__
 backup_the_oldfashioned_way.py
 quick_backup_and_old
 gameclient/perspective-package.zip
+.DS_Store
