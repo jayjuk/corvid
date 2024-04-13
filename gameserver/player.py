@@ -93,11 +93,11 @@ class Player(Entity):
     # Get inventory description
     def get_inventory_description(self):
         if not self.get_inventory():
-            description = "You are not carrying any objects. You "
+            description = "You are not carrying any items. You "
         else:
             description = "You are carrying: "
-            for object in self.get_inventory():
-                description += object.get_name("a") + ", "
+            for item in self.get_inventory():
+                description += item.get_name("a") + ", "
             # Add money to inventory description
             description = description[:-2] + ".\nYou also "
         description += f"have {self.world.get_currency(self.money)} in your pocket."
@@ -117,14 +117,14 @@ class Player(Entity):
         # Store change
         self.world.storage_manager.store_game_object(self.world.name, self)
 
-    def can_add_object(self):
+    def can_add_item(self):
         return len(self.inventory) < self.max_inventory
 
-    # Override for player picking up an object - has a limit
-    def add_object(self, object):
-        if not self.can_add_object():
+    # Override for player picking up an item - has a limit
+    def add_item(self, item):
+        if not self.can_add_item():
             return "You can't carry any more items."
-        self.inventory.append(object)
+        self.inventory.append(item)
 
     # Override for player's location change
     def set_location(self, next_room):

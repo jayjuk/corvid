@@ -80,7 +80,7 @@ class AIBroker:
             )
         else:
             # Experiment to see whether cheaper AIs can do this
-            ai_instructions += "Prioritise exploring, picking up objects ('get all'), selling them to merchants, and then buying the red button (which costs 999p) from Gambino, so you win the game! use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
+            ai_instructions += "Prioritise exploring, picking up items ('get all'), selling them to merchants, and then buying the red button (which costs 999p) from Gambino, so you win the game! use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
             # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
         return ai_instructions
 

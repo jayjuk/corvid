@@ -47,7 +47,7 @@ class GameManager:
             storage_manager, mode=None, ai_enabled=ai_enabled, name=world_name
         )
 
-        self.object_name_empty_message = "Invalid input: object name is empty."
+        self.item_name_empty_message = "Invalid input: item name is empty."
 
         # Set up game language
         self.setup_commands()
@@ -114,11 +114,11 @@ class GameManager:
             },
             "get": {
                 "function": self.do_get,
-                "description": "Pick up an object in your current location",
+                "description": "Pick up an item in your current location",
             },
             "drop": {
                 "function": self.do_drop,
-                "description": "Drop an object in your current location",
+                "description": "Drop an item in your current location",
             },
             "go": {
                 "function": self.do_go,
@@ -131,11 +131,11 @@ class GameManager:
             },
             "buy": {
                 "function": self.do_buy,
-                "description": "Buy an object from an entity (e.g. a Merchant) in your current location.",
+                "description": "Buy an item from an entity (e.g. a Merchant) in your current location.",
             },
             "sell": {
                 "function": self.do_sell,
-                "description": "Sell an object to an entity (e.g. a Merchant) in your current location.",
+                "description": "Sell an item to an entity (e.g. a Merchant) in your current location.",
             },
             "trade": {
                 "function": self.do_trade,
@@ -151,7 +151,7 @@ class GameManager:
             },
             "inventory": {
                 "function": self.do_inventory,
-                "description": "List the objects you are carrying",
+                "description": "List the items you are carrying",
             },
             "xox": {
                 "function": self.do_shutdown,
@@ -180,20 +180,20 @@ class GameManager:
         self.commands_description = self.commands_description[:-2]
 
     # All these 'do_' functions are for processing commands from the player.
-    # They all take the player object and the rest of the response as arguments,
+    # They all take the player item and the rest of the response as arguments,
     # Even if they're not needed. This is to keep the command processing simple.
 
     def do_go(self, player, rest_of_response):
         return self.move_entity(player, rest_of_response, "")
 
     def do_push(self, player, rest_of_response):
-        object_name = self.get_object_name_from_response(rest_of_response)
-        if "button" in object_name:
+        item_name = self.get_item_name_from_response(rest_of_response)
+        if "button" in item_name:
             # Check red button in inventory
             item = None
-            for inv_object in player.get_inventory():
-                if object_name.lower() in inv_object.get_name().lower():
-                    item = inv_object
+            for inv_item in player.get_inventory():
+                if item_name.lower() in inv_item.get_name().lower():
+                    item = inv_item
                     break
             if item:
                 message = f"The Button has been pressed!!! Congratulations to {player.get_name()}!!! The game will restart in 10 seconds..."
@@ -225,21 +225,21 @@ class GameManager:
             rest_of_response = ""
         return rest_of_response, ""
 
-    def find_object_in_player_inventory(self, player, object_name):
-        """Try to find the object in the player's inventory."""
-        for inv_object in player.get_inventory():
-            if object_name.lower() in inv_object.get_name().lower():
-                return inv_object
+    def find_item_in_player_inventory(self, player, item_name):
+        """Try to find the item in the player's inventory."""
+        for inv_item in player.get_inventory():
+            if item_name.lower() in inv_item.get_name().lower():
+                return inv_item
         return None
 
-    def find_object_in_merchant_inventory(self, player, object_name):
+    def find_item_in_merchant_inventory(self, player, item_name):
         for merchant in self.get_entities("merchant", player.get_current_location()):
-            for merchant_object in merchant.get_inventory():
+            for merchant_item in merchant.get_inventory():
                 if (
-                    object_name
-                    and object_name.lower() in merchant_object.get_name().lower()
+                    item_name
+                    and item_name.lower() in merchant_item.get_name().lower()
                 ):
-                    return merchant_object
+                    return merchant_item
         return None
 
     def do_look(self, player, rest_of_response):
@@ -266,24 +266,24 @@ class GameManager:
             return outcome
 
         # Find what they are looking at
-        object_name = self.get_object_name_from_response(rest_of_response)
-        # Check if the object is in the room
-        item = self.world.search_object(object_name, player.get_current_location())
+        item_name = self.get_item_name_from_response(rest_of_response)
+        # Check if the item is in the room
+        item = self.world.search_item(item_name, player.get_current_location())
         if not item:
-            item = self.find_object_in_player_inventory(player, object_name)
-            # Try to find the object in the possession of a merchant
+            item = self.find_item_in_player_inventory(player, item_name)
+            # Try to find the item in the possession of a merchant
             if not item:
-                item = self.find_object_in_merchant_inventory(player, object_name)
+                item = self.find_item_in_merchant_inventory(player, item_name)
         if item:
             return (
                 f"You look at {item.get_name(article='the')}: {item.get_description()}"
             )
         # Check if they named an entity
-        entity = self.is_entity(object_name)
+        entity = self.is_entity(item_name)
         if entity:
             return entity.get_description()
         # If you get here, can't find anything that matches that name
-        return f"There is no '{object_name}' here."
+        return f"There is no '{item_name}' here."
 
     def do_help(self, player=None, rest_of_response=None):
         return (
@@ -463,12 +463,12 @@ class GameManager:
         )
         return f"You build {direction} and make a new location, {room_name}: {room_description}"
 
-    def is_entity(self, object_name):
-        if object_name:
+    def is_entity(self, item_name):
+        if item_name:
             for other_entity in self.get_other_entities():
                 if (
-                    str(other_entity.name).lower() == str(object_name).lower()
-                    or other_entity.get_role() == object_name.lower()
+                    str(other_entity.name).lower() == str(item_name).lower()
+                    or other_entity.get_role() == item_name.lower()
                 ):
                     return other_entity
         return False
@@ -484,55 +484,55 @@ class GameManager:
         return merchants
 
     # Sale transaction
-    def transact_sale(self, object_name, player, merchant):
-        for object in player.get_inventory():
-            if object.get_name().lower() == object_name.lower():
-                # Change object ownership
-                transfer_outcome = object.transfer(player, merchant)
+    def transact_sale(self, item_name, player, merchant):
+        for item in player.get_inventory():
+            if item.get_name().lower() == item_name.lower():
+                # Change item ownership
+                transfer_outcome = item.transfer(player, merchant)
                 if not transfer_outcome:
                     # Add the money to the player's inventory
-                    player.add_money(object.get_price())
+                    player.add_money(item.get_price())
                     # NOTE: Merchant has unlimited money for now at least
-                    return f"You sell {object.get_name(article='the')} to {merchant.get_name()} for {self.world.get_currency(object.get_price())}."
+                    return f"You sell {item.get_name(article='the')} to {merchant.get_name()} for {self.world.get_currency(item.get_price())}."
                 else:
                     return "The sale fell through: " + transfer_outcome
-        return f"'{object_name}' is not in your inventory."
+        return f"'{item_name}' is not in your inventory."
 
-    def make_purchase(self, object, player, merchant):
-        # Simply return True if the object is in the merchant's possession and the player said to buy
-        if player.deduct_money(object.get_price()):
-            transfer_issue = object.transfer(merchant, player)
+    def make_purchase(self, item, player, merchant):
+        # Simply return True if the item is in the merchant's possession and the player said to buy
+        if player.deduct_money(item.get_price()):
+            transfer_issue = item.transfer(merchant, player)
             if transfer_issue:
                 return transfer_issue
             # If no issue, tell the others about the transaction
             self.tell_others(
                 player.sid,
-                f"{player.name} has bought {object.get_name(article='the')} from {merchant.get_name()}.",
+                f"{player.name} has bought {item.get_name(article='the')} from {merchant.get_name()}.",
             )
-            return f"Congratulations, you successfully purchased {object.get_name(article='the')} for {self.world.get_currency(object.get_price())}."
+            return f"Congratulations, you successfully purchased {item.get_name(article='the')} for {self.world.get_currency(item.get_price())}."
 
-        return f"You do not have enough money to buy {object.get_name(article='the')}."
+        return f"You do not have enough money to buy {item.get_name(article='the')}."
 
     # Buy or get stuff
-    def transact_buy_get(self, action, object_name, player, merchant):
+    def transact_buy_get(self, action, item_name, player, merchant):
         found_count = 0
-        for object in merchant.get_inventory():
+        for item in merchant.get_inventory():
             if (
-                object_name.lower() in object.get_name().lower()
-                or object_name.lower() == "all"
+                item_name.lower() in item.get_name().lower()
+                or item_name.lower() == "all"
             ):
                 found_count += 1
                 if action == "get":
-                    # Simply return True if the object is in the merchant's possession and the player said to get not buy
+                    # Simply return True if the item is in the merchant's possession and the player said to get not buy
                     # As we can't assume they were willing to buy it
-                    return f"The object '{object.get_name()}' is in the possession of a merchant. Perhaps you can purchase it?"
+                    return f"The item '{item.get_name()}' is in the possession of a merchant. Perhaps you can purchase it?"
                 elif action == "buy":
-                    return self.make_purchase(object, player, merchant)
+                    return self.make_purchase(item, player, merchant)
         if found_count == 0:
-            return f"There is no {object_name} to be found here."
+            return f"There is no {item_name} to be found here."
 
-    # Check if an object is in a merchant's possession
-    def transact_object(self, object_name, player, action="get"):
+    # Check if an item is in a merchant's possession
+    def transact_item(self, item_name, player, action="get"):
         merchants = self.get_entities("merchant", player.get_current_location())
         if action in ("buy", "sell") and not merchants:
             return "There is no merchant here to trade with."
@@ -540,16 +540,16 @@ class GameManager:
         # Try each merchant in the room
         for merchant in merchants:
             if action == "sell":
-                return self.transact_sale(object_name, player, merchant)
+                return self.transact_sale(item_name, player, merchant)
             else:
                 # Don't go any further if pockets are full!
-                if not player.can_add_object():
+                if not player.can_add_item():
                     return "You can't carry any more."
-                return self.transact_buy_get(action, object_name, player, merchant)
-        # If we get here, the object is not in any merchant's possession
-        return f"You are unable to {action} '{object_name}' here."
+                return self.transact_buy_get(action, item_name, player, merchant)
+        # If we get here, the item is not in any merchant's possession
+        return f"You are unable to {action} '{item_name}' here."
 
-    # Get / pick up an object
+    # Get / pick up an item
     def do_get(self, player, rest_of_response):
         logger.info("Doing get command.")
         # First check in case they wrote 'pick up'. If so, remove the 'up'.
@@ -557,23 +557,23 @@ class GameManager:
             rest_of_response = rest_of_response[3:]
         # TODO #70 If in future pick is a verb e.g. pick a lock, select, we will need to pass the original verb into the functions
 
-        # Get object name by calling a function to parse the response
-        object_name = self.get_object_name_from_response(rest_of_response)
+        # Get item name by calling a function to parse the response
+        item_name = self.get_item_name_from_response(rest_of_response)
 
-        # Check the object name is valid
-        if object_name == "":
-            return self.object_name_empty_message
+        # Check the item name is valid
+        if item_name == "":
+            return self.item_name_empty_message
 
         # Loop to handle wild cards
         keep_looking = True
         found = False
         while keep_looking:
             keep_looking = False
-            # Check if the object is in the room
-            item = self.world.search_object(object_name, player.get_current_location())
+            # Check if the item is in the room
+            item = self.world.search_item(item_name, player.get_current_location())
             if item:
                 found = True
-                # Setting player will remove the object from the room
+                # Setting player will remove the item from the room
                 result = item.set_possession(player)
                 if not result:
                     self.tell_player(
@@ -584,14 +584,14 @@ class GameManager:
                 else:
                     return result
             # Check if they named an entity
-            elif self.is_entity(object_name):
-                return f"I would advise against picking up {object_name}, they will not react well!"
-            # Check if the object is in the possession of a merchant
-            elif object_name != "all" and not found:
-                outcome = self.transact_object(object_name, player, "get")
+            elif self.is_entity(item_name):
+                return f"I would advise against picking up {item_name}, they will not react well!"
+            # Check if the item is in the possession of a merchant
+            elif item_name != "all" and not found:
+                outcome = self.transact_item(item_name, player, "get")
                 if outcome:
                     return outcome
-                return f"There is no {object_name} to be found here."
+                return f"There is no {item_name} to be found here."
         if not found:
             return "There is nothing here that you can pick up."
 
@@ -599,39 +599,38 @@ class GameManager:
         # Not used, next line is to avoid warnings
         return player.get_inventory_description()
 
-    def get_object_list_text(self, objects):
+    def get_item_list_text(self, items):
         drop_list_text = ""
         drop_count = 0
-        for object in objects:
+        for item in items:
             drop_count += 1
             if drop_count > 1:
-                if drop_count == len(objects):
+                if drop_count == len(items):
                     drop_list_text += " and "
                 else:
                     drop_list_text += ", "
-            drop_list_text += f"{object.get_name(article='the')}"
+            drop_list_text += f"{item.get_name(article='the')}"
         drop_list_text += "."
         return drop_list_text
 
     def do_drop(self, player, rest_of_response):
-        # Get object name by calling a function to parse the response
-        object_name = self.get_object_name_from_response(rest_of_response)
+        # Get item name by calling a function to parse the response
+        item_name = self.get_item_name_from_response(rest_of_response)
 
-        # Check the object name is valid
-        if object_name == "":
-            return self.object_name_empty_message
+        # Check the item name is valid
+        if item_name == "":
+            return self.item_name_empty_message
         if (
-            self.world.get_currency(amount=None, short=False, plural=True)
-            in object_name
+            self.world.get_currency(amount=None, short=False, plural=True) in item_name
             or self.world.get_currency(amount=None, short=False, plural=False)
-            in object_name
+            in item_name
         ):
             return "You can't drop your money, you might need it!"
-        # Check if the object is in the player's inventory, if so, drop it
+        # Check if the item is in the player's inventory, if so, drop it
         # "all" is a special case to drop everything
-        objects = player.drop_objects(object_name)
-        if objects:
-            drop_list_text = self.get_object_list_text(objects)
+        items = player.drop_items(item_name)
+        if items:
+            drop_list_text = self.get_item_list_text(items)
             # Tell the others about the drop
             self.tell_others(
                 player.sid,
@@ -639,61 +638,60 @@ class GameManager:
             )
             return "You drop " + drop_list_text
         else:
-            if object_name == "all":
+            if item_name == "all":
                 return "You are not carrying anything."
             else:
-                return f"You are not carrying '{object_name}'."
+                return f"You are not carrying '{item_name}'."
 
     def do_buy(self, player, rest_of_response):
-        # Get object name by calling a function to parse the response
-        object_name = self.get_object_name_from_response(rest_of_response)
+        # Get item name by calling a function to parse the response
+        item_name = self.get_item_name_from_response(rest_of_response)
 
-        # Check the object name is valid
-        if object_name == "":
-            return self.object_name_empty_message
+        # Check the item name is valid
+        if item_name == "":
+            return self.item_name_empty_message
 
-        # Check if the object is in the room
-        item = self.world.search_object(object_name, player.get_current_location())
+        # Check if the item is in the room
+        item = self.world.search_item(item_name, player.get_current_location())
         if item:
             # Can just pick it up
             return "You don't have to buy that, you can just pick it up!"
         # Check if they named an entity
-        elif self.is_entity(object_name):
-            return f"That {object_name} is not for sale!"
+        elif self.is_entity(item_name):
+            return f"That {item_name} is not for sale!"
         # Otherwise proceed to try to buy it
-        return self.transact_object(object_name, player, "buy")
+        return self.transact_item(item_name, player, "buy")
 
     def do_sell(self, player, rest_of_response):
-        # Get object name by calling a function to parse the response
-        object_name = self.get_object_name_from_response(rest_of_response)
-        # Check the object name is valid
-        if object_name == "":
-            return self.object_name_empty_message
+        # Get item name by calling a function to parse the response
+        item_name = self.get_item_name_from_response(rest_of_response)
+        # Check the item name is valid
+        if item_name == "":
+            return self.item_name_empty_message
         if (
-            self.world.get_currency(amount=None, short=False, plural=True)
-            in object_name
+            self.world.get_currency(amount=None, short=False, plural=True) in item_name
             or self.world.get_currency(amount=None, short=False, plural=False)
-            in object_name
+            in item_name
         ):
             return "You can't sell money!"
 
-        # Check if the object is in the player's inventory
+        # Check if the item is in the player's inventory
         found_count = 0
         tmp_inv = player.get_inventory().copy()
-        for object in tmp_inv:
+        for item in tmp_inv:
             if (
-                object_name.lower() in object.get_name().lower()
-                or object_name.lower() == "all"
+                item_name.lower() in item.get_name().lower()
+                or item_name.lower() == "all"
             ):
                 found_count += 1
-                if not object.get_price():
-                    return f"You can't sell {object.get_name(article='the')} - it is valueless (or priceless!)."
+                if not item.get_price():
+                    return f"You can't sell {item.get_name(article='the')} - it is valueless (or priceless!)."
                 # Try to sell it to a merchant
                 self.tell_player(
-                    player, self.transact_object(object.get_name(), player, "sell")
+                    player, self.transact_item(item.get_name(), player, "sell")
                 )
-        if object_name != "all" and found_count == 0:
-            return f"You are not carrying '{object_name}'."
+        if item_name != "all" and found_count == 0:
+            return f"You are not carrying '{item_name}'."
 
     def do_trade(self, player, rest_of_response):
         # TODO #71 Implement trade command
@@ -706,8 +704,8 @@ class GameManager:
 
     # Getters
 
-    # Parse object name from the response after the initial verb that triggered the function
-    def get_object_name_from_response(self, rest_of_response):
+    # Parse item name from the response after the initial verb that triggered the function
+    def get_item_name_from_response(self, rest_of_response):
         if rest_of_response == "everything" or rest_of_response == "*":
             return "all"
 
@@ -774,7 +772,7 @@ class GameManager:
                 "That name is a reserved word, it would be confusing to be called that.",
             )
 
-        # Create/load the player, who is part of the world like entities objects etc
+        # Create/load the player, who is part of the world like entities items etc
         outcome, player = self.world.create_player(sid, player_name, player.get("role"))
         # Outcomes are adverse
         if outcome:
@@ -1022,7 +1020,7 @@ class GameManager:
                     room,
                     brief=False,
                     role=player.get_role(),
-                    show_objects=False,
+                    show_items=False,
                     show_exits=False,
                 ),
                 "exits": self.world.get_room_exits_description(room),
@@ -1095,9 +1093,9 @@ class GameManager:
     def remove_player(self, sid, reason):
         if sid in self.players:
             player = self.players[sid]
-            # Make player drop all objects in their inventory
+            # Make player drop all items in their inventory
             self.tell_player(player, self.do_drop(player, "all"))
-            # TODO #6 Create coin objects corresponding to their money
+            # TODO #6 Create coin items corresponding to their money
             self.tell_player(
                 player,
                 reason,

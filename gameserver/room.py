@@ -29,7 +29,7 @@ class Room:
             self.image = image
             self.grid_reference = grid_reference
 
-        # An object belongs to a world
+        # A room belongs to a world
         self.world = world
 
         logger.info(f"Creating room {self.name}")

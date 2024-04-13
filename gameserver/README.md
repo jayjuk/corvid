@@ -12,11 +12,11 @@ Where almost all the business logic resides, especially the processing of player
 
 ### World
 
-Tracks the entities, players, objects and their state
+Tracks the entities, players, items and their state
 
-### Object
+### Item
 
-Methods and attributes of objects in the game
+Methods and attributes of items in the game
 
 ### Entity
 

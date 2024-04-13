@@ -5,7 +5,7 @@ logger = setup_logger()
 
 
 # Player class
-class Object:
+class GameItem:
     def __init__(
         self,
         world,
@@ -23,10 +23,10 @@ class Object:
             self.location = location
             self.price = price
 
-        # An object belongs to a world
+        # An item belongs to a world
         self.world = world
 
-        self.check_object_name(self.name)
+        self.check_item_name(self.name)
         if (
             hasattr(self, "location")
             and self.location not in world.rooms
@@ -34,19 +34,19 @@ class Object:
         ):
             exit(
                 logger,
-                f"Invalid location {location} specified for object {self.name}",
+                f"Invalid location {location} specified for item {self.name}",
             )
 
-        logger.info(f"Creating object {self.name}" + f" starting in {self.location}")
+        logger.info(f"Creating item {self.name}" + f" starting in {self.location}")
 
-    def check_object_name(self, object_name):
-        if not object_name:
-            exit(logger, "Object must have a name")
+    def check_item_name(self, item_name):
+        if not item_name:
+            exit(logger, "Item must have a name")
         for reserved_word in (" from ", " up ", " to "):
-            if reserved_word in object_name.lower():
+            if reserved_word in item_name.lower():
                 exit(
                     logger,
-                    "Problems will arise if an object is created that contains '{}'.",
+                    "Problems will arise if an item is created that contains '{}'.",
                 )
 
     # Getter for player's current location
@@ -63,30 +63,30 @@ class Object:
             exit(logger, f"{self.name} is being dropped in a non-existent room")
         logger.info(f"{self.name} is being dropped in {room_name}")
         self.set_location(room_name)
-        self.world.add_object_to_room(self, room_name)
+        self.world.add_item_to_room(self, room_name)
 
     # Setter for player picking up
     def set_possession(self, entity):
         # Remove from room in which receiving entity is
-        self.world.remove_object_from_room(self, entity.location)
+        self.world.remove_item_from_room(self, entity.location)
         self.set_location(entity.name)
-        # Try to add the object to the player's inventory, if it fails, return an error string, no error means success
-        add_object_error = entity.add_object(self)
-        if add_object_error:
-            return add_object_error
+        # Try to add the item to the player's inventory, if it fails, return an error string, no error means success
+        add_item_error = entity.add_item(self)
+        if add_item_error:
+            return add_item_error
 
         # Return empty string means it's been picked up without issue
         return ""
 
     # Remove from old player and add to new player
     def transfer(self, old_entity, new_entity):
-        if new_entity.can_add_object():
-            if old_entity.drop_object(self):
+        if new_entity.can_add_item():
+            if old_entity.drop_item(self):
                 outcome = self.set_possession(new_entity)
                 if not outcome:
                     # Remove from room
-                    # TODO #73 Review and improve object transfer going up from object to world
-                    self.world.remove_object_from_room(
+                    # TODO #73 Review and improve item transfer going up from item to world
+                    self.world.remove_item_from_room(
                         self, new_entity.get_current_location()
                     )
 
@@ -94,17 +94,17 @@ class Object:
                 return f"{old_entity.get_name()} can't drop {self.name}."
         return f"{new_entity.get_name()} can't carry any more."
 
-    # Description of the object
+    # Description of the item
     def get_description(self):
         return self.description
 
-    # Description of the object
+    # Description of the item
     def get_price(self):
         return self.price
 
-    # Name of the object
+    # Name of the item
     def get_name(self, article=""):
-        # Adjust article (if any) for the name of the object
+        # Adjust article (if any) for the name of the item
         if article == "a" and self.name[0].lower() in "aeiou":
             article = "an "
         elif article != "":

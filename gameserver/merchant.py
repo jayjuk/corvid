@@ -15,15 +15,15 @@ class Merchant(Entity):
         # Set up entity
         Entity.__init__(self, world, name, "merchant", location, description)
 
-        for object in inventory:
-            # Add object to merchant's inventory
-            object.set_possession(self)
+        for item in inventory:
+            # Add item to merchant's inventory
+            item.set_possession(self)
 
     # Get inventory description
     def get_inventory_description(self):
         description = ""
-        for object in self.get_inventory():
-            description += f"{object.get_name('a')} ({self.world.get_currency(object.get_price(), short=True)}), "
+        for item in self.get_inventory():
+            description += f"{item.get_name('a')} ({self.world.get_currency(item.get_price(), short=True)}), "
         if description:
             return (
                 "They have the following available for sale: " + description[:-2] + "."
@@ -34,6 +34,6 @@ class Merchant(Entity):
     def get_description(self):
         return self.description + " " + self.get_inventory_description()
 
-    # Overridden method to allow them to receive objects
-    def can_add_object(self):
+    # Overridden method to allow them to receive items
+    def can_add_item(self):
         return True

@@ -4,11 +4,10 @@ from logger import setup_logger, exit
 logger = setup_logger()
 
 import aimanager
-from storagemanager import StorageManager
 from merchant import Merchant
 from room import Room
 from animal import Animal
-from object import Object
+from gameitem import GameItem
 from player import Player
 
 
@@ -33,18 +32,18 @@ class World:
             "west": (-1, 0),
         }
         self.grid_references = {}
-        self.room_objects = {}
+        self.room_items = {}
         # Register of entities with name as key
         self.entities = {}
         self.done_path = {}
 
-        # Populate dictionary of room objects, keyed off room name (aka location)
+        # Populate dictionary of room items, keyed off room name (aka location)
         self.rooms = self.load_rooms()
 
-        # Only load objects and merchants if not in any special mode
+        # Only load items and merchants if not in any special mode
         if not mode:
             self.load_entities()
-            self.load_room_objects()
+            self.load_room_items()
 
         # Separate AI manager for images (can use different model)
         if ai_enabled and images_enabled:
@@ -233,7 +232,7 @@ class World:
             return "You cannot build from here."
 
     def get_room_description(
-        self, room, brief=False, role=None, show_objects=True, show_exits=True
+        self, room, brief=False, role=None, show_items=True, show_exits=True
     ):
         # TODO #77 Review logic around deciding when to show build options in room description
         description = ""
@@ -249,9 +248,9 @@ class World:
         if role == "builder":
             description += self.get_room_build_options(room)
 
-        if show_objects:
-            for object in self.room_objects.get(room, []):
-                description += f" There is {object.get_name(article='a')} here."
+        if show_items:
+            for item in self.room_items.get(room, []):
+                description += f" There is {item.get_name(article='a')} here."
         return description
 
     def get_room_image_url(self, room_name):
@@ -285,7 +284,7 @@ class World:
         if direction in self.get_exits(current_location):
             return f"Sorry, there is already an exit in the {direction} from {current_location}."
 
-        # Resolve pointer to current room object
+        # Resolve pointer to current room item
         current_room = self.rooms[current_location]
 
         # Check that there is not already a room in this location based on the grid reference
@@ -339,7 +338,7 @@ class World:
         self.storage_manager.store_game_object(self.name, current_room)
 
         # Create and store room
-        new_room_object = Room(
+        new_room_item = Room(
             self,
             new_room_name,
             room_description,
@@ -348,108 +347,108 @@ class World:
             image=image_name,
             creator=creator,
         )
-        self.storage_manager.store_game_object(self.name, new_room_object)
-        self.rooms[new_room_name] = new_room_object
+        self.storage_manager.store_game_object(self.name, new_room_item)
+        self.rooms[new_room_name] = new_room_item
 
-    # Search room for object by name and return reference to it if found
-    def search_object(self, object_name, location):
-        logger.info(f"Searching for object {object_name} in {location}")
-        for object in self.room_objects.get(location, []):
-            logger.info(f"  Checking {object.get_name()}")
-            # Return the first object that includes the given object name
+    # Search room for item by name and return reference to it if found
+    def search_item(self, item_name, location):
+        logger.info(f"Searching for item {item_name} in {location}")
+        for item in self.room_items.get(location, []):
+            logger.info(f"  Checking {item.get_name()}")
+            # Return the first item that includes the given item name
             # So "get clock" will find "dusty clock" and "grandfather clock"
-            if object_name and (
-                object_name
-                and object_name.lower() in object.get_name().lower()
-                or object_name.lower() == "all"
+            if item_name and (
+                item_name
+                and item_name.lower() in item.get_name().lower()
+                or item_name.lower() == "all"
             ):
-                return object
+                return item
         return None
 
-    # Room objects getter
-    def get_room_objects(self, location):
-        return self.room_objects.get(location, [])
+    # Room items getter
+    def get_room_items(self, location):
+        return self.room_items.get(location, [])
 
-    # Room objects setter
-    def add_object_to_room(self, object, room_name):
-        if room_name in self.room_objects:
-            self.room_objects[room_name].append(object)
+    # Room items setter
+    def add_item_to_room(self, item, room_name):
+        if room_name in self.room_items:
+            self.room_items[room_name].append(item)
         else:
-            self.room_objects[room_name] = [object]
+            self.room_items[room_name] = [item]
 
-    # Room objects setter
-    def remove_object_from_room(self, object, room_name):
-        if room_name in self.room_objects:
-            for i, o in enumerate(self.room_objects[room_name]):
-                if o.name == object.name:
-                    self.room_objects[room_name].pop(i)
+    # Room items setter
+    def remove_item_from_room(self, item, room_name):
+        if room_name in self.room_items:
+            for i, o in enumerate(self.room_items[room_name]):
+                if o.name == item.name:
+                    self.room_items[room_name].pop(i)
                     return
 
-    # Load objects and return a map of room to objects
-    def load_room_objects(self):
-        logger.info("Loading room objects...")
-        object_load_count = 0
-        for this_object in self.storage_manager.get_game_objects(self.name, "Object"):
-            # Populate the room_object_map with object versions of the objects
-            o = Object(world=self, init_dict=this_object)
-            self.register_object(o)
-            object_load_count += 1
-        if not object_load_count:
-            logger.info("No objects found, loading from file instead")
-            self.load_default_objects()
+    # Load items and return a map of room to items
+    def load_room_items(self):
+        logger.info("Loading room items...")
+        item_load_count = 0
+        for this_item in self.storage_manager.get_game_items(self.name, "item"):
+            # Populate the room_item_map with item versions of the items
+            o = GameItem(world=self, init_dict=this_item)
+            self.register_item(o)
+            item_load_count += 1
+        if not item_load_count:
+            logger.info("No items found, loading from file instead")
+            self.load_default_items()
 
-    def load_default_objects(self):
-        for object_data in self.storage_manager.get_default_world_data(
-            self.name, "objects"
+    def load_default_items(self):
+        for item_data in self.storage_manager.get_default_world_data(
+            self.name, "items"
         ):
-            logger.info(f"Loading and storing object {object_data['name']}")
-            o = Object(world=self, init_dict=object_data)
+            logger.info(f"Loading and storing item {item_data['name']}")
+            o = GameItem(world=self, init_dict=item_data)
             self.storage_manager.store_game_object("jaysgame", o)
-            self.register_object(o)
+            self.register_item(o)
 
-    def register_object(self, object):
+    def register_item(self, item):
         # Is it a room or an entity?
-        if object.location in self.entities:
-            self.entities[object.location].inventory.append(object)
+        if item.location in self.entities:
+            self.entities[item.location].inventory.append(item)
         else:
-            if object.location not in self.rooms:
-                # TODO #78 Improve robustness of object location on restart, possibly recording default / starting location per object in data and JSON
+            if item.location not in self.rooms:
+                # TODO #78 Improve robustness of item location on restart, possibly recording default / starting location per item in data and JSON
                 logger.info(
-                    f"Object location {object.location} for object {object.name} does not correspond to a room or entity. Resetting it to default location."
+                    f"item location {item.location} for item {item.name} does not correspond to a room or entity. Resetting it to default location."
                 )
-                # This will also register the object with the room, and store the update
-                object.set_room(self.default_location)
+                # This will also register the item with the room, and store the update
+                item.set_room(self.default_location)
             else:
-                # Add object to list of objects for its starting room
-                self.add_object_to_room(object, object.location)
+                # Add item to list of items for its starting room
+                self.add_item_to_room(item, item.location)
 
     def load_entities(self):
         if self.entities:
             exit("Load_entities called when entities are already registered!")
         logger.info("Loading entities...")
         for entity_role in ("Animal", "Merchant"):
-            for this_object in self.storage_manager.get_game_objects(
+            for this_item in self.storage_manager.get_game_objects(
                 self.name, entity_role
             ):
-                logger.info(f"Loading entity {this_object['name']}")
-                # Populate the room_object_map with object versions of the objects
+                logger.info(f"Loading entity {this_item['name']}")
+                # Populate the room_item_map with object versions of the items
                 # TODO #79 Streamline merchant and animal DB->object loading
-                if this_object.get("role") == "merchant":
+                if this_item.get("role") == "merchant":
                     entity_object = Merchant(
                         self,
-                        name=this_object["name"],
-                        location=this_object["location"],
+                        name=this_item["name"],
+                        location=this_item["location"],
                         inventory=[],
-                        description=this_object.get("description", ""),
+                        description=this_item.get("description", ""),
                     )
-                elif this_object.get("role") == "animal":
+                elif this_item.get("role") == "animal":
                     entity_object = Animal(
                         self,
-                        name=this_object["name"],
-                        location=this_object["location"],
-                        description=this_object.get("description", ""),
-                        actions=this_object.get("actions", []),
-                        action_chance=this_object.get("action_chance", 0.5),
+                        name=this_item["name"],
+                        location=this_item["location"],
+                        description=this_item.get("description", ""),
+                        actions=this_item.get("actions", []),
+                        action_chance=this_item.get("action_chance", 0.5),
                     )
                 self.register_entity(entity_object)
             if not self.entities:
@@ -490,7 +489,7 @@ class World:
         # TODO #81 Implement unique entity and object ID to allow ants coins etc
         self.entities[entity.name] = entity
 
-    # Return list of entity names (e.g. for checking valid object starting locations)
+    # Return list of entity names (e.g. for checking valid item starting locations)
     def get_entity_names(self):
         entity_names = []
         for entity in self.entities.values():
