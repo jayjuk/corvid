@@ -8,6 +8,7 @@ logger = setup_logger()
 
 class Entity:
     # World reference applies to all entities
+    # Type hint is string to avoid circular import
     world: Optional["World"] = None
 
     def __init__(

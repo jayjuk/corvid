@@ -2,15 +2,13 @@ from typing import Any, Dict, List, Optional, Union
 from logger import setup_logger
 import json
 from os import path
-from abc import ABC, abstractmethod
-from utils import get_critical_env_variable
 
 # Set up logger
 logger = setup_logger()
 
 
 # Superclass for storage managers
-class StorageManager(ABC):
+class StorageManager:
 
     # Constructor
     def __init__(self, image_only: bool = False) -> None:
@@ -99,12 +97,18 @@ class StorageManager(ABC):
         for object in self.get_game_objects(game_name, object_type, rowkey_value):
             return object
 
-    @abstractmethod
-    def store_game_object(self, game_name: str, object: object) -> None:
-        pass
+    def store_game_object(self, world_name: str, object: object) -> None:
+        # Unit testing will use this superclass method hence not abstract
+        logger.info(
+            f"NOT Storing python object in game {world_name}: {object.__dict__}"
+        )
+        return True
 
-    @abstractmethod
     def get_game_objects(
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None
     ) -> List[Dict[str, Any]]:
-        pass
+        # Unit testing will use this superclass method hence not abstract
+        logger.info(
+            f"NOT getting python objects in game {world_name}: {object.__dict__}"
+        )
+        return []
