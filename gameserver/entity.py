@@ -1,6 +1,5 @@
 from typing import List, Optional, Union
 from logger import setup_logger
-from world import World
 from gameitem import GameItem
 
 # Set up logger
@@ -9,11 +8,11 @@ logger = setup_logger()
 
 class Entity:
     # World reference applies to all entities
-    world: Optional[World] = None
+    world: Optional["World"] = None
 
     def __init__(
         self,
-        world: World,
+        world: "World",
         entity_name: str,
         entity_role: str,
         location: Optional[str] = None,
@@ -39,7 +38,7 @@ class Entity:
         world.register_entity(self)
 
         # Save reference to the world this entity is in
-        self.world: World = world
+        self.world: world.World = world
 
     # Setter for player's location change
     def set_location(self, next_room: str) -> None:

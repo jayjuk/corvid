@@ -7,9 +7,8 @@ from typing import Any
 import eventlet
 import time
 import sys
-from player import Player
-from animal import Animal
 from world import World
+from player import Player
 from aimanager import AIManager
 import traceback
 
@@ -235,10 +234,7 @@ class GameManager:
     def find_item_in_merchant_inventory(self, player, item_name):
         for merchant in self.get_entities("merchant", player.get_current_location()):
             for merchant_item in merchant.get_inventory():
-                if (
-                    item_name
-                    and item_name.lower() in merchant_item.get_name().lower()
-                ):
+                if item_name and item_name.lower() in merchant_item.get_name().lower():
                     return merchant_item
         return None
 

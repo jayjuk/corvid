@@ -388,7 +388,7 @@ class World:
     def load_room_items(self):
         logger.info("Loading room items...")
         item_load_count = 0
-        for this_item in self.storage_manager.get_game_items(self.name, "item"):
+        for this_item in self.storage_manager.get_game_objects(self.name, "item"):
             # Populate the room_item_map with item versions of the items
             o = GameItem(world=self, init_dict=this_item)
             self.register_item(o)
