@@ -3,7 +3,7 @@ from logger import setup_logger
 # Set up logger
 logger = setup_logger()
 
-from entity import Entity
+import entity
 
 
 # Merchant class
@@ -13,7 +13,8 @@ class Merchant(Entity):
         logger.info(f"Creating merchant {name}")
 
         # Set up entity
-        Entity.__init__(self, world, name, "merchant", location, description)
+        # TODO #88 Fix circular import issue with entity
+        entity.Entity.__init__(self, world, name, "merchant", location, description)
 
         for item in inventory:
             # Add item to merchant's inventory
