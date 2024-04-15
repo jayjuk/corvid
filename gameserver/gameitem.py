@@ -1,3 +1,4 @@
+from typing import Optional, Dict, Any
 from logger import setup_logger, exit
 
 # Set up logger
@@ -8,23 +9,23 @@ logger = setup_logger()
 class GameItem:
     def __init__(
         self,
-        world,
-        name=None,
-        description=None,
-        price=0,
-        location=None,
-        init_dict=None,
-    ):
+        world: "World",
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        price: int = 0,
+        location: Optional[str] = None,
+        init_dict: Optional[Dict[str, Any]] = None,
+    ) -> None:
         if init_dict:
             self.__dict__.update(init_dict)
         elif name:
-            self.name = name
-            self.description = description
-            self.location = location
-            self.price = price
+            self.name: str = name
+            self.description: Optional[str] = description
+            self.location: Optional[str] = location
+            self.price: int = price
 
         # An item belongs to a world
-        self.world = world
+        self.world: "World" = world
 
         self.check_item_name(self.name)
         if (
@@ -39,7 +40,7 @@ class GameItem:
 
         logger.info(f"Creating item {self.name}" + f" starting in {self.location}")
 
-    def check_item_name(self, item_name):
+    def check_item_name(self, item_name: str) -> None:
         if not item_name:
             exit(logger, "Item must have a name")
         for reserved_word in (" from ", " up ", " to "):
@@ -50,15 +51,15 @@ class GameItem:
                 )
 
     # Getter for player's current location
-    def get_location(self):
+    def get_location(self) -> Optional[str]:
         return self.location
 
-    def set_location(self, location):
+    def set_location(self, location: str) -> None:
         self.location = location
         self.world.storage_manager.store_game_object(self.world.name, self)
 
     # Setter (i.e. player drops it)
-    def set_room(self, room_name):
+    def set_room(self, room_name: str) -> None:
         if room_name is None:
             exit(logger, f"{self.name} is being dropped in a non-existent room")
         logger.info(f"{self.name} is being dropped in {room_name}")
@@ -66,12 +67,12 @@ class GameItem:
         self.world.add_item_to_room(self, room_name)
 
     # Setter for player picking up
-    def set_possession(self, entity):
+    def set_possession(self, entity: "Entity") -> str:
         # Remove from room in which receiving entity is
         self.world.remove_item_from_room(self, entity.location)
         self.set_location(entity.name)
         # Try to add the item to the player's inventory, if it fails, return an error string, no error means success
-        add_item_error = entity.add_item(self)
+        add_item_error: str = entity.add_item(self)
         if add_item_error:
             return add_item_error
 
@@ -79,10 +80,10 @@ class GameItem:
         return ""
 
     # Remove from old player and add to new player
-    def transfer(self, old_entity, new_entity):
+    def transfer(self, old_entity: "Entity", new_entity: "Entity") -> str:
         if new_entity.can_add_item():
             if old_entity.drop_item(self):
-                outcome = self.set_possession(new_entity)
+                outcome: str = self.set_possession(new_entity)
                 if not outcome:
                     # Remove from room
                     # TODO #73 Review and improve item transfer going up from item to world
@@ -95,15 +96,15 @@ class GameItem:
         return f"{new_entity.get_name()} can't carry any more."
 
     # Description of the item
-    def get_description(self):
+    def get_description(self) -> Optional[str]:
         return self.description
 
     # Description of the item
-    def get_price(self):
+    def get_price(self) -> int:
         return self.price
 
     # Name of the item
-    def get_name(self, article=""):
+    def get_name(self, article: str = "") -> str:
         # Adjust article (if any) for the name of the item
         if article == "a" and self.name[0].lower() in "aeiou":
             article = "an "

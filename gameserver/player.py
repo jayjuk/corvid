@@ -1,18 +1,25 @@
+from typing import Optional, Dict, List, Any
 from logger import setup_logger, exit
-
-# Set up logger
-logger = setup_logger()
-
 import os
 import time
 from entity import Entity
+from typing import List, Optional
+from gameitem import GameItem
+
+# Set up logger
+logger = setup_logger()
 
 
 # Player class
 class Player(Entity):
     def __init__(
-        self, world, sid, player_name, player_role="player", stored_player_data=None
-    ):
+        self,
+        world: Any,
+        sid: str,
+        player_name: str,
+        player_role: str = "player",
+        stored_player_data: Optional[Dict[str, Any]] = None,
+    ) -> None:
         # First check if player name is valid
         if not (
             player_name
@@ -51,7 +58,7 @@ class Player(Entity):
             self.money = 100
 
             # Register of rooms this player has visited before (so they don't get long descriptions again)
-            self.seen_rooms = {}
+            self.seen_rooms: Dict[str, bool] = {}
             self.seen_rooms[self.location] = True
 
             # SID is the unique identifier for this player used by SocketIO
@@ -59,7 +66,7 @@ class Player(Entity):
 
         # Define history - this resets each time the player logs in
         self.max_input_history_length = 1000
-        self.input_history = []
+        self.input_history: List[str] = []
 
         # Define inventory limit for players
         self.max_inventory = 5
@@ -69,7 +76,7 @@ class Player(Entity):
         # Last action time is used to check for idle players, always refresh this
         self.last_action_time = time.time()
 
-    def get_input_history(self, number_of_entries=1, prefix=""):
+    def get_input_history(self, number_of_entries: int = 1, prefix: str = "") -> str:
         """Return some input history (optional input of number of entries to return)."""
         output: str = prefix + ("\n" if prefix else "")
         # Resolve start index of array: do not show the first entry which will be the instructions
@@ -80,18 +87,19 @@ class Player(Entity):
         return output
 
     # Setter for input history - add a new entry but don't let it get above a certain length
-    def add_input_history(self, input):
+    def add_input_history(self, input: str) -> None:
         self.input_history.append(input)
         if len(self.input_history) > self.max_input_history_length:
             self.input_history.pop(0)
 
     # Setter for updating player's last action time
     # Used to check for idle players
-    def update_last_action_time(self):
+    def update_last_action_time(self) -> None:
         self.last_action_time = time.time()
 
     # Get inventory description
-    def get_inventory_description(self):
+    def get_inventory_description(self) -> str:
+        description: str
         if not self.get_inventory():
             description = "You are not carrying any items. You "
         else:
@@ -103,7 +111,7 @@ class Player(Entity):
         description += f"have {self.world.get_currency(self.money)} in your pocket."
         return description
 
-    def deduct_money(self, amount):
+    def deduct_money(self, amount: int) -> bool:
         if self.money < amount:
             return False
         else:
@@ -112,22 +120,22 @@ class Player(Entity):
             self.world.storage_manager.store_game_object(self.world.name, self)
             return True
 
-    def add_money(self, amount):
+    def add_money(self, amount: int) -> None:
         self.money += amount
         # Store change
         self.world.storage_manager.store_game_object(self.world.name, self)
 
-    def can_add_item(self):
+    def can_add_item(self) -> bool:
         return len(self.inventory) < self.max_inventory
 
     # Override for player picking up an item - has a limit
-    def add_item(self, item):
+    def add_item(self, item: GameItem) -> Optional[str]:
         if not self.can_add_item():
             return "You can't carry any more items."
         self.inventory.append(item)
 
     # Override for player's location change
-    def set_location(self, next_room):
+    def set_location(self, next_room: str) -> None:
         # Superclass behaviour
         super().set_location(next_room)
         # Also flag this room as seen

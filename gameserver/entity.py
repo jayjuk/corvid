@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 from logger import setup_logger
 from gameitem import GameItem
 
@@ -7,9 +7,6 @@ logger = setup_logger()
 
 
 class Entity:
-    # World reference applies to all entities
-    # Type hint is string to avoid circular import
-    world: Optional["World"] = None
 
     def __init__(
         self,
@@ -19,10 +16,6 @@ class Entity:
         location: Optional[str] = None,
         description: Optional[str] = None,
     ):
-        # Register game server reference in player object to help with testing and minimise use of globals
-        if self.__class__.world is None and world is not None:
-            self.__class__.world = world
-
         self.name: str = entity_name
         self.role: str = entity_role
         self.is_player: bool = False
@@ -39,7 +32,7 @@ class Entity:
         world.register_entity(self)
 
         # Save reference to the world this entity is in
-        self.world: world.World = world
+        self.world: "World" = world
 
     # Setter for player's location change
     def set_location(self, next_room: str) -> None:
