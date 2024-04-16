@@ -1,63 +1,67 @@
 from logger import setup_logger, exit
 
-# Set up logger
+# Set up logger first
 logger = setup_logger()
 
-from typing import Any
+from typing import Any, Dict, List, Callable, Tuple, Optional, Union
 import eventlet
 import time
 import sys
 from world import World
 from player import Player
+from entity import Entity
+from merchant import Merchant
+from gameitem import GameItem
 from aimanager import AIManager
-import traceback
-
-
-def dbg(thing=None):
-    """Cheeky little debug function."""
-    # print stack trace
-    traceback.print_stack()
-    print(f" <{str(thing)}>")
+from storagemanager import StorageManager
 
 
 class GameManager:
     """Manage the game state and process player input & responses."""
 
     # Constructor
-    def __init__(self, sio, storage_manager, ai_enabled=True, world_name="jaysgame"):
+    def __init__(
+        self,
+        sio: str,
+        storage_manager: StorageManager,
+        ai_enabled: bool = True,
+        world_name: str = "jaysgame",
+    ) -> None:
 
         # Static variables
-        self.max_inactive_time = 300  # 5 minutes
-        self.background_loop_active = False
-        self.game_loop_time_secs = 30  # Animals etc move on this cycle
+        self.max_inactive_time: int = 300  # 5 minutes
+        self.background_loop_active: bool = False
+        self.game_loop_time_secs: int = 30  # Animals etc move on this cycle
 
         # Set up game state
-        self.sio = sio
-        self.players = {}
-        self.player_sid_to_name_map = {}
+        self.sio: str = sio
+        # Register of players currently in the game
+        self.players: Dict[str, Player] = {}
+        # Keep a log of all player names including those who have left
+        # This is so that when a player disconnects (e.g. closes their browser) after 'quitting' we can
+        # understand that, and it will allow them to rejoin with the same name later
+        self.player_sid_to_name_map: Dict[str, str] = {}
 
         # General AI manager - disabled in unit tests
+        self.ai_manager: Optional[AIManager]
         if ai_enabled:
-            self.ai_manager = AIManager()
-        else:
-            self.ai_manager = None
+            self.ai_manager: AIManager = AIManager()
 
-        self.world = World(
+        self.world: World = World(
             storage_manager, mode=None, ai_enabled=ai_enabled, name=world_name
         )
 
-        self.item_name_empty_message = "Invalid input: item name is empty."
+        self.item_name_empty_message: str = "Invalid input: item name is empty."
 
         # Set up game language
         self.setup_commands()
 
-    def setup_commands(self):
-        self.synonyms = {
+    def setup_commands(self) -> None:
+        self.synonyms: Dict[str, str] = {
             "n": "north",
             "e": "east",
             "s": "south",
             "w": "west",
-            # "exit": "quit", #AI tries exit to leave a room :-(
             "pick": "get",
             "take": "get",
             "head": "go",
@@ -76,8 +80,7 @@ class GameManager:
             "hit": "attack",
         }
 
-        # Define a dictionary to map commands to functions
-        self.command_functions = {
+        self.command_functions: Dict[str, Dict[str, Callable]] = {
             # TODO #66 Limit certain actions to players with the right permissions rather than just hiding from help
             "look": {
                 "function": self.do_look,
@@ -160,7 +163,7 @@ class GameManager:
         }
 
         # Build the commands description field from directions, synonyms and command functions
-        self.commands_description = "Valid directions: " + ", ".join(
+        self.commands_description: str = "Valid directions: " + ", ".join(
             self.world.get_directions()
         )
         self.commands_description += ".\nValid commands: "
@@ -182,20 +185,22 @@ class GameManager:
     # They all take the player item and the rest of the response as arguments,
     # Even if they're not needed. This is to keep the command processing simple.
 
-    def do_go(self, player, rest_of_response):
+    def do_go(self, player: Player, rest_of_response: str) -> str:
         return self.move_entity(player, rest_of_response, "")
 
-    def do_push(self, player, rest_of_response):
-        item_name = self.get_item_name_from_response(rest_of_response)
+    def do_push(self, player: Player, rest_of_response: str) -> None:
+        item_name: str = self.get_item_name_from_response(rest_of_response)
         if "button" in item_name:
             # Check red button in inventory
-            item = None
+            item: Optional[GameItem]
             for inv_item in player.get_inventory():
                 if item_name.lower() in inv_item.get_name().lower():
                     item = inv_item
                     break
             if item:
-                message = f"The Button has been pressed!!! Congratulations to {player.get_name()}!!! The game will restart in 10 seconds..."
+                message: str = (
+                    f"The Button has been pressed!!! Congratulations to {player.get_name()}!!! The game will restart in 10 seconds..."
+                )
                 self.tell_everyone(message)
                 for i in range(9, 0, -1):
                     eventlet.sleep(1)
@@ -206,13 +211,13 @@ class GameManager:
                 # TODO #15 Restart game without actually restarting the process
                 exit("Game ended by player pushing The Button!")
 
-    def create_restart_file(self):
+    def create_restart_file(self) -> None:
         # Temporary flag file checked by the local 'run' script.
         # TODO #15 On the cloud, this will be space junk as the restart is handled by the container service. See above.
         with open("restart.tmp", "w") as f:
             f.write("DELETE ME\n")
 
-    def remove_at_the(self, rest_of_response):
+    def remove_at_the(self, rest_of_response: str) -> Tuple[str, str]:
         # Strip off at and the
         if rest_of_response and rest_of_response[0:3] == "at ":
             rest_of_response = rest_of_response[3:]
@@ -224,24 +229,28 @@ class GameManager:
             rest_of_response = ""
         return rest_of_response, ""
 
-    def find_item_in_player_inventory(self, player, item_name):
+    def find_item_in_player_inventory(
+        self, player: Player, item_name: str
+    ) -> Optional[GameItem]:
         """Try to find the item in the player's inventory."""
         for inv_item in player.get_inventory():
             if item_name.lower() in inv_item.get_name().lower():
                 return inv_item
         return None
 
-    def find_item_in_merchant_inventory(self, player, item_name):
-        for merchant in self.get_entities("merchant", player.get_current_location()):
+    def find_item_in_merchant_inventory(
+        self, player: Player, item_name: str
+    ) -> Optional[GameItem]:
+        for merchant in self.get_entities(Merchant, player.get_current_location()):
             for merchant_item in merchant.get_inventory():
                 if item_name and item_name.lower() in merchant_item.get_name().lower():
                     return merchant_item
         return None
 
-    def do_look(self, player, rest_of_response):
+    def do_look(self, player: Player, rest_of_response: str) -> str:
         if not rest_of_response:
             # Looking at the room
-            message = (
+            message: str = (
                 "You look again at the "
                 + str(player.get_current_location()).lower()
                 + ": "
@@ -262,7 +271,7 @@ class GameManager:
             return outcome
 
         # Find what they are looking at
-        item_name = self.get_item_name_from_response(rest_of_response)
+        item_name: str = self.get_item_name_from_response(rest_of_response)
         # Check if the item is in the room
         item = self.world.search_item(item_name, player.get_current_location())
         if not item:
@@ -281,24 +290,27 @@ class GameManager:
         # If you get here, can't find anything that matches that name
         return f"There is no '{item_name}' here."
 
-    def do_help(self, player=None, rest_of_response=None):
+    def do_help(
+        self, player: Optional[Player] = None, rest_of_response: Optional[str] = None
+    ) -> str:
         return (
             self.world.get_objective()
             + self.get_players_text()
             + f"\nAvailable commands:\n{self.get_commands_description()}"
         )
 
-    def do_say(self, player, rest_of_response, shout=False):
-        verb = "shouts" if shout else "says"
+    def do_say(self, player: Player, rest_of_response: str, shout: bool = False) -> str:
+        verb: str = "shouts" if shout else "says"
         # Remove 'to' and player name
         if rest_of_response.startswith("to "):
             return "You can't currently speak to just one person in the room. To converse, just use 'say' followed by what you want to say, everyone in the room will hear you."
 
         logger.info(f"User {player.name} {verb}: {rest_of_response}")
+        player_response: str
         if self.get_player_count() == 1:
             player_response = "You are the only player in the game currently!"
         else:
-            told_count = self.tell_others(
+            told_count: int = self.tell_others(
                 player.sid, f'{player.name} {verb}, "{rest_of_response}"', shout
             )
             if not told_count:
@@ -307,22 +319,22 @@ class GameManager:
                 player_response = f"You {verb[:-1]}, '{rest_of_response}'."
         return player_response
 
-    def do_shout(self, player, rest_of_response):
+    def do_shout(self, player: Player, rest_of_response: str) -> str:
         # Shout is the same as say but to everyone
         return self.do_say(player, rest_of_response, shout=True)
 
-    def do_greet(self, player, rest_of_response):
+    def do_greet(self, player: Player, rest_of_response: str) -> str:
         # Like say hi!
         return self.do_say(player, "Hi " + rest_of_response)
 
-    def do_wait(self, player, rest_of_response):
+    def do_wait(self, player: Player, rest_of_response: str) -> str:
         return "You decide to just wait a while."
 
-    def do_jump(self, player, rest_of_response):
+    def do_jump(self, player: Player, rest_of_response: str) -> str:
         # Jump to location of another player named in rest_of_response
-        other_entity_name = rest_of_response
+        other_entity_name: str = rest_of_response
         # find location of other player
-        other_entity_location = self.get_player_location_by_name(
+        other_entity_location: Optional[str] = self.get_player_location_by_name(
             player.sid, other_entity_name
         )
         # if found, move player there
@@ -331,10 +343,10 @@ class GameManager:
         else:
             return f"'{other_entity_name}' is not a valid player name."
 
-    def do_shutdown(self, player, rest_of_response):
-        message = f"{player.name} has shut down the server."
+    def do_shutdown(self, player: Player, rest_of_response: str) -> None:
+        message: str = f"{player.name} has shut down the server."
         if rest_of_response:
-            message = message[:-1] + ", saying '{rest_of_response}'."
+            message = message[:-1] + f", saying '{rest_of_response}'."
         logger.info(message)
         self.tell_everyone(message)
         # TODO #68 Web client should do something when the back end is down, can we terminate the client too?
@@ -343,29 +355,29 @@ class GameManager:
         eventlet.sleep(1)
         exit("Shutdown command invoked")
 
-    def do_quit(self, player, rest_of_response):
+    def do_quit(self, player: Player, rest_of_response: str) -> None:
         self.remove_player(player.sid, "You have left the game.")
 
-    def check_direction(self, direction, player):
+    def check_direction(self, direction: str, player: Player) -> str:
         if direction not in self.world.get_directions():
             return f"'{direction}' is not a valid direction."
         if direction in self.world.get_exits(player.get_current_location()):
             return f"There is already a room to the {direction}."
 
-    def resolve_room_name(self, rest_of_response):
+    def resolve_room_name(self, rest_of_response: str) -> Tuple[str, str, str]:
         if rest_of_response.startswith("'") or rest_of_response.startswith('"'):
             # Find the end of the quoted string
-            quote_char = rest_of_response[0]
-            end_quote_index = rest_of_response.find(quote_char, 1)
+            quote_char: str = rest_of_response[0]
+            end_quote_index: int = rest_of_response.find(quote_char, 1)
             if end_quote_index == -1:
                 return "", "", "Invalid input: room name is not properly quoted."
             # Extract the room name from the quoted string
-            room_name = rest_of_response[1:end_quote_index]
+            room_name: str = rest_of_response[1:end_quote_index]
             # Remove the room name and any extra spaces from the response
             rest_of_response = rest_of_response[end_quote_index + 1 :].strip()
         else:
             # Room name is a single word
-            room_name = rest_of_response.split()[0]
+            room_name: str = rest_of_response.split()[0]
             # Remove the room name from the response
             rest_of_response = " ".join(rest_of_response.split()[1:])
 
@@ -383,7 +395,7 @@ class GameManager:
         )
         return room_name.capitalize(), rest_of_response, ""
 
-    def do_build(self, player, rest_of_response):
+    def do_build(self, player: Player, rest_of_response: str) -> str:
         # Create a new room
 
         # First parse the response to get the direction, room name and description. handle the player
@@ -391,34 +403,34 @@ class GameManager:
 
         # First take the direction which is one word and must be one of the directions
 
-        direction = rest_of_response.split()[0]
+        direction: str = rest_of_response.split()[0]
 
         # Check direction is valid and not taken
-        outcome = self.check_direction(direction, player)
+        outcome: str = self.check_direction(direction, player)
         if outcome:
             return outcome
 
         # Remove the direction from the response
-        rest_of_response = " ".join(rest_of_response.split()[1:])
+        rest_of_response: str = " ".join(rest_of_response.split()[1:])
         if not rest_of_response:
             # User did not specify name of room to build
             return "Please specify room name in quotes and a description."
 
         # Check if the room name is in quotes
-        (room_name, rest_of_response, outcome) = self.resolve_room_name(
-            rest_of_response
-        )
+        room_name: str
+        outcome: str
+        room_name, rest_of_response, outcome = self.resolve_room_name(rest_of_response)
         if outcome:
             return outcome
 
         # Now take the room description, which must be in quotes
         if not rest_of_response:
             # Get existing room descriptions into a list for inspiration
-            existing_room_descriptions = [
+            existing_room_descriptions: List[str] = [
                 self.world.rooms[room].description for room in self.world.rooms.keys()
             ]
             if self.ai_manager:
-                room_description = self.ai_manager.submit_request(
+                room_description: str = self.ai_manager.submit_request(
                     "Generate a description for a new room in my adventure game. Pre-existing room descriptions for inspiration:\n"
                     + "\n,\n".join(existing_room_descriptions[0:10])
                     + f"\nThis room is called '{room_name}'\n"
@@ -434,13 +446,13 @@ class GameManager:
             return "Invalid input: room description must be in quotes."
         else:
             # Quoted room description given by user
-            quote_char = rest_of_response[0]
-            end_quote_index = rest_of_response.find(quote_char, 1)
+            quote_char: str = rest_of_response[0]
+            end_quote_index: int = rest_of_response.find(quote_char, 1)
             if end_quote_index == -1:
                 return "Invalid input: room description is not properly quoted."
-            room_description = rest_of_response[1:end_quote_index]
+            room_description: str = rest_of_response[1:end_quote_index]
 
-        error_message = self.world.add_room(
+        error_message: str = self.world.add_room(
             player.get_current_location(),
             direction,
             room_name,
@@ -459,7 +471,7 @@ class GameManager:
         )
         return f"You build {direction} and make a new location, {room_name}: {room_description}"
 
-    def is_entity(self, item_name):
+    def is_entity(self, item_name: str) -> Union["Entity", bool]:
         if item_name:
             for other_entity in self.get_other_entities():
                 if (
@@ -469,7 +481,9 @@ class GameManager:
                     return other_entity
         return False
 
-    def get_entities(self, entity_type, room=None):
+    def get_entities(
+        self, entity_type: str, room: Optional["Room"] = None
+    ) -> List["Entity"]:
         # Merchants are entities of a certain type.
         # If a room is specified, only return merchants in that room
         merchants = []
@@ -480,11 +494,11 @@ class GameManager:
         return merchants
 
     # Sale transaction
-    def transact_sale(self, item_name, player, merchant):
+    def transact_sale(self, item_name: str, player: Player, merchant: Merchant) -> str:
         for item in player.get_inventory():
             if item.get_name().lower() == item_name.lower():
                 # Change item ownership
-                transfer_outcome = item.transfer(player, merchant)
+                transfer_outcome: str = item.transfer(player, merchant)
                 if not transfer_outcome:
                     # Add the money to the player's inventory
                     player.add_money(item.get_price())
@@ -494,7 +508,7 @@ class GameManager:
                     return "The sale fell through: " + transfer_outcome
         return f"'{item_name}' is not in your inventory."
 
-    def make_purchase(self, item, player, merchant):
+    def make_purchase(self, item: GameItem, player: Player, merchant: Merchant) -> str:
         # Simply return True if the item is in the merchant's possession and the player said to buy
         if player.deduct_money(item.get_price()):
             transfer_issue = item.transfer(merchant, player)
@@ -509,9 +523,10 @@ class GameManager:
 
         return f"You do not have enough money to buy {item.get_name(article='the')}."
 
-    # Buy or get stuff
-    def transact_buy_get(self, action, item_name, player, merchant):
-        found_count = 0
+    def transact_buy_get(
+        self, action: str, item_name: str, player: Player, merchant: Merchant
+    ) -> str:
+        found_count: int = 0
         for item in merchant.get_inventory():
             if (
                 item_name.lower() in item.get_name().lower()
@@ -528,8 +543,8 @@ class GameManager:
             return f"There is no {item_name} to be found here."
 
     # Check if an item is in a merchant's possession
-    def transact_item(self, item_name, player, action="get"):
-        merchants = self.get_entities("merchant", player.get_current_location())
+    def transact_item(self, item_name: str, player: Player, action: str = "get") -> str:
+        merchants = self.get_entities("Merchant", player.get_current_location())
         if action in ("buy", "sell") and not merchants:
             return "There is no merchant here to trade with."
 
@@ -546,7 +561,7 @@ class GameManager:
         return f"You are unable to {action} '{item_name}' here."
 
     # Get / pick up an item
-    def do_get(self, player, rest_of_response):
+    def do_get(self, player: Player, rest_of_response: str) -> str:
         logger.info("Doing get command.")
         # First check in case they wrote 'pick up'. If so, remove the 'up'.
         if rest_of_response.startswith("up "):
@@ -554,23 +569,25 @@ class GameManager:
         # TODO #70 If in future pick is a verb e.g. pick a lock, select, we will need to pass the original verb into the functions
 
         # Get item name by calling a function to parse the response
-        item_name = self.get_item_name_from_response(rest_of_response)
+        item_name: str = self.get_item_name_from_response(rest_of_response)
 
         # Check the item name is valid
         if item_name == "":
             return self.item_name_empty_message
 
         # Loop to handle wild cards
-        keep_looking = True
-        found = False
+        keep_looking: bool = True
+        found: bool = False
         while keep_looking:
             keep_looking = False
             # Check if the item is in the room
-            item = self.world.search_item(item_name, player.get_current_location())
+            item: Optional[GameItem] = self.world.search_item(
+                item_name, player.get_current_location()
+            )
             if item:
                 found = True
                 # Setting player will remove the item from the room
-                result = item.set_possession(player)
+                result: Optional[str] = item.set_possession(player)
                 if not result:
                     self.tell_player(
                         player, f"You pick up {item.get_name(article='the')}."
@@ -584,20 +601,20 @@ class GameManager:
                 return f"I would advise against picking up {item_name}, they will not react well!"
             # Check if the item is in the possession of a merchant
             elif item_name != "all" and not found:
-                outcome = self.transact_item(item_name, player, "get")
+                outcome: Optional[str] = self.transact_item(item_name, player, "get")
                 if outcome:
                     return outcome
                 return f"There is no {item_name} to be found here."
         if not found:
             return "There is nothing here that you can pick up."
 
-    def do_inventory(self, player, rest_of_response):
+    def do_inventory(self, player: Player, rest_of_response: str) -> str:
         # Not used, next line is to avoid warnings
         return player.get_inventory_description()
 
-    def get_item_list_text(self, items):
-        drop_list_text = ""
-        drop_count = 0
+    def get_item_list_text(self, items: List[GameItem]) -> str:
+        drop_list_text: str = ""
+        drop_count: int = 0
         for item in items:
             drop_count += 1
             if drop_count > 1:
@@ -609,9 +626,9 @@ class GameManager:
         drop_list_text += "."
         return drop_list_text
 
-    def do_drop(self, player, rest_of_response):
+    def do_drop(self, player: Player, rest_of_response: str) -> str:
         # Get item name by calling a function to parse the response
-        item_name = self.get_item_name_from_response(rest_of_response)
+        item_name: str = self.get_item_name_from_response(rest_of_response)
 
         # Check the item name is valid
         if item_name == "":
@@ -624,9 +641,9 @@ class GameManager:
             return "You can't drop your money, you might need it!"
         # Check if the item is in the player's inventory, if so, drop it
         # "all" is a special case to drop everything
-        items = player.drop_items(item_name)
+        items: List[GameItem] = player.drop_items(item_name)
         if items:
-            drop_list_text = self.get_item_list_text(items)
+            drop_list_text: str = self.get_item_list_text(items)
             # Tell the others about the drop
             self.tell_others(
                 player.sid,
@@ -639,16 +656,18 @@ class GameManager:
             else:
                 return f"You are not carrying '{item_name}'."
 
-    def do_buy(self, player, rest_of_response):
+    def do_buy(self, player: Player, rest_of_response: str) -> str:
         # Get item name by calling a function to parse the response
-        item_name = self.get_item_name_from_response(rest_of_response)
+        item_name: str = self.get_item_name_from_response(rest_of_response)
 
         # Check the item name is valid
         if item_name == "":
             return self.item_name_empty_message
 
         # Check if the item is in the room
-        item = self.world.search_item(item_name, player.get_current_location())
+        item: Optional[GameItem] = self.world.search_item(
+            item_name, player.get_current_location()
+        )
         if item:
             # Can just pick it up
             return "You don't have to buy that, you can just pick it up!"
@@ -658,9 +677,9 @@ class GameManager:
         # Otherwise proceed to try to buy it
         return self.transact_item(item_name, player, "buy")
 
-    def do_sell(self, player, rest_of_response):
+    def do_sell(self, player: Player, rest_of_response: str) -> str:
         # Get item name by calling a function to parse the response
-        item_name = self.get_item_name_from_response(rest_of_response)
+        item_name: str = self.get_item_name_from_response(rest_of_response)
         # Check the item name is valid
         if item_name == "":
             return self.item_name_empty_message
@@ -672,8 +691,8 @@ class GameManager:
             return "You can't sell money!"
 
         # Check if the item is in the player's inventory
-        found_count = 0
-        tmp_inv = player.get_inventory().copy()
+        found_count: int = 0
+        tmp_inv: List[GameItem] = player.get_inventory().copy()
         for item in tmp_inv:
             if (
                 item_name.lower() in item.get_name().lower()
@@ -689,11 +708,11 @@ class GameManager:
         if item_name != "all" and found_count == 0:
             return f"You are not carrying '{item_name}'."
 
-    def do_trade(self, player, rest_of_response):
+    def do_trade(self, player: Player, rest_of_response: str) -> str:
         # TODO #71 Implement trade command
         return "Support for this command coming soon!"
 
-    def do_attack(self, player, rest_of_response):
+    def do_attack(self, player: Player, rest_of_response: str) -> str:
         return "This game does not condone violence! There must be another way to achieve your goal..."
 
     # End of 'do_' functions
@@ -701,7 +720,7 @@ class GameManager:
     # Getters
 
     # Parse item name from the response after the initial verb that triggered the function
-    def get_item_name_from_response(self, rest_of_response):
+    def get_item_name_from_response(self, rest_of_response: str) -> str:
         if rest_of_response == "everything" or rest_of_response == "*":
             return "all"
 
@@ -712,12 +731,12 @@ class GameManager:
         return rest_of_response
 
     # Get a description of the commands available
-    def get_commands_description(self):
+    def get_commands_description(self) -> str:
         return self.commands_description
 
     # Get a description of the players in the game
-    def get_players_text(self):
-        others_count = self.get_player_count() - 1
+    def get_players_text(self) -> str:
+        others_count: int = self.get_player_count() - 1
         if others_count == 0:
             return "You are the first player to join the game.\n"
         elif others_count == 1:
@@ -726,18 +745,18 @@ class GameManager:
             return f"There are {others_count} other players in the game.\n"
 
     # Get location of player given a name
-    def get_player_location_by_name(self, sid, player_name):
+    def get_player_location_by_name(self, sid: str, player_name: str) -> Optional[str]:
         for other_entity in self.get_other_entities(sid):
             if str(other_entity.name).lower() == str(player_name).lower():
                 return other_entity.get_current_location()
         return None
 
     # Get number of players in the game
-    def get_player_count(self):
+    def get_player_count(self) -> int:
         return len(self.players)
 
     # Check if a player name is unique
-    def is_existing_player_name(self, player_name):
+    def is_existing_player_name(self, player_name: str) -> bool:
         for player_sid, player in self.players.items():
             if str(player.name).lower() == str(player_name).lower():
                 return True
@@ -748,14 +767,16 @@ class GameManager:
     # Setters etc
 
     # Process player setup request from client
-    def process_player_setup(self, sid, player):
+    def process_player_setup(
+        self, sid: str, player: Dict[str, Any]
+    ) -> Union[Tuple[str, str], None]:
         # Be defensive as this is coming from either UI or AI broker
         if "name" not in player:
             logger.error("FATAL: Player name not specified")
             sys.exit()
 
         # Strip out any whitespace (defensive in case of client bug)
-        player_name = player["name"].strip().title()
+        player_name: str = player["name"].strip().title()
 
         # Check uniqueness here, other checks are done in the player class
         if self.is_existing_player_name(player_name):
@@ -769,6 +790,8 @@ class GameManager:
             )
 
         # Create/load the player, who is part of the world like entities items etc
+        outcome: Union[Tuple[str, str], None]
+        player: Union[Player, None]
         outcome, player = self.world.create_player(sid, player_name, player.get("role"))
         # Outcomes are adverse
         if outcome:
@@ -785,7 +808,7 @@ class GameManager:
         )
 
         # Tell this player about the game
-        instructions = (
+        instructions: str = (
             f"Welcome to the game, {player_name}. "
             + self.list_players(sid)
             + " "
@@ -804,7 +827,7 @@ class GameManager:
         # This is to minimise resource usage when no one is playing.
         self.activate_background_loop()
 
-    def list_players(self, sid):
+    def list_players(self, sid: str) -> str:
         if self.get_player_count() == 1:
             return "You are the only player in the game currently."
         player_list = "Other players in the game: "
@@ -814,7 +837,7 @@ class GameManager:
         player_list = player_list[:-2] + "."
         return player_list
 
-    def strip_outer_quotes(self, some_text):
+    def strip_outer_quotes(self, some_text: str) -> None:
         if (
             some_text.startswith('"')
             and some_text.endswith('"')
@@ -824,7 +847,7 @@ class GameManager:
             some_text = some_text[1:-1]
 
     # Parse player input
-    def parse_player_input(self, player_input):
+    def parse_player_input(self, player_input: str) -> Tuple[str, str]:
         player_input = player_input.strip(".")
         # Special handling of leading apostrophe (means say):
         if player_input.startswith("'"):
@@ -839,7 +862,7 @@ class GameManager:
         return verb, rest
 
     # Translate player input and try to process it again
-    def translate_and_process(self, player: Player, player_input: str) -> str:
+    def translate_and_process(self, player: Player, player_input: str) -> Optional[str]:
         # Try to translate the user input into a valid command using AI :-)
         self.tell_player(player, "I'm trying to guess what you meant by that...")
         prompt: str = (
@@ -851,7 +874,7 @@ class GameManager:
             )
             + f"Their latest input to translate: {player_input}"
         )
-        ai_translation = self.ai_manager.submit_request(prompt)
+        ai_translation: Optional[str] = self.ai_manager.submit_request(prompt)
         logger.info("AI translation: %s", ai_translation)
         if ai_translation:
             # Try to process the AI translation as a command, but only try this once
@@ -859,13 +882,16 @@ class GameManager:
                 player,
                 f"I think you meant '{ai_translation}', and will proceed accordingly. ",
             )
-            player_response = self.process_player_input(
+            player_response: Optional[str] = self.process_player_input(
                 player, ai_translation, translated=True
             )
             return player_response
+        return None
 
     # Process player input
-    def process_player_input(self, player, player_input, translated=False):
+    def process_player_input(
+        self, player: Player, player_input: str, translated: bool = False
+    ) -> str:
         player.update_last_action_time()
         if not player_input:
             # Empty command
@@ -874,6 +900,8 @@ class GameManager:
         player.add_input_history(f"You: {player_input}")
 
         # get the rest of the response apart from the first word
+        command: str
+        rest_of_response: str
         command, rest_of_response = self.parse_player_input(player_input)
 
         # Check for synonyms
@@ -881,6 +909,7 @@ class GameManager:
         logger.info(f"Command: {command}")
 
         # Call the function associated with a command
+        player_response: str
         if command in self.command_functions:
             player_response = self.command_functions[command]["function"](
                 player, rest_of_response
@@ -902,7 +931,9 @@ class GameManager:
         return player_response
 
     # Build move message back to player
-    def build_move_outcome_message(self, player, action, next_room):
+    def build_move_outcome_message(
+        self, player: Player, action: str, next_room: str
+    ) -> str:
         # Build message. only describe room if it is new to this player.
         message = f"You {action} the {next_room.lower()}"
         if next_room in player.seen_rooms:
@@ -919,19 +950,22 @@ class GameManager:
         return message
 
     # Resolve move action
-    def resolve_move_action(self, direction):
+    def resolve_move_action(self, direction: str) -> str:
         if direction == "jump":
             return "jump to"
         if direction == "join":
             return "start in"
         return f"head {direction} to"
 
-    # Handle an entity's move
-    def move_entity(self, entity, direction, next_room=None):
+    def move_entity(
+        self, entity: Entity, direction: str, next_room: Optional[str] = None
+    ) -> str:
         # Set new room
-        previous_room = entity.get_current_location()
+        previous_room: str = entity.get_current_location()
 
         # Resolve arrival and departure messages
+        departure_message: str
+        arrival_message: str
         if direction == "jump":
             departure_message = f"{entity.name} has disappeared in a puff of smoke!"
             arrival_message = f"{entity.name} has materialised as if by magic!"
@@ -942,7 +976,7 @@ class GameManager:
             next_room = self.world.get_next_room(
                 entity.get_current_location(), direction
             )
-            their_name = entity.name
+            their_name: str = entity.name
             # Describe animals with 'the' when they leave, 'a' when they arrive
             if entity.get_role() == "animal":
                 their_name = entity.get_name(article_type="definite").capitalize()
@@ -982,7 +1016,7 @@ class GameManager:
                     arrival_message,
                 )
 
-        message = ""
+        message: str = ""
         if entity.is_player:
             message = self.build_move_outcome_message(
                 entity, self.resolve_move_action(direction), next_room
@@ -995,17 +1029,13 @@ class GameManager:
 
         return message
 
-    def register_player(self, sid, player, player_name):
+    def register_player(self, sid: str, player: Player, player_name: str) -> Player:
         self.players[sid] = player
-        # Keep a log of all player names including those who have left
-        # This is so that when a player disconnects (e.g. closes their browser) after 'quitting' we can
-        # understand that, and it will allow them to rejoin with the same name later
         self.player_sid_to_name_map[sid] = player_name
-        # self.emit_player_room_update(sid, current_room)
         return player
 
     # Emit a message about a room to a specific player
-    def emit_player_room_update(self, player, room):
+    def emit_player_room_update(self, player: Player, room: str) -> None:
         # Tell the player about the room including the image name
         self.sio.emit(
             "room_update",
@@ -1025,11 +1055,11 @@ class GameManager:
         )
 
     # Emit a message to all players
-    def tell_everyone(self, message):
+    def tell_everyone(self, message: str) -> None:
         self.tell_others(None, message, shout=True)
 
     # Emit a message to all players except the one specified
-    def tell_others(self, sid, message, shout=False):
+    def tell_others(self, sid: Optional[str], message: str, shout: bool = False) -> int:
         told_count = 0
         if message.strip():
             for other_player_sid, other_player in self.players.items():
@@ -1044,14 +1074,18 @@ class GameManager:
         return told_count
 
     # Emit a message to a specific player
-    def tell_player(self, player, message, type="game_update"):
+    def tell_player(
+        self, player: Player, message: str, type: str = "game_update"
+    ) -> None:
         message = message.strip()
         self.sio.emit(type, message, player.sid)
         player.add_input_history(f"Game: {message}")
 
     # Get other entities
-    def get_other_entities(self, sid=None, players_only=False):
-        other_entities = []
+    def get_other_entities(
+        self, sid: Optional[str] = None, players_only: bool = False
+    ) -> List[Union[Player, Entity]]:
+        other_entities: List[Union[Player, Entity]] = []
         for other_player_sid, other_player in self.players.items():
             if sid is None or sid != other_player_sid:
                 other_entities.append(other_player)
@@ -1063,18 +1097,18 @@ class GameManager:
         return other_entities
 
     # Emit game data update to all players
-    def emit_game_data_update(self):
+    def emit_game_data_update(self) -> None:
         if self.get_player_count() > 0:
-            game_data = {"player_count": self.get_player_count()}
+            game_data: Dict[str, int] = {"player_count": self.get_player_count()}
             self.sio.emit(
                 "game_data_update",
                 game_data,
             )
 
     # Check each player to see if they have been inactive for too long
-    def check_players_activity(self):
-        current_time = time.time()
-        sids_to_remove = []
+    def check_players_activity(self) -> None:
+        current_time: float = time.time()
+        sids_to_remove: List[str] = []
         # First go through players and make a list of who to remove
         for player_sid, player in self.players.items():
             if current_time - player.last_action_time > self.max_inactive_time:
@@ -1086,7 +1120,7 @@ class GameManager:
             )
 
     # Remove a player from the game
-    def remove_player(self, sid, reason):
+    def remove_player(self, sid: str, reason: str) -> None:
         if sid in self.players:
             player = self.players[sid]
             # Make player drop all items in their inventory
@@ -1096,7 +1130,9 @@ class GameManager:
                 player,
                 reason,
             )
-            message = f"{player.name} has left the game; there are now {self.get_player_count()-1} players."
+            message: str = (
+                f"{player.name} has left the game; there are now {self.get_player_count()-1} players."
+            )
             logger.info(message)
             self.tell_others(
                 sid,
@@ -1119,7 +1155,7 @@ class GameManager:
             )
 
     # Spawn the world-wide metadata loop when the first player is created
-    def activate_background_loop(self):
+    def activate_background_loop(self) -> None:
         if not self.background_loop_active:
             logger.info("Activating background loop.")
             self.background_loop_active = True
@@ -1127,13 +1163,13 @@ class GameManager:
             eventlet.spawn(self.game_background_loop)
 
     # Cause the game background loop to exit
-    def deactivate_background_loop(self):
+    def deactivate_background_loop(self) -> None:
         logger.info("Deactivating background loop.")
         self.background_loop_active = False
 
     # This loop runs in the background to do things like broadcast player count
     # It only runs when there are players in the game
-    def game_background_loop(self):
+    def game_background_loop(self) -> None:
         while self.background_loop_active:
             # Run the loop periodically
             eventlet.sleep(self.game_loop_time_secs)
@@ -1146,6 +1182,7 @@ class GameManager:
             self.emit_game_data_update()
 
             # Move animals around
+            direction: str
             for animal in self.get_entities("animal"):
                 logger.info(f"Checking animal {animal.name}")
                 direction = animal.maybe_pick_direction_to_move()
@@ -1153,7 +1190,7 @@ class GameManager:
                     logger.info(f"Moving {animal.name} {direction}")
                     self.move_entity(animal, direction)
                 else:
-                    gesture_description = animal.maybe_gesture()
+                    gesture_description: str = animal.maybe_gesture()
                     if gesture_description:
                         logger.info(f"{animal.name} will gesture {gesture_description}")
                         # Check for other players who will witness the gesture
