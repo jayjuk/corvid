@@ -1,20 +1,24 @@
 # Game Server
 
-## Modules
+## Private Modules
 
 ### Game Server
 
 The "main" runtime modules. Comprises SocketIO setup, creation and launch of Game Manager
 
+### Player Input Processor
+
+Where the player's input (i.e. command and nouns etc) is parsed and turned into a reference to a function and parameters
+
 ### Game Manager
 
-Where almost all the business logic resides, especially the processing of player input (i.e. commands)
+Where almost all the rest of the game business logic resides, including putting the player's commands into action
 
 ### World
 
 Tracks the entities, players, items and their state
 
-### Item
+### Game Item
 
 Methods and attributes of items in the game
 
@@ -30,9 +34,15 @@ A subclass of entity which has additional attributes and behaviours only needed 
 
 A subclass of entity which has specific abilities (to buy and sell stuff)
 
+## Common Modules
+
 ### Storage Manager
 
-Manages storage and retrieval of dynamic data such as rooms and their exits
+Manages storage and retrieval of game data (superclass for unit testing)
+
+### Azure Storage Manager
+
+Actually stores and retrieves stuff, from Azure
 
 ### AI Manager
 

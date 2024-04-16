@@ -2,6 +2,7 @@ import unittest
 from gamemanager import GameManager
 from player import Player
 from storagemanager import StorageManager
+from player_input_processor import PlayerInputProcessor
 
 
 class TestGameManager(unittest.TestCase):
@@ -11,6 +12,7 @@ class TestGameManager(unittest.TestCase):
         self.game_manager = GameManager(
             sio=None, storage_manager=self.storage_manager, ai_enabled=False
         )
+        self.player_input_processor = PlayerInputProcessor(self.game_manager)
         self.player = Player(self.game_manager.world, 0, "TestPlayer")
 
     def tearDown(self):
@@ -24,7 +26,7 @@ class TestGameManager(unittest.TestCase):
         )
 
     def test_get_commands_description(self):
-        description = self.game_manager.get_commands_description().lower()
+        description = self.player_input_processor.get_commands_description().lower()
         for command in ("north", "south", "east", "west", "look", "say"):
             self.assertIn(
                 command, description, f"Command {command} missing from description"
