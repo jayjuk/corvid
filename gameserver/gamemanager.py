@@ -3,7 +3,7 @@ from logger import setup_logger, exit
 # Set up logger first
 logger = setup_logger()
 
-from typing import Any, Dict, List, Callable, Tuple, Optional, Union
+from typing import Any, Dict, List, Tuple, Optional, Union
 import eventlet
 import time
 import sys
@@ -12,6 +12,7 @@ from player import Player
 from entity import Entity
 from merchant import Merchant
 from gameitem import GameItem
+from room import Room
 from aimanager import AIManager
 from storagemanager import StorageManager
 
@@ -52,134 +53,6 @@ class GameManager:
         )
 
         self.item_name_empty_message: str = "Invalid input: item name is empty."
-
-        # Set up game language
-        self.setup_commands()
-
-    def setup_commands(self) -> None:
-        self.synonyms: Dict[str, str] = {
-            "n": "north",
-            "e": "east",
-            "s": "south",
-            "w": "west",
-            "pick": "get",
-            "take": "get",
-            "head": "go",
-            "walk": "go",
-            "run": "go",
-            "enter": "go",
-            "hi": "greet",
-            "talk": "say",
-            "inv": "inventory",
-            "haggle": "trade",
-            "purchase": "buy",
-            "examine": "look",
-            "inspect": "look",
-            "press": "push",
-            "kill": "attack",
-            "hit": "attack",
-        }
-
-        self.command_functions: Dict[str, Dict[str, Callable]] = {
-            # TODO #66 Limit certain actions to players with the right permissions rather than just hiding from help
-            "look": {
-                "function": self.do_look,
-                "description": "Get a description of your current location",
-            },
-            "say": {
-                "function": self.do_say,
-                "description": "Say something to all other players in your *current* location, e.g. say which way shall we go?",
-            },
-            "shout": {
-                "function": self.do_shout,
-                "description": "Shout something to everyone in the game, e.g. shout Where is everyone?",
-            },
-            "greet": {
-                "function": self.do_greet,
-                "description": "Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!",
-            },
-            "wait": {
-                "function": self.do_wait,
-                "description": "Do nothing for now",
-            },
-            "jump": {
-                "function": self.do_jump,
-                "description": "Jump to location of another player named in rest_of_response",
-            },
-            "attack": {
-                "function": self.do_attack,
-                "description": "",  # Not supported
-            },
-            "quit": {
-                "function": self.do_quit,
-                "description": "",  # Don't encourage the AI to quit! TODO: make this only appear in the help to human players
-            },
-            "get": {
-                "function": self.do_get,
-                "description": "Pick up an item in your current location",
-            },
-            "drop": {
-                "function": self.do_drop,
-                "description": "Drop an item in your current location",
-            },
-            "go": {
-                "function": self.do_go,
-                "description": "Head in a direction e.g. go north (you can also use n, e, s, w))",
-            },
-            "build": {
-                "function": self.do_build,
-                "description": "Build a new location. Specify the direction, name and description using single quotes "
-                + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'",
-            },
-            "buy": {
-                "function": self.do_buy,
-                "description": "Buy an item from an entity (e.g. a Merchant) in your current location.",
-            },
-            "sell": {
-                "function": self.do_sell,
-                "description": "Sell an item to an entity (e.g. a Merchant) in your current location.",
-            },
-            "trade": {
-                "function": self.do_trade,
-                "description": "Enter into trading negotiations with a Merchant in your current location.",
-            },
-            "push": {
-                "function": self.do_push,
-                "description": "",
-            },
-            "help": {
-                "function": self.do_help,
-                "description": "Get game instructions",
-            },
-            "inventory": {
-                "function": self.do_inventory,
-                "description": "List the items you are carrying",
-            },
-            "xox": {
-                "function": self.do_shutdown,
-                # Keep this one hidden - it shuts down the game server and AI broker!
-                "description": "",
-            },
-        }
-
-        # Build the commands description field from directions, synonyms and command functions
-        self.commands_description: str = "Valid directions: " + ", ".join(
-            self.world.get_directions()
-        )
-        self.commands_description += ".\nValid commands: "
-        for command, data in self.command_functions.items():
-            # Only add commands with descriptions
-            if data.get("description"):
-                self.commands_description += f"{command} = {data['description']}; "
-        self.commands_description = self.commands_description[:-2]
-        self.commands_description += "Recognised synonyms: "
-        for key, value in self.synonyms.items():
-            # Only show synonyms to commands that have a description
-            if value in self.command_functions and self.command_functions[value].get(
-                "description"
-            ):
-                self.commands_description += f"{key} = {value}, "
-        self.commands_description = self.commands_description[:-2]
 
     # All these 'do_' functions are for processing commands from the player.
     # They all take the player item and the rest of the response as arguments,
@@ -290,15 +163,6 @@ class GameManager:
         # If you get here, can't find anything that matches that name
         return f"There is no '{item_name}' here."
 
-    def do_help(
-        self, player: Optional[Player] = None, rest_of_response: Optional[str] = None
-    ) -> str:
-        return (
-            self.world.get_objective()
-            + self.get_players_text()
-            + f"\nAvailable commands:\n{self.get_commands_description()}"
-        )
-
     def do_say(self, player: Player, rest_of_response: str, shout: bool = False) -> str:
         verb: str = "shouts" if shout else "says"
         # Remove 'to' and player name
@@ -358,73 +222,19 @@ class GameManager:
     def do_quit(self, player: Player, rest_of_response: str) -> None:
         self.remove_player(player.sid, "You have left the game.")
 
-    def check_direction(self, direction: str, player: Player) -> str:
-        if direction not in self.world.get_directions():
-            return f"'{direction}' is not a valid direction."
+    def do_build(
+        self,
+        player: Player,
+        direction: str,
+        room_name: str,
+        room_description: Optional[str],
+    ) -> str:
+        # Create a new room
         if direction in self.world.get_exits(player.get_current_location()):
             return f"There is already a room to the {direction}."
 
-    def resolve_room_name(self, rest_of_response: str) -> Tuple[str, str, str]:
-        if rest_of_response.startswith("'") or rest_of_response.startswith('"'):
-            # Find the end of the quoted string
-            quote_char: str = rest_of_response[0]
-            end_quote_index: int = rest_of_response.find(quote_char, 1)
-            if end_quote_index == -1:
-                return "", "", "Invalid input: room name is not properly quoted."
-            # Extract the room name from the quoted string
-            room_name: str = rest_of_response[1:end_quote_index]
-            # Remove the room name and any extra spaces from the response
-            rest_of_response = rest_of_response[end_quote_index + 1 :].strip()
-        else:
-            # Room name is a single word
-            room_name: str = rest_of_response.split()[0]
-            # Remove the room name from the response
-            rest_of_response = " ".join(rest_of_response.split()[1:])
-
-        # Check the room name is valid
-        if room_name == "":
-            return "", "", "Invalid input: room name is empty."
-        # Check room name is not a reserved word
-        if (
-            room_name.lower() in self.synonyms
-            or room_name.lower() in self.command_functions
-        ):
-            return "", "", f"'{room_name}' is a reserved word."
-        logger.info(
-            f"Resolved room name {room_name}, rest of response <{rest_of_response}>"
-        )
-        return room_name.capitalize(), rest_of_response, ""
-
-    def do_build(self, player: Player, rest_of_response: str) -> str:
-        # Create a new room
-
-        # First parse the response to get the direction, room name and description. handle the player
-        # Using quotes in order to have room names and descriptions with spaces in
-
-        # First take the direction which is one word and must be one of the directions
-
-        direction: str = rest_of_response.split()[0]
-
-        # Check direction is valid and not taken
-        outcome: str = self.check_direction(direction, player)
-        if outcome:
-            return outcome
-
-        # Remove the direction from the response
-        rest_of_response: str = " ".join(rest_of_response.split()[1:])
-        if not rest_of_response:
-            # User did not specify name of room to build
-            return "Please specify room name in quotes and a description."
-
-        # Check if the room name is in quotes
-        room_name: str
-        outcome: str
-        room_name, rest_of_response, outcome = self.resolve_room_name(rest_of_response)
-        if outcome:
-            return outcome
-
-        # Now take the room description, which must be in quotes
-        if not rest_of_response:
+        # If player does not provide a room description, try to get one from the AI
+        if not room_description:
             # Get existing room descriptions into a list for inspiration
             existing_room_descriptions: List[str] = [
                 self.world.rooms[room].description for room in self.world.rooms.keys()
@@ -440,18 +250,7 @@ class GameManager:
             else:
                 return "Invalid input: room description missing and AI is not enabled."
 
-        elif not rest_of_response.startswith("'") and not rest_of_response.startswith(
-            '"'
-        ):
-            return "Invalid input: room description must be in quotes."
-        else:
-            # Quoted room description given by user
-            quote_char: str = rest_of_response[0]
-            end_quote_index: int = rest_of_response.find(quote_char, 1)
-            if end_quote_index == -1:
-                return "Invalid input: room description is not properly quoted."
-            room_description: str = rest_of_response[1:end_quote_index]
-
+        # Add the room
         error_message: str = self.world.add_room(
             player.get_current_location(),
             direction,
@@ -471,6 +270,7 @@ class GameManager:
         )
         return f"You build {direction} and make a new location, {room_name}: {room_description}"
 
+    # Check if an item is an entity
     def is_entity(self, item_name: str) -> Union["Entity", bool]:
         if item_name:
             for other_entity in self.get_other_entities():
@@ -481,9 +281,10 @@ class GameManager:
                     return other_entity
         return False
 
+    # Get entities of a certain type
     def get_entities(
-        self, entity_type: str, room: Optional["Room"] = None
-    ) -> List["Entity"]:
+        self, entity_type: str, room: Optional[Room] = None
+    ) -> List[Entity]:
         # Merchants are entities of a certain type.
         # If a room is specified, only return merchants in that room
         merchants = []
@@ -730,10 +531,6 @@ class GameManager:
         # This is now simple because quotes are stripped out earlier
         return rest_of_response
 
-    # Get a description of the commands available
-    def get_commands_description(self) -> str:
-        return self.commands_description
-
     # Get a description of the players in the game
     def get_players_text(self) -> str:
         others_count: int = self.get_player_count() - 1
@@ -768,7 +565,7 @@ class GameManager:
 
     # Process player setup request from client
     def process_player_setup(
-        self, sid: str, player: Dict[str, Any]
+        self, sid: str, player: Dict[str, Any], help_message: str
     ) -> Union[Tuple[str, str], None]:
         # Be defensive as this is coming from either UI or AI broker
         if "name" not in player:
@@ -812,7 +609,7 @@ class GameManager:
             f"Welcome to the game, {player_name}. "
             + self.list_players(sid)
             + " "
-            + self.do_help()
+            + help_message
         )
 
         self.tell_player(player, instructions, type="instructions")
@@ -836,99 +633,6 @@ class GameManager:
                 player_list += player_name + ", "
         player_list = player_list[:-2] + "."
         return player_list
-
-    def strip_outer_quotes(self, some_text: str) -> None:
-        if (
-            some_text.startswith('"')
-            and some_text.endswith('"')
-            or some_text.startswith("'")
-            and some_text.endswith("'")
-        ):
-            some_text = some_text[1:-1]
-
-    # Parse player input
-    def parse_player_input(self, player_input: str) -> Tuple[str, str]:
-        player_input = player_input.strip(".")
-        # Special handling of leading apostrophe (means say):
-        if player_input.startswith("'"):
-            player_input = player_input.strip("'")
-            player_input = "say " + player_input
-        # Separate first word (command) from rest
-        words = str(player_input).split()
-        verb = words[0].lower()
-        rest = " ".join(words[1:])
-        # strip out quotes from the outside of the response only
-        self.strip_outer_quotes(rest)
-        return verb, rest
-
-    # Translate player input and try to process it again
-    def translate_and_process(self, player: Player, player_input: str) -> Optional[str]:
-        # Try to translate the user input into a valid command using AI :-)
-        self.tell_player(player, "I'm trying to guess what you meant by that...")
-        prompt: str = (
-            "Help me to translate my user's input into a valid adventure game command.\n"
-            + self.get_commands_description()
-            + "\nRespond with only a valid command, nothing else.\n"
-            + player.get_input_history(
-                10, "Some history of what the user has seen for context:"
-            )
-            + f"Their latest input to translate: {player_input}"
-        )
-        ai_translation: Optional[str] = self.ai_manager.submit_request(prompt)
-        logger.info("AI translation: %s", ai_translation)
-        if ai_translation:
-            # Try to process the AI translation as a command, but only try this once
-            self.tell_player(
-                player,
-                f"I think you meant '{ai_translation}', and will proceed accordingly. ",
-            )
-            player_response: Optional[str] = self.process_player_input(
-                player, ai_translation, translated=True
-            )
-            return player_response
-        return None
-
-    # Process player input
-    def process_player_input(
-        self, player: Player, player_input: str, translated: bool = False
-    ) -> str:
-        player.update_last_action_time()
-        if not player_input:
-            # Empty command
-            return "You need to enter a command."
-
-        player.add_input_history(f"You: {player_input}")
-
-        # get the rest of the response apart from the first word
-        command: str
-        rest_of_response: str
-        command, rest_of_response = self.parse_player_input(player_input)
-
-        # Check for synonyms
-        command = self.synonyms.get(command, command)
-        logger.info(f"Command: {command}")
-
-        # Call the function associated with a command
-        player_response: str
-        if command in self.command_functions:
-            player_response = self.command_functions[command]["function"](
-                player, rest_of_response
-            )
-        # Move the player if the command is a direction
-        elif command in self.world.get_directions():
-            player_response = self.move_entity(player, command, rest_of_response)
-        else:
-            # If the command is not recognised, try to translate it using AI (unless this is already a translation)
-            if not translated:
-                player_response = self.translate_and_process(player, player_input)
-            else:
-                # Invalid command
-                player_response = (
-                    "That is not a recognised command. Available commands:\n"
-                    + self.get_commands_description()
-                )
-        player.add_input_history(f"Game: {player_response}")
-        return player_response
 
     # Build move message back to player
     def build_move_outcome_message(

@@ -29,11 +29,11 @@ class World:
 
         self.name: str = name
         self.storage_manager: Any = storage_manager
-        self.directions: Dict[str, Tuple[int, int]] = {
-            "north": (0, 1),
-            "south": (0, -1),
-            "east": (1, 0),
-            "west": (-1, 0),
+        self.directions: Dict[str, Tuple[int, int, str]] = {
+            "north": (0, 1, "south"),
+            "south": (0, -1, "north"),
+            "east": (1, 0, "west"),
+            "west": (-1, 0, "east"),
         }
         self.grid_references: Dict = {}
         self.room_items: Dict = {}
@@ -279,13 +279,8 @@ class World:
         return url
 
     def get_opposite_direction(self, direction: str) -> Optional[str]:
-        directions: Dict[str, str] = {
-            "north": "south",
-            "south": "north",
-            "east": "west",
-            "west": "east",
-        }
-        return directions.get(direction, None)
+        # Return the opposite direction
+        return self.directions[direction][2]
 
     def add_room(
         self,
