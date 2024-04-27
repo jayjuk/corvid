@@ -9,6 +9,7 @@ import openai_client
 import gemini_client
 import anthropic_client
 import stability_client
+import groq_client
 
 # Set up logger
 logger = setup_logger()
@@ -27,7 +28,7 @@ class AIManager:
         self.output_token_count: int = 0
 
         # Chat history / context
-        self.chat_history: List[Dict[str, Union[str, List[Dict[str, str]]]]] = []
+        self.reset()
 
         # Event log = feedback from game manager, to be included in next request
         self.event_log: List[str] = []
@@ -78,6 +79,10 @@ class AIManager:
         # Create specific log file for model responses
         self.create_model_log_file()
 
+    # Reset chat history
+    def reset(self) -> None:
+        self.chat_history: List[Dict[str, str]] = []
+
     # Set system message
     def set_system_message(self, system_message: str) -> None:
         if system_message:
@@ -108,11 +113,16 @@ class AIManager:
             return "Anthropic"
         elif self.model_name.startswith("stable-diffusion"):
             return "StabilityAI"
+        elif self.model_name.startswith("mixtral") or self.model_name.startswith(
+            "llama"
+        ):
+            return "Groq"
 
     # Store model data to file (for investigating issues with model responses)
     def store_model_data(self, filename_prefix: str, data: Any) -> None:
         logger.info("Saving model data")
-        folder_path: str = "model_io"
+        # For now, just treat as logging data. We might want to store it in the DB later.
+        folder_path: str = "logs"
         makedirs(folder_path, exist_ok=True)
         with open(
             folder_path + sep + f"{self.model_name}_{filename_prefix}.tmp",
@@ -136,6 +146,8 @@ class AIManager:
             self.model_client = stability_client.get_model_client(
                 model_name=self.model_name
             )
+        elif self.get_model_api() == "Groq":
+            self.model_client = groq_client.get_model_client()
         else:
             utils.exit(f"Model name {self.model_name} not recognised.")
 
@@ -230,6 +242,13 @@ class AIManager:
                         model_name=model_name,
                         max_tokens=max_tokens,
                         system_message=self.system_message,
+                    )
+                elif self.get_model_api() == "Groq":
+                    model_response = groq_client.do_model_request(
+                        model_client=self.model_client,
+                        messages=messages,
+                        model_name=model_name,
+                        max_tokens=max_tokens,
                     )
                 else:
                     utils.exit(f"Unsupported model type: {self.model_name}")
