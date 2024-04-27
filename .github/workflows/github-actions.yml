@@ -12,7 +12,7 @@ jobs:
       - run: pip install -r gameserver/requirements.txt
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
-      - run: cd gameserver; python -m unittest tests.unittest_gamemanager
+      - run: cd gameserver; python -m unittest tests.test_gamemanager
   test_imageserver:
     runs-on: ubuntu-latest
     steps:
@@ -23,7 +23,18 @@ jobs:
       - run: pip install -r imageserver/requirements.txt
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
-      - run: cd imageserver; python -m unittest tests.unittest_imageserver
+      - run: cd imageserver; python -m unittest tests.test_imageserver
+  test_aibroker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.5"
+      - run: pip install -r aibroker/requirements.txt
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
+      - run: cd aibroker; python -m unittest tests.test_aibroker
   build_gameserver:
     needs: test_gameserver
     runs-on: ubuntu-latest
@@ -64,6 +75,26 @@ jobs:
           file: "imageserver/Dockerfile"
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/imageserver:latest
+  build_aibroker:
+    needs: test_aibroker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: "{{defaultContext}}"
+          file: "aibroker/Dockerfile"
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/aibroker:latest
   # deploy:
   #   needs: build
   #   runs-on: ubuntu-latest

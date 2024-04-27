@@ -3,7 +3,6 @@ from typing import List, Dict, Optional
 import eventlet
 import socketio
 import time
-import sys
 from os import environ
 import re
 from aimanager import AIManager
@@ -17,26 +16,25 @@ sio = socketio.Client()
 
 # Class to manage the AI's interaction with the game server
 class AIBroker:
-    time_to_die: bool = False
-    game_instructions: str = ""
-    event_log: List[str] = []
-    max_history: int = 50
-    max_wait: int = 5  # secs
-    last_time: float = time.time()
-    active: bool = True
-    mode: Optional[str] = None
-    player_name: str = "TBD"
-    input_token_count: int = 0
-    output_token_count: int = 0
-
-    # Constructor
     def __init__(self, mode: str = "player"):
-        self.mode = mode
+        # Constructor
+        self.mode: Optional[str] = mode
+        self.time_to_die: bool = False
+        self.game_instructions: str = ""
+        self.event_log: List[str] = []
+        self.max_history: int = 50
+        self.max_wait: int = 5  # secs
+        self.last_time: float = time.time()
+        self.active: bool = True
+        self.player_name: str = "TBD"
+        self.input_token_count: int = 0
+        self.output_token_count: int = 0
 
         # Set up the AI manager
         self.ai_manager = AIManager(system_message=self.get_ai_instructions())
 
         # Get the AI's name
+        # TODO #89 Enable many AI players to be managed by the same broker
         self.player_name = self.get_ai_name()
 
     # The main processing loop
@@ -105,25 +103,6 @@ class AIBroker:
                 eventlet.sleep(3)
         return ai_name
 
-    # Submit the game's updates as input to the AI manager
-    def submit_input(self) -> str:
-        # TODO #60 Improve transactionality of event log management when submitting to AI
-        # Grab and clear the log quickly to minimise threading issue risk
-        tmp_log = self.event_log.copy()
-        self.event_log = []
-        logger.info(f"Found {len(tmp_log)} events to submit to model.")
-
-        # Catch up with the input / game context
-        message_text = ""
-        for event_text in tmp_log:
-            message_text += event_text + "\n"
-
-        # Now append the command request
-        command_text = "Please enter a single valid command phrase, one line only:"
-        message_text += command_text
-
-        return self.ai_manager.submit_request(message_text)
-
     # Log the game events for the AI to process
     def log_event(self, event_text: str) -> None:
         # If the input is just echoing back what you said, do nothing
@@ -136,6 +115,29 @@ class AIBroker:
             r"{[^}]*}", "", event_text, flags=re.DOTALL
         )  # dotall flag is to handle newline
         self.event_log.append(event_text)
+
+    # Clear event log
+    def clear_event_log(self) -> None:
+        self.event_log = []
+
+    # Submit the game's updates as input to the AI manager
+    def submit_input(self) -> str:
+        # TODO #60 Improve transactionality of event log management when submitting to AI
+        # Grab and clear the log quickly to minimise threading issue risk
+        tmp_log = self.event_log.copy()
+        self.clear_event_log()
+        logger.info(f"Found {len(tmp_log)} events to submit to model.")
+
+        # Catch up with the input / game context
+        message_text = ""
+        for event_text in tmp_log:
+            message_text += event_text + "\n"
+
+        # Now append the command request
+        command_text = "Please enter a single valid command phrase, one line only:"
+        message_text += command_text
+
+        return self.ai_manager.submit_request(message_text)
 
     # Check the event log for new events to process
     def poll_event_log(self) -> None:
