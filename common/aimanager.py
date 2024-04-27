@@ -4,6 +4,8 @@ from os import path, makedirs, environ, sep
 import json
 import time
 from logger import setup_logger, exit
+
+# TODO #90 Consider redesigning such that the AI Manager only imports the necessary LLM client libraries according to runtime model choices
 import openai_client
 import gemini_client
 import anthropic_client
