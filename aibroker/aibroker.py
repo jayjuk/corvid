@@ -1,4 +1,4 @@
-from logger import setup_logger
+from logger import setup_logger, exit
 from typing import List, Dict, Optional
 import eventlet
 import socketio
@@ -80,7 +80,7 @@ class AIBroker:
             )
         else:
             # Experiment to see whether cheaper AIs can do this
-            ai_instructions += "Prioritise exploring, picking up objects ('get all'), selling them to merchants, and then buying the red button (which costs 999p) from Gambino, so you win the game! use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
+            ai_instructions += "Prioritise exploring, picking up items ('get all'), selling them to merchants, and then buying the red button (which costs 999p) from Gambino, so you win the game! use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
             # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
         return ai_instructions
 
@@ -151,11 +151,9 @@ class AIBroker:
                 sio.emit("user_action", response)
                 # If response was to exit, exit here (after sending the exit message to the game server)
                 if response == "exit":
-                    logger.info("AI has exited the game.")
-                    sys.exit()
+                    exit("AI has exited the game.")
             else:
-                logger.info("ERROR: AI returned empty response")
-                sys.exit()
+                exit("AI returned empty response")
 
 
 # Non-class functions below here (SocketIO event handlers etc.)
@@ -178,8 +176,7 @@ def connect_to_server(hostname: str) -> None:
             wait_time = int(wait_time * 1.5)
 
     if not connected:
-        logger.info("Could not connect to server. Exiting.")
-        sys.exit()
+        exit("Could not connect to server.")
 
 
 # SocketIO event handlers
@@ -192,8 +189,7 @@ def catch_all(data: Dict) -> None:
         logger.info(f"Received game update event: {data}")
         ai_broker.log_event(data)
     else:
-        logger.info("ERROR: Received empty game update event")
-        sys.exit()
+        exit(logger, "Received empty game update event")
 
 
 # Instructions event handler
@@ -209,7 +205,7 @@ def catch_all(data: Dict) -> None:
     ai_broker.time_to_die = True
     sio.disconnect()
     sio.eio.disconnect()
-    sys.exit()
+    exit(logger, "AI Broker shutting down.")
 
 
 # This might happen if the AI quits!
@@ -217,7 +213,7 @@ def catch_all(data: Dict) -> None:
 def catch_all(data: Dict) -> None:
     logger.info(f"Logout event received: {data} did AI quit?")
     sio.disconnect()
-    sys.exit()
+    exit(logger, "AI Broker logout received.")
 
 
 # Room update event handler
@@ -260,9 +256,8 @@ def connect() -> None:
 # Connection error event handler
 @sio.event
 def connect_error(data: Dict) -> None:
-    logger.error("Connection failure!")
-    logger.info(data)
-    sys.exit()
+    logger.error(data)
+    exit(logger, "Connection failure!")
 
 
 # Disconnection event handler
@@ -284,10 +279,10 @@ if __name__ == "__main__":
     ai_mode: str = environ.get("AI_MODE") or "player"
     # Check AI_MODE is set to a valid value
     if ai_mode not in ("player", "builder", "observer"):
-        logger.info(
-            f"ERROR: AI_MODE is set to {ai_mode} but must be either 'player' or 'observer'. Exiting."
+        exit(
+            logger,
+            f"ERROR: AI_MODE is set to {ai_mode} but must be either 'player' or 'observer'. Exiting.",
         )
-        sys.exit()
 
     # If AI_COUNT is not set, sleep forever (if you exit, the container will restart)
     if ai_count in ("""${AI_COUNT}""", "0"):
@@ -297,10 +292,10 @@ if __name__ == "__main__":
     else:
         # AI_COUNT is set, so start up the AI
         if ai_count != "1":
-            logger.info(
-                f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting."
+            exit(
+                logger,
+                f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting.",
             )
-            sys.exit()
         ai_broker = AIBroker(mode=ai_mode)
 
     # Change log file name to include AI name

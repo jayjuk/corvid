@@ -17,7 +17,7 @@ Below is an overview of each component of the game architecture. In future, more
 
 ### 1. Game Server
 
-This service is where all the game's "business logic" resides. It loads the game world into memory from its database (rooms i.e. locations and their exits, objects, entities etc), then keeps track of the state of each player and the contents of the world as the game commences. It receives player commands over SocketIO, parses and processes them, and sends feedback to the game client and AI broker(s), also via SocketIO.
+This service is where all the game's "business logic" resides. It loads the game world into memory from its database (rooms i.e. locations and their exits, items, entities etc), then keeps track of the state of each player and the contents of the world as the game commences. It receives player commands over SocketIO, parses and processes them, and sends feedback to the game client and AI broker(s), also via SocketIO.
 
 Note that the game server also uses an LLM itself for various purposes including generation of interesting descriptions and images when a new location is created by a player with 'builder' permissions, or when a player provides a command it does not understand (which can sometimes be 'translated' into supported syntax given the context). This operates independently of the AI broker at runtime.
 

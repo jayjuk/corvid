@@ -5,6 +5,7 @@ import utils
 import json
 import base64
 from typing import Optional
+from utils import get_critical_env_variable
 
 # Set up logger
 logger = setup_logger()
@@ -28,7 +29,7 @@ def get_model_client() -> GenerativeModel:
 
     # Load Base 64 encoded key JSON from env variable and convert back to JSON
     credentials: Dict = json.loads(
-        base64.b64decode(utils.get_critical_env_variable("GOOGLE_GEMINI_KEY"))
+        base64.b64decode(get_critical_env_variable("GOOGLE_GEMINI_KEY"))
     )
 
     vertexai.init(

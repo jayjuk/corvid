@@ -1,29 +1,39 @@
+from typing import List, Optional
 from logger import setup_logger
+from entity import Entity
+from gameitem import GameItem
 
 # Set up logger
 logger = setup_logger()
 
-from entity import Entity
-
 
 # Merchant class
 class Merchant(Entity):
-    def __init__(self, world, name, location, inventory=[], description=""):
+    def __init__(
+        self,
+        world: "World",
+        name: str,
+        location: str,
+        inventory: Optional[List[GameItem]] = None,
+        description: str = "",
+    ):
         # First check
         logger.info(f"Creating merchant {name}")
 
         # Set up entity
-        Entity.__init__(self, world, name, "merchant", location, description)
+        super().__init__(world, name, "merchant", location, description)
 
-        for object in inventory:
-            # Add object to merchant's inventory
-            object.set_possession(self)
+        if inventory is None:
+            inventory = []
+        for item in inventory:
+            # Add item to merchant's inventory
+            item.set_possession(self)
 
     # Get inventory description
-    def get_inventory_description(self):
-        description = ""
-        for object in self.get_inventory():
-            description += f"{object.get_name('a')} ({self.world.get_currency(object.get_price(), short=True)}), "
+    def get_inventory_description(self) -> str:
+        description: str = ""
+        for item in self.get_inventory():
+            description += f"{item.get_name('a')} ({self.world.get_currency(item.get_price(), short=True)}), "
         if description:
             return (
                 "They have the following available for sale: " + description[:-2] + "."
@@ -31,9 +41,9 @@ class Merchant(Entity):
         return "They do not currently have anything to sell."
 
     # Overridden method to get description of merchant including their inventory.
-    def get_description(self):
+    def get_description(self) -> str:
         return self.description + " " + self.get_inventory_description()
 
-    # Overridden method to allow them to receive objects
-    def can_add_object(self):
+    # Overridden method to allow them to receive items
+    def can_add_item(self) -> bool:
         return True

@@ -3,8 +3,7 @@ import traceback
 from os import path, makedirs, environ, sep
 import json
 import time
-from logger import setup_logger
-import utils
+from logger import setup_logger, exit
 import openai_client
 import gemini_client
 import anthropic_client
@@ -149,7 +148,7 @@ class AIManager:
         elif self.get_model_api() == "Groq":
             self.model_client = groq_client.get_model_client()
         else:
-            utils.exit(f"Model name {self.model_name} not recognised.")
+            exit(f"Model name {self.model_name} not recognised.")
 
     # Build a message for the model (everyone but Gemini)
     def build_message(self, role: str, content: str):
@@ -251,7 +250,7 @@ class AIManager:
                         max_tokens=max_tokens,
                     )
                 else:
-                    utils.exit(f"Unsupported model type: {self.model_name}")
+                    exit(f"Unsupported model type: {self.model_name}")
 
                 # Clean up response
                 if "```" in model_response:
@@ -341,7 +340,7 @@ class AIManager:
                 model_client=self.model_client, prompt=description
             )
         else:
-            utils.exit(
+            exit(
                 "Image generation using other model APIs than OpenAI and StabilityAI not yet supported!"
             )
         return None, None

@@ -2,6 +2,7 @@ import logging
 import sys
 import os
 import time
+from typing import Any
 
 # INSTRUCTIONS TO USE THIS MODULE
 # At the top of your module, add the following:
@@ -13,8 +14,13 @@ import time
 
 
 # Shortest  way to quickly output some content, whatever the mode, easy to then find these statements and remove them later
-def debug(*args):
-    print(f"*** DEBUG: {' '.join(str(arg) for arg in args)} ***")
+def debug(*args: Any) -> None:
+    """
+    This function is used for debugging purposes.
+    It takes any number of arguments, prints them, and then sleeps for 1 second.
+    """
+    debug_content: str = " ".join(str(arg) for arg in args)
+    print(f"*** DEBUG: {debug_content} ***")
     sleep_time: int = 1
     print(f"Sleeping {sleep_time} seconds...")
     time.sleep(sleep_time)
@@ -41,7 +47,8 @@ def setup_logger(
 
     # Create logs directory if it doesn't exist
     logs_dir: str = "logs"
-    os.makedirs(logs_dir, exist_ok=True)
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
 
     # Set logging level based on waterfall of settings
     logging_level: int = logging.INFO
@@ -66,6 +73,8 @@ def setup_logger(
 
 # Default common exit logic which logs a critical error and exits at the same time.
 def exit(logger: logging.Logger, error_message: str = None) -> None:
+    # If no message, assume normal exit.
+    exit_code: int = 0
     if error_message:
         logger.critical(error_message)
         exit_code: int = 1
@@ -75,6 +84,4 @@ def exit(logger: logging.Logger, error_message: str = None) -> None:
             print(
                 f"I suspect an error message was passed into the logger parameter: {logger}"
             )
-        # If no message, assume normal exit.
-        exit_code: int = 0
     sys.exit(exit_code)
