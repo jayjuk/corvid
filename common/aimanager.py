@@ -43,6 +43,7 @@ class AIManager:
             "gpt-3.5-turbo": (0.0005, 0.0015),
             "gpt-4-turbo-preview": (0.01, 0.03),
             "gemini-pro": (0, 0),
+            "claude": (0, 0),
         }
 
         # Get model choice from env variable if possible
