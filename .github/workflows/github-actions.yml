@@ -2,6 +2,17 @@ name: run-unit-tests
 run-name: ${{ github.actor }} is running unit tests
 on: [push]
 jobs:
+  test_common:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.5"
+      - run: pip install -r common/requirements.txt
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
+      - run: cd common; python -m unittest tests.test_aimanager
   test_gameserver:
     runs-on: ubuntu-latest
     steps:

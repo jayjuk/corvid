@@ -1,0 +1,6 @@
+python-dotenv
+openai
+google-cloud-aiplatform
+anthropic
+groq
+stability_sdk
