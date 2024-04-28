@@ -7,10 +7,4 @@ if "%ERRORLEVEL%"=="1" (
     timeout /T 10
 )
 echo Running unit tests as per GHA using Act
-echo Game Server:
-"C:\Act\Act.exe" -j test_imageserver
-echo AI Broker:
-"C:\Act\Act.exe" -j test_aibroker
-echo Image Server:
-"C:\Act\Act.exe" -j test_imageserver
-
+"C:\Act\Act.exe" -j unit_tests

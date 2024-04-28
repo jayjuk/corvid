@@ -16,7 +16,7 @@ class TestAIManager(unittest.TestCase):
 
 class TestAIManagerClaude(TestAIManager):
 
-    @patch("anthropic_client.Anthropic")
+    @patch("anthropic_client.get_model_client")
     def setUp(self, MockModelClient) -> None:
         self.test_model_name = "claude-mock"
         return super().setUp()

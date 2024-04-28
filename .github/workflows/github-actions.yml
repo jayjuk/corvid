@@ -2,7 +2,7 @@ name: run-unit-tests
 run-name: ${{ github.actor }} is running unit tests
 on: [push]
 jobs:
-  test_common:
+  unit_tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -10,44 +10,17 @@ jobs:
         with:
           python-version: "3.11.5"
       - run: pip install -r common/requirements.txt
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
-      - run: cd common; python -m unittest tests.test_aimanager
-  test_gameserver:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.5"
       - run: pip install -r gameserver/requirements.txt
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
-      - run: cd gameserver; python -m unittest tests.test_gamemanager
-  test_imageserver:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.5"
       - run: pip install -r imageserver/requirements.txt
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
-      - run: cd imageserver; python -m unittest tests.test_imageserver
-  test_aibroker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.5"
       - run: pip install -r aibroker/requirements.txt
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
+      - run: cd common; python -m unittest tests.test_aimanager
+      - run: cd gameserver; python -m unittest tests.test_gamemanager
+      - run: cd imageserver; python -m unittest tests.test_imageserver
       - run: cd aibroker; python -m unittest tests.test_aibroker
   build_gameserver:
-    needs: test_gameserver
+    needs: unit_tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -67,7 +40,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/gameserver:latest
   build_imageserver:
-    needs: test_imageserver
+    needs: unit_tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -87,7 +60,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/imageserver:latest
   build_aibroker:
-    needs: test_aibroker
+    needs: unit_tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
