@@ -62,7 +62,9 @@ class World:
             self.image_ai_manager: Optional[AIManager] = None
 
     # Get the objective of the game
-    def get_objective(self) -> str:
+    def get_objective(self, player: Optional[Player] = None) -> str:
+        if player and player.role == "builder":
+            return "You are a builder and your objective is to create a wonderful game world."
         return (
             "The aim of this game is to earn enough money to buy The Button. "
             + "You don't know what will happen when you press The Button, but you know it will be good. "
@@ -318,7 +320,7 @@ class World:
             return (
                 f"Sorry, there is already a room to the {direction} of {current_location}, "
                 + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else. "
-                + self.get_room_build_options(current_room)
+                + self.get_room_build_options(current_location)
             )
 
         # Format the room name to be title case

@@ -148,8 +148,9 @@ class PlayerInputProcessor:
     def get_help_text(
         self, player: Optional[Player] = None, rest_of_response: Optional[str] = None
     ) -> str:
+        objective = self.game_manager.world.get_objective(player)
         return (
-            self.game_manager.world.get_objective()
+            objective
             + " "
             + self.game_manager.get_players_text()
             + f"\nAvailable commands:\n{self.get_commands_description()}"
@@ -220,7 +221,7 @@ class PlayerInputProcessor:
     # Translate player input and try to process it again
     def translate_and_process(self, player: Player, player_input: str) -> Optional[str]:
         # Try to translate the user input into a valid command using AI :-)
-        self.tell_player(player, "I'm trying to guess what you meant by that...")
+        output: str = "I'm trying to guess what you meant by that..."
         prompt: str = (
             "Help me to translate my user's input into a valid adventure game command.\n"
             + self.get_commands_description()
@@ -230,16 +231,17 @@ class PlayerInputProcessor:
             )
             + f"Their latest input to translate: {player_input}"
         )
-        ai_translation: Optional[str] = self.ai_manager.submit_request(prompt)
+        ai_translation: Optional[str] = self.game_manager.ai_manager.submit_request(
+            prompt
+        )
         logger.info("AI translation: %s", ai_translation)
         if ai_translation:
             # Try to process the AI translation as a command, but only try this once
-            self.tell_player(
-                player,
-                f"I think you meant '{ai_translation}', and will proceed accordingly. ",
+            output += f"\nI think you meant '{ai_translation}', and will proceed accordingly.\n"
+            return output + self.process_player_input(
+                player, ai_translation, translated=True
             )
-            return self.process_player_input(player, ai_translation, translated=True)
-        return None
+        return output
 
     def check_direction(self, direction: str, player: Player) -> str:
         if direction not in self.directions:

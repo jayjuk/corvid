@@ -5,6 +5,7 @@ import socketio
 import time
 from os import environ
 import re
+from urllib3.exceptions import HTTPError
 from aimanager import AIManager
 
 # Set up logger
@@ -16,7 +17,7 @@ sio = socketio.Client()
 
 # Class to manage the AI's interaction with the game server
 class AIBroker:
-    def __init__(self, mode: str = "player"):
+    def __init__(self, mode: str = "player", model_name: str = None):
         # Constructor
         self.mode: Optional[str] = mode
         self.time_to_die: bool = False
@@ -31,11 +32,13 @@ class AIBroker:
         self.output_token_count: int = 0
 
         # Set up the AI manager
-        self.ai_manager = AIManager(system_message=self.get_ai_instructions())
+        self.ai_manager = AIManager(
+            system_message=self.get_ai_instructions(), model_name=model_name
+        )
 
         # Get the AI's name
         # TODO #89 Enable many AI players to be managed by the same broker
-        self.player_name = self.get_ai_name()
+        self.set_ai_name()
 
     # The main processing loop
     def ai_response_loop(self) -> None:
@@ -74,7 +77,7 @@ class AIBroker:
                 "You are a creator of worlds! You can and should create new locations in the game with the 'build' command "
                 + "followed by the direction, location name (quotes for spaces) and the description (in quotes). "
                 + """e.g. build north "Neighbour's House" "A quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke."" \n"""
-                + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions and north/south of the Road (don't modify existing houses)\n"
+                + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions.\n"
             )
         else:
             # Experiment to see whether cheaper AIs can do this
@@ -83,7 +86,7 @@ class AIBroker:
         return ai_instructions
 
     # Get AI name from the LLM using the AI manager
-    def get_ai_name(self) -> str:
+    def set_ai_name(self, feedback=None) -> str:
 
         mode_name_hints = {
             "builder": "You are a creator of worlds! You can add new locations in the game. "
@@ -92,6 +95,9 @@ class AIBroker:
             mode_name_hints.get(self.mode, "")
             + "What do you want your name to be in this game? Please respond with a single one-word name only, and try to be random."
         )
+        # If any feedback from previous attempt, include it
+        if feedback:
+            request += f"\nNOTE: {feedback}"
 
         ai_name = None
         while not ai_name or " " in ai_name:
@@ -101,6 +107,7 @@ class AIBroker:
                 logger.info(f"AI chose the name {ai_name}.")
             else:
                 eventlet.sleep(3)
+        self.player_name = ai_name
         return ai_name
 
     # Log the game events for the AI to process
@@ -163,22 +170,22 @@ class AIBroker:
 
 # Connect to SocketIO server, trying again if it fails
 def connect_to_server(hostname: str) -> None:
-    connected = False
-    max_wait = 240  # 4 minutes
-    wait_time = 1
+    connected: bool = False
+    max_wait: int = 240  # 4 minutes
+    wait_time: int = 4
     while not connected and wait_time <= max_wait:
         try:
             sio.connect(hostname)
             connected = True
-        except ConnectionError:
+        except Exception as e:
             logger.info(
                 f"Could not connect to server. Retrying in {wait_time} seconds..."
             )
             eventlet.sleep(wait_time)
-            wait_time = int(wait_time * 1.5)
+            wait_time = int(wait_time * 2)
 
     if not connected:
-        exit("Could not connect to server.")
+        exit(logger, "Could not connect to Game Server. Is it running?")
 
 
 # SocketIO event handlers
@@ -255,11 +262,19 @@ def connect() -> None:
     sio.emit("set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode})
 
 
+# Invalid name, try again
+@sio.on("name_invalid")
+def catch_all(data: Dict) -> None:
+    logger.info(f"Invalid name event received: {data}")
+    ai_broker.set_ai_name(data)
+    sio.emit("set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode})
+
+
 # Connection error event handler
 @sio.event
 def connect_error(data: Dict) -> None:
     logger.error(data)
-    exit(logger, "Connection failure!")
+    # exit(logger, "Connection failure!")
 
 
 # Disconnection event handler
@@ -298,7 +313,13 @@ if __name__ == "__main__":
                 logger,
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting.",
             )
-        ai_broker = AIBroker(mode=ai_mode)
+
+        # Get model choice from command line parameter, or env variable, if available
+        model_name: str = (
+            environ.get("MODEL_NAME") or "llama3-70b-8192"
+        )  # "gemini-pro" - Llama/Groq is currently free, so make that default
+        logger.info(f"Model name set to {model_name}")
+        ai_broker = AIBroker(mode=ai_mode, model_name=model_name)
 
     # Change log file name to include AI name
     logger = setup_logger(f"ai_broker_{ai_broker.player_name}.log")
@@ -311,9 +332,12 @@ if __name__ == "__main__":
     # TODO #65 Do not allow default port, and make this common
     port: str = environ.get("GAMESERVER_PORT", "3001")
     logger.info(f"Starting up AI Broker on hostname {hostname}")
-    # Connect to the server
-    connect_to_server(f"http://{hostname}:{port}")
-
+    # Connect to the server. If can't connect, warn user that the Game Server may not be running.
+    try:
+        connect_to_server(f"http://{hostname}:{port}")
+    except Exception as e:
+        exit(logger, f"Could not connect to server: {e}\nIs the Game Server running?")
+    logger.info("Connected to server.")
     # This is where the main processing of inputs happens
     eventlet.spawn(ai_broker.ai_response_loop())
 

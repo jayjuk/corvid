@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Dark Cupboard",
+    "description": "In the beginning, there was darkness! You cannot see anything. You feel around, and realise you must be in some little cupboard.",
+    "image": "black.png",
+    "exits": {}
+  }
+]

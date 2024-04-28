@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
 from logger import setup_logger
+from utils import get_critical_env_variable
 import json
 from os import path
 
@@ -43,6 +44,11 @@ class StorageManager:
         return None
 
     def get_blob_name(self, world_name: str, image_name: str) -> str:
+        # Black is a special image that needs no prefix, it is not created by AI or specific to a world.
+        # It is for starting from an empty world.
+        # So check if image name start with 'black.'
+        if image_name.startswith("black."):
+            return image_name
         if world_name:
             return world_name + "." + image_name
         return image_name

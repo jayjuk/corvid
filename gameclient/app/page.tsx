@@ -108,6 +108,15 @@ export default function HomePage() {
       setNameSet(false);
     });
 
+    // Listen for the 'name_invalid' event from the server
+    socket.current.on("name_invalid", (message) => {
+      console.log("Player name invalid");
+      if (message != null) {
+        alert(message);
+      }
+      setNameSet(false);
+    });
+
     return () => {
       if (socket.current) {
         socket.current.disconnect();

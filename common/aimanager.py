@@ -151,7 +151,7 @@ class AIManager:
         elif self.get_model_api() == "Groq":
             self.model_client = groq_client.get_model_client()
         else:
-            exit(f"Model name {self.model_name} not recognised.")
+            exit(logger, f"Model name {self.model_name} not recognised.")
 
     # Build a message for the model (everyone but Gemini)
     def build_message(self, role: str, content: str):
@@ -168,7 +168,7 @@ class AIManager:
     ) -> str:
         try_count: int = 0
         max_tries: int = 10
-        wait_time: int = 5
+        wait_time: float = 3.0
         logger.info(f"Received request to submit: {request}")
 
         # Use default values if not provided
@@ -218,6 +218,8 @@ class AIManager:
         model_response: Optional[str] = None
         prompt_tokens: int = 0
         response_tokens: int = 0
+        wait_time: float = 0
+
         while not model_response and try_count < max_tries:
             try_count += 1
             try:
@@ -253,7 +255,7 @@ class AIManager:
                         max_tokens=max_tokens,
                     )
                 else:
-                    exit(f"Unsupported model type: {self.model_name}")
+                    exit(logger, f"Unsupported model type: {self.model_name}")
 
                 # Clean up response
                 if "```" in model_response:
@@ -267,8 +269,21 @@ class AIManager:
                     or "The response was blocked." in str(e)
                     or "list index out of range" in str(e)
                     or "rate_limit_error" in str(e)
+                    or "rate_limit_exceeded" in str(e)
                 ) and try_count < max_tries:
-                    wait_time = wait_time * 2
+                    # Check for a substring like Please try again in 940.714285ms, if so, extract that wait time
+                    if "Please try again in" in str(e):
+                        wait_time = 0.1 + (
+                            float(
+                                str(e)
+                                .split("Please try again in ")[1]
+                                .split("ms")[0]
+                                .split("s")[0]
+                            )
+                            / 1000
+                        )
+                    else:
+                        wait_time = wait_time * 2
                     logger.info(
                         f"Retrying in {wait_time} seconds... (attempt {try_count+1}/{max_tries})"
                     )
@@ -344,7 +359,8 @@ class AIManager:
             )
         else:
             exit(
-                "Image generation using other model APIs than OpenAI and StabilityAI not yet supported!"
+                logger,
+                "Image generation using other model APIs than OpenAI and StabilityAI not yet supported!",
             )
         return None, None
 

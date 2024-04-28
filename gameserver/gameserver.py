@@ -2,6 +2,7 @@
 from logger import setup_logger
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
+from sys import argv
 
 logger = setup_logger("gameserver")
 
@@ -31,18 +32,18 @@ def connect(sid: str, environ: Dict[str, Any]) -> None:
 
 # Player setup
 @sio.event
-def set_player_name(sid: str, player: Player) -> None:
+def set_player_name(sid: str, player_info: Dict[str, str]) -> None:
     logger.info(
-        f"Client requesting player setup: {sid}, {player.get('name')}, {player.get('role')}"
+        f"Client requesting player setup: {sid}, {player_info.get('name')}, {player_info.get('role')}"
     )
     outcome: Optional[str] = game_manager.process_player_setup(
-        sid, player, player_input_processor.get_help_text()
+        sid, player_info, player_input_processor.get_help_text()
     )
     # Blank outcome = success
     if outcome:
-        # Issue with player name setting - log out client with error message
+        # Issue with player name setting - indicate using name_invalid event, with error message
         sio.emit(
-            "logout",
+            "name_invalid",
             outcome,
             sid,
         )
@@ -101,7 +102,14 @@ if __name__ == "__main__":
         hostname = hostname[:-4]
     # TODO #65 Do not allow default port, and make this common
     port: int = int(environ.get("GAMESERVER_PORT", "3001"))
-    world_name: str = environ.get("GAMESERVER_WORLD_NAME", "jaysgame")
+
+    # Get world name from command line or environment variable
+    world_name: str
+    if len(argv) > 1:
+        world_name = argv[1]
+    else:
+        world_name = environ.get("GAMESERVER_WORLD_NAME", "jaysgame")
+
     logger.info(f"Starting up game manager - world '{world_name}'")
     storage_manager: AzureStorageManager = AzureStorageManager()
     game_manager: GameManager = GameManager(sio, storage_manager, world_name=world_name)

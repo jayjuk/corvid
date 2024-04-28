@@ -565,42 +565,43 @@ class GameManager:
 
     # Process player setup request from client
     def process_player_setup(
-        self, sid: str, player: Dict[str, Any], help_message: str
+        self, sid: str, player_info: Dict[str, Any], help_message: str
     ) -> Union[Tuple[str, str], None]:
         # Be defensive as this is coming from either UI or AI broker
-        if "name" not in player:
+        if "name" not in player_info:
             logger.error("FATAL: Player name not specified")
             sys.exit()
 
         # Strip out any whitespace (defensive in case of client bug)
-        player_name: str = player["name"].strip().title()
+        player_name: str = player_info["name"].strip().title()
 
         # Check uniqueness here, other checks are done in the player class
         if self.is_existing_player_name(player_name):
             # Issue with player name setting
-            return "game_update", "That name is already in use."
+            return f"The name {player_name} is already in use."
         if player_name == "system":
             # Do not let any player be called system
             return (
-                "game_update",
-                "That name is a reserved word, it would be confusing to be called that.",
+                "The name '{player_name}' is a reserved word, it would be confusing to be called that.",
             )
 
         # Create/load the player, who is part of the world like entities items etc
         outcome: Union[Tuple[str, str], None]
-        player: Union[Player, None]
-        outcome, player = self.world.create_player(sid, player_name, player.get("role"))
+        player_info: Union[Player, None]
+        outcome, player_info = self.world.create_player(
+            sid, player_name, player_info.get("role")
+        )
         # Outcomes are adverse
         if outcome:
             return outcome
 
         # Register this player with the game server
-        self.register_player(sid, player, player_name)
+        self.register_player(sid, player_info, player_name)
 
         # Tell other players about this new player
         self.tell_others(
             sid,
-            f"{player_name} has joined the game, starting in the {player.get_current_location()}; there are now {self.get_player_count()} players.",
+            f"{player_name} has joined the game, starting in the {player_info.get_current_location()}; there are now {self.get_player_count()} players.",
             shout=True,
         )
 
@@ -612,10 +613,11 @@ class GameManager:
             + help_message
         )
 
-        self.tell_player(player, instructions, type="instructions")
+        self.tell_player(player_info, instructions, type="instructions")
 
         self.tell_player(
-            player, self.move_entity(player, "join", player.get_current_location())
+            player_info,
+            self.move_entity(player_info, "join", player_info.get_current_location()),
         )
 
         self.emit_game_data_update()
