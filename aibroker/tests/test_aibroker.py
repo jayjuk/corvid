@@ -25,7 +25,7 @@ class TestAIBroker(unittest.TestCase):
 
         # Check that the AIManager was called with the expected system_message
         MockAIManager.assert_called_once_with(
-            system_message=self.ai_broker.get_ai_instructions()
+            system_message=self.ai_broker.get_ai_instructions(), model_name=None
         )
 
     def test_get_player_name(self):
@@ -44,15 +44,15 @@ class TestAIBroker(unittest.TestCase):
         # Check that the player_name was set correctly
         self.assertIn("instructions", self.ai_broker.get_ai_instructions().lower())
 
-    def test_get_ai_name(self):
+    def test_set_ai_name(self):
         # Set up side_effect to return a name with a space, then a valid name
         self.mock_ai_manager.submit_request.side_effect = [
             self.test_invalid_name,
             self.test_valid_name,
         ]
 
-        # Call get_ai_name and check the result
-        ai_name = self.ai_broker.get_ai_name()
+        # Call set_ai_name and check the result
+        ai_name = self.ai_broker.set_ai_name()
         self.assertEqual(ai_name, self.test_valid_name)
 
         # Check that submit_request was called three times (including in setup when constructor was called)
