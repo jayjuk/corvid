@@ -10,7 +10,10 @@ class TestGameManager(unittest.TestCase):
         print("*** Setting up ***")
         self.storage_manager = StorageManager()
         self.game_manager = GameManager(
-            sio=None, storage_manager=self.storage_manager, ai_enabled=False
+            sio=None,
+            storage_manager=self.storage_manager,
+            ai_enabled=False,
+            world_name="unittest",
         )
         self.player_input_processor = PlayerInputProcessor(self.game_manager)
         self.player = Player(self.game_manager.world, 0, "TestPlayer")

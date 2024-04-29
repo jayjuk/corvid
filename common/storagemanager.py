@@ -114,7 +114,5 @@ class StorageManager:
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         # Unit testing will use this superclass method hence not abstract
-        logger.info(
-            f"NOT getting python objects in game {world_name}: {object.__dict__}"
-        )
+        logger.info(f"NOT getting python objects in game {world_name}: {object_type}")
         return []
