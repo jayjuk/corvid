@@ -41,7 +41,7 @@ class AIManager:
         # Input, output
         self.model_cost: Dict[str, Tuple[float, float]] = {
             "gpt-3.5-turbo": (0.0005, 0.0015),
-            "gpt-4-turbo-preview": (0.01, 0.03),
+            "gpt-4-turbo-2024-04-09": (0.01, 0.03),
             "gemini-pro": (0, 0),
             "claude": (0, 0),
         }

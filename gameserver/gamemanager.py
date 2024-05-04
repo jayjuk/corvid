@@ -15,6 +15,7 @@ from gameitem import GameItem
 from room import Room
 from aimanager import AIManager
 from storagemanager import StorageManager
+import json
 
 
 class GameManager:
@@ -516,6 +517,51 @@ class GameManager:
     def do_attack(self, player: Player, rest_of_response: str) -> str:
         return "This game does not condone violence! There must be another way to achieve your goal..."
 
+    # Evaluate and if appropriate perform a custom action, which can modify the state of the location
+    # And objects / entities in the vicinity
+    def do_custom_action(self, player: Player, action: str) -> str:
+        logger.info("About to do a custom action: " + action)
+        # Get the AI to figure out the impact on nearby things from this action
+        prompt = (
+            f"The player in a game is in location {player.get_current_location()} "
+            + f" which has current description '{self.world.rooms[player.get_current_location()].description}'."
+        )
+        # Check if player has inventory
+        if player.get_inventory():
+            prompt += f" The player has the following items in their inventory: {player.get_inventory_description()}"
+        # Check for any objects in this location
+        prompt += (
+            f" {self.world.get_room_items_description(player.get_current_location()):}"
+        )
+        # Check for any entities in this location
+        for other_entity in self.get_other_entities(player.sid):
+            if other_entity.get_current_location() == player.get_current_location():
+                prompt += f" {other_entity.get_name().capitalize()} is here."
+                if other_entity.get_role() == "merchant":
+                    prompt += " " + other_entity.get_inventory_description()
+
+        prompt += (
+            f"\nThe player issues this command: {action}"
+            + "\n If this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with a JSON document containing a feedback message to the user in element 'success_response' and the updated description of the current location as a JSON document with single element 'updated_location_description'."
+            + "\n Otherwise, provide a meaningful response in JSON with element 'rejection_response'."
+        )
+        ai_response = self.ai_manager.submit_request(prompt)
+        try:
+            response_json = json.loads(ai_response)
+        except json.JSONDecodeError:
+            return "The AI could not understand the command."
+        if "updated_location_description" in response_json:
+            new_description = response_json["updated_location_description"]
+            self.world.update_room_description(
+                player.get_current_location(), new_description
+            )
+            return (
+                response_json.get("success_response")
+                or f"The room now looks like this: {new_description}"
+            )
+        elif "rejection_response" in response_json:
+            return response_json["rejection_response"]
+
     # End of 'do_' functions
 
     # Getters
@@ -848,7 +894,7 @@ class GameManager:
             self.emit_game_data_update()
             # Give player time to read the messages before logging them out
             eventlet.sleep(2)
-            self.sio.emit("logout", None, sid)
+            self.sio.emit("logout", reason, sid)
             # Check again (race condition)
             if sid in self.players:
                 del self.players[sid]

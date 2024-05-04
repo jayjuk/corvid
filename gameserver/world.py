@@ -269,8 +269,13 @@ class World:
             description += self.get_room_build_options(room)
 
         if show_items:
-            for item in self.room_items.get(room, []):
-                description += f" There is {item.get_name(article='a')} here."
+            description += self.get_room_items_description(room)
+        return description
+
+    def get_room_items_description(self, room: str) -> str:
+        description: str = ""
+        for item in self.room_items.get(room, []):
+            description += f" There is {item.get_name(article='a')} here."
         return description
 
     def get_room_image_url(self, room_name: str) -> str:
@@ -368,6 +373,10 @@ class World:
         )
         self.storage_manager.store_game_object(self.name, new_room)
         self.rooms[new_room_name] = new_room
+
+    def update_room_description(self, room_name: str, description: str) -> None:
+        self.rooms[room_name].description = description
+        self.storage_manager.store_game_object(self.name, self.rooms[room_name])
 
     # Search room for item by name and return reference to it if found
     def search_item(self, item_name: str, location: str) -> Optional[GameItem]:

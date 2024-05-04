@@ -223,9 +223,10 @@ class PlayerInputProcessor:
         # Try to translate the user input into a valid command using AI :-)
         output: str = "I'm trying to guess what you meant by that..."
         prompt: str = (
-            "Help me to translate my user's input into a valid adventure game command.\n"
+            "Help me to translate my player's input into either a valid adventure game command, or a custom action.\n"
             + self.get_commands_description()
-            + "\nRespond with only a valid command, nothing else.\n"
+            + "\nIf the player did not mean one of the above commands, please respond with the special command 'custom' only."
+            + "\nRespond with only a valid command phrase, nothing else.\n"
             + player.get_input_history(
                 10, "Some history of what the user has seen for context:"
             )
@@ -235,13 +236,21 @@ class PlayerInputProcessor:
             prompt
         )
         logger.info("AI translation: %s", ai_translation)
+        # If the AI translation is 'custom', prompt the player for a custom action
+        if ai_translation == "custom":
+            ai_translation += " " + player_input
         if ai_translation:
             # Try to process the AI translation as a command, but only try this once
             output += f"\nI think you meant '{ai_translation}', and will proceed accordingly.\n"
-            return output + self.process_player_input(
-                player, ai_translation, translated=True
+            command_function, command_args, response_to_player = (
+                self.process_player_input(player, ai_translation, translated=True)
             )
-        return output
+            return (
+                command_function,
+                command_args,
+                (output or "") + (response_to_player or ""),
+            )
+        return None, None, output
 
     def check_direction(self, direction: str, player: Player) -> str:
         if direction not in self.directions:
@@ -342,6 +351,12 @@ class PlayerInputProcessor:
             return (
                 self.game_manager.move_entity,
                 (player, command, rest_of_response),
+                None,
+            )
+        elif command == "custom":
+            return (
+                self.game_manager.do_custom_action,
+                (player, rest_of_response),
                 None,
             )
         else:

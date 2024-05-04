@@ -58,22 +58,22 @@ def user_action(sid: str, player_input: str):
         sio.emit("game_update", f"You: {player_input}", sid)
         command_function: Callable
         command_args: Tuple
-        player_response: Optional[str]
+        response_to_player: Optional[str]
 
         # Process player input to resolve the command and arguments, or return an error message
-        command_function, command_args, player_response = (
+        command_function, command_args, response_to_player = (
             player_input_processor.process_player_input(player, player_input)
         )
         if command_function:
             logger.info(
                 f"Command function: {command_function.__name__}, Args: {command_args}"
             )
-            player_response = command_function(*command_args)
+            response_to_player = command_function(*command_args)
 
         # Respond to player
-        if player_response:
-            player.add_input_history(f"Game: {player_response}")
-            sio.emit("game_update", player_response, sid)
+        if response_to_player:
+            player.add_input_history(f"Game: {response_to_player}")
+            sio.emit("game_update", response_to_player, sid)
     else:
         logger.info(f"Received user action from non-existent player {sid}")
         sio.emit(

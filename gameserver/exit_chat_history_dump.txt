@@ -1,0 +1,57 @@
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+If the player did not mean one of the above commands, please respond with the special command 'custom' only.
+Respond with only a valid command phrase, nothing else.
+Some history of what the user has seen for context:
+Game: You start in the freezer room.  Available exits: west: Pantry.
+You: dig a hole
+Their latest input to translate: dig a hole
+role: model
+parts: Sorry, I can't help you with that. "dig a hole" is not a valid command. Please try again.
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+If the player did not mean one of the above commands, please respond with the special command 'custom' only.
+Respond with only a valid command phrase, nothing else.
+Some history of what the user has seen for context:
+Game: You start in the freezer room.  Available exits: west: Pantry.
+You: dig a hole
+You: Sorry, I can't help you with that. "dig a hole" is not a valid command. Please try again.
+Game: I'm trying to guess what you meant by that...
+I think you meant 'Sorry, I can't help you with that. "dig a hole" is not a valid command. Please try again.', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: eat banana
+Their latest input to translate: eat banana
+role: model
+parts: eat
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+If the player did not mean one of the above commands, please respond with the special command 'custom' only.
+Respond with only a valid command phrase, nothing else.
+Some history of what the user has seen for context:
+Game: You start in the freezer room.  Available exits: west: Pantry.
+You: dig a hole
+You: Sorry, I can't help you with that. "dig a hole" is not a valid command. Please try again.
+Game: I'm trying to guess what you meant by that...
+I think you meant 'Sorry, I can't help you with that. "dig a hole" is not a valid command. Please try again.', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: eat banana
+You: eat
+Game: I'm trying to guess what you meant by that...
+I think you meant 'eat', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: draw a circle on the ground
+Their latest input to translate: draw a circle on the ground
+role: model
+parts: custom
