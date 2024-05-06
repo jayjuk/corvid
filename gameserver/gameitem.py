@@ -47,7 +47,7 @@ class GameItem:
             if reserved_word in item_name.lower():
                 exit(
                     logger,
-                    "Problems will arise if an item is created that contains '{}'.",
+                    f"Problems will arise if an item is created that contains '{reserved_word}'.",
                 )
 
     # Getter for player's current location

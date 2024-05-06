@@ -16,5 +16,29 @@
     "description": "A green whiteboard marker pen.",
     "price": 1,
     "location": "Playroom"
+  },
+  {
+    "name": "Lighter",
+    "description": "A cigarette lighter full of lighter fluid.",
+    "price": 1,
+    "location": "Playroom"
+  },
+  {
+    "name": "Clay",
+    "description": "Some soft modelling clay, currently not shaped into anything.",
+    "price": 1,
+    "location": "Playroom"
+  },
+  {
+    "name": "Long Stick",
+    "description": "A long thin stick, about 1m long, made of wood.",
+    "price": 1,
+    "location": "Playroom"
+  },
+  {
+    "name": "Wire",
+    "description": "A 6 inch long piece of thin bare metal wire.",
+    "price": 1,
+    "location": "Playroom"
   }
 ]

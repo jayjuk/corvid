@@ -5,11 +5,11 @@
     "location": "Playroom"
   },
   {
-    "name": "Aardvark",
+    "name": "Crow",
     "type": "animal",
     "location": "Playroom",
-    "description": "Just your average aardvark.",
-    "actions": ["looks around", "scratches"],
+    "description": "A tame, friendly crow.",
+    "actions": ["eyes you curiously", "ruffles its feathers"],
     "action_chance": 0.1
   }
 ]

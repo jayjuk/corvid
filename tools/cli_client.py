@@ -68,9 +68,9 @@ class CliClient:
             sio.emit("user_action", response)
             # If response was to exit, exit here (after sending the exit message to the game server)
             if response == "exit":
-                exit("You have exited the game.")
+                exit(logger, "You have exited the game.")
         else:
-            exit("You returned empty response")
+            exit(logger, "You returned empty response")
 
 
 # Non-class functions below here (SocketIO event handlers etc.)

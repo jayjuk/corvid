@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional, Union
-from logger import setup_logger
+from logger import setup_logger, exit
 from utils import get_critical_env_variable
 import json
 from os import path
@@ -61,6 +61,8 @@ class StorageManager:
         self, world_name: str, object_type: str
     ) -> Dict[str, Any]:
         full_path = path.join("world_data", world_name, f"{object_type.lower()}.json")
+        if not path.exists(full_path):
+            exit(logger, f"Default data file {full_path} not found")
         with open(full_path, "r") as f:
             default_data = json.load(f)
         return default_data
@@ -110,12 +112,14 @@ class StorageManager:
         )
         return True
 
-    def delete_game_object(self, world_name: str, object: object) -> None:
+    def delete_game_object(
+        self, world_name: str, object_type: str, name: str, location: str
+    ) -> bool:
         # Unit testing will use this superclass method hence not abstract
         logger.info(
             f"NOT deleting python object in game {world_name}: {object.__dict__}"
         )
-        return True
+        return False
 
     def get_game_objects(
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None

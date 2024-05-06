@@ -77,15 +77,6 @@ class AzureStorageManager(StorageManager):
             credential=self.credential,
         )
 
-    def check_rowkey(
-        self, table_client: TableServiceClient, query_filter_rowkey: str
-    ) -> bool:
-        parameters: dict = {"pk": "jaysgame", "rk": query_filter_rowkey}
-        query_filter: str = "PartitionKey eq @pk and RowKey eq @rk"
-        for _ in table_client.query_entities(query_filter, parameters=parameters):
-            return True
-        return False
-
     def store_image_in_cloud(
         self, world_name: str, image_name: str, image_data: bytes
     ) -> bool:
@@ -181,6 +172,7 @@ class AzureStorageManager(StorageManager):
         self.stringify_object(entity)
 
         logger.info(f"Storing {entity['name']}")
+        print(entity)
         objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
 
         # Return true if successful
@@ -188,18 +180,22 @@ class AzureStorageManager(StorageManager):
 
     # Delete a game object
     def delete_game_object(
-        self, world_name: str, object_type: str, rowkey_value: str
+        self, world_name: str, object_type: str, name: str, location: str
     ) -> bool:
         objects_client = self.table_service_client.get_table_client("PythonObjects")
         if objects_client:
             parameters: dict = {
                 "pk": world_name + "__" + object_type,
-                "rk": rowkey_value,
+                "rk": name,
+                "location": location,
             }
-            query_filter: str = "PartitionKey eq @pk and RowKey eq @rk"
+            query_filter: str = (
+                "PartitionKey eq @pk and RowKey eq @rk and location eq @location"
+            )
             for entity in objects_client.query_entities(
                 query_filter, parameters=parameters
             ):
+                logger.info(f"Deleting {entity['PartitionKey']} - {entity['name']}")
                 objects_client.delete_entity(
                     partition_key=entity["PartitionKey"], row_key=entity["RowKey"]
                 )
