@@ -1,5 +1,5 @@
 from logger import setup_logger
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Tuple, Union, Optional
 from utils import get_critical_env_variable
 from urllib.request import urlopen
 
@@ -26,11 +26,17 @@ def do_model_request(
     messages: List[Dict[str, str]],
 ) -> Tuple[str, int, int]:
 
+    # Set response format according to the last message containing JSON or not
+    response_format: Optional[Dict[str, str]] = None
+    if "JSON" in messages[-1]["content"]:
+        response_format = {"type": "json_object"}
+
     response: openai.Response = model_client.chat.completions.create(
         model=model_name,
         messages=messages,
         max_tokens=max_tokens,
         temperature=temperature,
+        response_format=response_format,
     )
     # Extract response content
     for choice in response.choices:

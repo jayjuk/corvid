@@ -106,7 +106,14 @@ class StorageManager:
     def store_game_object(self, world_name: str, object: object) -> None:
         # Unit testing will use this superclass method hence not abstract
         logger.info(
-            f"NOT Storing python object in game {world_name}: {object.__dict__}"
+            f"NOT storing python object in game {world_name}: {object.__dict__}"
+        )
+        return True
+
+    def delete_game_object(self, world_name: str, object: object) -> None:
+        # Unit testing will use this superclass method hence not abstract
+        logger.info(
+            f"NOT deleting python object in game {world_name}: {object.__dict__}"
         )
         return True
 

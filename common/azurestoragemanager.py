@@ -186,6 +186,41 @@ class AzureStorageManager(StorageManager):
         # Return true if successful
         return True
 
+    # Delete a game object
+    def delete_game_object(
+        self, world_name: str, object_type: str, rowkey_value: str
+    ) -> bool:
+        objects_client = self.table_service_client.get_table_client("PythonObjects")
+        if objects_client:
+            parameters: dict = {
+                "pk": world_name + "__" + object_type,
+                "rk": rowkey_value,
+            }
+            query_filter: str = "PartitionKey eq @pk and RowKey eq @rk"
+            for entity in objects_client.query_entities(
+                query_filter, parameters=parameters
+            ):
+                objects_client.delete_entity(
+                    partition_key=entity["PartitionKey"], row_key=entity["RowKey"]
+                )
+                return True
+        return False
+
+    # Delete all objects in a world
+    def delete_world_from_db(self, world_name: str) -> None:
+        objects_client = self.table_service_client.get_table_client("PythonObjects")
+        if objects_client:
+            logger.info(f"Deleting all objects in world {world_name}")
+            parameters: dict = {"world": world_name}
+            query_filter: str = "world eq @world"
+            for entity in objects_client.query_entities(
+                query_filter, parameters=parameters
+            ):
+                logger.info(f"Deleting {entity['PartitionKey']} - {entity['name']}")
+                objects_client.delete_entity(
+                    partition_key=entity["PartitionKey"], row_key=entity["RowKey"]
+                )
+
     # Returns all instances of a type of object, as a dict
     def get_game_objects(
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None

@@ -40,6 +40,6 @@ class Animal(Entity):
         r = random.random()
         if r < self.action_chance:
             possible_exits = self.world.get_exits(self.location)
-            direction = random.choice(possible_exits)
-            return direction
+            if possible_exits:
+                return random.choice(possible_exits)
         return ""

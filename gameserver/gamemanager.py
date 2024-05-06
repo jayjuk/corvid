@@ -158,7 +158,7 @@ class GameManager:
                 f"You look at {item.get_name(article='the')}: {item.get_description()}"
             )
         # Check if they named an entity
-        entity = self.is_entity(item_name)
+        entity = self.get_entity_by_name(item_name)
         if entity:
             return entity.get_description()
         # If you get here, can't find anything that matches that name
@@ -272,7 +272,7 @@ class GameManager:
         return f"You build {direction} and make a new location, {room_name}: {room_description}"
 
     # Check if an item is an entity
-    def is_entity(self, item_name: str) -> Union["Entity", bool]:
+    def get_entity_by_name(self, item_name: str) -> Optional["Entity"]:
         if item_name:
             for other_entity in self.get_other_entities():
                 if (
@@ -280,7 +280,7 @@ class GameManager:
                     or other_entity.get_role() == item_name.lower()
                 ):
                     return other_entity
-        return False
+        return None
 
     # Get entities of a certain type
     def get_entities(
@@ -399,7 +399,7 @@ class GameManager:
                 else:
                     return result
             # Check if they named an entity
-            elif self.is_entity(item_name):
+            elif self.get_entity_by_name(item_name):
                 return f"I would advise against picking up {item_name}, they will not react well!"
             # Check if the item is in the possession of a merchant
             elif item_name != "all" and not found:
@@ -474,7 +474,7 @@ class GameManager:
             # Can just pick it up
             return "You don't have to buy that, you can just pick it up!"
         # Check if they named an entity
-        elif self.is_entity(item_name):
+        elif self.get_entity_by_name(item_name):
             return f"That {item_name} is not for sale!"
         # Otherwise proceed to try to buy it
         return self.transact_item(item_name, player, "buy")
@@ -542,25 +542,51 @@ class GameManager:
 
         prompt += (
             f"\nThe player issues this command: {action}"
-            + "\n If this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with a JSON document containing a feedback message to the user in element 'success_response' and the updated description of the current location as a JSON document with single element 'updated_location_description'."
-            + "\n Otherwise, provide a meaningful response in JSON with element 'rejection_response'."
+            + "\nRespond with a JSON object as follows:"
+            + "\nIf this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with feedback to the player in string property 'success_response' and any combination of:"
+            + "\n* The updated description of the current location in string property 'updated_location'."
+            + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
+            + "\n* The updated descriptions of any modified entities (only those listed earlier) as nested object property 'updated_entities', with entity names as keys and new descriptions as values."
+            + "\n If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'."
         )
         ai_response = self.ai_manager.submit_request(prompt)
         try:
             response_json = json.loads(ai_response)
         except json.JSONDecodeError:
             return "The AI could not understand the command."
-        if "updated_location_description" in response_json:
-            new_description = response_json["updated_location_description"]
-            self.world.update_room_description(
-                player.get_current_location(), new_description
+        if response_json.get("success_response"):
+            logger.info(
+                f"AI understood the command and returned a success response: {response_json.get('success_response')}"
             )
-            return (
-                response_json.get("success_response")
-                or f"The room now looks like this: {new_description}"
-            )
+            return_text: str = response_json.get("success_response")
+            if "updated_location" in response_json:
+                self.world.update_room_description(
+                    player.get_current_location(), response_json["updated_location"]
+                )
+            if "updated_items" in response_json:
+                for item_name, new_description in response_json[
+                    "updated_items"
+                ].items():
+                    item = self.world.search_item(
+                        item_name, player.get_current_location()
+                    )
+                    if item:
+                        self.world.update_item_description(item, new_description)
+            if "updated_entities" in response_json:
+                for entity_name, new_description in response_json[
+                    "updated_entities"
+                ].items():
+                    entity = self.get_entity_by_name(entity_name)
+                    if entity:
+                        self.world.update_entity_description(entity, new_description)
+            return return_text
+
         elif "rejection_response" in response_json:
             return response_json["rejection_response"]
+        exit(
+            logger,
+            "The AI did not manage to respond as instructed with success or rejection response!",
+        )
 
     # End of 'do_' functions
 

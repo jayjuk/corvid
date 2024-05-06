@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Playroom",
+    "description": "You are in a playroom. There are toys scattered everywhere. There is a desk with a computer on it, a whiteboard, and a table and chair with sheets of blank paper on it.",
+    "image": "black.png",
+    "exits": {}
+  }
+]

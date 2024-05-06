@@ -41,9 +41,11 @@ class AIManager:
         # Input, output
         self.model_cost: Dict[str, Tuple[float, float]] = {
             "gpt-3.5-turbo": (0.0005, 0.0015),
-            "gpt-4-turbo-2024-04-09": (0.01, 0.03),
+            "gpt-4-turbo": (0.01, 0.03),
             "gemini-pro": (0, 0),
-            "claude": (0, 0),
+            "claude-3-haiku-20240307": (0.00025, 0.00125),
+            "mixtral-8x7b-32768": (0, 0),  # Free on Groq for now
+            "llama3-70b-8192": (0, 0),  # Free on Groq for now
         }
 
         # Get model choice from env variable if possible
@@ -323,12 +325,12 @@ class AIManager:
                 self.output_token_count += response_tokens
                 session_cost: float = (
                     (
-                        self.model_cost.get(model_name, [0])[0]
+                        self.model_cost.get(model_name, [0, 0])[0]
                         * self.input_token_count
                         / 1000
                     )
                     + (
-                        self.model_cost.get(model_name, [0])[1]
+                        self.model_cost.get(model_name, [0, 0])[1]
                         * self.output_token_count
                         / 1000
                     )

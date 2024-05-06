@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Red Pen",
+    "description": "A red whiteboard marker pen.",
+    "price": 1,
+    "location": "Playroom"
+  },
+  {
+    "name": "Blue Pen",
+    "description": "A blue whiteboard marker pen.",
+    "price": 1,
+    "location": "Playroom"
+  },
+  {
+    "name": "Green Pen",
+    "description": "A green whiteboard marker pen.",
+    "price": 1,
+    "location": "Playroom"
+  }
+]

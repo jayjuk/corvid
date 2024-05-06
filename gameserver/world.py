@@ -211,9 +211,14 @@ class World:
         return self.rooms[location].exits[direction]
 
     def get_room_exits_description(self, room: str) -> str:
-        exits: str = " Available exits: "
+        exits: str = " "
         for exit in self.rooms[room].exits:
-            exits += exit + ": " + self.rooms[room].exits[exit] + ".  "
+            if exits == " ":
+                exits += "Available exits: "
+            exits += exit + ": " + self.rooms[room].exits[exit] + "; "
+        # Replace last semicolon with a full stop
+        if exits != " ":
+            exits = exits[:-2] + "."
         return exits
 
     def get_room_build_options(self, location_name: str) -> str:
@@ -449,6 +454,11 @@ class World:
                 # Add item to list of items for its starting room
                 self.add_item_to_room(item, item.location)
 
+    # Update item description and store in database
+    def update_item_description(self, item: GameItem, description: str) -> None:
+        item.description = description
+        self.storage_manager.store_game_object(self.name, item)
+
     def load_entities(self) -> None:
         if self.entities:
             exit("Load_entities called when entities are already registered!")
@@ -525,6 +535,11 @@ class World:
         for entity in self.entities.values():
             entity_names.append(entity.name)
         return entity_names
+
+    # Update entity description and store in database
+    def update_entity_description(self, entity: Entity, description: str) -> None:
+        entity.description = description
+        self.storage_manager.store_game_object(self.name, entity)
 
     def get_currency(
         self, amount: Optional[int] = None, short: bool = False, plural: bool = False
