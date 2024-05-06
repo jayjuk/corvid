@@ -1,3 +1,4 @@
 python-socketio
 eventlet
 azure-data-tables
+azure-storage-blob

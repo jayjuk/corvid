@@ -16,6 +16,9 @@ vars = [
     "AZURE_STORAGE_ACCOUNT_KEY",
     "OPENAI_API_KEY",
     "GOOGLE_GEMINI_KEY",
+    "STABILITY_KEY",
+    "GROQ_API_KEY",
+    "ANTHROPIC_API_KEY",
     "AI_COUNT",
 ]
 
