@@ -543,10 +543,11 @@ class GameManager:
         prompt += (
             f"\nThe player issues this command: {action}"
             + "\nRespond with a JSON object as follows:"
-            + "\nIf this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with feedback to the player in string property 'success_response' and any combination of:"
+            + "\nIf this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with feedback to the player in string property 'success_response' and any combination (or none) of the following:"
             + "\n* The updated description of the current location in string property 'updated_location'."
             + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
             + "\n* The updated descriptions of any modified entities (only those listed earlier) as nested object property 'updated_entities', with entity names as keys and new descriptions as values."
+            + "\nOnly include the updated elements if they have changed in a way that another player who did not witness the cause of the change would notice."
             + "\n If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'."
         )
         ai_response = self.ai_manager.submit_request(prompt)
