@@ -530,15 +530,15 @@ class GameManager:
         if player.get_inventory():
             prompt += f" The player has the following items in their inventory: {player.get_inventory_description()}"
         # Check for any objects in this location
-        prompt += (
-            f" {self.world.get_room_items_description(player.get_current_location()):}"
-        )
+        prompt += f" {self.world.get_room_items_description(player.get_current_location(), detail=True):}"
         # Check for any entities in this location
         for other_entity in self.get_other_entities(player.sid):
             if other_entity.get_current_location() == player.get_current_location():
-                prompt += f" {other_entity.get_name().capitalize()} is here."
-                if other_entity.get_role() == "merchant":
-                    prompt += " " + other_entity.get_inventory_description()
+                prompt += (
+                    f" {other_entity.get_name().capitalize()} is here: "
+                    + other_entity.get_description()
+                    + "\n"
+                )
 
         prompt += (
             f"\nThe player issues this command: {action}"
@@ -546,6 +546,9 @@ class GameManager:
             + "\nIf this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with feedback to the player in string property 'success_response' and any combination (or none) of the following:"
             + "\n* The updated description of the current location in string property 'updated_location'."
             + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
+            + "\n* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values."
+            + "\n* The descriptions of any destroyed/deleted items as string array 'deleted_items'."
+            + " (If an item has changed so much that its name no longer applies, then delete it and replace it with one or more new items)"
             + "\n* The updated descriptions of any modified entities (only those listed earlier) as nested object property 'updated_entities', with entity names as keys and new descriptions as values."
             + "\nOnly include the updated elements if they have changed in a way that another player who did not witness the cause of the change would notice."
             + "\n If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'."
@@ -573,6 +576,15 @@ class GameManager:
                     )
                     if item:
                         self.world.update_item_description(item, new_description)
+            if "new_items" in response_json:
+                for item_name, new_description in response_json["new_items"].items():
+                    print(
+                        f"TODO: CREATE ITEM {item_name} with description {new_description}"
+                    )
+            for item_name, new_description in response_json.get("deleted_items", []):
+                print(
+                    f"TODO: DELETE ITEM {item_name} with description {new_description}"
+                )
             if "updated_entities" in response_json:
                 for entity_name, new_description in response_json[
                     "updated_entities"

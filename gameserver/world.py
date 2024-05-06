@@ -277,10 +277,12 @@ class World:
             description += self.get_room_items_description(room)
         return description
 
-    def get_room_items_description(self, room: str) -> str:
+    def get_room_items_description(self, room: str, detail: bool = False) -> str:
         description: str = ""
         for item in self.room_items.get(room, []):
             description += f" There is {item.get_name(article='a')} here."
+            if detail:
+                description = description[:-1] + f": {item.description}"
         return description
 
     def get_room_image_url(self, room_name: str) -> str:
