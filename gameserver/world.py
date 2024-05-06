@@ -20,10 +20,10 @@ class World:
     # Constructor
     def __init__(
         self,
+        name: str,
         storage_manager: Any,
         mode: Optional[str] = None,
         ai_enabled: bool = True,
-        name: str = "jaysgame",
         images_enabled: bool = True,
     ) -> None:
 
@@ -387,9 +387,7 @@ class World:
 
     # Search room for item by name and return reference to it if found
     def search_item(self, item_name: str, location: str) -> Optional[GameItem]:
-        logger.info(f"Searching for item {item_name} in {location}")
         for item in self.room_items.get(location, []):
-            logger.info(f"  Checking {item.get_name()}")
             # Return the first item that includes the given item name
             # So "get clock" will find "dusty clock" and "grandfather clock"
             if item_name and (
@@ -422,7 +420,7 @@ class World:
     def load_room_items(self) -> None:
         logger.info("Loading room items...")
         item_load_count: int = 0
-        for this_item in self.storage_manager.get_game_objects(self.name, "item"):
+        for this_item in self.storage_manager.get_game_objects(self.name, "GameItem"):
             # Populate the room_item_map with item versions of the items
             o: GameItem = GameItem(world=self, init_dict=this_item)
             self.register_item(o)
@@ -437,8 +435,44 @@ class World:
         ):
             logger.info(f"Loading and storing item {item_data['name']}")
             o: GameItem = GameItem(world=self, init_dict=item_data)
-            self.storage_manager.store_game_object("jaysgame", o)
             self.register_item(o)
+            self.storage_manager.store_game_object(self.name, o)
+
+    def create_item(self, name: str, description: str, location: str) -> Optional[str]:
+        for reserved_word in (" from ", " up ", " to "):
+            if reserved_word in name.lower():
+                return f"Problems will arise if an item is created that contains '{reserved_word}'."
+
+        # Format the item name to be title case
+        name = name.title()
+
+        logger.info(f"Creating item {name} in {location}")
+
+        # Create and store item
+        o: GameItem = GameItem(
+            world=self, name=name, description=description, location=location
+        )
+        self.register_item(o)
+        self.storage_manager.store_game_object(self.name, o)
+
+    # Currently, must specify player to delete item, which is either in their possession or in their location
+    def delete_item(self, item_name: str, player: Player) -> None:
+        location: str
+        if item_name in player.get_inventory():
+            location = player.name
+        else:
+            location = player.get_current_location()
+
+        item_to_delete: Optional[GameItem] = self.search_item(item_name, location)
+        if item_to_delete:
+            # Check if item is in room or an entity's possession
+            if item_to_delete.location in self.entities:
+                self.entities[location].inventory.remove(item_to_delete)
+            else:
+                self.remove_item_from_room(item_to_delete, location)
+            self.storage_manager.delete_game_object(
+                self.name, "GameItem", item_to_delete.name, location
+            )
 
     def register_item(self, item: GameItem) -> None:
         # Is it a room or an entity?
@@ -463,7 +497,7 @@ class World:
 
     def load_entities(self) -> None:
         if self.entities:
-            exit("Load_entities called when entities are already registered!")
+            exit(logger, "Load_entities called when entities are already registered!")
         logger.info("Loading entities...")
         for entity_role in ("Animal", "Merchant"):
             for this_item in self.storage_manager.get_game_objects(

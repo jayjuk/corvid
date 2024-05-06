@@ -50,7 +50,7 @@ class GameManager:
             self.ai_manager: AIManager = AIManager()
 
         self.world: World = World(
-            storage_manager, mode=None, ai_enabled=ai_enabled, name=world_name
+            world_name, storage_manager, mode=None, ai_enabled=ai_enabled
         )
 
         self.item_name_empty_message: str = "Invalid input: item name is empty."
@@ -83,7 +83,13 @@ class GameManager:
                 self.create_restart_file()
                 self.sio.emit("shutdown", message)
                 # TODO #15 Restart game without actually restarting the process
-                exit("Game ended by player pushing The Button!")
+                exit(logger, "Game ended by player pushing The Button!")
+            else:
+                return "You don't have the button in your inventory."
+        elif rest_of_response:
+            return "You can't push that."
+        else:
+            return "Push what?"
 
     def create_restart_file(self) -> None:
         # Temporary flag file checked by the local 'run' script.
@@ -99,8 +105,6 @@ class GameManager:
                 rest_of_response = rest_of_response[4:]
             if rest_of_response == "":
                 return rest_of_response, "Look at what?"
-        else:
-            rest_of_response = ""
         return rest_of_response, ""
 
     def find_item_in_player_inventory(
@@ -218,7 +222,7 @@ class GameManager:
         # TODO #69 Make shutdown command restart process not shut down
         self.sio.emit("shutdown", message)
         eventlet.sleep(1)
-        exit("Shutdown command invoked")
+        exit(logger, "Shutdown command invoked")
 
     def do_quit(self, player: Player, rest_of_response: str) -> None:
         self.remove_player(player.sid, "You have left the game.")
@@ -548,7 +552,7 @@ class GameManager:
             + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
             + "\n* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values."
             + "\n* The descriptions of any destroyed/deleted items as string array 'deleted_items'."
-            + " (If an item has changed so much that its name no longer applies, then delete it and replace it with one or more new items)"
+            + " (If an item has changed so much that its name no longer applies, then delete it and replace it with one or more new items. Note that an item cannot be both updated and deleted.)"
             + "\n* The updated descriptions of any modified entities (only those listed earlier) as nested object property 'updated_entities', with entity names as keys and new descriptions as values."
             + "\nOnly include the updated elements if they have changed in a way that another player who did not witness the cause of the change would notice."
             + "\n If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'."
@@ -563,11 +567,18 @@ class GameManager:
                 f"AI understood the command and returned a success response: {response_json.get('success_response')}"
             )
             return_text: str = response_json.get("success_response")
-            if "updated_location" in response_json:
+            if response_json.get("updated_location"):
                 self.world.update_room_description(
                     player.get_current_location(), response_json["updated_location"]
                 )
-            if "updated_items" in response_json:
+            if response_json.get("updated_entities"):
+                for entity_name, new_description in response_json[
+                    "updated_entities"
+                ].items():
+                    entity = self.get_entity_by_name(entity_name)
+                    if entity:
+                        self.world.update_entity_description(entity, new_description)
+            if response_json.get("updated_items"):
                 for item_name, new_description in response_json[
                     "updated_items"
                 ].items():
@@ -576,22 +587,20 @@ class GameManager:
                     )
                     if item:
                         self.world.update_item_description(item, new_description)
-            if "new_items" in response_json:
+            for item_name in response_json.get("deleted_items", []):
+                self.world.delete_item(item_name, player)
+            if response_json.get("new_items"):
                 for item_name, new_description in response_json["new_items"].items():
-                    print(
-                        f"TODO: CREATE ITEM {item_name} with description {new_description}"
+                    # Create item
+                    outcome = self.world.create_item(
+                        item_name,
+                        new_description,
+                        player.get_current_location(),
                     )
-            for item_name, new_description in response_json.get("deleted_items", []):
-                print(
-                    f"TODO: DELETE ITEM {item_name} with description {new_description}"
-                )
-            if "updated_entities" in response_json:
-                for entity_name, new_description in response_json[
-                    "updated_entities"
-                ].items():
-                    entity = self.get_entity_by_name(entity_name)
-                    if entity:
-                        self.world.update_entity_description(entity, new_description)
+                    # If there is an issue, return it
+                    # TODO #91 Handle errors in custom actions better
+                    if outcome:
+                        return outcome
             return return_text
 
         elif "rejection_response" in response_json:
@@ -975,7 +984,6 @@ class GameManager:
             # Move animals around
             direction: str
             for animal in self.get_entities("animal"):
-                logger.info(f"Checking animal {animal.name}")
                 direction = animal.maybe_pick_direction_to_move()
                 if direction:
                     logger.info(f"Moving {animal.name} {direction}")

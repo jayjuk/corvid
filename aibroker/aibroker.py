@@ -160,9 +160,9 @@ class AIBroker:
                 sio.emit("user_action", response)
                 # If response was to exit, exit here (after sending the exit message to the game server)
                 if response == "exit":
-                    exit("AI has exited the game.")
+                    exit(logger, "AI has exited the game.")
             else:
-                exit("AI returned empty response")
+                exit(logger, "AI returned empty response")
 
 
 # Non-class functions below here (SocketIO event handlers etc.)

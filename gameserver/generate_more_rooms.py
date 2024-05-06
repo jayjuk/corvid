@@ -3,6 +3,7 @@ import aimanager
 import world
 from logger import setup_logger
 import random
+import azurestoragemanager
 
 # Set up logging
 logger = setup_logger()
@@ -71,7 +72,8 @@ def explore_room(ai_manager, room, data, done_rooms):
 # Main
 if __name__ == "__main__":
     ai_manager = aimanager.AIManager()
-    world = world.World("builder")
+    storage_manager = azurestoragemanager.AzureStorageManager()
+    world = world.World("jaysgame", storage_manager, "builder")
     max_iterations = 1
 
     for i in range(1, max_iterations + 1):
