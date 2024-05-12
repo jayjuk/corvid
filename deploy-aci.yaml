@@ -8,8 +8,8 @@ properties:
         image: jayjuk/gameclient
         resources:
           requests:
-            cpu: 1
-            memoryInGb: 1.5
+            cpu: .25
+            memoryInGb: 0.5
         ports:
           - port: 3000
     - name: gameserver
@@ -34,8 +34,8 @@ properties:
         image: jayjuk/gameserver
         resources:
           requests:
-            cpu: 1
-            memoryInGb: 1.5
+            cpu: 0.25
+            memoryInGb: 0.5
         ports:
           - port: 3001
     - name: imageserver
@@ -52,8 +52,8 @@ properties:
         image: jayjuk/imageserver
         resources:
           requests:
-            cpu: 1
-            memoryInGb: 1.5
+            cpu: 0.25
+            memoryInGb: 0.25
         ports:
           - port: 3002
     - name: aibroker
@@ -70,8 +70,8 @@ properties:
         image: jayjuk/aibroker
         resources:
           requests:
-            cpu: 1
-            memoryInGb: 1.5
+            cpu: 0.25
+            memoryInGb: 0.75
   osType: Linux
   ipAddress:
     type: Public
