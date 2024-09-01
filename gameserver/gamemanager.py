@@ -119,7 +119,7 @@ class GameManager:
     def find_item_in_merchant_inventory(
         self, player: Player, item_name: str
     ) -> Optional[GameItem]:
-        for merchant in self.get_entities(Merchant, player.get_current_location()):
+        for merchant in self.get_entities("merchant", player.get_current_location()):
             for merchant_item in merchant.get_inventory():
                 if item_name and item_name.lower() in merchant_item.get_name().lower():
                     return merchant_item
@@ -350,7 +350,7 @@ class GameManager:
 
     # Check if an item is in a merchant's possession
     def transact_item(self, item_name: str, player: Player, action: str = "get") -> str:
-        merchants = self.get_entities("Merchant", player.get_current_location())
+        merchants = self.get_entities("merchant", player.get_current_location())
         if action in ("buy", "sell") and not merchants:
             return "There is no merchant here to trade with."
 

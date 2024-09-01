@@ -15,7 +15,7 @@ def get_model_client() -> Groq:
     # Use pre-set variable before dotenv.
 
     return Groq(
-        api_key=utils.get_critical_env_variable("GROQ_API_KEY"),
+        api_key=get_critical_env_variable("GROQ_API_KEY"),
     )
 
 

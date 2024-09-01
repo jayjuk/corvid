@@ -84,16 +84,20 @@ class GameItem:
         if new_entity.can_add_item():
             if old_entity.drop_item(self):
                 outcome: str = self.set_possession(new_entity)
+                if outcome:
+                    # If there was an error, return it
+                    return outcome
                 if not outcome:
                     # Remove from room
                     # TODO #73 Review and improve item transfer going up from item to world
-                    self.world.remove_item_from_room(
+                    return self.world.remove_item_from_room(
                         self, new_entity.get_current_location()
                     )
 
             else:
                 return f"{old_entity.get_name()} can't drop {self.name}."
-        return f"{new_entity.get_name()} can't carry any more."
+        else:
+            return f"{new_entity.get_name()} can't carry any more."
 
     # Description of the item
     def get_description(self) -> Optional[str]:

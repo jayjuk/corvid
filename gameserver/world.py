@@ -415,6 +415,10 @@ class World:
                 if o.name == game_item.name:
                     self.room_items[room_name].pop(i)
                     return
+            # If item not found in room, log error
+            logger.error(f"Item {game_item.name} not found in room {room_name}")
+        else:
+            logger.error(f"Room {room_name} not found in room items map")
 
     # Load items and return a map of room to items
     def load_room_items(self) -> None:
