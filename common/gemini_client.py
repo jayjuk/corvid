@@ -1,7 +1,6 @@
 from logger import setup_logger
 import os
 from typing import List, Dict, Union, Iterable
-import utils
 import json
 import base64
 from typing import Optional

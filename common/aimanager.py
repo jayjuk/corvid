@@ -4,6 +4,8 @@ from os import path, makedirs, environ, sep
 import json
 import time
 from logger import setup_logger, exit
+from utils import get_critical_env_variable
+
 
 # TODO #90 Consider redesigning such that the AI Manager only imports the necessary LLM client libraries according to runtime model choices
 import openai_client
@@ -48,8 +50,8 @@ class AIManager:
             "llama3-70b-8192": (0, 0),  # Free on Groq for now
         }
 
-        # Get model choice from env variable if possible
-        self.model_name: str = model_name or environ.get("MODEL_NAME") or "gemini-pro"
+        # Get model choice from env variable if necessary
+        self.model_name: str = model_name or get_critical_env_variable("MODEL_NAME")
         logger.info(f"Model name set to {self.model_name}")
 
         #  Adjust the max_tokens based on desired response length

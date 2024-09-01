@@ -7,6 +7,7 @@ from os import environ
 import re
 from urllib3.exceptions import HTTPError
 from aimanager import AIManager
+from utils import get_critical_env_variable
 
 # Set up logger
 logger = setup_logger("aibroker")
@@ -314,12 +315,9 @@ if __name__ == "__main__":
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting.",
             )
 
-        # Get model choice from command line parameter, or env variable, if available
-        model_name: str = (
-            environ.get("MODEL_NAME") or "llama3-70b-8192"
-        )  # "gemini-pro" - Llama/Groq is currently free, so make that default
-        logger.info(f"Model name set to {model_name}")
-        ai_broker = AIBroker(mode=ai_mode, model_name=model_name)
+        ai_broker = AIBroker(
+            mode=ai_mode, model_name=get_critical_env_variable("MODEL_NAME")
+        )
 
     # Change log file name to include AI name
     logger = setup_logger(f"ai_broker_{ai_broker.player_name}.log")
