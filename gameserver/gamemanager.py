@@ -26,8 +26,9 @@ class GameManager:
         self,
         sio: str,
         storage_manager: StorageManager,
-        ai_enabled: bool = True,
         world_name: str = "jaysgame",
+        model_name: str = None,
+        image_model_name: str = None,
     ) -> None:
 
         # Static variables
@@ -46,11 +47,17 @@ class GameManager:
 
         # General AI manager - disabled in unit tests
         self.ai_manager: Optional[AIManager]
-        if ai_enabled:
-            self.ai_manager: AIManager = AIManager()
+        if model_name:
+            self.ai_manager: AIManager = AIManager(model_name=model_name)
+        else:
+            self.ai_manager = None
+            logger.info("No model name set: AI is disabled.")
 
         self.world: World = World(
-            world_name, storage_manager, mode=None, ai_enabled=ai_enabled
+            world_name,
+            storage_manager,
+            mode=None,
+            image_model_name=image_model_name,
         )
 
         self.item_name_empty_message: str = "Invalid input: item name is empty."

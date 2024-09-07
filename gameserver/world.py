@@ -23,8 +23,7 @@ class World:
         name: str,
         storage_manager: Any,
         mode: Optional[str] = None,
-        ai_enabled: bool = True,
-        images_enabled: bool = True,
+        image_model_name: str = None,
     ) -> None:
 
         self.name: str = name
@@ -50,15 +49,15 @@ class World:
             self.load_room_items()
 
         # Separate AI manager for images (can use different model)
-        if ai_enabled and images_enabled:
+        if image_model_name:
             # Image AI manager
             logger.info("Creating separate AI manager for image generation")
             self.image_ai_manager: AIManager = AIManager(
+                model_name=image_model_name,
                 system_message="You are helping to create an adventure game.",
-                model_name="stable-diffusion-xl-1024-v1-0",  # stable-diffusion-v1-6 or gpt-3.5-turbo
             )
         else:
-            logger.warning("AI and/or cloud image storage not enabled.")
+            logger.warning("No image generation model set - AI not enabled.")
             self.image_ai_manager: Optional[AIManager] = None
 
     # Get the objective of the game

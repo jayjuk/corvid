@@ -112,7 +112,13 @@ if __name__ == "__main__":
 
     logger.info(f"Starting up game manager - world '{world_name}'")
     storage_manager: AzureStorageManager = AzureStorageManager()
-    game_manager: GameManager = GameManager(sio, storage_manager, world_name=world_name)
+    game_manager: GameManager = GameManager(
+        sio,
+        storage_manager,
+        world_name=world_name,
+        model_name=environ.get("MODEL_NAME"),
+        image_model_name=environ.get("IMAGE_MODEL_NAME"),
+    )
     player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
     logger.info(f"Launching WSGI server on {hostname}:{port}")
     eventlet.wsgi.server(eventlet.listen(("0.0.0.0", port)), app)

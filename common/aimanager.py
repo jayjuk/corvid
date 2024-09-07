@@ -20,7 +20,7 @@ logger = setup_logger()
 
 # Class to handle interaction with the AI
 class AIManager:
-    def __init__(self, system_message: str = None, model_name: str = None):
+    def __init__(self, model_name: str, system_message: Optional[str] = None) -> None:
 
         # Static variables
         self.max_history: int = 40
@@ -51,7 +51,7 @@ class AIManager:
         }
 
         # Get model choice from env variable if necessary
-        self.model_name: str = model_name or get_critical_env_variable("MODEL_NAME")
+        self.model_name: str = model_name
         logger.info(f"Model name set to {self.model_name}")
 
         #  Adjust the max_tokens based on desired response length
