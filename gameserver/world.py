@@ -270,7 +270,7 @@ class World:
 
         # Only show build options to builders
         if role == "builder":
-            description += self.get_room_build_options(room)
+            description += " " + self.get_room_build_options(room)
 
         if show_items:
             description += self.get_room_items_description(room)

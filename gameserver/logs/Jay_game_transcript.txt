@@ -1,0 +1,60 @@
+# Player input and response log for Jay
+
+2024-09-08 18:42:47 Jay: w
+2024-09-08 18:42:47 Game: You head west to the golden chamber: {A lavish chamber adorned with gold and sparkling jewels.
+} Available exits: south: Treasure Vault; east: Gemstone Gallery.
+
+2024-09-08 18:42:49 Jay: e
+2024-09-08 18:42:49 Game: You head east to the gemstone gallery.  Available exits: west: Golden Chamber.
+
+2024-09-08 18:42:50 Jay: w
+2024-09-08 18:42:50 Game: You head west to the golden chamber.  Available exits: south: Treasure Vault; east: Gemstone Gallery.
+
+2024-09-08 18:42:51 Jay: w
+2024-09-08 18:42:51 Game: You can't go west. Available exits: south: Treasure Vault; east: Gemstone Gallery.
+
+2024-09-08 18:42:52 Jay: w
+2024-09-08 18:42:52 Game: You can't go west. Available exits: south: Treasure Vault; east: Gemstone Gallery.
+
+2024-09-08 18:42:53 Jay: e
+2024-09-08 18:42:53 Game: You head east to the gemstone gallery.  Available exits: west: Golden Chamber.
+
+2024-09-08 18:42:53 Jay: e
+2024-09-08 18:42:53 Game: You can't go east. Available exits: west: Golden Chamber.
+
+2024-09-08 18:42:55 Jay: s
+2024-09-08 18:42:55 Game: You can't go south. Available exits: west: Golden Chamber.
+
+2024-09-08 18:42:55 Jay: n
+2024-09-08 18:42:55 Game: You can't go north. Available exits: west: Golden Chamber.
+
+2024-09-08 18:42:56 Jay: w
+2024-09-08 18:42:56 Game: You head west to the golden chamber.  Available exits: south: Treasure Vault; east: Gemstone Gallery.
+
+2024-09-08 18:45:08 Jay: e
+2024-09-08 18:45:08 Game: You head east to the gemstone gallery.  Available exits: west: Golden Chamber.
+
+2024-09-08 18:50:06 Jay: shout this is the creator of the game. please both jump to me, and do not leave once you arrive. I would like to have a timeout and discuss how it's going.
+2024-09-08 18:50:06 Game: You shout, 'this is the creator of the game. please both jump to me, and do not leave once you arrive. I would like to have a timeout and discuss how it's going'.
+
+2024-09-08 18:50:13 Jay: 'hi both
+2024-09-08 18:50:13 Game: You say, 'hi both'.
+
+2024-09-08 18:50:24 Jay: 'Caesar, you are leader right?
+2024-09-08 18:50:24 Game: You say, 'Caesar, you are leader right?'.
+
+2024-09-08 18:50:35 Jay: 'Brutus, what are your instructions?
+2024-09-08 18:50:35 Game: You say, 'Brutus, what are your instructions?'.
+
+2024-09-08 18:50:57 Jay: 'It does not feel like you are talkign to each other enough
+2024-09-08 18:50:57 Game: You say, 'It does not feel like you are talkign to each other enough'.
+
+2024-09-08 18:51:08 Jay: 'I want you Caesar to give feedback to Brutus on his creations
+2024-09-08 18:51:08 Game: You say, 'I want you Caesar to give feedback to Brutus on his creations'.
+
+2024-09-08 18:51:21 Jay: 'on an ongoing basis I mean
+2024-09-08 18:51:21 Game: You say, 'on an ongoing basis I mean'.
+
+2024-09-08 18:51:52 Jay: shout Brutus - discuss with Caesar before you build each room from now on
+2024-09-08 18:51:52 Game: You shout, 'Brutus - discuss with Caesar before you build each room from now on'.
+

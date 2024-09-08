@@ -18,7 +18,13 @@ sio = socketio.Client()
 
 # Class to manage the AI's interaction with the game server
 class AIBroker:
-    def __init__(self, mode: str = "player", model_name: str = None):
+
+    def __init__(
+        self,
+        mode: str = "player",
+        model_name: str = None,
+        system_message: Optional[str] = None,
+    ) -> None:
         # Constructor
         self.mode: Optional[str] = mode
         self.time_to_die: bool = False
@@ -32,9 +38,18 @@ class AIBroker:
         self.input_token_count: int = 0
         self.output_token_count: int = 0
 
+        this_system_message: str = self.get_ai_instructions()
+        if system_message:
+            this_system_message += (
+                "\nYOUR Special Instructions (these are very important and take precedence): "
+                + system_message
+                + "\n"
+            )
+        self.system_message = this_system_message
         # Set up the AI manager
         self.ai_manager = AIManager(
-            model_name=model_name, system_message=self.get_ai_instructions()
+            model_name=model_name,
+            system_message=this_system_message,
         )
 
         # Get the AI's name
@@ -61,7 +76,7 @@ class AIBroker:
     # Which are given to each player at the start of the game
     def record_instructions(self, data: str) -> None:
         self.game_instructions += data + "\n"
-        self.ai_manager.set_system_message(self.game_instructions)
+        self.ai_manager.set_system_message(self.game_instructions + self.system_message)
 
     # AI manager will get instructions from the game server
     def get_ai_instructions(self) -> str:
@@ -82,12 +97,21 @@ class AIBroker:
             )
         else:
             # Experiment to see whether cheaper AIs can do this
-            ai_instructions += "Prioritise exploring, picking up items ('get all'), selling them to merchants, and then buying the red button (which costs 999p) from Gambino, so you win the game! use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
+            ai_instructions += (
+                "Prioritise exploring, picking up items ('get all'), selling them to merchants,"
+                + " and then buying the red button (which costs 999p) from Gambino, so you win the game!"
+                + " Use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
+            )
             # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
         return ai_instructions
 
     # Get AI name from the LLM using the AI manager
     def set_ai_name(self, feedback=None) -> str:
+
+        # If AI_NAME is set in the environment, use that
+        if environ.get("AI_NAME"):
+            self.player_name = environ.get("AI_NAME")
+            return self.player_name
 
         mode_name_hints = {
             "builder": "You are a creator of worlds! You can add new locations in the game. "
@@ -316,7 +340,9 @@ if __name__ == "__main__":
             )
 
         ai_broker = AIBroker(
-            mode=ai_mode, model_name=get_critical_env_variable("MODEL_NAME")
+            mode=ai_mode,
+            model_name=get_critical_env_variable("MODEL_NAME"),
+            system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
         )
 
     # Change log file name to include AI name

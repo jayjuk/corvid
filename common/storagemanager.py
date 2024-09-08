@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 from logger import setup_logger, exit
 from utils import get_critical_env_variable
 import json
-from os import path
+from os import path, makedirs
 
 # Set up logger
 logger = setup_logger()
@@ -62,7 +62,9 @@ class StorageManager:
     ) -> Dict[str, Any]:
         full_path = path.join("world_data", world_name, f"{object_type.lower()}.json")
         if not path.exists(full_path):
-            exit(logger, f"Default data file {full_path} not found")
+            full_path = path.join("world_data", "empty", f"{object_type.lower()}.json")
+            if not path.exists(full_path):
+                exit(logger, f"Default data file not found: {full_path}")
         with open(full_path, "r") as f:
             default_data = json.load(f)
         return default_data

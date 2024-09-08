@@ -1,0 +1,2 @@
+# Player input and response log for Brutus
+

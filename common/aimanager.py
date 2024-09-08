@@ -40,10 +40,12 @@ class AIManager:
         self.first_request: bool = True
 
         # Model costs as of 22 Feb 2024 from https://openai.com/pricing#language-models
-        # Input, output
+        # Input, output pricing per 1000 tokens
         self.model_cost: Dict[str, Tuple[float, float]] = {
             "gpt-3.5-turbo": (0.0005, 0.0015),
             "gpt-4-turbo": (0.01, 0.03),
+            "gpt-4o": (0.005, 0.015),
+            "gpt-4o-mini": (0.00015, 0.0006),
             "gemini-pro": (0, 0),
             "claude-3-haiku-20240307": (0.00025, 0.00125),
             "mixtral-8x7b-32768": (0, 0),  # Free on Groq for now

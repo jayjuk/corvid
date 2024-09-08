@@ -634,7 +634,7 @@ class GameManager:
 
     # Get a description of the players in the game
     def get_players_text(self) -> str:
-        others_count: int = self.get_player_count() - 1
+        others_count: int = self.get_player_count()
         if others_count == 0:
             return "You are the first player to join the game.\n"
         elif others_count == 1:

@@ -3,6 +3,8 @@ from logger import setup_logger
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv
+import time
+from os import path, makedirs
 
 logger = setup_logger("gameserver")
 
@@ -19,6 +21,30 @@ from player_input_processor import PlayerInputProcessor
 logger.info("Setting up SocketIO")
 sio = socketio.Server(cors_allowed_origins="*")
 app = socketio.WSGIApp(sio)
+
+# Transcript management
+
+
+# Create a log file for model responses
+def get_player_transcript_file_name(player_name: str) -> str:
+    logs_folder: str = "logs"
+    makedirs(logs_folder, exist_ok=True)
+    return path.join(logs_folder, f"{player_name}_game_transcript.txt")
+
+
+def create_player_transcript(player_name: str) -> None:
+    with open(get_player_transcript_file_name(player_name), "w") as f:
+        f.write(f"# Player input and response log for {player_name}\n\n")
+
+
+# Log model response to file
+def log_to_player_transcript(
+    player_name: str, request: str = "", response: str = ""
+) -> None:
+    with open(get_player_transcript_file_name(player_name), "a") as f:
+        timestamp: str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        f.write(f"{timestamp} {player_name}: {request}\n")
+        f.write(f"{timestamp} Game: {response}\n\n")
 
 
 # Event handlers
@@ -47,6 +73,8 @@ def set_player_name(sid: str, player_info: Dict[str, str]) -> None:
             outcome,
             sid,
         )
+    else:
+        create_player_transcript(player_info.get("name"))
 
 
 # Player input from the client
@@ -74,6 +102,9 @@ def user_action(sid: str, player_input: str):
         if response_to_player:
             player.add_input_history(f"Game: {response_to_player}")
             sio.emit("game_update", response_to_player, sid)
+
+        # Log player input and response
+        log_to_player_transcript(player.name, player_input, response_to_player)
     else:
         logger.info(f"Received user action from non-existent player {sid}")
         sio.emit(

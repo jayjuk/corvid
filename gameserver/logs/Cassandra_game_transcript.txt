@@ -1,0 +1,41 @@
+# Player input and response log for Cassandra
+
+2024-09-08 18:54:44 Cassandra: go south
+2024-09-08 18:54:44 Game: You head south to the forgotten laboratory: {A cluttered room filled with dusty beakers, test tubes, and peculiar contraptions.
+} Available exits: east: Creepy Crawlspace; north: Abandoned Storeroom; south: Phantom Workshop.You cannot build from here.
+
+2024-09-08 18:54:49 Cassandra: go south
+2024-09-08 18:54:49 Game: You head south to the phantom workshop: {A mysterious workshop filled with half-finished inventions and flickering shadows, where the air is thick with the scent of aged wood and old magic.
+} Available exits: north: Forgotten Laboratory.Available directions in which you can build: south, east, west.
+
+2024-09-08 18:54:55 Cassandra: check with Caesar before building
+2024-09-08 18:54:55 Game: The AI could not understand the command.
+
+2024-09-08 18:55:00 Cassandra: go north
+2024-09-08 18:55:00 Game: You head north to the forgotten laboratory.  Available exits: east: Creepy Crawlspace; north: Abandoned Storeroom; south: Phantom Workshop.You cannot build from here.
+
+2024-09-08 18:55:06 Cassandra: go east
+2024-09-08 18:55:06 Game: You head east to the creepy crawlspace: {A dimly lit, cobweb-covered passage with a faint scent of decay.
+} Available exits: north: Dark Cupboard; west: Forgotten Laboratory.Available directions in which you can build: south, east.
+
+2024-09-08 18:55:12 Cassandra: check with Caesar before building
+2024-09-08 18:55:12 Game: There is no Caesar in this location to check with. You are alone in the Creepy Crawlspace.
+
+2024-09-08 18:55:18 Cassandra: go north
+2024-09-08 18:55:18 Game: You head north to the dark cupboard: {In the beginning, there was darkness! You cannot see anything. You feel around, and realise you must be in some little cupboard.
+} Available exits: north: Dusty Attic; south: Creepy Crawlspace; east: Enchanted Garden.You cannot build from here.
+
+2024-09-08 18:55:24 Cassandra: go north
+2024-09-08 18:55:24 Game: You head north to the dusty attic: {A dimly lit attic with old trunks, cobwebs, and a faint smell of decay.
+} Available exits: south: Dark Cupboard; east: Mysterious Alcove; north: Ancient Library.You cannot build from here.
+
+2024-09-08 18:55:29 Cassandra: go north
+2024-09-08 18:55:29 Game: You head north to the ancient library: {A vast, dusty library filled with towering shelves of forgotten tomes, mysterious artifacts, and a faint smell of parchment, whispering secrets of the past to those who dare to explore.
+} Available exits: south: Dusty Attic.Available directions in which you can build: north.
+
+2024-09-08 18:55:53 Cassandra: check with Caesar before building
+2024-09-08 18:55:53 Game: There is no Caesar in this location to check with. You are alone in the Ancient Library, surrounded by dusty tomes and mysterious artifacts.
+
+2024-09-08 18:56:11 Cassandra: wait
+2024-09-08 18:56:11 Game: You decide to just wait a while.
+

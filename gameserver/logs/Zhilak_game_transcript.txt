@@ -1,0 +1,54 @@
+# Player input and response log for Zhilak
+
+2024-09-08 18:17:27 Zhilak: build south "Creepy Crawlspace" "A dimly lit, cobweb-covered passage with a faint scent of decay."
+2024-09-08 18:17:27 Game: You build south and make a new location, Creepy crawlspace: A dimly lit, cobweb-covered passage with a faint scent of decay.
+
+2024-09-08 18:17:29 Zhilak: go south
+2024-09-08 18:17:29 Game: You head south to the creepy crawlspace: {A dimly lit, cobweb-covered passage with a faint scent of decay.
+} Available exits: north: Dark Cupboard.Available directions in which you can build: south, east, west.
+
+2024-09-08 18:17:47 Zhilak: build west "Forgotten Laboratory" "A cluttered room filled with dusty beakers, test tubes, and peculiar contraptions."
+2024-09-08 18:17:47 Game: You build west and make a new location, Forgotten laboratory: A cluttered room filled with dusty beakers, test tubes, and peculiar contraptions.
+
+2024-09-08 18:17:52 Zhilak: go west
+2024-09-08 18:17:52 Game: You head west to the forgotten laboratory: {A cluttered room filled with dusty beakers, test tubes, and peculiar contraptions.
+} Available exits: east: Creepy Crawlspace.Available directions in which you can build: north, south, west.
+
+2024-09-08 18:17:55 Zhilak: look
+2024-09-08 18:17:55 Game: You look again at the forgotten laboratory: {A cluttered room filled with dusty beakers, test tubes, and peculiar contraptions.
+} Available exits: east: Creepy Crawlspace.Available directions in which you can build: north, south, west.
+ Available exits: east: Creepy Crawlspace.
+
+2024-09-08 18:18:00 Zhilak: get beaker
+2024-09-08 18:18:00 Game: You are unable to get 'beaker' here.
+
+2024-09-08 18:18:17 Zhilak: build north "Abandoned Storeroom" "A cramped, dimly lit space filled with old crates and mysterious trunks."
+2024-09-08 18:18:17 Game: You build north and make a new location, Abandoned storeroom: A cramped, dimly lit space filled with old crates and mysterious trunks.
+
+2024-09-08 18:18:26 Zhilak: go north
+2024-09-08 18:18:26 Game: You head north to the abandoned storeroom: {A cramped, dimly lit space filled with old crates and mysterious trunks.
+} Available exits: south: Forgotten Laboratory.Available directions in which you can build: north, west.
+
+2024-09-08 18:18:31 Zhilak: look
+2024-09-08 18:18:31 Game: You look again at the abandoned storeroom: {A cramped, dimly lit space filled with old crates and mysterious trunks.
+} Available exits: south: Forgotten Laboratory.Available directions in which you can build: north, west.
+ Available exits: south: Forgotten Laboratory.
+
+2024-09-08 18:18:37 Zhilak: get crate
+2024-09-08 18:18:37 Game: You are unable to get 'crate' here.
+
+2024-09-08 18:18:51 Zhilak: build west "Dusty Archives" "A vast, dimly lit repository of ancient texts and forgotten knowledge."
+2024-09-08 18:18:51 Game: You build west and make a new location, Dusty archives: A vast, dimly lit repository of ancient texts and forgotten knowledge.
+
+2024-09-08 18:18:57 Zhilak: go west
+2024-09-08 18:18:57 Game: You head west to the dusty archives: {A vast, dimly lit repository of ancient texts and forgotten knowledge.
+} Available exits: east: Abandoned Storeroom.Available directions in which you can build: north, south, west.
+
+2024-09-08 18:18:58 Zhilak: look
+2024-09-08 18:18:58 Game: You look again at the dusty archives: {A vast, dimly lit repository of ancient texts and forgotten knowledge.
+} Available exits: east: Abandoned Storeroom.Available directions in which you can build: north, south, west.
+ Available exits: east: Abandoned Storeroom.
+
+2024-09-08 18:19:15 Zhilak: get text
+2024-09-08 18:19:15 Game: You are unable to get 'text' here.
+
