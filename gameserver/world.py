@@ -145,6 +145,11 @@ class World:
                 )
             ):
                 self.done_path[key] = True
+                if next_room not in rooms:
+                    exit(
+                        logger,
+                        f"Next room {next_room} not found in rooms but referenced by {room_name}",
+                    )
                 self.add_grid_references(
                     rooms,
                     next_room,
@@ -342,9 +347,9 @@ class World:
         )
 
         # Try to create the image and save it
+        image_name: str = ""
         if self.image_ai_manager:
             try:
-                image_name: str
                 image_data: bytes
                 image_name, image_data = self.image_ai_manager.create_image(
                     new_room_name, room_description

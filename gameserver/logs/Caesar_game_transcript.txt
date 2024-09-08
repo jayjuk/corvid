@@ -1,2 +1,24 @@
 # Player input and response log for Caesar
 
+2024-09-08 19:29:26 Caesar: go west
+2024-09-08 19:29:26 Game: You head west to the cavern of riches.  Available exits: north: Treasure Vault; east: Mystical Forest; south: Hidden Grotto.
+
+2024-09-08 19:29:32 Caesar: look
+2024-09-08 19:29:32 Game: You look again at the cavern of riches: {A vast cavern filled with glittering gold and shimmering jewels, where the air is thick with the scent of adventure and the promise of hidden treasures.
+} Available exits: north: Treasure Vault; east: Mystical Forest; south: Hidden Grotto.
+
+2024-09-08 19:29:38 Caesar: shout "I'm in the Cavern of Riches! Let's explore together!"
+2024-09-08 19:29:38 Game: You shout, 'I'm in the Cavern of Riches! Let's explore together!'.
+
+2024-09-08 19:29:43 Caesar: hi Brutus
+2024-09-08 19:29:43 Game: You say, 'Hi Brutus'.
+
+2024-09-08 19:29:49 Caesar: hi Zephyr
+2024-09-08 19:29:49 Game: You say, 'Hi Zephyr'.
+
+2024-09-08 19:30:00 Caesar: Let's explore north to the Treasure Vault.
+2024-09-08 19:30:00 Game: You say, 'Let's explore north to the Treasure Vault'.
+
+2024-09-08 19:30:05 Caesar: go north
+2024-09-08 19:30:05 Game: You head north to the treasure vault.  Available exits: west: Ancient Chamber; north: Golden Chamber; south: Cavern Of Riches. Jay is here. Brutus the builder is here. Zephyr the builder is here.
+

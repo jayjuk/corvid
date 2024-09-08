@@ -1,8 +1,26 @@
 # Player input and response log for Zephyr
 
-2024-09-08 18:24:32 Zephyr: build north "Enchanted Garden" "A vibrant garden filled with luminescent flowers, singing birds, and a gentle breeze, the air thick with the scent of blooming jasmine and lilacs."
-2024-09-08 18:24:32 Game: Sorry, there is already a room called 'Enchanted garden'.
+2024-09-08 19:29:31 Zephyr: go south
+2024-09-08 19:29:31 Game: You head south to the ancient chamber: {A chamber filled with ancient relics and treasures.
+} Available exits: north: Mysterious Alcove; east: Treasure Vault. Available directions in which you can build: south.
 
-2024-09-08 18:24:44 Zephyr: build north "Whispering Glade" "A tranquil glade where soft whispers of the wind mingle with the rustling leaves, illuminated by dappled sunlight filtering through the tall trees."
-2024-09-08 18:24:44 Game: You build north and make a new location, Whispering glade: A tranquil glade where soft whispers of the wind mingle with the rustling leaves, illuminated by dappled sunlight filtering through the tall trees.
+2024-09-08 19:29:37 Zephyr: go east
+2024-09-08 19:29:37 Game: You head east to the treasure vault: {A secure vault filled with gold and precious gems.
+} Available exits: west: Ancient Chamber; north: Golden Chamber; south: Cavern Of Riches. Available directions in which you can build: east. Jay is here.
+
+2024-09-08 19:29:43 Zephyr: go south
+2024-09-08 19:29:43 Game: You head south to the cavern of riches: {A vast cavern filled with glittering gold and shimmering jewels, where the air is thick with the scent of adventure and the promise of hidden treasures.
+} Available exits: north: Treasure Vault; east: Mystical Forest; south: Hidden Grotto. Available directions in which you can build: west. Caesar the player is here. Brutus the builder is here.
+
+2024-09-08 19:29:57 Zephyr: build west "Glistening Cave" "A shimmering cave filled with glittering crystals and echoing whispers, creating an enchanting atmosphere that draws adventurers deeper into its mysteries."
+2024-09-08 19:29:57 Game: You build west and make a new location, Glistening cave: A shimmering cave filled with glittering crystals and echoing whispers, creating an enchanting atmosphere that draws adventurers deeper into its mysteries.
+
+2024-09-08 19:29:57 Zephyr: Caesar, do you approve of the Glistening Cave I built?
+2024-09-08 19:29:57 Game: You say, ''.
+
+2024-09-08 19:30:01 Zephyr: go north
+2024-09-08 19:30:01 Game: You head north to the treasure vault.  Available exits: west: Ancient Chamber; north: Golden Chamber; south: Cavern Of Riches. Available directions in which you can build: east. Jay is here.
+
+2024-09-08 19:30:13 Zephyr: build east "Crystal Hall" "A grand hall adorned with luminous crystals that refract light in a dazzling display, creating a mesmerizing atmosphere filled with wonder and enchantment."
+2024-09-08 19:30:13 Game: You build east and make a new location, Crystal hall: A grand hall adorned with luminous crystals that refract light in a dazzling display, creating a mesmerizing atmosphere filled with wonder and enchantment.
 
