@@ -239,26 +239,34 @@ class GameManager:
         player: Player,
         direction: str,
         room_name: str,
-        room_description: Optional[str],
+        room_description: Optional[str] = "",
     ) -> str:
         # Create a new room
         if direction in self.world.get_exits(player.get_current_location()):
             return f"There is already a room to the {direction}."
 
         # If player does not provide a room description, try to get one from the AI
-        if not room_description:
+        if len(room_description) < 50:
             # Get existing room descriptions into a list for inspiration
             existing_room_descriptions: List[str] = [
                 self.world.rooms[room].description for room in self.world.rooms.keys()
             ]
             if self.ai_manager:
-                room_description: str = self.ai_manager.submit_request(
-                    "Generate a description for a new room in my adventure game. Pre-existing room descriptions for inspiration:\n"
+                prompt: str = (
+                    f"Generate an appropriate description for a new room in my adventure game called '{room_name}'. Pre-existing room descriptions for inspiration:\n"
                     + "\n,\n".join(existing_room_descriptions[0:10])
-                    + f"\nThis room is called '{room_name}'\n"
-                    + "\nRespond with only a description of similar length to the ones above, nothing else.\n"
+                    + f"\nThis room is called '{room_name}', the description should be appropriate to that.\n"
                 )
+                if room_description:
+                    prompt += f"Some inspiration for the room description:\n{room_description}\n"
+                prompt += "Respond with only a description of similar length to the examples above, nothing else.\n"
+
+                room_description: str = self.ai_manager.submit_request(prompt).strip()
                 logger.info(f"AI-generated room description: {room_description}")
+
+                # Log the interaction in the AI log
+                self.ai_manager.log_response_to_file(prompt, room_description)
+
             else:
                 return "Invalid input: room description missing and AI is not enabled."
 

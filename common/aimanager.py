@@ -355,14 +355,15 @@ class AIManager:
         file_name: str = image_name.lower().replace(" ", "_").replace("'", "") + ".png"
         """Create an image from description and return the data"""
         if self.get_model_api() == "GPT":
-            response = openai_client.do_image_request(
+            return file_name, openai_client.do_image_request(
                 model_client=self.model_client, prompt=description
             )
-            return file_name, response
         elif self.get_model_api() == "StabilityAI":
             return file_name, stability_client.do_image_request(
                 model_client=self.model_client, prompt=description
             )
+        elif self.get_model_api() == "Gemini":
+            return file_name, gemini_client.do_image_request(prompt=description)
         else:
             exit(
                 logger,

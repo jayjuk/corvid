@@ -78,8 +78,7 @@ def set_player_name(sid: str, player_info: Dict[str, str]) -> None:
 
 
 # Player input from the client
-@sio.event
-def user_action(sid: str, player_input: str):
+def greenthread_user_action(sid: str, player_input: str) -> None:
     if sid in game_manager.players:
         player: Player = game_manager.players[sid]
         logger.info(f"Received user action: {player_input} from {sid} ({player.name})")
@@ -112,6 +111,11 @@ def user_action(sid: str, player_input: str):
             "You have been logged out due to a server error. Please log in again.",
             sid,
         )
+
+
+@sio.event
+def user_action(sid: str, player_input: str):
+    eventlet.spawn(greenthread_user_action, sid, player_input)
 
 
 # Disconnection

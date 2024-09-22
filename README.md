@@ -59,8 +59,10 @@ Operation of the game depends on the setup of API keys for Azure and AI provider
 Note that the openai.key file should contain only the key value from the OpenAI website for your account, but the Google Gemini file (gemini.key) contains a JSON document in the format and with the content provided by Google's Vertex AI website (see gemini_key_dummy_example.json for an example). Gemini's API expects the filename (gemini.key) to be in GOOGLE_APPLICATION_CREDENTIALS. See for instructions on how to create this key file.
 
 The keys are:
-OPENAI*API_KEY - Obtained from the OpenAI website for your account
-GOOGLE_GEMINI_KEY - Create and download the JSON-format key document (see https://cloud.google.com/iam/docs/keys-create-delete#iam-service-account-keys-create-console), then run \_common\convert_gemini_key_to_encoded_env_variable.py*, and put the resulting string in this variable (this approach is necessary to avoid having to store the API key, when using the only API Google supports in the UK, Vertex AI). NOTE: Gemini quickly blocks itself after history builds up, on the basis of 'harm' perceived by the adventure, despite there being no threat or danger in the game.
+OPENAI\*API\*KEY - Obtained from the OpenAI website for your account
+GOOGLE_GEMINI_KEY - Create a service account and create an API (see https://cloud.google.com/iam/docs/keys-create-delete#iam-service-account-keys-create-console), which will and download the JSON-format key document. Then run common\convert_gemini_key_to_encoded_env_variable.py, and put the resulting string in this variable (this approach is necessary to avoid having to store the API key, when using the only API Google supports in the UK, Vertex AI). Be sure to also do the following in the console: 1. Enable the Vertex API; 2. Check the project ID; 3. Check the location; 4. Give permissions to the service account
+GOOGLE_GEMINI_PROJECT_ID= From the Project settings page of the Console
+GOOGLE_GEMINI_LOCATION= Probably us-central1
 STABILITY_KEY= Obtained from the StabilityAI website after you create an account. Not needed if you (pay more to) use OpenAI's Dall-E 3 model for image generation.
 ANTHROPIC_API_KEY - Obtained from the Anthropic website after you create an account. Not needed if you use OpenAI's gpt-3.5 model (or later) for text generation.
 AZURE_STORAGE_ACCOUNT_KEY - Obtained from the Azure Storage console after you create a storage account.

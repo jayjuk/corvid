@@ -16,7 +16,7 @@ class Room:
         exits: Optional[Dict[str, str]] = None,
         init_dict: Optional[Dict[str, Any]] = None,
         creator: Optional[str] = None,
-        image: Optional[bytes] = None,
+        image: Optional[str] = None,
         grid_reference: Optional[str] = None,
     ) -> None:
         if init_dict:
@@ -27,7 +27,7 @@ class Room:
             self.description: Optional[str] = description
             self.exits: Optional[Dict[str, str]] = exits
             self.creator: Optional[str] = creator
-            self.image: Optional[bytes] = image
+            self.image: Optional[str] = image
             self.grid_reference: Optional[str] = grid_reference
 
         # A room belongs to a world

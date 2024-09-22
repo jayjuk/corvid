@@ -26,6 +26,8 @@ class World:
         image_model_name: str = None,
     ) -> None:
 
+        logger.info(f"Creating world {name}")
+
         self.name: str = name
         self.storage_manager: Any = storage_manager
         self.directions: Dict[str, Tuple[int, int, str]] = {
@@ -300,6 +302,28 @@ class World:
         # Return the opposite direction
         return self.directions[direction][2]
 
+    def create_room_image(self, room_name: str, description: str) -> None:
+        image_name: str = ""
+        if self.image_ai_manager:
+            try:
+                image_data: bytes
+                image_name, image_data = self.image_ai_manager.create_image(
+                    room_name, description
+                )
+                if image_data:
+                    self.storage_manager.store_image(self.name, image_name, image_data)
+                    return image_name
+                else:
+                    logger.error(
+                        "Error creating/saving image - returned no data, this room will be created without one"
+                    )
+            except Exception as e:
+                logger.error(
+                    f"Error creating/saving image ({e}), this room will be created without one"
+                )
+        else:
+            logger.warning("Image generation not enabled.")
+
     def add_room(
         self,
         current_location: str,
@@ -346,26 +370,8 @@ class World:
             f"Adding room {new_room_name} to the {direction} of {current_location}"
         )
 
-        # Try to create the image and save it
-        image_name: str = ""
-        if self.image_ai_manager:
-            try:
-                image_data: bytes
-                image_name, image_data = self.image_ai_manager.create_image(
-                    new_room_name, room_description
-                )
-                if image_data:
-                    self.storage_manager.store_image(self.name, image_name, image_data)
-                else:
-                    logger.error(
-                        "Error creating/saving image - returned no data, this room will be created without one"
-                    )
-            except Exception as e:
-                logger.error(
-                    f"Error creating/saving image ({e}), this room will be created without one"
-                )
-        else:
-            logger.warning("Image generation not enabled.")
+        # Create image for new room
+        image_name = self.create_room_image(new_room_name, room_description)
 
         # Add the new room to the exits of the current room
         current_room.exits[direction] = new_room_name

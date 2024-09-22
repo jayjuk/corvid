@@ -37,6 +37,8 @@ class AIBroker:
         self.player_name: str = "TBD"
         self.input_token_count: int = 0
         self.output_token_count: int = 0
+        self.error_count: Dict[str] = {}
+        self.max_error_count: int = 10
 
         this_system_message: str = self.get_ai_instructions()
         if system_message:
@@ -95,14 +97,14 @@ class AIBroker:
                 + """e.g. build north "Neighbour's House" "A quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke."" \n"""
                 + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions.\n"
             )
-        else:
-            # Experiment to see whether cheaper AIs can do this
-            ai_instructions += (
-                "Prioritise exploring, picking up items ('get all'), selling them to merchants,"
-                + " and then buying the red button (which costs 999p) from Gambino, so you win the game!"
-                + " Use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
-            )
-            # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
+        # else:
+        #     # Experiment to see whether cheaper AIs can do this
+        #     ai_instructions += (
+        #         "Prioritise exploring, picking up items ('get all'), selling them to merchants,"
+        #         + " and then buying the red button (which costs 999p) from Gambino, so you win the game!"
+        #         + " Use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
+        #     )
+        # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
         return ai_instructions
 
     # Get AI name from the LLM using the AI manager
@@ -188,6 +190,16 @@ class AIBroker:
                     exit(logger, "AI has exited the game.")
             else:
                 exit(logger, "AI returned empty response")
+
+    # Log an error message
+    def log_error(self, error_message: str) -> None:
+        if error_message in self.error_count:
+            self.error_count[error_message] += 1
+        else:
+            self.error_count[error_message] = 1
+        logger.error(f"Error: {error_message}")
+        if self.error_count[error_message] > self.max_error_count:
+            exit(logger, f"Repeated error: {error_message}")
 
 
 # Non-class functions below here (SocketIO event handlers etc.)
@@ -290,7 +302,9 @@ def connect() -> None:
 # Invalid name, try again
 @sio.on("name_invalid")
 def catch_all(data: Dict) -> None:
-    logger.info(f"Invalid name event received: {data}")
+    error_message: str = f"Invalid name event received: {data}"
+    logger.info(error_message)
+    ai_broker.log_error(error_message)
     ai_broker.set_ai_name(data)
     sio.emit("set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode})
 
