@@ -351,6 +351,8 @@ class AIManager:
     # Image creator
     def create_image(self, image_name: str, description: str) -> Tuple[str, bytes]:
 
+        # TODO #94 Handle quota exceeded errors esp from Gemini - different per model?
+
         # Common filename definition, kept with the image generation to ensure consistency of format.
         file_name: str = image_name.lower().replace(" ", "_").replace("'", "") + ".png"
         """Create an image from description and return the data"""

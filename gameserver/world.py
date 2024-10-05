@@ -23,12 +23,13 @@ class World:
         name: str,
         storage_manager: Any,
         mode: Optional[str] = None,
-        image_model_name: str = None,
+        ai_manager: AIManager = None,
     ) -> None:
 
         logger.info(f"Creating world {name}")
 
         self.name: str = name
+        self.ai_manager: AIManager = ai_manager
         self.storage_manager: Any = storage_manager
         self.directions: Dict[str, Tuple[int, int, str]] = {
             "north": (0, 1, "south"),
@@ -49,18 +50,6 @@ class World:
         if not mode:
             self.load_entities()
             self.load_room_items()
-
-        # Separate AI manager for images (can use different model)
-        if image_model_name:
-            # Image AI manager
-            logger.info("Creating separate AI manager for image generation")
-            self.image_ai_manager: AIManager = AIManager(
-                model_name=image_model_name,
-                system_message="You are helping to create an adventure game.",
-            )
-        else:
-            logger.warning("No image generation model set - AI not enabled.")
-            self.image_ai_manager: Optional[AIManager] = None
 
     # Get the objective of the game
     def get_objective(self, player: Optional[Player] = None) -> str:
@@ -88,6 +77,7 @@ class World:
         for room in rooms_list:
             r = Room(world=self, init_dict=room)
             rooms_dict[r.name] = r
+
         # Set default room
         self.default_location: str = "Road"
         if self.default_location not in rooms_dict:
@@ -164,6 +154,15 @@ class World:
 
     def get_rooms(self) -> Dict[str, Room]:
         return self.rooms
+
+    def get_rooms_missing_images(self) -> List[str]:
+        rooms_missing_images: List[Tuple[str, str]] = []
+        for room in self.rooms:
+            if not hasattr(self.rooms[room], "image") or not self.rooms[room].image:
+                rooms_missing_images.append(
+                    [self.rooms[room].name, self.rooms[room].description]
+                )
+        return rooms_missing_images
 
     def get_location(self) -> str:
         return self.default_location
@@ -302,44 +301,25 @@ class World:
         # Return the opposite direction
         return self.directions[direction][2]
 
-    def create_room_image(self, room_name: str, description: str) -> None:
-        image_name: str = ""
-        if self.image_ai_manager:
-            try:
-                image_data: bytes
-                image_name, image_data = self.image_ai_manager.create_image(
-                    room_name, description
-                )
-                if image_data:
-                    self.storage_manager.store_image(self.name, image_name, image_data)
-                    return image_name
-                else:
-                    logger.error(
-                        "Error creating/saving image - returned no data, this room will be created without one"
-                    )
-            except Exception as e:
-                logger.error(
-                    f"Error creating/saving image ({e}), this room will be created without one"
-                )
-        else:
-            logger.warning("Image generation not enabled.")
-
     def add_room(
         self,
         current_location: str,
         direction: str,
-        new_room_name: str,
+        room_name: str,
         room_description: str,
         creator: str = "system",
-    ) -> Optional[str]:
+    ) -> Tuple[str, str]:
         # Check room name is not taken in any case (case insensitive)
         for room in self.rooms:
-            if str(room).lower() == str(new_room_name).lower():
-                return f"Sorry, there is already a room called '{new_room_name}'."
+            if str(room).lower() == str(room_name).lower():
+                return f"Sorry, there is already a room called '{room_name}'.", None
 
         # Check that the current room does not already have  an exit in the specified direction
         if direction in self.get_exits(current_location):
-            return f"Sorry, there is already an exit in the {direction} from {current_location}."
+            return (
+                f"Sorry, there is already an exit in the {direction} from {current_location}.",
+                None,
+            )
 
         # Resolve pointer to current room item
         current_room: Room = self.rooms[current_location]
@@ -361,35 +341,62 @@ class World:
                 f"Sorry, there is already a room to the {direction} of {current_location}, "
                 + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else. "
                 + self.get_room_build_options(current_location)
-            )
+            ), None
 
-        # Format the room name to be title case
-        new_room_name = new_room_name.title()
+        logger.info(f"Adding room {room_name} to the {direction} of {current_location}")
 
-        logger.info(
-            f"Adding room {new_room_name} to the {direction} of {current_location}"
-        )
+        # If player does not provide a room description, try to get one from the AI
+        # TODO #93 Consider whether AI usage belongs inside World class
+        if len(room_description) < 50:
+            # Get existing room descriptions into a list for inspiration
+            existing_room_descriptions: List[str] = [
+                self.rooms[room].description for room in self.rooms.keys()
+            ]
+            if self.ai_manager:
+                prompt: str = (
+                    f"Generate an appropriate description for a new room in my adventure game called '{room_name}'. Pre-existing room descriptions for inspiration:\n"
+                    + "\n,\n".join(existing_room_descriptions[0:10])
+                    + f"\nThis room is called '{room_name}', the description should be appropriate to that.\n"
+                )
+                if room_description:
+                    prompt += f"Some inspiration for the room description:\n{room_description}\n"
+                prompt += "Respond with only a description of similar length to the examples above, nothing else.\n"
 
-        # Create image for new room
-        image_name = self.create_room_image(new_room_name, room_description)
+                room_description: str = self.ai_manager.submit_request(prompt).strip()
+                logger.info(f"AI-generated room description: {room_description}")
 
-        # Add the new room to the exits of the current room
-        current_room.exits[direction] = new_room_name
-        #  TODO #86 Effect transactionality around storage of new room
-        self.storage_manager.store_game_object(self.name, current_room)
+                # Log the interaction in the AI log
+                self.ai_manager.log_response_to_file(prompt, room_description)
+
+            else:
+                return (
+                    "Invalid input: room description missing and AI is not enabled.",
+                    None,
+                )
 
         # Create and store room
         new_room: Room = Room(
             self,
-            new_room_name,
+            room_name,
             room_description,
             exits={self.get_opposite_direction(direction): current_location},
             grid_reference=new_grid_reference,
-            image=image_name,
+            image=None,
             creator=creator,
         )
         self.storage_manager.store_game_object(self.name, new_room)
-        self.rooms[new_room_name] = new_room
+        self.rooms[room_name] = new_room
+
+        # Add the new room to the exits of the current room
+        current_room.exits[direction] = room_name
+        #  TODO #86 Effect transactionality around storage of new room
+        self.storage_manager.store_game_object(self.name, current_room)
+
+        return None, room_description
+
+    def update_room_image(self, room_name: str, image_name: str) -> None:
+        self.rooms[room_name].image = image_name
+        self.storage_manager.store_game_object(self.name, self.rooms[room_name])
 
     def update_room_description(self, room_name: str, description: str) -> None:
         self.rooms[room_name].description = description

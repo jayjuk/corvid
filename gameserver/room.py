@@ -21,7 +21,9 @@ class Room:
     ) -> None:
         if init_dict:
             self.__dict__.update(init_dict)
-            # Override world (in DB it is the game name, we need a pointer to the world object)
+            # Create blank image if not provided
+            if not hasattr(self, "image"):
+                self.image = None
         else:
             self.name: Optional[str] = name
             self.description: Optional[str] = description

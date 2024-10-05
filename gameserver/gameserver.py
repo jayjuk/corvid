@@ -11,6 +11,7 @@ logger = setup_logger("gameserver")
 import socket
 import socketio
 import eventlet
+
 from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager
 from player import Player
@@ -78,7 +79,14 @@ def set_player_name(sid: str, player_info: Dict[str, str]) -> None:
 
 
 # Player input from the client
-def greenthread_user_action(sid: str, player_input: str) -> None:
+def process_user_action(sid: str, player_input: str) -> None:
+    # sleep to debug
+    # player: Player = game_manager.players[sid]
+    # if player.name == "Jay":
+    #     eventlet.sleep(10)
+    #     sio.emit("game_update", "slept", sid)
+    # else:
+    #     sio.emit("game_update", "not Jay", sid)
     if sid in game_manager.players:
         player: Player = game_manager.players[sid]
         logger.info(f"Received user action: {player_input} from {sid} ({player.name})")
@@ -115,7 +123,8 @@ def greenthread_user_action(sid: str, player_input: str) -> None:
 
 @sio.event
 def user_action(sid: str, player_input: str):
-    eventlet.spawn(greenthread_user_action, sid, player_input)
+    # eventlet.spawn(greenthread_user_action, sid, player_input)
+    process_user_action(sid, player_input)
 
 
 # Disconnection
@@ -125,6 +134,21 @@ def disconnect(sid: str) -> None:
     # TODO #72 Allow players to reconnect (for now disconnect is same as quit)
     game_manager.remove_player(
         sid, "You have been logged out as your client disconnected."
+    )
+
+
+# process_missing_image_request
+@sio.event
+def missing_image_request(sid: str, data: Dict) -> None:
+    logger.info("Received missing images request")
+    game_manager.process_missing_image_request()
+
+
+@sio.event
+def image_creation_response(sid: str, data: Dict) -> None:
+    logger.info(f"Received image creation response: {data}")
+    game_manager.process_image_creation_response(
+        data["room_name"], data["image_filename"], data["success"]
     )
 
 
@@ -152,7 +176,6 @@ if __name__ == "__main__":
         storage_manager,
         world_name=world_name,
         model_name=environ.get("MODEL_NAME"),
-        image_model_name=environ.get("IMAGE_MODEL_NAME"),
     )
     player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
     logger.info(f"Launching WSGI server on {hostname}:{port}")

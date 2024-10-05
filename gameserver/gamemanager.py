@@ -28,7 +28,6 @@ class GameManager:
         storage_manager: StorageManager,
         world_name: str = "jaysgame",
         model_name: str = None,
-        image_model_name: str = None,
     ) -> None:
 
         # Static variables
@@ -57,7 +56,7 @@ class GameManager:
             world_name,
             storage_manager,
             mode=None,
-            image_model_name=image_model_name,
+            ai_manager=self.ai_manager,
         )
 
         self.item_name_empty_message: str = "Invalid input: item name is empty."
@@ -245,33 +244,12 @@ class GameManager:
         if direction in self.world.get_exits(player.get_current_location()):
             return f"There is already a room to the {direction}."
 
-        # If player does not provide a room description, try to get one from the AI
-        if len(room_description) < 50:
-            # Get existing room descriptions into a list for inspiration
-            existing_room_descriptions: List[str] = [
-                self.world.rooms[room].description for room in self.world.rooms.keys()
-            ]
-            if self.ai_manager:
-                prompt: str = (
-                    f"Generate an appropriate description for a new room in my adventure game called '{room_name}'. Pre-existing room descriptions for inspiration:\n"
-                    + "\n,\n".join(existing_room_descriptions[0:10])
-                    + f"\nThis room is called '{room_name}', the description should be appropriate to that.\n"
-                )
-                if room_description:
-                    prompt += f"Some inspiration for the room description:\n{room_description}\n"
-                prompt += "Respond with only a description of similar length to the examples above, nothing else.\n"
-
-                room_description: str = self.ai_manager.submit_request(prompt).strip()
-                logger.info(f"AI-generated room description: {room_description}")
-
-                # Log the interaction in the AI log
-                self.ai_manager.log_response_to_file(prompt, room_description)
-
-            else:
-                return "Invalid input: room description missing and AI is not enabled."
+        # Format the room name to be title case
+        room_name = room_name.title()
 
         # Add the room
-        error_message: str = self.world.add_room(
+        error_message: Optional[str]
+        error_message, room_description = self.world.add_room(
             player.get_current_location(),
             direction,
             room_name,
@@ -288,7 +266,25 @@ class GameManager:
             f"{player.name} has built to the {direction} and made a new location, {room_name}.",
             shout=True,
         )
-        return f"You build {direction} and make a new location, {room_name}: {room_description}"
+
+        # Emit event to trigger a room image creation
+        self.request_room_image_creation(room_name, room_description)
+
+        return f"You build {direction} and make a new location, {room_name}."
+
+    def request_room_image_creation(
+        self, room_name: str, room_description: str
+    ) -> None:
+        logger.info(f"Requesting image creation for room {room_name}")
+        # Emit event to trigger a room image creation
+        self.sio.emit(
+            "image_creation_request",
+            {
+                "world_name": self.world.name,
+                "room_name": room_name,
+                "description": room_description,
+            },
+        )
 
     # Check if an item is an entity
     def get_entity_by_name(self, item_name: str) -> Optional["Entity"]:
@@ -967,6 +963,24 @@ class GameManager:
         else:
             logger.info(
                 f"Player with SID {sid} ({self.player_sid_to_name_map.get(sid,'name unknown')}) has already been removed, they probably quit before."
+            )
+
+    def process_missing_image_request(self) -> None:
+        # Check for rooms missing images and request them
+        for room_name, room_description in self.world.get_rooms_missing_images():
+            self.request_room_image_creation(room_name, room_description)
+
+    # Process image creation response from AI image generator
+    def process_image_creation_response(
+        self, room_name: str, image_filename: str, success: str
+    ) -> None:
+        logger.info(f"Image creation response for {room_name}: {success}")
+        if success:
+            self.world.update_room_image(room_name, image_filename)
+            self.tell_everyone(f"Room image for {room_name} has been created.")
+        else:
+            self.tell_everyone(
+                f"Room image creation for {room_name} failed: {image_filename}"
             )
 
     # Spawn the world-wide metadata loop when the first player is created
