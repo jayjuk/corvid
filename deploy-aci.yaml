@@ -98,8 +98,6 @@ properties:
           requests:
             cpu: 0.2
             memoryInGb: 0.7
-        ports:
-          - port: 3001
     - name: imagecreator
       properties:
         environmentVariables:
@@ -132,8 +130,6 @@ properties:
           requests:
             cpu: 0.2
             memoryInGb: 0.7
-        ports:
-          - port: 3001
   osType: Linux
   ipAddress:
     type: Public

@@ -1,4 +1,12 @@
-call gameserver\build_tag_push.bat
-call imageserver\build_tag_push.bat
-call aibroker\build_tag_push.bat
-call gameclient\build_tag_push.bat
+cd gameserver
+call build_tag_push.bat
+cd ..\imageserver
+call build_tag_push.bat
+cd ..\aibroker
+call build_tag_push.bat
+cd ..\gameclient
+call build_tag_push.bat
+cd ..\imagecreator
+call build_tag_push.bat
+cd ..
+
