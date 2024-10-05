@@ -171,10 +171,13 @@ class AIManager:
         max_tokens: Optional[int] = 1000,
         temperature: float = 0.7,
         history: bool = True,
+        system_message: Optional[str] = None,
     ) -> str:
         try_count: int = 0
         max_tries: int = 10
         wait_time: float = 3.0
+        system_message: str = system_message or self.system_message
+
         logger.info(f"Received request to submit: {request}")
 
         # Use default values if not provided
@@ -191,13 +194,13 @@ class AIManager:
         # Start with system message
         if self.get_model_api() == "Gemini":
             messages = [
-                build_message("user", self.system_message),
+                build_message("user", system_message),
                 build_message(self.model_word, "OK."),
             ]
         elif self.get_model_api() == "Anthropic":
             pass  # Leave empty
         else:
-            messages = [build_message("system", self.system_message)]
+            messages = [build_message("system", system_message)]
 
         # Now use history to build the messages for model input
         # (we have a separate messages list to allow for model-specific truncation without losing the history from our own memory,

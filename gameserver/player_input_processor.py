@@ -219,26 +219,37 @@ class PlayerInputProcessor:
         return verb, rest
 
     # Translate player input and try to process it again
-    def translate_and_process(self, player: Player, player_input: str) -> Optional[str]:
+    def translate_and_process(
+        self, player: Player, player_input: str
+    ) -> Optional[Tuple[str, str, str]]:
         # Try to translate the user input into a valid command using AI :-)
         output: str = "I'm trying to guess what you meant by that..."
         prompt: str = (
             "Help me to translate my player's input into either a valid adventure game command, or a custom action.\n"
             + self.get_commands_description()
-            + "\nIf the player did not mean one of the above commands, please respond with the special command 'custom' only."
-            + "\nRespond with only a valid command phrase, nothing else.\n"
             + player.get_input_history(
                 10, "Some history of what the user has seen for context:"
             )
-            + f"Their latest input to translate: {player_input}"
+            + "\nThe player's current location description: "
+            + self.game_manager.world.rooms[player.get_current_location()].description
+            + "\nThe items in this location: "
+            + self.game_manager.world.get_room_items_description(
+                player.get_current_location()
+            )
+            + f"\nPlayer's inventory: {player.get_inventory_description()}"
+            + f"\nPlayer's input: {player_input}"
+            + "\nIf the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only."
+            + "\nRespond with only a valid command phrase or the word 'custom', nothing else.\n"
         )
+
         ai_translation: Optional[str] = self.game_manager.ai_manager.submit_request(
-            prompt
+            prompt, system_message="You are a game command interpreter"
         )
         logger.info("AI translation: %s", ai_translation)
         # If the AI translation is 'custom', prompt the player for a custom action
         if ai_translation == "custom":
             ai_translation += " " + player_input
+
         if ai_translation:
             # Try to process the AI translation as a command, but only try this once
             output += f"\nI think you meant '{ai_translation}', and will proceed accordingly.\n"
