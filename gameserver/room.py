@@ -35,4 +35,4 @@ class Room:
         # A room belongs to a world
         self.world: "World" = world
 
-        logger.info(f"Creating room {self.name}")
+        logger.debug(f"Creating room {self.name}")

@@ -1,3 +1,3 @@
-docker build -t gameclient . -f gameclient\Dockerfile
-docker tag gameclient jayjuk/gameclient
-docker push jayjuk/gameclient
+@echo off
+echo Building, tagging, and pushing the Game Client image...
+..\common\build_tag_push.bat gameclient

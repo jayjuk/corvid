@@ -73,9 +73,8 @@ class ImageCreator:
 
     def work_loop(self):
         while True:
-            # Do some work here
-            eventlet.sleep(10)
-            logger.info("Waiting for work")
+            # Just wait for events for now
+            eventlet.sleep(60)
 
 
 # SocketIO event handlers
@@ -165,11 +164,8 @@ def connect_to_server(hostname: str) -> None:
 
 # Main function to start the program
 if __name__ == "__main__":
-    # Set up logging to file and console
-    logger.info("Starting up Game AI Worker")
-
     # Change log file name to include AI name
-    logger = setup_logger("game_worker.log")
+    logger = setup_logger("image_creator.log")
 
     # Set hostname (default is "localhost" to support local pre container testing)
     # hostname = socket.getfqdn()
@@ -178,7 +174,7 @@ if __name__ == "__main__":
     hostname: str = environ.get("GAMESERVER_HOSTNAME") or "localhost"
     # TODO #65 Do not allow default port, and make this common
     port: str = environ.get("GAMESERVER_PORT", "3001")
-    logger.info(f"Starting up Game AI Worker on hostname {hostname}")
+    logger.info(f"Starting up Image Creator on hostname {hostname}")
     # Connect to the server. If can't connect, warn user that the Game Server may not be running.
     try:
         connect_to_server(f"http://{hostname}:{port}")

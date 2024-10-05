@@ -38,7 +38,7 @@ class GameItem:
                 f"Invalid location {location} specified for item {self.name}",
             )
 
-        logger.info(f"Creating item {self.name}" + f" starting in {self.location}")
+        logger.debug(f"Creating item {self.name}" + f" starting in {self.location}")
 
     def check_item_name(self, item_name: str) -> None:
         if not item_name:

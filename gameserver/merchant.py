@@ -18,7 +18,7 @@ class Merchant(Entity):
         description: str = "",
     ):
         # First check
-        logger.info(f"Creating merchant {name}")
+        logger.debug(f"Creating merchant {name}")
 
         # Set up entity
         super().__init__(world, name, "merchant", location, description)

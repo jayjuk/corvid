@@ -1,3 +1,3 @@
-docker build -t imageserver . -f imageserver\Dockerfile
-docker tag imageserver jayjuk/imageserver
-docker push jayjuk/imageserver
+@echo off
+echo Building, tagging, and pushing the Image Server image...
+..\common\build_tag_push.bat imageserver

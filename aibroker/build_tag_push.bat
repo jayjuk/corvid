@@ -1,3 +1,3 @@
-docker build -t aibroker . -f aibroker\Dockerfile
-docker tag aibroker jayjuk/aibroker
-docker push jayjuk/aibroker
+@echo off
+echo Building, tagging, and pushing the AI Broker image...
+..\common\build_tag_push.bat aibroker

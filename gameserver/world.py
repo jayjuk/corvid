@@ -63,6 +63,9 @@ class World:
         )
 
     def load_rooms(self) -> Dict[str, Room]:
+
+        logger.info("Loading rooms...")
+
         # Get rooms from storage
         rooms_list: List[Dict[str, Any]] = self.storage_manager.get_game_objects(
             self.name, "Room"
@@ -524,7 +527,7 @@ class World:
             for this_item in self.storage_manager.get_game_objects(
                 self.name, entity_role
             ):
-                logger.info(f"Loading entity {this_item['name']}")
+                logger.debug(f"Loading entity {this_item['name']}")
                 # Populate the room_item_map with object versions of the items
                 # TODO #79 Streamline merchant and animal DB->object loading
                 entity_object: Union[Animal, Merchant]

@@ -1,5 +1,4 @@
 @echo off
-echo Loading env variables from common .env file in local execution...
-for /F "tokens=1* delims==" %%a in (..\common\.env) do ( set "%%a=%%b" )
+call ..\common\load_dotenv.bat
 echo Running Image Server...
 python imageserver.py

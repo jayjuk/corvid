@@ -20,7 +20,7 @@ class Animal(Entity):
     ):
         # Note that there can be many instances of the same named animal
 
-        logger.info(f"Creating animal of type {name}")
+        logger.debug(f"Creating animal of type {name}")
 
         # Set up entity.
         Entity.__init__(self, world, name, "animal", location, description)

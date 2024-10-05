@@ -1,6 +1,4 @@
 @echo off
-echo Loading env variables from common .env file in local execution...
-
 REM Check for .env file in ..\common
 if exist "..\common\.env" (
     set "env_file_path=..\common\.env"
@@ -13,8 +11,7 @@ if exist "..\common\.env" (
         exit /b 1
     )
 )
-
-REM Load the environment variables from the .env file
-for /F "tokens=1* delims==" %%a in (%env_file_path%) do (
-    set "%%a=%%b"
-)
+echo Running Image Server...
+set "GAMESERVER_HOSTNAME=gameserver_local"
+docker rm gameclient_local
+docker run --name gameclient_local -p 3000:3000 gameclient:latest
