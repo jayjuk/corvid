@@ -2,10 +2,14 @@ apiVersion: 2019-12-01
 location: westeurope
 name: jaysgame
 properties:
+  imageRegistryCredentials:
+    - server: "${CONTAINER_REGISTRY_SERVER}"
+      username: "${CONTAINER_REGISTRY_USERNAME}"
+      password: "${CONTAINER_REGISTRY_PASSWORD}"
   containers:
     - name: gameclient
       properties:
-        image: jayjuk/gameclient
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/gameclient"
         resources:
           requests:
             cpu: 0.2
@@ -47,7 +51,7 @@ properties:
             value: "${GOOGLE_GEMINI_LOCATION}"
           - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
             value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
-        image: jayjuk/gameserver
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/gameserver"
         resources:
           requests:
             cpu: 0.2
@@ -65,18 +69,50 @@ properties:
             value: "${AZURE_STORAGE_ACCOUNT_NAME}"
           - name: "AZURE_STORAGE_ACCOUNT_KEY"
             value: "${AZURE_STORAGE_ACCOUNT_KEY}"
-        image: jayjuk/imageserver
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/imageserver"
         resources:
           requests:
             cpu: 0.2
             memoryInGb: 0.3
         ports:
           - port: 3002
+    - name: imagecreator
+      properties:
+        environmentVariables:
+          - name: "GAMESERVER_HOSTNAME"
+            value: "${GAMESERVER_HOSTNAME}"
+          - name: "GAMESERVER_PORT"
+            value: "${GAMESERVER_PORT}"
+          - name: "AZURE_STORAGE_ACCOUNT_NAME"
+            value: "${AZURE_STORAGE_ACCOUNT_NAME}"
+          - name: "AZURE_STORAGE_ACCOUNT_KEY"
+            value: "${AZURE_STORAGE_ACCOUNT_KEY}"
+          - name: "IMAGE_MODEL_NAME"
+            value: "${IMAGE_MODEL_NAME}"
+          - name: "OPENAI_API_KEY"
+            value: "${OPENAI_API_KEY}"
+          - name: "STABILITY_KEY"
+            value: "${STABILITY_KEY}"
+          - name: "GOOGLE_GEMINI_KEY"
+            value: "${GOOGLE_GEMINI_KEY}"
+          - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
+            value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
+          - name: "GOOGLE_GEMINI_PROJECT_ID"
+            value: "${GOOGLE_GEMINI_PROJECT_ID}"
+          - name: "GOOGLE_GEMINI_LOCATION"
+            value: "${GOOGLE_GEMINI_LOCATION}"
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/imagecreator"
+        resources:
+          requests:
+            cpu: 0.2
+            memoryInGb: 0.7
     - name: aibroker
       properties:
         environmentVariables:
           - name: "AI_COUNT"
             value: "${AI_COUNT}"
+          - name: "MODEL_SYSTEM_MESSAGE"
+            value: "${MODEL_SYSTEM_MESSAGE}"
           - name: "OPENAI_API_KEY"
             value: "${OPENAI_API_KEY}"
           - name: "STABILITY_KEY"
@@ -93,39 +129,7 @@ properties:
             value: "jaysgame.westeurope.azurecontainer.io"
           - name: "GAMESERVER_PORT"
             value: "3001"
-        image: jayjuk/aibroker
-        resources:
-          requests:
-            cpu: 0.2
-            memoryInGb: 0.7
-    - name: imagecreator
-      properties:
-        environmentVariables:
-          - name: "GAMESERVER_HOSTNAME"
-            value: "${GAMESERVER_HOSTNAME}"
-          - name: "GAMESERVER_PORT"
-            value: "${GAMESERVER_PORT}"
-          - name: "AZURE_STORAGE_ACCOUNT_NAME"
-            value: "${AZURE_STORAGE_ACCOUNT_NAME}"
-          - name: "AZURE_STORAGE_ACCOUNT_KEY"
-            value: "${AZURE_STORAGE_ACCOUNT_KEY}"
-          - name: "IMAGE_MODEL_NAME"
-            value: "${IMAGE_MODEL_NAME}"
-          - name: "MODEL_SYSTEM_MESSAGE"
-            value: "${MODEL_SYSTEM_MESSAGE}"
-          - name: "OPENAI_API_KEY"
-            value: "${OPENAI_API_KEY}"
-          - name: "STABILITY_KEY"
-            value: "${STABILITY_KEY}"
-          - name: "GOOGLE_GEMINI_KEY"
-            value: "${GOOGLE_GEMINI_KEY}"
-          - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
-            value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
-          - name: "GOOGLE_GEMINI_PROJECT_ID"
-            value: "${GOOGLE_GEMINI_PROJECT_ID}"
-          - name: "GOOGLE_GEMINI_LOCATION"
-            value: "${GOOGLE_GEMINI_LOCATION}"
-        image: jayjuk/aibroker
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/aibroker"
         resources:
           requests:
             cpu: 0.2
