@@ -16,5 +16,12 @@ echo Loading env variables from common .env file in local execution...
 for /F "tokens=1* delims==" %%a in (%env_file_path%) do (
     set "%%a=%%b"
 )
+cd droplet_configuration
 terraform plan -out=infra.out
 terraform apply "infra.out"
+cd ..
+cd docker_configuration
+terraform plan -out=infra.out
+terraform apply "infra.out"
+cd ..
+echo Terraform execution completed.
