@@ -1,3 +1,3 @@
 @echo off
 echo Building, tagging, and pushing the Image Server image...
-..\common\build_tag_push.bat imageserver
+..\common\build_tag_push.bat jayjuk imageserver

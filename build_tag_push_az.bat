@@ -1,5 +1,5 @@
-call common\build_tag_push_az.bat gameserver
-call common\build_tag_push_az.bat imageserver
-call common\build_tag_push_az.bat aibroker
-call common\build_tag_push.bat gameclient
-call common\build_tag_push.bat imagecreator
+call common\build_tag_push.bat jaysgameacr.azurecr.io gameserver
+call common\build_tag_push.bat jaysgameacr.azurecr.io imageserver
+call common\build_tag_push.bat jaysgameacr.azurecr.io aibroker
+call common\build_tag_push.bat jaysgameacr.azurecr.io gameclient
+call common\build_tag_push.bat jaysgameacr.azurecr.io imagecreator

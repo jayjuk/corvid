@@ -1,12 +1,5 @@
-cd gameserver
-call build_tag_push.bat
-cd ..\imageserver
-call build_tag_push.bat
-cd ..\aibroker
-call build_tag_push.bat
-cd ..\gameclient
-call build_tag_push.bat
-cd ..\imagecreator
-call build_tag_push.bat
-cd ..
-
+call common\build_tag_push.bat jayjuk gameserver
+call common\build_tag_push.bat jayjuk imageserver
+call common\build_tag_push.bat jayjuk aibroker
+call common\build_tag_push.bat jayjuk gameclient
+call common\build_tag_push.bat jayjuk imagecreator

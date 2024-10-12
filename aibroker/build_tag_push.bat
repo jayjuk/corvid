@@ -1,3 +1,3 @@
 @echo off
 echo Building, tagging, and pushing the AI Broker image...
-..\common\build_tag_push.bat aibroker
+..\common\build_tag_push.bat jayjuk aibroker

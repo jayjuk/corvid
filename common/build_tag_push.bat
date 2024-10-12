@@ -2,11 +2,12 @@
 setlocal
 
 REM Define the directory and image name
-set "service_name=%1%"
+set "repo_name=%1%"
+set "service_name=%2%"
 
 REM Check service name set
 if "%service_name%"=="" (
-    echo ERROR: Service name not provided as command line parameter 1.
+    echo ERROR: Service name not provided as command line parameter 2. Repo name is parameter 1
     exit /b 1
 )
 
@@ -19,7 +20,7 @@ if /i "%current_dir%"=="%service_name%" (
 )
 
 docker build -t %service_name% . -f %service_name%\Dockerfile
-docker tag %service_name% jayjuk/%service_name%
-docker push jayjuk/%service_name%
+docker tag %service_name% %repo_name%/%service_name%
+docker push %repo_name%/%service_name%
 
 endlocal

@@ -1,3 +1,3 @@
 @echo off
 echo Building, tagging, and pushing the Game Server image...
-..\common\build_tag_push.bat gameserver
+..\common\build_tag_push.bat jayjuk gameserver
