@@ -7,6 +7,15 @@ terraform {
   }
 }
 
+
+# Retrieve local state from the first configuration
+data "terraform_remote_state" "droplet" {
+  backend = "local"
+  config = {
+    path = "../droplet_configuration/terraform.tfstate"
+  }
+}
+
 variable "pvt_key" {
   description = "Path to the SSH private key"
   type        = string
@@ -19,6 +28,25 @@ variable "CONTAINER_REGISTRY_REPOSITORY" {
 }
 
 # Add any additional environment variables as Terraform variables
+variable "GAMESERVER_PORT" {
+  type = string
+}
+
+# Add any additional environment variables as Terraform variables
+variable "IMAGE_MODEL_NAME" {
+  type = string
+}
+
+# Add any additional environment variables as Terraform variables
+variable "AI_COUNT" {
+  type = string
+}
+
+# Add any additional environment variables as Terraform variables
+variable "MODEL_SYSTEM_MESSAGE" {
+  type = string
+}
+
 variable "GAMESERVER_WORLD_NAME" {
   type = string
 }
@@ -136,7 +164,7 @@ resource "docker_container" "imageserver_container" {
   name  = "imageserver"
 
   env = [
-    "IMAGESERVER_HOSTNAME=jaysgame.westeurope.azurecontainer.io",
+    "IMAGESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
     "IMAGESERVER_PORT=3002",
     "AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME}",
     "AZURE_STORAGE_ACCOUNT_KEY=${var.AZURE_STORAGE_ACCOUNT_KEY}"
@@ -157,7 +185,7 @@ resource "docker_container" "imagecreator_container" {
   name  = "imagecreator"
 
   env = [
-    "GAMESERVER_HOSTNAME=${var.GAMESERVER_HOSTNAME}",
+    "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
     "GAMESERVER_PORT=${var.GAMESERVER_PORT}",
     "AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME}",
     "AZURE_STORAGE_ACCOUNT_KEY=${var.AZURE_STORAGE_ACCOUNT_KEY}",
@@ -181,18 +209,25 @@ resource "docker_container" "aibroker_container" {
 
   env = [
     "AI_COUNT=${var.AI_COUNT}",
+    "MODEL_NAME=${var.MODEL_NAME}",
     "MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE}",
     "OPENAI_API_KEY=${var.OPENAI_API_KEY}",
     "STABILITY_KEY=${var.STABILITY_KEY}",
     "ANTHROPIC_API_KEY=${var.ANTHROPIC_API_KEY}",
     "GROQ_API_KEY=${var.GROQ_API_KEY}",
     "GOOGLE_GEMINI_KEY=${var.GOOGLE_GEMINI_KEY}",
+    "GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID}",
+    "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
     "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
-    "GAMESERVER_HOSTNAME=jaysgame.westeurope.azurecontainer.io",
+    "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
     "GAMESERVER_PORT=3001"
   ]
 
   networks_advanced {
     name = docker_network.jaysgame_network.name
+  }
+  #Emit IP addrees of the container
+  provisioner "local-exec" {
+    command = "echo Play the game at: https://${data.terraform_remote_state.droplet.outputs.droplet_ip}:3000"
   }
 }

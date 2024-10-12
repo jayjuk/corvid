@@ -33,10 +33,22 @@ class GameItem:
             and self.location not in world.rooms
             and self.location not in world.get_entity_names()
         ):
-            exit(
-                logger,
-                f"Invalid location {location} specified for item {self.name}",
+            # This can be caused by the game server being killed while a player is holding an item.
+            # In this case, the item location will be a player's name, which is not a valid location if that player is not playing.
+            logger.warning(
+                f"Invalid location {self.location} specified for item {self.name}"
             )
+            # First try to use starting location
+            if hasattr(self, "starting_location"):
+                self.set_location(self.starting_location)
+            else:
+                # Set default location
+                self.set_location(world.get_default_location())
+
+        # Check item has starting location, if not, set to current location
+        # This is used to track where the item was originally created
+        if not (hasattr(self, "starting_location")):
+            self.set_starting_location(self.location)
 
         logger.debug(f"Creating item {self.name}" + f" starting in {self.location}")
 
@@ -56,6 +68,10 @@ class GameItem:
 
     def set_location(self, location: str) -> None:
         self.location = location
+        self.world.storage_manager.store_game_object(self.world.name, self)
+
+    def set_starting_location(self, location: str) -> None:
+        self.starting_location = location
         self.world.storage_manager.store_game_object(self.world.name, self)
 
     # Setter (i.e. player drops it)

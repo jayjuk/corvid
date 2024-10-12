@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     digitalocean = {
-      source = "digitalocean/digitalocean"
+      source  = "digitalocean/digitalocean"
       version = "~> 2.0"
     }
   }
@@ -29,19 +29,20 @@ data "digitalocean_ssh_key" "terraform" {
 
 
 resource "digitalocean_droplet" "jaysgame" {
-  image = "ubuntu-24-04-x64"
-  name = "jaysgame"
+  image  = "ubuntu-24-04-x64"
+  name   = "jaysgame"
   region = "lon1"
-  size = "s-1vcpu-1gb"
+  size   = "s-1vcpu-2gb"
+
   ssh_keys = [
     data.digitalocean_ssh_key.terraform.id
   ]
   connection {
-    host = self.ipv4_address
-    user = "root"
-    type = "ssh"
+    host        = self.ipv4_address
+    user        = "root"
+    type        = "ssh"
     private_key = file(var.pvt_key)
-    timeout = "2m"
+    timeout     = "2m"
   }
   provisioner "remote-exec" {
     inline = [
@@ -54,28 +55,17 @@ resource "digitalocean_droplet" "jaysgame" {
       "sudo apt-get update",
       "sudo apt-get install -y docker-ce docker-ce-cli containerd.io",
       "sudo systemctl start docker",
-      "sudo systemctl enable docker"    
-      ]
-  }  
+      "sudo systemctl enable docker"
+    ]
+  }
 }
 
-# Ensure that Docker setup is complete before starting to use the Docker provider
-resource "null_resource" "wait_for_docker" {
-  depends_on = [digitalocean_droplet.jaysgame]
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo Waiting for Docker setup to complete",
-      "sleep 30",  # Wait for 30 seconds to ensure Docker is fully initialized
-      "docker --version"  # You can use this to confirm Docker is installed
-    ]
-    connection {
-      host = digitalocean_droplet.jaysgame.ipv4_address
-      user = "root"
-      type = "ssh"
-      private_key = file(var.pvt_key)
-    }
-  }
+resource "digitalocean_record" "a_record" {
+  domain = "moncorvosolutions.com"
+  type   = "A"
+  name   = "game" # This is for the root domain, use "www" for a subdomain
+  value  = digitalocean_droplet.jaysgame.ipv4_address
+  ttl    = 3600
 }
 
 output "droplet_ip" {
