@@ -20,35 +20,21 @@ gameclient/perspective-package.zip
 gameserver/logs
 *_transcript.txt
 
-terraform/.terraform.tfstate.lock.info
-terraform/.terraform.lock.hcl
+# Ignore Terraform state files and backups
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
-terraform/.terraform/providers/registry.terraform.io/digitalocean/digitalocean/2.42.0/windows_amd64/terraform-provider-digitalocean_v2.42.0.exe
-terraform/.terraform/providers/registry.terraform.io/digitalocean/digitalocean/2.42.0/windows_amd64/README.md
-terraform/.terraform/providers/registry.terraform.io/digitalocean/digitalocean/2.42.0/windows_amd64/LICENSE
-terraform/.terraform/providers/registry.terraform.io/digitalocean/digitalocean/2.42.0/windows_amd64/CHANGELOG.md
-terraform/droplet_configuration/terraform.tfstate
-terraform/droplet_configuration/.terraform/providers/registry.terraform.io/digitalocean/digitalocean/2.42.0/windows_amd64/CHANGELOG.md
-terraform/droplet_configuration/.terraform/providers/registry.terraform.io/digitalocean/digitalocean/2.42.0/windows_amd64/LICENSE
-terraform/droplet_configuration/.terraform/providers/registry.terraform.io/digitalocean/digitalocean/2.42.0/windows_amd64/README.md
-terraform/droplet_configuration/.terraform/providers/registry.terraform.io/digitalocean/digitalocean/2.42.0/windows_amd64/terraform-provider-digitalocean_v2.42.0.exe
-terraform/droplet_configuration/.terraform/providers/registry.terraform.io/hashicorp/null/3.2.3/windows_amd64/LICENSE.txt
-terraform/droplet_configuration/.terraform/providers/registry.terraform.io/hashicorp/null/3.2.3/windows_amd64/terraform-provider-null_v3.2.3_x5.exe
-terraform/docker_configuration/terraform.tfstate
-terraform/docker_configuration/.terraform/providers/registry.terraform.io/kreuzwerker/docker/3.0.2/windows_amd64/CHANGELOG.md
-terraform/docker_configuration/.terraform/providers/registry.terraform.io/kreuzwerker/docker/3.0.2/windows_amd64/LICENSE
-terraform/docker_configuration/.terraform/providers/registry.terraform.io/kreuzwerker/docker/3.0.2/windows_amd64/README.md
-terraform/docker_configuration/.terraform/providers/registry.terraform.io/kreuzwerker/docker/3.0.2/windows_amd64/terraform-provider-docker_v3.0.2.exe
-terraform/droplet_configuration/.terraform.lock.hcl
-terraform/.terraform/providers/registry.terraform.io/hashicorp/null/3.2.3/windows_amd64/LICENSE.txt
-terraform/.terraform/providers/registry.terraform.io/hashicorp/null/3.2.3/windows_amd64/terraform-provider-null_v3.2.3_x5.exe
-terraform/.terraform/providers/registry.terraform.io/kreuzwerker/docker/2.16.0/windows_amd64/CHANGELOG.md
-terraform/.terraform/providers/registry.terraform.io/kreuzwerker/docker/2.16.0/windows_amd64/LICENSE
-terraform/.terraform/providers/registry.terraform.io/kreuzwerker/docker/2.16.0/windows_amd64/README.md
-terraform/.terraform/providers/registry.terraform.io/kreuzwerker/docker/2.16.0/windows_amd64/terraform-provider-docker_v2.16.0.exe
-terraform/.terraform/providers/registry.terraform.io/kreuzwerker/docker/3.0.2/windows_amd64/CHANGELOG.md
-terraform/.terraform/providers/registry.terraform.io/kreuzwerker/docker/3.0.2/windows_amd64/LICENSE
-terraform/.terraform/providers/registry.terraform.io/kreuzwerker/docker/3.0.2/windows_amd64/README.md
-terraform/.terraform/providers/registry.terraform.io/kreuzwerker/docker/3.0.2/windows_amd64/terraform-provider-docker_v3.0.2.exe
-terraform/docker_configuration/.terraform.lock.hcl
+terraform/**/terraform.tfstate
+terraform/**/terraform.tfstate.backup
+
+# Ignore lock files
+terraform/.terraform.tfstate.lock.info
+terraform/.terraform.lock.hcl
+terraform/**/.terraform.tfstate.lock.info
+terraform/**/.terraform.lock.hcl
+
+# Ignore Terraform provider binaries and caches
+terraform/.terraform/
+terraform/**/.terraform/
+
+# Optional: Ignore any hidden files or directories, which may contain sensitive information
+terraform/.env

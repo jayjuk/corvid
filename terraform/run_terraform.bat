@@ -14,7 +14,7 @@ if exist "..\common\.env" (
 REM Load the environment variables from the .env file
 echo Loading env variables from common .env file in local execution...
 for /F "tokens=1* delims==" %%a in (%env_file_path%) do (
-    set "%%a=%%b"
+    set "TF_VAR_%%a=%%b"
 )
 cd droplet_configuration
 terraform plan -out=infra.out
