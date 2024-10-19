@@ -3,11 +3,12 @@ from logger import setup_logger, exit
 # Set up logger first
 logger = setup_logger()
 
-from typing import Dict, Callable, Tuple, Optional, Union
+from typing import Dict, Callable, Tuple, Optional, Union, List
 from player import Player
 from world import World
 from aimanager import AIManager
 from gamemanager import GameManager
+import re
 
 
 class PlayerInputProcessor:
@@ -90,9 +91,14 @@ class PlayerInputProcessor:
                 "description": "Head in a direction e.g. go north (you can also use n, e, s, w))",
             },
             "build": {
-                "function": self.game_manager.do_build,
+                "function": self.game_manager.do_build,  # Called with special inputs - see process_player_input below
                 "description": "Build a new location. Specify the direction, name and description using single quotes "
                 + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'",
+            },
+            "create": {
+                "function": self.game_manager.do_create,
+                "description": "Create a new item. Specify the name and description using single quotes "
+                + "e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside...'.'",
             },
             "buy": {
                 "function": self.game_manager.do_buy,
@@ -160,15 +166,13 @@ class PlayerInputProcessor:
     def get_commands_description(self) -> str:
         return self.commands_description
 
-    # Strip outer quotes from a string
-    def strip_outer_quotes(self, some_text: str) -> None:
-        if (
-            some_text.startswith('"')
-            and some_text.endswith('"')
-            or some_text.startswith("'")
-            and some_text.endswith("'")
-        ):
+    def strip_outer_quotes(self, some_text: str) -> str:
+        # Regular expression to match a single set of quotes around the whole string
+        pattern = r'^(["\']).*\1$'
+
+        if re.match(pattern, some_text):
             some_text = some_text[1:-1]
+
         return some_text
 
     # Resolve the room name from the rest of the response
@@ -214,8 +218,6 @@ class PlayerInputProcessor:
         words = str(player_input).split()
         verb = words[0].lower()
         rest = " ".join(words[1:])
-        # strip out quotes from the outside of the response only
-        rest = self.strip_outer_quotes(rest)
         return verb, rest
 
     # Translate player input and try to process it again
@@ -267,6 +269,26 @@ class PlayerInputProcessor:
         if direction not in self.directions:
             return f"'{direction}' is not a valid direction."
 
+    # Get phrases. Each phrase is either a single word, or a number of words in quotes. There can be multiple phrases. Different quotes could be used from one phrase to the next.
+    def get_phrases(self, rest_of_response: str) -> List[str]:
+        print(f"Rest of response: {rest_of_response}")
+        phrases: List[str] = []
+
+        # Regex pattern to match phrases in single or double quotes or unquoted words
+        pattern = re.compile(r'(["\'])(.*?)\1|(\S+)')
+
+        # Use findall to get all phrases
+        matches = pattern.findall(rest_of_response)
+
+        for match in matches:
+            # Match groups: match[1] will contain the quoted phrase, match[2] the unquoted word
+            if match[1]:  # This is a quoted phrase
+                phrases.append(match[1].strip())
+            elif match[2]:  # This is an unquoted word
+                phrases.append(match[2].strip())
+        print(f"Phrases: {phrases}")
+        return phrases
+
     # Process player input. Returns a function pointer, a tuple of arguments, and an error message if any.
     def process_player_input(
         self, player: Player, player_input: str, translated: bool = False
@@ -293,7 +315,7 @@ class PlayerInputProcessor:
 
         # Resolve the function associated with a command, and its parameters.
         if command in self.command_functions:
-            # Special handling for build command: validate the room name and pass it as an extra parameter
+            # Special handling for build command: validate the room name and pass it as an extra parameter, before calling do_build
             if command == "build":
 
                 # First parse the response to get the direction, room name and description. handle the player
@@ -348,12 +370,37 @@ class PlayerInputProcessor:
                     (player, direction, room_name, room_description),
                     None,
                 )
+            elif command == "create":
+                # First split the response into phrases which are separated by quotes
+                phrases = self.get_phrases(rest_of_response)
+
+                # You: create "Big bug" "A big bug that's nice."
+                # Please specify item name and description in quotes.
+                # NOT WORKING
+                # Check the number of phrases
+                if len(phrases) != 2:
+                    return (
+                        None,
+                        None,
+                        "Please specify item name and description in quotes.",
+                    )
+
+                # Check item name is not empty
+                item_name: str = phrases[0]
+
+                description: str = phrases[1]
+
+                return (
+                    self.command_functions[command]["function"],
+                    (player, item_name, description),
+                    None,
+                )
             # Normal command
             return (
                 self.command_functions[command]["function"],
                 (
                     player,
-                    rest_of_response,
+                    self.strip_outer_quotes(rest_of_response),
                 ),
                 None,
             )

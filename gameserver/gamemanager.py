@@ -286,6 +286,33 @@ class GameManager:
             },
         )
 
+    # Create item
+    def do_create(self, player: Player, item_name: str, description: str) -> str:
+
+        # Check the item name is valid
+        if item_name == "":
+            return self.item_name_empty_message
+
+        # Check if the item is in the room
+        item: Optional[GameItem] = self.world.search_item(
+            item_name, player.get_current_location()
+        )
+        if item:
+            return f"{item.get_name(article='The')} is already here."
+        # Check if they named an entity
+        elif self.get_entity_by_name(item_name):
+            return f"{item_name} is already the name of an entity."
+        # Create the item
+        # Add a full stop to the end of the description if it is missing
+        if description[-1] != ".":
+            description += "."
+        outcome: Optional[str] = self.world.create_item(
+            item_name, description, player.get_current_location()
+        )
+        if outcome:
+            return outcome
+        return f"You create {item_name} with the following description: {description}"
+
     # Check if an item is an entity
     def get_entity_by_name(self, item_name: str) -> Optional["Entity"]:
         if item_name:
@@ -630,8 +657,8 @@ class GameManager:
         if rest_of_response == "everything" or rest_of_response == "*":
             return "all"
 
-        if " from " in rest_of_response:
-            rest_of_response = rest_of_response.split(" from ")[0]
+        if rest_of_response.startswith(" from "):
+            rest_of_response = rest_of_response[6:]
 
         # This is now simple because quotes are stripped out earlier
         return rest_of_response
