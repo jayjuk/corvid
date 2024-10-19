@@ -13,8 +13,6 @@ class TestGameManager(unittest.TestCase):
             sio=None,
             storage_manager=self.storage_manager,
             world_name="unittest",
-            model_name=None,
-            image_model_name=None,
         )
         self.player_input_processor = PlayerInputProcessor(self.game_manager)
         self.player = Player(self.game_manager.world, 0, "TestPlayer")
