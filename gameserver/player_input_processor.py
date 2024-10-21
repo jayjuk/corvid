@@ -300,7 +300,7 @@ class PlayerInputProcessor:
         player.update_last_action_time()
         if not player_input:
             # Empty command
-            return "You need to enter a command."
+            return None, None, "You need to enter a command."
 
         player.add_input_history(f"You: {player_input}")
 
@@ -327,13 +327,17 @@ class PlayerInputProcessor:
                 # Check direction is valid and not taken
                 outcome: str = self.check_direction(direction, player)
                 if outcome:
-                    return outcome
+                    return None, None, outcome
 
                 # Remove the direction from the response
                 rest_of_response: str = " ".join(rest_of_response.split()[1:])
                 if not rest_of_response:
                     # User did not specify name of room to build
-                    return "Please specify room name in quotes and a description."
+                    return (
+                        None,
+                        None,
+                        "Please specify room name in quotes and a description.",
+                    )
 
                 # Check if the room name is in quotes
                 room_name: str

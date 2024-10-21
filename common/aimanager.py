@@ -115,7 +115,9 @@ class AIManager:
     def get_model_api(self) -> str:
         if self.model_name.startswith("gpt"):
             return "GPT"
-        elif self.model_name.startswith("gemini"):
+        elif self.model_name.startswith("gemini") or self.model_name.startswith(
+            "imagen"
+        ):
             return "Gemini"
         elif self.model_name.startswith("claude"):
             return "Anthropic"

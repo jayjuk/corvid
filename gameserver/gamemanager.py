@@ -586,6 +586,7 @@ class GameManager:
             f"\nThe player issues this command: {action}"
             + "\nRespond with a JSON object as follows:"
             + "\nIf this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with feedback to the player in string property 'success_response' and any combination (or none) of the following:"
+            + "\n* Something the player says in string property 'player_utterance'."
             + "\n* The updated description of the current location in string property 'updated_location'."
             + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
             + "\n* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values."
@@ -605,6 +606,10 @@ class GameManager:
                 f"AI understood the command and returned a success response: {response_json.get('success_response')}"
             )
             return_text: str = response_json.get("success_response")
+            if response_json.get("player_utterance"):
+                return_text += " " + self.do_say(
+                    player, response_json.get("player_utterance", "")
+                )
             if response_json.get("updated_location"):
                 self.world.update_room_description(
                     player.get_current_location(), response_json["updated_location"]
@@ -833,9 +838,9 @@ class GameManager:
 
             # First check in case a room is mentioned
             # Loop through the exits to see if any of them match the room name
-            for exit_dir, exit_room in self.world.rooms[entity.get_current_location()][
-                "exits"
-            ].items():
+            for exit_dir, exit_room in self.world.rooms[
+                entity.get_current_location()
+            ].exits.items():
                 if exit_room.lower() in direction.lower():
                     return self.move_entity(entity, exit_dir)
 
