@@ -270,7 +270,25 @@ class GameManager:
         # Emit event to trigger a room image creation
         self.request_room_image_creation(room_name, room_description)
 
-        return f"You build {direction} and make a new location, {room_name}."
+        # If this is the first room apart from the empty world room, move all players there
+        original_location = player.get_current_location()
+        return_message = f"You build {direction} and make a new location, {room_name}: {room_description}."
+        if self.world.is_empty:
+            logger.info(
+                "This is the first room in the world. Removing the starting room."
+            )
+            for other_player in self.players.values():
+                self.move_entity(other_player, "join", room_name)
+            # Move self
+            self.move_entity(player, "join", room_name)
+
+            # Update the world to reflect that it is no longer empty
+            self.world.is_empty = False
+            # Remove the empty world room
+            self.world.delete_room(original_location)
+            return_message += " Congratulations, it is the first location in this world! You move there immediately."
+
+        return return_message
 
     def request_room_image_creation(
         self, room_name: str, room_description: str

@@ -28,6 +28,10 @@ class World:
 
         logger.info(f"Creating world {name}")
 
+        # Flag to indicate if the world is empty
+        # Only set to true if we load from empty.json
+        self.is_empty: bool = False
+
         self.name: str = name
         self.ai_manager: AIManager = ai_manager
         self.storage_manager: Any = storage_manager
@@ -73,7 +77,9 @@ class World:
         store_default_rooms = False
         if not rooms_list:
             logger.warning("No rooms found in cloud - loading from static")
-            rooms_list = self.storage_manager.get_default_world_data(self.name, "rooms")
+            (self.is_empty, rooms_list) = self.storage_manager.get_default_world_data(
+                self.name, "rooms"
+            )
             store_default_rooms = True
         # Add room name to each room
         rooms_dict: Dict[str, Room] = {}
@@ -405,6 +411,25 @@ class World:
         self.rooms[room_name].description = description
         self.storage_manager.store_game_object(self.name, self.rooms[room_name])
 
+    def delete_room(self, room_name: str) -> str:
+        logger.info(f"Deleting room {room_name}")
+        # Remove the room from the exits of all other rooms
+        rooms_to_update = []
+        for room in self.rooms:
+            if room_name in self.rooms[room].exits.values():
+                rooms_to_update.append(room)
+
+        for room in rooms_to_update:
+            for direction in list(self.rooms[room].exits.keys()):
+                if self.rooms[room].exits[direction] == room_name:
+                    del self.rooms[room].exits[direction]
+                    self.storage_manager.store_game_object(self.name, self.rooms[room])
+        # Delete the room
+        del self.rooms[room_name]
+        self.storage_manager.delete_game_object(self.name, "Room", room_name, room_name)
+        logger.info(f"Room {room_name} has been deleted.")
+        return f"Room {room_name} has been deleted."
+
     # Search room for item by name and return reference to it if found
     def search_item(self, item_name: str, location: str) -> Optional[GameItem]:
         for item in self.room_items.get(location, []):
@@ -454,9 +479,8 @@ class World:
             self.load_default_items()
 
     def load_default_items(self) -> None:
-        for item_data in self.storage_manager.get_default_world_data(
-            self.name, "items"
-        ):
+        _, item_datas = self.storage_manager.get_default_world_data(self.name, "items")
+        for item_data in item_datas:
             logger.info(f"Loading and storing item {item_data['name']}")
             o: GameItem = GameItem(world=self, init_dict=item_data)
             self.register_item(o)
@@ -559,9 +583,8 @@ class World:
 
     def load_default_entities(self) -> None:
         logger.info("Loading default entities from file")
-        for entity in self.storage_manager.get_default_world_data(
-            self.name, "entities"
-        ):
+        _, entities = self.storage_manager.get_default_world_data(self.name, "entities")
+        for entity in entities:
             logger.info(f"Loading {entity['name']}")
             self.spawn_entity(entity)
 
