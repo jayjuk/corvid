@@ -313,6 +313,70 @@ class GameManager:
             return outcome
         return f"You create {item_name} with the following description: {description}"
 
+    # Function to parse rest of response and return a list, each item in the list is either one word or a single quoted phrase
+    def parse_rest_of_response(self, rest_of_response: str) -> List[str]:
+        logger.info(f"Parsing rest of response: {rest_of_response}")
+
+        # Split the response into words
+        response_list: List[str] = rest_of_response.split()
+        # Loop through the words and combine single quoted phrases
+        combined_list: List[str] = []
+        combined_phrase: str = ""
+        for word in response_list:
+            if word[0] == "'":
+                combined_phrase = word[1:]
+            elif word[-1] == "'":
+                combined_phrase += " " + word[:-1]
+                combined_list.append(combined_phrase)
+                combined_phrase = ""
+            elif combined_phrase:
+                combined_phrase += " " + word
+            else:
+                combined_list.append(word)
+
+        logger.info(f"Parsed response: {combined_list}")
+        return combined_list
+
+    # Spawn an animal
+    def do_spawn(self, player: Player, rest_of_response: str) -> str:
+        # Get the description and actions from the rest of the response
+        animal_name: str
+        description: str
+        list_of_actions: str
+        inputs_list = self.parse_rest_of_response(rest_of_response)
+        if len(inputs_list) == 3:
+            # Split the response into description and actions
+            animal_name, description, list_of_actions = inputs_list
+        else:
+            return "You need to provide a name, description and actions for the animal."
+
+        # Check the animal name is valid
+        if animal_name == "":
+            return "Invalid input: animal name is empty."
+
+        # Check if the animal is in the room
+        animal: Optional[Entity] = self.get_entity_by_name(animal_name)
+        if animal:
+            return f"{animal_name} is already here."
+        # Check if they named an item
+        elif self.world.search_item(animal_name, player.get_current_location()):
+            return f"{animal_name} is already the name of an item."
+        # Spawn the animal using same dictionary as per the world file
+        entity_dict = {
+            "name": animal_name,
+            "type": "animal",
+            "description": description,
+            "location": player.get_current_location(),
+            "actions": list_of_actions.split(","),
+            "inventory": [],
+            "action_chance": 0.1,
+            "move_chance": 0,  # For now, animals created by players don't move
+        }
+        outcome: Optional[str] = self.world.spawn_entity(entity_dict)
+        if outcome:
+            return outcome
+        return f"You spawn a {animal_name}: {description}."
+
     # Check if an item is an entity
     def get_entity_by_name(self, item_name: str) -> Optional["Entity"]:
         if item_name:

@@ -93,12 +93,21 @@ class PlayerInputProcessor:
             "build": {
                 "function": self.game_manager.do_build,  # Called with special inputs - see process_player_input below
                 "description": "Build a new location. Specify the direction, name and description using single quotes "
-                + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'",
+                + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'",
             },
             "create": {
                 "function": self.game_manager.do_create,
                 "description": "Create a new item. Specify the name and description using single quotes "
-                + "e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside...'.'",
+                + "e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'",
+            },
+            "spawn": {
+                "function": self.game_manager.do_spawn,
+                "description": (
+                    "Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for each"
+                    + "e.g: create 'smiling fox' "
+                    + "'A plump, healthy-looking fox with a permanent cheeky smile on its face' "
+                    + "'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'"
+                ),
             },
             "buy": {
                 "function": self.game_manager.do_buy,

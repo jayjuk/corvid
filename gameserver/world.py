@@ -563,27 +563,32 @@ class World:
             self.name, "entities"
         ):
             logger.info(f"Loading {entity['name']}")
-            entity_object = None
-            if entity["type"] == "merchant":
-                entity_object = Merchant(
-                    self,
-                    name=entity["name"],
-                    location=entity["location"],
-                    inventory=[],
-                    description=entity.get("description", ""),
-                )
-            elif entity["type"] == "animal":
-                entity_object = Animal(
-                    self,
-                    name=entity["name"],
-                    location=entity["location"],
-                    description=entity["description"],
-                    actions=entity["actions"],
-                    action_chance=entity["action_chance"],
-                )
-            else:
-                exit(logger, f"Invalid or unsupported entity type {entity['type']}")
-            self.storage_manager.store_game_object(self.name, entity_object)
+            self.spawn_entity(entity)
+
+    # Create entity from dictionary and store in database
+    def spawn_entity(self, entity: Entity) -> None:
+        entity_object = None
+        if entity["type"] == "merchant":
+            entity_object = Merchant(
+                self,
+                name=entity["name"],
+                location=entity["location"],
+                inventory=[],
+                description=entity.get("description", ""),
+            )
+        elif entity["type"] == "animal":
+            entity_object = Animal(
+                self,
+                name=entity["name"],
+                location=entity["location"],
+                description=entity["description"],
+                actions=entity["actions"],
+                action_chance=entity["action_chance"],
+            )
+        else:
+            exit(logger, f"Invalid or unsupported entity type {entity['type']}")
+        self.storage_manager.store_game_object(self.name, entity_object)
+        self.register_entity(entity_object)
 
     def register_entity(self, entity: Union[Merchant, Animal]) -> None:
         # TODO #81 Implement unique entity and object ID to allow ants coins etc
