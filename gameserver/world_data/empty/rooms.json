@@ -1,7 +1,7 @@
 [
   {
-    "name": "Dark Cupboard",
-    "description": "In the beginning, there was darkness! You cannot see anything. You feel around, and realise you must be in some little cupboard.",
+    "name": "The Void",
+    "description": "In the beginning, there was nothing! You cannot see, hear, smell or feel anything. Better start building...",
     "image": "black.png",
     "exits": {}
   }

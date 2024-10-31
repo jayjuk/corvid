@@ -305,6 +305,10 @@ def catch_all(data: Dict) -> None:
     error_message: str = f"Invalid name event received: {data}"
     logger.info(error_message)
     ai_broker.log_error(error_message)
+    # If AI_NAME is set in the environment and was the invalid name, reset it
+    if environ.get("AI_NAME", "") in data:
+        # Set AI_NAME to empty string to force a new name to be chosen
+        environ["AI_NAME"] = ""
     ai_broker.set_ai_name(data)
     sio.emit("set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode})
 

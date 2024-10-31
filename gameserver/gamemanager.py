@@ -682,6 +682,17 @@ class GameManager:
         try:
             response_json = json.loads(ai_response)
         except json.JSONDecodeError:
+            logger.error(f"AI response was not valid JSON: {ai_response}")
+            return "The AI could not understand the command."
+        # If a list comes back, take the first element
+        if isinstance(response_json, list):
+            if len(response_json) == 1:
+                response_json = response_json[0]
+            else:
+                logger.error(f"AI response was a list: {response_json}")
+                return "The AI could not understand the command."
+        if not isinstance(response_json, dict):
+            logger.error(f"AI response was not a dictionary: {response_json}")
             return "The AI could not understand the command."
         if response_json.get("success_response"):
             logger.info(

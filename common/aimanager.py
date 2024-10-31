@@ -79,8 +79,6 @@ class AIManager:
             "(some game transcript history removed for brevity)"
         )
         if self.get_model_api() == "Gemini":
-            # Override max history for Gemini for now, as it's free
-            self.max_history: int = 99999
             self.model_word: str = "model"
             self.content_word: str = "parts"
         logger.info("Starting up AI with model " + self.model_name)
@@ -271,6 +269,8 @@ class AIManager:
                 # Clean up response
                 if "```" in model_response:
                     model_response = model_response.split("```")[0].strip()
+                if "#" in model_response:
+                    model_response = model_response.split("#")[0].strip()
 
             except Exception as e:
                 traceback.print_exc()

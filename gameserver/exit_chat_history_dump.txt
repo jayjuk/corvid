@@ -1,147 +1,991 @@
 role: user
 parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
 Valid directions: north, east, south, west.
-Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
-If the player did not mean one of the above commands, please respond with the special command 'custom' only.
-Respond with only a valid command phrase, nothing else.
-Some history of what the user has seen for context:
-Game: You start in the dark cupboard.   Caesar the player is here. Brutus the builder is here. Phoenix the builder is here.
-Game: Brutus says, "Hi Jay!"
-Game: Caesar says, "Greetings, Jay. Welcome to the team! Together, we shall craft a world the likes of which has never been seen before!"
-Game: Phoenix says, "Hi Caesar"
-Game: Caesar has built to the north and made a new location, A shimmering desert.
-You: I look forward to it. Away you go!
-Their latest input to translate: I look forward to it. Away you go!
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You start in the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+Game: Brutus has joined the game, starting in the Neptune'S Grotto; there are now 2 players.
+Game: Tidebringer has joined the game, starting in the Coral Archway; there are now 3 players.
+You: look
+Game: You look again at the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+Game: Brutus has built to the north and made a new location, Neptune'S Throne Room.
+You: look at the treasure chest
+Game: You look at the Treasure Chest: An ancient, wooden treasure chest, adorned with intricate carvings and bound by a heavy iron lock.
+You: open the treasure chest 
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest 
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
 role: model
-parts: say Away you go!
+parts: open the treasure chest
 role: user
 parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
 Valid directions: north, east, south, west.
-Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
-If the player did not mean one of the above commands, please respond with the special command 'custom' only.
-Respond with only a valid command phrase, nothing else.
-Some history of what the user has seen for context:
-Game: You look again at the dark cupboard: {In the beginning, there was darkness! You cannot see anything. You feel around, and realise you must be in some little cupboard.
-}  Available directions in which you can build: north, south, east, west.
- 
-Game: Caesar has built to the north and made a new location, A shimmering desert.
-You: look at the dark cupboard
-Game: There is no 'dark cupboard' here.
-You: look at A shimmering desert 
-Game: There is no 'A shimmering desert' here.
-Game: Jay says, "Away you go!"
-Game: Caesar leaves, heading north to the a shimmering desert.
-Game: Phoenix leaves, heading north to the a shimmering desert.
-You: I want to follow Caesar, north!
-Their latest input to translate: I want to follow Caesar, north!
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+You: look
+Game: You look again at the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+Game: Brutus has built to the north and made a new location, Neptune'S Throne Room.
+You: look at the treasure chest
+Game: You look at the Treasure Chest: An ancient, wooden treasure chest, adorned with intricate carvings and bound by a heavy iron lock.
+You: open the treasure chest 
+
+
+You: open the treasure chest
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Brutus has built to the east and made a new location, Poseidon'S Treasure Chamber.
+You: open the treasure chest
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
 role: model
-parts: go north
+parts: open the treasure chest
 role: user
 parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
 Valid directions: north, east, south, west.
-Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
-If the player did not mean one of the above commands, please respond with the special command 'custom' only.
-Respond with only a valid command phrase, nothing else.
-Some history of what the user has seen for context:
-Game: Phoenix has built to the west and made a new location, The oasis.
-Game: Caesar says, "Jay, we're building a new world to the south of this desert. Why not join us? It’s more interesting and adventurous."
-You: look at the shimmering desert 
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You look at the Treasure Chest: An ancient, wooden treasure chest, adorned with intricate carvings and bound by a heavy iron lock.
+You: open the treasure chest 
 
-Game: There is no 'shimmering desert' here.
-Game: Jay leaves, heading south to the dark cupboard.
-Game: Jay arrives from the dark cupboard.
-Game: Jay leaves, heading south to the dark cupboard.
-Game: Phoenix leaves, heading south to the dark cupboard.
-Game: Jay arrives from the dark cupboard.
-You: follow Jay! 
 
-Their latest input to translate: follow Jay! 
-
-role: model
-parts: go south
-role: user
-parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+You: open the treasure chest
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest', and will proceed accordingly.
+That is not a recognised command. Available commands:
 Valid directions: north, east, south, west.
-Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
-If the player did not mean one of the above commands, please respond with the special command 'custom' only.
-Respond with only a valid command phrase, nothing else.
-Some history of what the user has seen for context:
-Game: Jay arrives from the dark cupboard.
-Game: Jay leaves, heading west to the the oasis.
-Game: Jay arrives from the the oasis.
-You: look at the shimmering desert 
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Brutus has built to the east and made a new location, Poseidon'S Treasure Chamber.
+You: open the treasure chest
 
 
-
-
-Game: There is no 'shimmering desert' here.
-Game: Jay leaves, heading south to the dark cupboard.
-Game: Phoenix arrives from the dark cupboard.
-Game: Caesar leaves, heading west to the the oasis.
-Game: Jay arrives from the dark cupboard.
-You: follow Caesar 
-
-Their latest input to translate: follow Caesar 
-
-role: model
-parts: go west
-role: user
-parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+You: open the treasure chest
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest', and will proceed accordingly.
+That is not a recognised command. Available commands:
 Valid directions: north, east, south, west.
-Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
-If the player did not mean one of the above commands, please respond with the special command 'custom' only.
-Respond with only a valid command phrase, nothing else.
-Some history of what the user has seen for context:
-Game: Brutus leaves, heading west to the the oasis.
-You: w
-Game: You head west to the the oasis.  Available exits: east: A Shimmering Desert. Caesar the player is here. Brutus the builder is here.
-You: e
-Game: You head east to the a shimmering desert.  Available exits: south: Dark Cupboard; west: The Oasis. Phoenix the builder is here.
-You: w
-Game: You head west to the the oasis.  Available exits: east: A Shimmering Desert. Caesar the player is here. Brutus the builder is here.
-You: w
-Game: You can't go west. Available exits: east: A Shimmering Desert.
-You: billabong
-Their latest input to translate: billabong
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Room image for Neptune'S Throne Room has been created.
+You: open the treasure chest. 
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest. 
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
 role: model
 parts: custom
 role: user
 parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
 Valid directions: north, east, south, west.
-Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
-If the player did not mean one of the above commands, please respond with the special command 'custom' only.
-Respond with only a valid command phrase, nothing else.
-Some history of what the user has seen for context:
-You: e
-Game: You head east to the a shimmering desert.  Available exits: south: Dark Cupboard; west: The Oasis. Phoenix the builder is here.
-You: w
-Game: You head west to the the oasis.  Available exits: east: A Shimmering Desert. Caesar the player is here. Brutus the builder is here.
-You: w
-Game: You can't go west. Available exits: east: A Shimmering Desert.
-You: billabong
-You: custom billabong
-Game: The AI could not understand the command.
-You: potato
-Their latest input to translate: potato
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: Room image for Poseidon'S Treasure Chamber has been created.
+Game: Brutus shouts, "Can anyone hear me?"
+You: shout Yes, I can hear you.
+Game: You shout, 'Yes, I can hear you'.
+You: look in the treasure chest 
+
+Game: There is no 'in the treasure chest' here.
+You: look inside the treasure chest 
+
+
+
+
+Game: There is no 'inside the treasure chest' here.
+Game: Tidebringer has built to the east and made a new location, A Sunken Cave.
+You: I meant to say "look inside the treasure chest" in my previous message. Can you please look inside the treasure chest for me? 
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: I meant to say "look inside the treasure chest" in my previous message. Can you please look inside the treasure chest for me? 
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: look inside the treasure chest
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+You: look in the treasure chest 
+
+Game: There is no 'in the treasure chest' here.
+You: look inside the treasure chest 
+
+
+
+
+Game: There is no 'inside the treasure chest' here.
+Game: Tidebringer has built to the east and made a new location, A Sunken Cave.
+You: I meant to say "look inside the treasure chest" in my previous message. Can you please look inside the treasure chest for me? 
+
+You: look inside the treasure chest
+Game: There is no 'inside the treasure chest' here.
+Game: Brutus has built to the south and made a new location, Shipwrecked Galley.
+You: I meant "open the treasure chest". Sorry for all the trouble
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: I meant "open the treasure chest". Sorry for all the trouble
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the treasure chest 
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: Tidebringer has built to the east and made a new location, A Sunken Cave.
+You: I meant to say "look inside the treasure chest" in my previous message. Can you please look inside the treasure chest for me? 
+
+You: look inside the treasure chest
+Game: There is no 'inside the treasure chest' here.
+Game: Brutus has built to the south and made a new location, Shipwrecked Galley.
+You: I meant "open the treasure chest". Sorry for all the trouble
+
+You: open the treasure chest 
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest ', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Room image for A Sunken Cave has been created.
+You: open the treasure chest 
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest 
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the treasure chest 
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: There is no 'inside the treasure chest' here.
+Game: Brutus has built to the south and made a new location, Shipwrecked Galley.
+You: I meant "open the treasure chest". Sorry for all the trouble
+
+You: open the treasure chest 
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest ', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Room image for A Sunken Cave has been created.
+You: open the treasure chest 
+You: open the treasure chest 
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest ', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the treasure chest 
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest 
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
 role: model
 parts: custom
 role: user
 parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
 Valid directions: north, east, south, west.
-Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest.'.'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
-If the player did not mean one of the above commands, please respond with the special command 'custom' only.
-Respond with only a valid command phrase, nothing else.
-Some history of what the user has seen for context:
-Game: You head west to the the oasis.  Available exits: east: A Shimmering Desert. Caesar the player is here. Brutus the builder is here.
-You: w
-Game: You can't go west. Available exits: east: A Shimmering Desert.
-You: billabong
-You: custom billabong
-Game: The AI could not understand the command.
-You: potato
-You: custom potato
-Game: The AI could not understand the command.
-You: banana
-Their latest input to translate: banana
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You start in the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+You: look inside the treasure chest 
+
+
+
+
+
+
+Game: There is no 'inside the treasure chest' here.
+You: open the treasure chest 
+
+
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest 
+
+
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the treasure chest 
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You start in the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+You: look inside the treasure chest 
+
+
+
+
+
+
+Game: There is no 'inside the treasure chest' here.
+You: open the treasure chest 
+
+
+
+
+You: open the treasure chest 
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest ', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Tidebringer has left the game; there are now 2 players.
+You: open the treasure chest 
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest 
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the treasure chest 
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: There is no 'inside the treasure chest' here.
+You: open the treasure chest 
+
+
+
+
+You: open the treasure chest 
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest ', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Tidebringer has left the game; there are now 2 players.
+You: open the treasure chest 
+You: open the treasure chest 
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest ', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Tidebringer has joined the game, starting in the A Sunken Cave; there are now 3 players.
+You: open the treasure chest 
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest 
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
 role: model
 parts: custom
+
+
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You start in the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+You: open the treasure chest 
+
+
+
+
+
+
+
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest 
+
+
+
+
+
+
+
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the treasure chest
+
+
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You start in the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+You: open the treasure chest 
+
+
+
+
+
+
+
+
+
+You: open the treasure chest
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the treasure chest 
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the treasure chest 
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the treasure chest 
+
+
+
+
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You start in the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+You: open the treasure chest 
+
+
+
+
+
+
+
+
+
+You: open the treasure chest
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the treasure chest 
+
+
+You: open the treasure chest 
+
+
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest 
+
+
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Tidebringer has left the game; there are now 2 players.
+You: open the Treasure Chest 
+
+
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the Treasure Chest 
+
+
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the Treasure Chest 
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the treasure chest 
+
+
+You: open the treasure chest 
+
+
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest 
+
+
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Tidebringer has left the game; there are now 2 players.
+You: open the Treasure Chest 
+
+
+
+
+You: open the Treasure Chest 
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest ', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Tidebringer has joined the game, starting in the A Sunken Cave; there are now 3 players.
+You: open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the treasure chest 
+
+
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Tidebringer has left the game; there are now 2 players.
+You: open the Treasure Chest 
+
+
+
+
+You: open the Treasure Chest 
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest ', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Tidebringer has joined the game, starting in the A Sunken Cave; there are now 3 players.
+You: open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+You: open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the Treasure Chest 
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the Treasure Chest 
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the Treasure Chest 
+
+
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+You: open the Treasure Chest 
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest ', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+Game: Tidebringer has joined the game, starting in the A Sunken Cave; there are now 3 players.
+You: open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+You: open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the Treasure Chest 
+
+You: open the Treasure Chest 
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest 
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the Treasure Chest 
+
+
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the Treasure Chest 
+
+
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the Treasure Chest 
+
+
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+You: open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+You: open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest 
+
+
+
+
+
+
+
+
+
+
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the Treasure Chest 
+
+You: open the Treasure Chest 
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest 
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the Treasure Chest 
+
+
+
+
+You: open the Treasure Chest 
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest 
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the Treasure Chest          
+
+
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the Treasure Chest          
+
+
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: custom
+
+role: user
+parts: The player in a game is in location Grand Library Of Atlantis  which has current description 'A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.'.  There is a Treasure Chest here: An ancient, wooden treasure chest, adorned with intricate carvings and bound by a heavy iron lock.
+The player issues this command: 
+Respond with a JSON object as follows:
+If this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with feedback to the player in string property 'success_response' and any combination (or none) of the following:
+* Something the player says in string property 'player_utterance'.
+* The updated description of the current location in string property 'updated_location'.
+* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values.
+* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values.
+* The descriptions of any destroyed/deleted items as string array 'deleted_items'. (If an item has changed so much that its name no longer applies, then delete it and replace it with one or more new items. Note that an item cannot be both updated and deleted.)
+* The updated descriptions of any modified entities (only those listed earlier) as nested object property 'updated_entities', with entity names as keys and new descriptions as values.
+Only include the updated elements if they have changed in a way that another player who did not witness the cause of the change would notice.
+ If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'.
+role: model
+parts: Here's the JSON response to the player's action:
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You start in the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+You: open the Treasure Chest         
+
+
+
+
+
+
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the Treasure Chest         
+
+
+
+
+
+
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the Treasure Chest         
+
+
+
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You start in the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+You: open the Treasure Chest         
+
+
+
+
+
+
+
+
+You: open the Treasure Chest         
+
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest         
+
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the Treasure Chest         
+
+
+
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the Treasure Chest         
+
+
+
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: open the Treasure Chest         
+
+
+role: user
+parts: Help me to translate my player's input into either a valid adventure game command, or a custom action.
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = pushSome history of what the user has seen for context:
+Game: You start in the grand library of atlantis: {A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+} Available exits: east: The Sunken Ship; north: The Great Hall Of Atlantis. There is a Treasure Chest here.
+You: open the Treasure Chest         
+
+
+
+
+
+
+
+
+You: open the Treasure Chest         
+
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest         
+
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the Treasure Chest         
+
+
+
+
+You: open the Treasure Chest         
+
+
+Game: I'm trying to guess what you meant by that...
+I think you meant 'open the Treasure Chest         
+
+', and will proceed accordingly.
+That is not a recognised command. Available commands:
+Valid directions: north, east, south, west.
+Valid commands: look = Get a description of your current location; say = Say something to all other players in your *current* location, e.g. say which way shall we go?; shout = Shout something to everyone in the game, e.g. shout Where is everyone?; greet = Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!; wait = Do nothing for now; jump = Jump to location of another player named in rest_of_response; get = Pick up an item in your current location; drop = Drop an item in your current location; go = Head in a direction e.g. go north (you can also use n, e, s, w)); build = Build a new location. Specify the direction, name and description using single quotes e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'; create = Create a new item. Specify the name and description using single quotes e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'; spawn = Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for eache.g: create 'smiling fox' 'A plump, healthy-looking fox with a permanent cheeky smile on its face' 'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'; buy = Buy an item from an entity (e.g. a Merchant) in your current location.; sell = Sell an item to an entity (e.g. a Merchant) in your current location.; trade = Enter into trading negotiations with a Merchant in your current location.; push = Push something in your possession, a button for example...; inventory = List the items you are carrying; help = Get game instructions. Recognised synonyms: pick = get, take = get, head = go, walk = go, run = go, enter = go, hi = greet, talk = say, inv = inventory, haggle = trade, purchase = buy, examine = look, inspect = look, press = push
+You: open the Treasure Chest         
+
+
+The player's current location description: A colossal library submerged beneath the waves, housing countless scrolls and ancient texts that hold secrets of the lost civilization.
+The items in this location:  There is a Treasure Chest here.
+Player's inventory: You are not carrying any items. You have 100 pennies in your pocket.
+Player's input: open the Treasure Chest         
+
+If the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only.
+Respond with only a valid command phrase or the word 'custom', nothing else.
+
+role: model
+parts: custom
+
+
