@@ -45,9 +45,13 @@ class GameManager:
         self.player_sid_to_name_map: Dict[str, str] = {}
 
         # General AI manager - disabled in unit tests
+        # AI manager is used for the AI to interact with the game
+        # Share sio with AI manager in this instance only
         self.ai_manager: Optional[AIManager]
         if model_name:
-            self.ai_manager: AIManager = AIManager(model_name=model_name)
+            self.ai_manager: AIManager = AIManager(
+                model_name=model_name, system_message="", sio=self.sio
+            )
         else:
             self.ai_manager = None
             logger.info("No model name set: AI is disabled.")
@@ -60,6 +64,20 @@ class GameManager:
         )
 
         self.item_name_empty_message: str = "Invalid input: item name is empty."
+
+    def do_test(self, player: Player, rest_of_response: str) -> str:
+        print("Test command received:", rest_of_response)
+        self.ai_manager.submit_remote_request(
+            self.handle_test_response,
+            player,
+            "test_request",
+            f"test prompt: {rest_of_response}",
+        )
+        return "Test command received."
+
+    def handle_test_response(self, ai_response: Dict, request_data: str = "") -> str:
+        print("Test response received:", ai_response, request_data)
+        return f"Test response received: {ai_response}, {request_data}"
 
     # All these 'do_' functions are for processing commands from the player.
     # They all take the player item and the rest of the response as arguments,
@@ -248,17 +266,82 @@ class GameManager:
         room_name = room_name.title()
 
         # Add the room
-        error_message: Optional[str]
-        error_message, room_description = self.world.add_room(
-            player.get_current_location(),
+        response_text, description_prompt, new_grid_reference = (
+            self.world.check_room_description(
+                player,
+                direction,
+                room_name,
+                room_description,
+            )
+        )
+        # If there was a response, return it
+        if response_text:
+            return response_text
+        # If there is a prompt, submit it to the AI
+        if description_prompt:
+            self.ai_manager.submit_remote_request(
+                self.handle_room_description_ai_response,
+                player,
+                "room_description",
+                description_prompt,
+                player_context={
+                    "room_name": room_name,
+                    "direction": direction,
+                    "current_location": player.get_current_location(),
+                    "new_grid_reference": new_grid_reference,
+                },
+            )
+            return "Your room description is being prepared..."
+        else:
+            return self.build_room(
+                player,
+                player.get_current_location(),
+                direction,
+                room_name,
+                room_description,
+                new_grid_reference,
+            )
+
+    def handle_room_description_ai_response(
+        self, ai_response: str, request_data: Dict
+    ) -> str:
+        player: Player = request_data["player"]
+        player_context: Dict = request_data["player_context"]
+        room_description: str = ai_response.strip()
+
+        logger.info(f"AI-generated room description: {room_description}")
+
+        # Log the interaction in the AI log
+        self.ai_manager.log_response_to_file(player_context, room_description)
+
+        return self.build_room(
+            player,
+            player_context["current_location"],
+            player_context["direction"],
+            player_context["room_name"],
+            room_description,
+            player_context["new_grid_reference"],
+        )
+
+    def build_room(
+        self,
+        player: Player,
+        current_location: str,
+        direction: str,
+        room_name: str,
+        room_description: str,
+        new_grid_reference,
+    ) -> str:
+
+        # If there was no response, it means room was built directly - handle the room built
+        self.world.add_room(
+            player,
+            current_location,
             direction,
             room_name,
             room_description,
-            player.name,
+            new_grid_reference,
         )
-        # If there was an error, return it
-        if error_message:
-            return error_message
 
         # Otherwise, tell other players about the new room
         self.tell_others(
@@ -271,7 +354,6 @@ class GameManager:
         self.request_room_image_creation(room_name, room_description)
 
         # If this is the first room apart from the empty world room, move all players there
-        original_location = player.get_current_location()
         return_message = f"You build {direction} and make a new location, {room_name}: {room_description}."
         if self.world.is_empty:
             logger.info(
@@ -285,7 +367,7 @@ class GameManager:
             # Update the world to reflect that it is no longer empty
             self.world.is_empty = False
             # Remove the empty world room
-            self.world.delete_room(original_location)
+            self.world.delete_room(current_location)
             return_message += " Congratulations, it is the first location in this world! You move there immediately."
 
         return return_message
@@ -678,25 +760,39 @@ class GameManager:
             + "\nOnly include the updated elements if they have changed in a way that another player who did not witness the cause of the change would notice."
             + "\n If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'."
         )
-        ai_response = self.ai_manager.submit_request(prompt)
+        self.ai_manager.submit_remote_request(
+            self.handle_custom_action_response, player, "custom_action", prompt
+        )
+
+    def handle_custom_action_response(
+        self, ai_response: str, request_data: str = ""
+    ) -> str:
+        player: Player = request_data["player"]
+        player_context: str = request_data["player_context"]
         try:
             response_json = json.loads(ai_response)
         except json.JSONDecodeError:
-            logger.error(f"AI response was not valid JSON: {ai_response}")
-            return "The AI could not understand the command."
+            logger.error(
+                f"AI response to '{player_context}' was not valid JSON: {ai_response}"
+            )
+            return "The AI could not understand the command '{player_context}'."
         # If a list comes back, take the first element
         if isinstance(response_json, list):
             if len(response_json) == 1:
                 response_json = response_json[0]
             else:
-                logger.error(f"AI response was a list: {response_json}")
-                return "The AI could not understand the command."
+                logger.error(
+                    f"AI response to '{player_context}' was a list: {response_json}"
+                )
+                return "The AI gave an invalid response to '{player_context}'."
         if not isinstance(response_json, dict):
-            logger.error(f"AI response was not a dictionary: {response_json}")
-            return "The AI could not understand the command."
+            logger.error(
+                f"AI response to '{player_context}' was not a dictionary: {response_json}"
+            )
+            return "The AI gave an invalid response to '{player_context}'."
         if response_json.get("success_response"):
             logger.info(
-                f"AI understood the command and returned a success response: {response_json.get('success_response')}"
+                f"AI understood the command '{player_context}' and returned a success response: {response_json.get('success_response')}"
             )
             return_text: str = response_json.get("success_response")
             if response_json.get("player_utterance"):

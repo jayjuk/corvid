@@ -310,24 +310,25 @@ class World:
         # Return the opposite direction
         return self.directions[direction][2]
 
-    def add_room(
+    def check_room_description(
         self,
-        current_location: str,
+        player: Player,
         direction: str,
         room_name: str,
         room_description: str,
-        creator: str = "system",
-    ) -> Tuple[str, str]:
+    ) -> Tuple[str, str, str]:
+        current_location: str = player.get_current_location()
         # Check room name is not taken in any case (case insensitive)
         for room in self.rooms:
             if str(room).lower() == str(room_name).lower():
-                return f"Sorry, there is already a room called '{room_name}'.", None
+                return f"Sorry, there is already a room called '{room_name}'.", "", ""
 
         # Check that the current room does not already have  an exit in the specified direction
         if direction in self.get_exits(current_location):
             return (
                 f"Sorry, there is already an exit in the {direction} from {current_location}.",
-                None,
+                "",
+                "",
             )
 
         # Resolve pointer to current room item
@@ -347,10 +348,14 @@ class World:
         new_grid_reference: str = f"{next_x},{next_y}"
         if new_grid_reference in self.grid_references:
             return (
-                f"Sorry, there is already a room to the {direction} of {current_location}, "
-                + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else. "
-                + self.get_room_build_options(current_location)
-            ), None
+                (
+                    f"Sorry, there is already a room to the {direction} of {current_location}, "
+                    + f"called {self.grid_references[f'{next_x},{next_y}']}. It must be accessed from somewhere else. "
+                    + self.get_room_build_options(current_location)
+                ),
+                "",
+                "",
+            )
 
         logger.info(f"Adding room {room_name} to the {direction} of {current_location}")
 
@@ -369,19 +374,25 @@ class World:
                 )
                 if room_description:
                     prompt += f"Some inspiration for the room description:\n{room_description}\n"
-                prompt += "Respond with only a description of similar length to the examples above, nothing else.\n"
-
-                room_description: str = self.ai_manager.submit_request(prompt).strip()
-                logger.info(f"AI-generated room description: {room_description}")
-
-                # Log the interaction in the AI log
-                self.ai_manager.log_response_to_file(prompt, room_description)
-
+                    prompt += "Respond with only a description of similar length to the examples above, nothing else.\n"
+                return "", prompt, new_grid_reference
             else:
                 return (
                     "Invalid input: room description missing and AI is not enabled.",
-                    None,
+                    "",
+                    "",
                 )
+        return "", "", new_grid_reference  # Success
+
+    def add_room(
+        self,
+        player: Player,
+        current_location: str,
+        direction: str,
+        room_name: str,
+        room_description: str,
+        new_grid_reference: str,
+    ) -> str:
 
         # Create and store room
         new_room: Room = Room(
@@ -391,17 +402,16 @@ class World:
             exits={self.get_opposite_direction(direction): current_location},
             grid_reference=new_grid_reference,
             image=None,
-            creator=creator,
+            creator=player.name or "system",
         )
         self.storage_manager.store_game_object(self.name, new_room)
         self.rooms[room_name] = new_room
 
         # Add the new room to the exits of the current room
-        current_room.exits[direction] = room_name
+        self.rooms[current_location].exits[direction] = room_name
         #  TODO #86 Effect transactionality around storage of new room
-        self.storage_manager.store_game_object(self.name, current_room)
-
-        return None, room_description
+        self.storage_manager.store_game_object(self.name, self.rooms[current_location])
+        return f"New location created: {room_description}"
 
     def update_room_image(self, room_name: str, image_name: str) -> None:
         self.rooms[room_name].image = image_name

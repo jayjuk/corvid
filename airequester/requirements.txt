@@ -1,0 +1,3 @@
+python-socketio
+socketio-client
+eventlet

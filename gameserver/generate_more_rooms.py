@@ -4,6 +4,7 @@ import world
 from logger import setup_logger
 import random
 import azurestoragemanager
+from player import Player
 
 # Set up logging
 logger = setup_logger()
@@ -51,7 +52,7 @@ def explore_room(ai_manager, room, data, done_rooms):
         )
         # Add the new room to the world
         if name and description:
-            error = world.add_room(room, room_exit, name, description)
+            error = world.check_room_description(room, room_exit, name, description)
             if error:
                 logger.error(f"{error}")
             else:
@@ -75,6 +76,7 @@ if __name__ == "__main__":
     storage_manager = azurestoragemanager.AzureStorageManager()
     world = world.World("jaysgame", storage_manager, "builder")
     max_iterations = 1
+    dummy_player = Player(world, 0, "system")
 
     for i in range(1, max_iterations + 1):
         # Start in the first room

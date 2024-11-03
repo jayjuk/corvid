@@ -20,7 +20,9 @@ logger = setup_logger()
 
 # Class to handle interaction with the AI
 class AIManager:
-    def __init__(self, model_name: str, system_message: Optional[str] = None) -> None:
+    def __init__(
+        self, model_name: str, system_message: Optional[str] = None, sio: object = None
+    ) -> None:
 
         # Static variables
         self.max_history: int = 40
@@ -29,6 +31,8 @@ class AIManager:
         self.active: bool = True
         self.input_token_count: int = 0
         self.output_token_count: int = 0
+        # SocketIO object - only provided to some instances where remote requests are required
+        self.sio = sio
 
         # Chat history / context
         self.reset()
@@ -84,6 +88,9 @@ class AIManager:
         logger.info("Starting up AI with model " + self.model_name)
         # Create specific log file for model responses
         self.create_model_log_file()
+
+        # Remote requests log
+        self.remote_requests: Dict[str, Dict[str, Any]] = {}
 
     # Reset chat history
     def reset(self) -> None:
@@ -352,6 +359,56 @@ class AIManager:
             logger.error("Model response is empty")
             self.dump_chat_history()
         return model_response
+
+    def submit_remote_request(
+        self,
+        handler,
+        player: object,
+        request_type: str,
+        prompt: str,
+        system_message: str = "",
+        player_context: Any = "",
+    ) -> None:
+        request_id = str(player.sid) + str(time.time())  # Unique request ID
+        self.remote_requests[request_id] = {
+            "request_id": request_id,
+            "request_type": request_type,
+            "prompt": prompt,
+            "system_message": system_message,
+        }
+        # Copy the object so that the handler can be added
+        emission_dict = self.remote_requests[request_id].copy()
+        # Add handler afterwards so it doesn't get sent to the AI, plus other stuff to be used in the handler
+        self.remote_requests[request_id]["response_handler"] = handler
+        self.remote_requests[request_id]["player"] = player
+        self.remote_requests[request_id]["player_context"] = player_context
+
+        # Check if we have SocketIO set up
+        if not self.sio:
+            exit(
+                logger,
+                "This AI Manager does not have SocketIO set up for remote requests",
+            )
+
+        # Emit the request to the server
+        self.sio.emit("ai_request", emission_dict)
+        logger.info(
+            f"Remote request submitted with request_id {request_id}: {self.remote_requests[request_id]}"
+        )
+
+    def process_ai_response(self, data: Dict) -> Tuple[object, str]:
+        # Look up the request ID in the remote requests
+        request_id = data.get("request_id")
+        if request_id not in self.remote_requests:
+            exit(logger, f"Unknown request ID in AI response: {request_id}")
+
+        # Get the response from the AI and pass it to the designated response handler along with the player object and AI response
+        return_text = self.remote_requests[request_id]["response_handler"](
+            data["ai_response"], self.remote_requests[request_id]
+        )
+        player = self.remote_requests[request_id]["player"]
+        del self.remote_requests[request_id]
+        return player, return_text
 
     # Image creator
     def create_image(self, image_name: str, description: str) -> Tuple[str, bytes]:

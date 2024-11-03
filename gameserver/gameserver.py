@@ -1,5 +1,5 @@
 # Set up logger first
-from logger import setup_logger
+from logger import setup_logger, exit
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv
@@ -150,6 +150,31 @@ def image_creation_response(sid: str, data: Dict) -> None:
     game_manager.process_image_creation_response(
         data["room_name"], data["image_filename"], data["success"]
     )
+
+
+@sio.event
+def ai_response(sid: str, data: Dict) -> None:
+    logger.info(f"Received AI response: {data}")
+    if (
+        "request_id" in data
+        and data["request_id"] in game_manager.ai_manager.remote_requests
+    ):
+        # TODO #98 should game server be allowed to access ai manager directly?
+        player: Player
+        response_to_player: str
+        player, response_to_player = game_manager.ai_manager.process_ai_response(data)
+        if response_to_player:
+            player.add_input_history(f"Game: {response_to_player}")
+            sio.emit("game_update", response_to_player, player.sid)
+            logger.info(
+                f"Emitting this response from the handler of this response: {response_to_player}"
+            )
+
+        # Log player input and response
+        log_to_player_transcript(player.name, "[AI response]", response_to_player)
+
+    else:
+        exit(logger, f"Valid request ID not found: data {data}")
 
 
 # End of event handlers

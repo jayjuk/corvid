@@ -6,7 +6,6 @@ logger = setup_logger()
 from typing import Dict, Callable, Tuple, Optional, Union, List
 from player import Player
 from world import World
-from aimanager import AIManager
 from gamemanager import GameManager
 import re
 
@@ -128,6 +127,11 @@ class PlayerInputProcessor:
             "inventory": {
                 "function": self.game_manager.do_inventory,
                 "description": "List the items you are carrying",
+            },
+            "xoxtest": {
+                "function": self.game_manager.do_test,
+                # Keep this one hidden - used for testing various features
+                "description": "",
             },
             "xox": {
                 "function": self.game_manager.do_shutdown,
@@ -253,17 +257,28 @@ class PlayerInputProcessor:
             + "\nRespond with only a valid command phrase or the word 'custom', nothing else.\n"
         )
 
-        ai_translation: Optional[str] = self.game_manager.ai_manager.submit_request(
-            prompt, system_message="You are a game command interpreter"
+        self.game_manager.ai_manager.submit_remote_request(
+            self.handle_translation_response,
+            player,
+            request_type="translation_request",
+            prompt=prompt,
+            system_message="You are a game command interpreter",
         )
-        logger.info("AI translation: %s", ai_translation)
-        # If the AI translation is 'custom', prompt the player for a custom action
-        if ai_translation == "custom":
-            ai_translation += " " + player_input
+        return None, None, output
 
+    def handle_translation_response(
+        self, ai_response: str, request_data: str = ""
+    ) -> Optional[Tuple[str, str, str]]:
+        player = request_data["player"]
+        output: str = ""
+        logger.info("AI translation: %s", ai_response)
+        # If the AI translation is 'custom', prompt the player for a custom action
+        ai_translation = ai_response
+        if ai_response == "custom":
+            ai_translation += " " + request_data["player_context"]
         if ai_translation:
             # Try to process the AI translation as a command, but only try this once
-            output += f"\nI think you meant '{ai_translation}', and will proceed accordingly.\n"
+            output = f"\nI think you meant '{ai_translation}', and will proceed accordingly.\n"
             command_function, command_args, response_to_player = (
                 self.process_player_input(player, ai_translation, translated=True)
             )
@@ -274,7 +289,7 @@ class PlayerInputProcessor:
             )
         return None, None, output
 
-    def check_direction(self, direction: str, player: Player) -> str:
+    def check_direction(self, direction: str) -> str:
         if direction not in self.directions:
             return f"'{direction}' is not a valid direction."
 
@@ -334,7 +349,7 @@ class PlayerInputProcessor:
                 direction: str = rest_of_response.split()[0]
 
                 # Check direction is valid and not taken
-                outcome: str = self.check_direction(direction, player)
+                outcome: str = self.check_direction(direction)
                 if outcome:
                     return None, None, outcome
 
