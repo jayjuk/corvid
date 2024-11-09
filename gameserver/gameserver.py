@@ -153,6 +153,12 @@ def image_creation_response(sid: str, data: Dict) -> None:
 
 
 @sio.event
+def missing_ai_request(sid: str, data: Dict) -> None:
+    logger.info("Received request for missing AI requests ")
+    game_manager.ai_manager.process_missing_ai_request()
+
+
+@sio.event
 def ai_response(sid: str, data: Dict) -> None:
     logger.info(f"Received AI response: {data}")
     if (
