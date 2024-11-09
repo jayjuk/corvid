@@ -775,7 +775,7 @@ class GameManager:
             logger.error(
                 f"AI response to '{player_context}' was not valid JSON: {ai_response}"
             )
-            return "The AI could not understand the command '{player_context}'."
+            return f"The AI could not understand the command '{player_context}'."
         # If a list comes back, take the first element
         if isinstance(response_json, list):
             if len(response_json) == 1:

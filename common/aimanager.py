@@ -21,7 +21,7 @@ logger = setup_logger()
 # Class to handle interaction with the AI
 class AIManager:
     def __init__(
-        self, model_name: str, system_message: Optional[str] = None, sio: object = None
+        self, model_name: str, system_message: str, sio: object = None
     ) -> None:
 
         # Static variables
@@ -72,9 +72,7 @@ class AIManager:
         self.model_api_connect()
 
         # Set system message
-        self.system_message: str = (
-            system_message or "You are playing an adventure game."
-        )
+        self.system_message: str = system_message
 
         # Model-specific static
         self.content_word: str = "content"
@@ -85,7 +83,9 @@ class AIManager:
         if self.get_model_api() == "Gemini":
             self.model_word: str = "model"
             self.content_word: str = "parts"
-        logger.info("Starting up AI with model " + self.model_name)
+        logger.info(
+            f"Starting up AI with model {self.model_name} and system message {self.system_message}"
+        )
         # Create specific log file for model responses
         self.create_model_log_file()
 
@@ -183,9 +183,11 @@ class AIManager:
         try_count: int = 0
         max_tries: int = 10
         wait_time: float = 3.0
-        system_message: str = system_message or self.system_message
+        this_system_message: str = system_message or self.system_message
 
-        logger.info(f"Received request to submit: {request}")
+        logger.info(
+            f"Received request to submit: {request} with system message: {this_system_message}"
+        )
 
         # Use default values if not provided
         model_name = model_name or self.model_name
@@ -201,13 +203,13 @@ class AIManager:
         # Start with system message
         if self.get_model_api() == "Gemini":
             messages = [
-                build_message("user", system_message),
+                build_message("user", this_system_message),
                 build_message(self.model_word, "OK."),
             ]
         elif self.get_model_api() == "Anthropic":
             pass  # Leave empty
         else:
-            messages = [build_message("system", system_message)]
+            messages = [build_message("system", this_system_message)]
 
         # Now use history to build the messages for model input
         # (we have a separate messages list to allow for model-specific truncation without losing the history from our own memory,
@@ -227,7 +229,7 @@ class AIManager:
         messages.append(build_message("user", request))
 
         logger.info(
-            f"About to submit to model, with system message: {self.system_message}"
+            f"About to submit to model, with system message: {this_system_message}"
         )
 
         # Get model response, retrying if necessary
@@ -402,10 +404,22 @@ class AIManager:
         if request_id not in self.remote_requests:
             exit(logger, f"Unknown request ID in AI response: {request_id}")
 
-        # Get the response from the AI and pass it to the designated response handler along with the player object and AI response
-        return_text = self.remote_requests[request_id]["response_handler"](
-            data["ai_response"], self.remote_requests[request_id]
+        # Output response handler method name
+        logger.info(
+            f"Processing AI response for request ID {request_id} with data {data}"
         )
+        logger.info(f"Handler : {self.remote_requests[request_id]['response_handler']}")
+
+        # Get the response from the AI and pass it to the designated response handler along with the player object and AI response
+        if "ai_response" not in data:
+            exit(logger, f"AI response not found in data: {data}")
+        if data["ai_response"]:
+            return_text = self.remote_requests[request_id]["response_handler"](
+                data["ai_response"], self.remote_requests[request_id]
+            )
+        else:
+            logger.error(f"AI response is empty for request ID {request_id}")
+            return_text = ""
         player = self.remote_requests[request_id]["player"]
         del self.remote_requests[request_id]
         return player, return_text

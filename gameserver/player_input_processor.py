@@ -273,21 +273,25 @@ class PlayerInputProcessor:
         output: str = ""
         logger.info("AI translation: %s", ai_response)
         # If the AI translation is 'custom', prompt the player for a custom action
-        ai_translation = ai_response
         if ai_response == "custom":
-            ai_translation += " " + request_data["player_context"]
-        if ai_translation:
+            ai_response += " " + request_data["player_context"]
+        if ai_response:
             # Try to process the AI translation as a command, but only try this once
-            output = f"\nI think you meant '{ai_translation}', and will proceed accordingly.\n"
+            output = (
+                f"\nI think you meant '{ai_response}', and will proceed accordingly.\n"
+            )
             command_function, command_args, response_to_player = (
-                self.process_player_input(player, ai_translation, translated=True)
+                self.process_player_input(player, ai_response, translated=True)
             )
-            return (
-                command_function,
-                command_args,
-                (output or "") + (response_to_player or ""),
-            )
-        return None, None, output
+            if command_function:
+                # Run it
+                return command_function(*command_args)
+            elif response_to_player:
+                return None, None, response_to_player
+            else:
+                return None, None, output
+        else:
+            exit(logger, "AI requester response empty!")
 
     def check_direction(self, direction: str) -> str:
         if direction not in self.directions:

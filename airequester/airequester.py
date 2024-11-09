@@ -20,12 +20,12 @@ class AIRequester:
 
     def __init__(
         self,
-        model_name: str = None,
-        system_message: str = None,
+        model_name: str,
+        system_message: str,
     ) -> None:
         # Constructor
         self.model_name = model_name
-        self.system_message = "You are a a helpful AI assistant."
+        self.system_message = system_message
         # Set up the AI manager
         self.ai_manager = AIManager(
             model_name=model_name,
@@ -33,8 +33,14 @@ class AIRequester:
         )
 
     def submit_request(self, prompt: str, system_message: str = "") -> str:
+        this_system_message: str = (
+            system_message if system_message else self.system_message
+        )
+        logger.info(
+            f"Submitting request: {prompt} with system message: {this_system_message}"
+        )
         return self.ai_manager.submit_request(
-            request=prompt, system_message=system_message or self.system_message
+            request=prompt, system_message=this_system_message
         )
 
     def work_loop(self):

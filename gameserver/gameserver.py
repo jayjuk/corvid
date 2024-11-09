@@ -163,6 +163,10 @@ def ai_response(sid: str, data: Dict) -> None:
         player: Player
         response_to_player: str
         player, response_to_player = game_manager.ai_manager.process_ai_response(data)
+        print(f"ai_response: Response to player: {response_to_player}")
+        from pprint import pprint
+
+        pprint(response_to_player)
         if response_to_player:
             player.add_input_history(f"Game: {response_to_player}")
             sio.emit("game_update", response_to_player, player.sid)
