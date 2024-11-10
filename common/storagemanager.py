@@ -57,20 +57,18 @@ class StorageManager:
         logger.info(f"Abstract method - does not return image: {blob_name}")
         return None
 
-    def get_default_world_data(self, world_name: str, object_type: str) -> List[Any]:
-        is_empty = False
+    def get_default_world_data(
+        self, world_name: str, object_type: str
+    ) -> List[Dict[str, Any]]:
         full_path = path.join("world_data", world_name, f"{object_type.lower()}.json")
         if not path.exists(full_path):
-            is_empty = True
+            logger.info(f"Default data file for {world_name} not found: {full_path}")
             full_path = path.join("world_data", "empty", f"{object_type.lower()}.json")
             if not path.exists(full_path):
                 exit(logger, f"Default data file not found: {full_path}")
         with open(full_path, "r") as f:
             default_data = json.load(f)
-        return (
-            is_empty,
-            default_data,
-        )
+        return default_data
 
     def check_complex_variable_cache(self, entity: Dict[str, Any]) -> None:
         if entity["PartitionKey"] not in self.complex_variable_cache:

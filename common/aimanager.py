@@ -183,7 +183,11 @@ class AIManager:
         try_count: int = 0
         max_tries: int = 10
         wait_time: float = 3.0
-        this_system_message: str = system_message or self.system_message
+        this_system_message: str = (
+            system_message
+            or self.system_message
+            or "You are a helpful AI assistant for a game server."
+        )
 
         logger.info(
             f"Received request to submit: {request} with system message: {this_system_message}"
@@ -433,6 +437,7 @@ class AIManager:
             logger.error(f"AI response is empty for request ID {request_id}")
             return_text = ""
         player = self.remote_requests[request_id]["player"]
+        logger.info(f"Deleting request ID {request_id} from remote requests")
         del self.remote_requests[request_id]
         return player, return_text
 

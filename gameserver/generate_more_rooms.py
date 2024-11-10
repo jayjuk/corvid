@@ -52,7 +52,9 @@ def explore_room(ai_manager, room, data, done_rooms):
         )
         # Add the new room to the world
         if name and description:
-            error = world.check_room_description(room, room_exit, name, description)
+            error = world.generate_room_description_prompt_if_required(
+                room, room_exit, name, description
+            )
             if error:
                 logger.error(f"{error}")
             else:

@@ -72,6 +72,7 @@ class GameManager:
             player,
             "test_request",
             f"test prompt: {rest_of_response}",
+            system_message="You are a helpful AI assistant providing a response to a test command in a game.",
         )
         return "Test command received."
 
@@ -265,9 +266,9 @@ class GameManager:
         # Format the room name to be title case
         room_name = room_name.title()
 
-        # Add the room
+        # Check and add the room
         response_text, description_prompt, new_grid_reference = (
-            self.world.check_room_description(
+            self.world.check_room_request(
                 player,
                 direction,
                 room_name,
@@ -290,6 +291,7 @@ class GameManager:
                     "current_location": player.get_current_location(),
                     "new_grid_reference": new_grid_reference,
                 },
+                system_message="You are a helpful AI assistant providing a description for a new location in a game.",
             )
             return "Your room description is being prepared..."
         else:
@@ -761,7 +763,11 @@ class GameManager:
             + "\n If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'."
         )
         self.ai_manager.submit_remote_request(
-            self.handle_custom_action_response, player, "custom_action", prompt
+            self.handle_custom_action_response,
+            player,
+            "custom_action",
+            prompt,
+            system_message="You are an AI assistant helping to evaluate a custom action in a game.",
         )
 
     def handle_custom_action_response(

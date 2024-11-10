@@ -102,6 +102,12 @@ class AzureStorageManager(StorageManager):
             self.image_container_name, self.get_blob_name(world_name, image_name)
         )
 
+        # Check if the blob already exists
+        if blob_client.exists():
+            logger.warning(f"Blob '{image_name}' already exists")
+            # Remove it
+            blob_client.delete_blob()
+
         # Upload the image
         try:
             blob_client.upload_blob(image_data)
@@ -180,18 +186,15 @@ class AzureStorageManager(StorageManager):
 
     # Delete a game object
     def delete_game_object(
-        self, world_name: str, object_type: str, name: str, location: str
+        self, world_name: str, object_type: str, name: str, location: str = ""
     ) -> bool:
         objects_client = self.table_service_client.get_table_client("PythonObjects")
         if objects_client:
-            parameters: dict = {
-                "pk": world_name + "__" + object_type,
-                "rk": name,
-                "location": location,
-            }
-            query_filter: str = (
-                "PartitionKey eq @pk and RowKey eq @rk and location eq @location"
-            )
+            parameters: dict = {"pk": world_name + "__" + object_type, "rk": name}
+            query_filter: str = "PartitionKey eq @pk and RowKey eq @rk"
+            if location:
+                parameters["location"] = location
+                query_filter += " and location eq @location"
             for entity in objects_client.query_entities(
                 query_filter, parameters=parameters
             ):

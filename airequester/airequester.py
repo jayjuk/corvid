@@ -84,17 +84,23 @@ def catch_all(data: Dict) -> None:
             exit(logger, "Received invalid AI request")
         # Submit the request to the AI
         ai_response = ai_requester.submit_request(
-            prompt=data["prompt"], system_message=data.get("system_message")
+            prompt=data["prompt"],
+            system_message=data.get(
+                "system_message", "You are a helpful AI assistant for a game server."
+            ),
         )
-        response_package = {
-            "ai_response": ai_response,
-            "request_id": data["request_id"],
-        }
-        # Emit event back to server
-        sio.emit(
-            "ai_response",
-            response_package,
-        )
+        if ai_response:
+            response_package = {
+                "ai_response": ai_response,
+                "request_id": data["request_id"],
+            }
+            # Emit event back to server
+            sio.emit(
+                "ai_response",
+                response_package,
+            )
+        else:
+            exit(logger, "AI request returned no response")
 
     else:
         exit(logger, "Received invalid event")

@@ -77,10 +77,13 @@ class World:
         store_default_rooms = False
         if not rooms_list:
             logger.warning("No rooms found in cloud - loading from static")
-            (self.is_empty, rooms_list) = self.storage_manager.get_default_world_data(
-                self.name, "rooms"
-            )
+            rooms_list = self.storage_manager.get_default_world_data(self.name, "rooms")
             store_default_rooms = True
+        if len(rooms_list) == 0:
+            exit(logger, "No rooms found in cloud or static data")
+        if len(rooms_list) == 1 and rooms_list[0]["name"] == "The Void":
+            self.is_empty = True
+
         # Add room name to each room
         rooms_dict: Dict[str, Room] = {}
         for room in rooms_list:
@@ -310,7 +313,7 @@ class World:
         # Return the opposite direction
         return self.directions[direction][2]
 
-    def check_room_description(
+    def check_room_request(
         self,
         player: Player,
         direction: str,
@@ -362,19 +365,10 @@ class World:
         # If player does not provide a room description, try to get one from the AI
         # TODO #93 Consider whether AI usage belongs inside World class
         if len(room_description) < 50:
-            # Get existing room descriptions into a list for inspiration
-            existing_room_descriptions: List[str] = [
-                self.rooms[room].description for room in self.rooms.keys()
-            ]
             if self.ai_manager:
-                prompt: str = (
-                    f"Generate an appropriate description for a new room in my adventure game called '{room_name}'. Pre-existing room descriptions for inspiration:\n"
-                    + "\n,\n".join(existing_room_descriptions[0:10])
-                    + f"\nThis room is called '{room_name}', the description should be appropriate to that.\n"
+                prompt = self.generate_room_description_prompt(
+                    room_name, room_description
                 )
-                if room_description:
-                    prompt += f"Some inspiration for the room description:\n{room_description}\n"
-                    prompt += "Respond with only a description of similar length to the examples above, nothing else.\n"
                 return "", prompt, new_grid_reference
             else:
                 return (
@@ -382,7 +376,35 @@ class World:
                     "",
                     "",
                 )
-        return "", "", new_grid_reference  # Success
+        return "", "", new_grid_reference
+
+    def generate_room_description_prompt(self, room_name: str, room_description: str):
+        # Get existing room descriptions into a list for inspiration
+        existing_room_descriptions: List[str] = [
+            self.rooms[room].description for room in self.rooms.keys()
+        ]
+
+        prompt: str = (
+            f"Generate an appropriate 30-50 word description for a new location in my adventure game world called '{self.name}'."
+        )
+        if len(existing_room_descriptions) > 1:
+            prompt += " Pre-existing descriptions for inspiration:\n" + "\n,\n".join(
+                existing_room_descriptions[0:10]
+            )
+        else:
+            prompt += (
+                " Here is an example of a room description:\n"
+                + "A rickety wooden shed stands precariously, its peeling paint hinting at long-forgotten secrets. Its interior is a labyrinth of shadows, filled with the musty scent of damp earth and forgotten tools.\n"
+                + "(This just gives you an idea of format and length, feel free to vary the style and theme, perhaps drawing inspiration from classic text adventure games of old...)."
+            )
+        prompt += f"\nThis room is called '{room_name}', the description should be appropriate to that.\n"
+
+        if room_description:
+            prompt += (
+                f"Some inspiration for the room description:\n{room_description}\n"
+            )
+            prompt += "Respond with only a description of similar length to the examples above, nothing else.\n"
+        return prompt  # Success
 
     def add_room(
         self,
@@ -408,9 +430,12 @@ class World:
         self.rooms[room_name] = new_room
 
         # Add the new room to the exits of the current room
-        self.rooms[current_location].exits[direction] = room_name
-        #  TODO #86 Effect transactionality around storage of new room
-        self.storage_manager.store_game_object(self.name, self.rooms[current_location])
+        if current_location in self.rooms:
+            self.rooms[current_location].exits[direction] = room_name
+            #  TODO #86 Effect transactionality around storage of new room
+            self.storage_manager.store_game_object(
+                self.name, self.rooms[current_location]
+            )
         return f"New location created: {room_description}"
 
     def update_room_image(self, room_name: str, image_name: str) -> None:
@@ -435,8 +460,11 @@ class World:
                     del self.rooms[room].exits[direction]
                     self.storage_manager.store_game_object(self.name, self.rooms[room])
         # Delete the room
+        del self.grid_references[self.rooms[room_name].grid_reference]
         del self.rooms[room_name]
-        self.storage_manager.delete_game_object(self.name, "Room", room_name, room_name)
+        self.storage_manager.delete_game_object(
+            self.name, "Room", room_name, location=""
+        )
         logger.info(f"Room {room_name} has been deleted.")
         return f"Room {room_name} has been deleted."
 
@@ -489,7 +517,7 @@ class World:
             self.load_default_items()
 
     def load_default_items(self) -> None:
-        _, item_datas = self.storage_manager.get_default_world_data(self.name, "items")
+        item_datas = self.storage_manager.get_default_world_data(self.name, "items")
         for item_data in item_datas:
             logger.info(f"Loading and storing item {item_data['name']}")
             o: GameItem = GameItem(world=self, init_dict=item_data)
@@ -593,7 +621,7 @@ class World:
 
     def load_default_entities(self) -> None:
         logger.info("Loading default entities from file")
-        _, entities = self.storage_manager.get_default_world_data(self.name, "entities")
+        entities = self.storage_manager.get_default_world_data(self.name, "entities")
         for entity in entities:
             logger.info(f"Loading {entity['name']}")
             self.spawn_entity(entity)
