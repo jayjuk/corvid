@@ -108,6 +108,13 @@ class PlayerInputProcessor:
                     + "'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'"
                 ),
             },
+            "summon": {
+                "function": self.game_manager.do_summon,
+                "description": (
+                    "Summon a new player into the game. Specify the instructions for the new player using single quotes "
+                    + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
+                ),
+            },
             "buy": {
                 "function": self.game_manager.do_buy,
                 "description": "Buy an item from an entity (e.g. a Merchant) in your current location.",

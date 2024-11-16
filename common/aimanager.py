@@ -3,7 +3,7 @@ import traceback
 from os import path, makedirs, environ, sep
 import json
 import time
-from logger import setup_logger, exit
+from logger import setup_logger, exit, get_logs_folder
 from utils import get_critical_env_variable
 
 
@@ -104,10 +104,11 @@ class AIManager:
 
     # Create a log file for model responses
     def create_model_log_file(self) -> None:
-        logs_folder: str = "logs"
-        makedirs(logs_folder, exist_ok=True)
-        self.model_log_file: str = f"{self.get_model_api()}_response_log.txt"
-        with open(path.join(logs_folder, self.model_log_file), "w") as f:
+        makedirs(get_logs_folder(), exist_ok=True)
+        self.model_log_file: str = path.join(
+            get_logs_folder(), f"{self.get_model_api()}_response_log.txt"
+        )
+        with open(self.model_log_file, "w") as f:
             f.write(f"# Model input and response log for {self.get_model_api()}\n\n")
 
     # Log model response to file
@@ -137,10 +138,9 @@ class AIManager:
     def store_model_data(self, filename_prefix: str, data: Any) -> None:
         logger.info("Saving model data")
         # For now, just treat as logging data. We might want to store it in the DB later.
-        folder_path: str = "logs"
-        makedirs(folder_path, exist_ok=True)
+        makedirs(get_logs_folder(), exist_ok=True)
         with open(
-            folder_path + sep + f"{self.model_name}_{filename_prefix}.tmp",
+            path.join(get_logs_folder(), f"{self.model_name}_{filename_prefix}.tmp"),
             "w",
         ) as f:
             json.dump(data, f, indent=4)

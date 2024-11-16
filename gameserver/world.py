@@ -462,6 +462,10 @@ class World:
         # Delete the room
         del self.grid_references[self.rooms[room_name].grid_reference]
         del self.rooms[room_name]
+        # Change default room
+        if self.default_location == room_name:
+            self.default_location = list(self.rooms.keys())[0]
+
         self.storage_manager.delete_game_object(
             self.name, "Room", room_name, location=""
         )

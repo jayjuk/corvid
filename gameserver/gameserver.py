@@ -1,5 +1,5 @@
 # Set up logger first
-from logger import setup_logger, exit
+from logger import setup_logger, exit, get_logs_folder
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv
@@ -28,9 +28,8 @@ app = socketio.WSGIApp(sio)
 
 # Create a log file for model responses
 def get_player_transcript_file_name(player_name: str) -> str:
-    logs_folder: str = "logs"
-    makedirs(logs_folder, exist_ok=True)
-    return path.join(logs_folder, f"{player_name}_game_transcript.txt")
+    makedirs(get_logs_folder(), exist_ok=True)
+    return path.join(get_logs_folder(), f"{player_name}_game_transcript.txt")
 
 
 def create_player_transcript(player_name: str) -> None:
@@ -156,6 +155,18 @@ def image_creation_response(sid: str, data: Dict) -> None:
 def missing_ai_request(sid: str, data: Dict) -> None:
     logger.info("Received request for missing AI requests ")
     game_manager.ai_manager.process_missing_ai_request()
+
+
+@sio.event
+def missing_summon_player_request(sid: str, data: Dict) -> None:
+    logger.info("Received request for missing Summon Player requests ")
+    game_manager.process_missing_summon_player_request()
+
+
+@sio.event
+def summon_player_response(sid: str, data: Dict) -> None:
+    logger.info(f"Received summon player response: {data}")
+    game_manager.process_summon_player_response(data["request_id"])
 
 
 @sio.event

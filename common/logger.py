@@ -13,6 +13,11 @@ from typing import Any
 # (e.g. gameserver.log)
 
 
+# Get the logs folder
+def get_logs_folder() -> str:
+    return "logs"
+
+
 # Shortest  way to quickly output some content, whatever the mode, easy to then find these statements and remove them later
 def debug(*args: Any) -> None:
     """
@@ -46,9 +51,8 @@ def setup_logger(
         file_name = file_name + ".log"
 
     # Create logs directory if it doesn't exist
-    logs_dir: str = "logs"
-    if not os.path.exists(logs_dir):
-        os.makedirs(logs_dir)
+    if not os.path.exists(get_logs_folder()):
+        os.makedirs(get_logs_folder())
 
     # Set logging level based on waterfall of settings
     logging_level: int = logging.INFO
@@ -64,7 +68,7 @@ def setup_logger(
         level=logging_level,
         format="%(asctime)s %(levelname)s %(message)s",
         handlers=[
-            logging.FileHandler(logs_dir + os.sep + file_name),
+            logging.FileHandler(os.path.join(get_logs_folder(), file_name)),
             logging.StreamHandler(),
         ],
     )

@@ -39,6 +39,9 @@ class GameManager:
         self.sio: str = sio
         # Register of players currently in the game
         self.players: Dict[str, Player] = {}
+        # Register of summon requests
+        self.summon_requests: Dict[str, str] = {}
+
         # Keep a log of all player names including those who have left
         # This is so that when a player disconnects (e.g. closes their browser) after 'quitting' we can
         # understand that, and it will allow them to rejoin with the same name later
@@ -251,6 +254,20 @@ class GameManager:
 
     def do_quit(self, player: Player, rest_of_response: str) -> None:
         self.remove_player(player.sid, "You have left the game.")
+
+    def emit_request(self, request_id: str, request: str) -> None:
+        emit_data = {"request_id": request_id, "request_data": request}
+        self.sio.emit("summon_player_request", emit_data)
+
+    def do_summon(self, player: Player, rest_of_response: str) -> str:
+        logger.info(f"Summon command received: {rest_of_response}")
+        # Generate a unique request ID from player SID and time
+        request_id: str = player.sid + str(time.time())
+        # Strip quotes from the response
+        player_briefing = rest_of_response.strip("'")
+        # Trigger a summon request
+        self.summon_requests[request_id] = player_briefing
+        self.emit_request(request_id, player_briefing)
 
     def do_build(
         self,
@@ -1209,6 +1226,19 @@ class GameManager:
             self.tell_everyone(
                 f"Room image creation for {room_name} failed: {image_filename}"
             )
+
+    # Process summon player request from client
+    def process_missing_summon_player_request(self) -> None:
+        # Check for unfulfilled requests by players to summon others
+        for request_id, request_data in self.summon_requests.items():
+            logger.info(f"Repeating summon request {request_id}")
+            self.emit_request(request_id, request_data)
+
+    # Process summon player response from player manager
+    def process_summon_player_response(self, request_id: str) -> None:
+        if request_id in self.summon_requests:
+            logger.info(f"Removing summon request {request_id}")
+            del self.summon_requests[request_id]
 
     # Spawn the world-wide metadata loop when the first player is created
     def activate_background_loop(self) -> None:

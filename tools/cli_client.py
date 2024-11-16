@@ -149,7 +149,7 @@ def catch_all(data: Dict) -> None:
 # Catch all other events
 @sio.on("*")
 def catch_all(event, data: Dict) -> None:
-    logger.warn(f"Received other unexpected event '{event}': {data}")
+    logger.warning(f"Received other unexpected event '{event}': {data}")
 
 
 # SocketIO connection handlers

@@ -41,10 +41,10 @@ class AIBroker:
         self.max_error_count: int = 10
 
         this_system_message: str = self.get_ai_instructions()
-        if system_message:
+        if system_message and system_message.strip():
             this_system_message += (
                 "\nYOUR Special Instructions (these are very important and take precedence): "
-                + system_message
+                + system_message.strip()
                 + "\n"
             )
         self.system_message = this_system_message
@@ -285,7 +285,7 @@ def catch_all(data: Dict) -> None:
 # Catch all other events
 @sio.on("*")
 def catch_all(event, data: Dict) -> None:
-    logger.warn(f"Received other unexpected event '{event}': {data}")
+    logger.warning(f"Received other unexpected event '{event}': {data}")
 
 
 # SocketIO connection handlers
