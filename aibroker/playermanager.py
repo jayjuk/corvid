@@ -1,5 +1,7 @@
 import eventlet
 
+eventlet.monkey_patch()
+
 from logger import setup_logger, exit, get_logs_folder
 from typing import List, Dict, Optional
 import socketio
@@ -67,6 +69,9 @@ class PlayerManager:
         }
 
         def run_player_process(env_vars):
+
+            print("**************** Running player process")
+
             env = {**os.environ, **env_vars}
             # Generate unique log file name based on timestamp
             seconds_since_epoch = str(time.time())
@@ -86,7 +91,7 @@ class PlayerManager:
 
         # Run the player process in a background thread
 
-        # TODO #100 run_player_process is not getting called when triggered by summon player request
+        # TODO #100 Improve solution for managing AI processes
         eventlet.spawn(run_player_process, env_vars)
         logger.info(f"Player created: {env_vars}")
 
@@ -197,7 +202,7 @@ if __name__ == "__main__":
     logger = setup_logger("player_manager.log")
 
     # TODO #99 Refactor so that common service behaviour is in a common module
-    hostname: str = environ.get("GAMESERVER_HOSTNAME") or "localhost"
+    hostname: str = environ.get("GAMESERVER_HOSTNAME") or "127.0.0.1"
     # TODO #65 Do not allow default port, and make this common
     port: str = environ.get("GAMESERVER_PORT", "3001")
     logger.info(f"Starting up Player Manager on hostname {hostname}")
