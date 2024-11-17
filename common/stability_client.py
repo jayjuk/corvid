@@ -1,7 +1,6 @@
-from utils import setup_logger
 from typing import Union
 import os
-from utils import get_critical_env_variable
+from utils import get_critical_env_variable, setup_logger
 
 
 # Set up logger

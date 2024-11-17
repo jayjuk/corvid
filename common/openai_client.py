@@ -1,6 +1,5 @@
-from utils import setup_logger
 from typing import List, Dict, Tuple, Union, Optional
-from utils import get_critical_env_variable
+from utils import get_critical_env_variable, setup_logger
 from urllib.request import urlopen
 
 # Set up logger

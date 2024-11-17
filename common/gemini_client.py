@@ -1,10 +1,9 @@
-from utils import setup_logger
 import os
 from typing import List, Dict, Union, Iterable
 import json
 import base64
 from typing import Optional
-from utils import get_critical_env_variable
+from utils import get_critical_env_variable, setup_logger
 from io import BytesIO
 
 # Set up logger

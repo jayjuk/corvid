@@ -1,8 +1,7 @@
 from typing import Any, Dict, List, Optional, Union
-from utils import setup_logger, exit
-from utils import get_critical_env_variable
+from utils import get_critical_env_variable, setup_logger, exit
 import json
-from os import path, makedirs
+from os import path
 
 # Set up logger
 logger = setup_logger()
