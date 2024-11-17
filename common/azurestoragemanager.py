@@ -1,6 +1,6 @@
 from storagemanager import StorageManager
 from shutil import copy2
-from logger import setup_logger, exit, debug
+from utils import setup_logger, exit, debug
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from azure.data.tables import TableServiceClient, UpdateMode

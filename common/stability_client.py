@@ -1,4 +1,4 @@
-from logger import setup_logger
+from utils import setup_logger
 from typing import Union
 import os
 from utils import get_critical_env_variable

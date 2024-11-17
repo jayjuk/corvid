@@ -1,5 +1,5 @@
 from typing import Dict, Optional, Any
-from logger import setup_logger, exit
+from utils import setup_logger, exit
 
 # Set up logger
 logger = setup_logger()

@@ -1,7 +1,7 @@
 import time
 import aimanager
 import world
-from logger import setup_logger
+from utils import setup_logger
 import random
 import azurestoragemanager
 from player import Player

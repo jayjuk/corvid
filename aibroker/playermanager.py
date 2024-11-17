@@ -2,21 +2,19 @@ import eventlet
 
 eventlet.monkey_patch()
 
-from logger import setup_logger, exit, get_logs_folder
-from typing import List, Dict, Optional
-import socketio
+from typing import Dict
 import os
-from utils import get_critical_env_variable
-from os import environ
+from utils import (
+    get_critical_env_variable,
+    setup_logger,
+    exit,
+    get_logs_folder,
+    connect_to_server,
+)
 import subprocess
 import json
 import time
-
-# Set up logger
-logger = setup_logger("playermanager")
-
-# Register the client with the server
-sio = socketio.Client()
+import socketio
 
 
 # Class to manage the AI's interaction with the game server
@@ -95,34 +93,9 @@ class PlayerManager:
         eventlet.spawn(run_player_process, env_vars)
         logger.info(f"Player created: {env_vars}")
 
-    def work_loop(self):
-        while True:
-            # Just wait for events for now
-            eventlet.sleep(60)
 
-
-# Non-class functions below here (SocketIO event handlers etc.)
-
-
-# Connect to SocketIO server, trying again if it fails
-def connect_to_server(hostname: str) -> None:
-    connected: bool = False
-    max_wait: int = 240  # 4 minutes
-    wait_time: int = 4
-    while not connected and wait_time <= max_wait:
-        try:
-            sio.connect(hostname)
-            connected = True
-        except Exception as e:
-            logger.info(
-                f"Could not connect to server. Retrying in {wait_time} seconds..."
-            )
-            eventlet.sleep(wait_time)
-            wait_time = int(wait_time * 2)
-
-    if not connected:
-        exit(logger, "Could not connect to Game Server. Is it running?")
-
+# Register the client with the server
+sio = socketio.Client()
 
 # SocketIO event handlers
 
@@ -176,52 +149,21 @@ def disconnect() -> None:
     logger.info("Disconnected from Server.")
 
 
-# Connect to SocketIO server, trying again if it fails
-def connect_to_server(hostname: str) -> None:
-    connected: bool = False
-    max_wait: int = 240  # 4 minutes
-    wait_time: int = 4
-    while not connected and wait_time <= max_wait:
-        try:
-            sio.connect(hostname)
-            connected = True
-        except Exception as e:
-            logger.info(
-                f"Could not connect to server. Retrying in {wait_time} seconds..."
-            )
-            eventlet.sleep(wait_time)
-            wait_time = int(wait_time * 2)
+# Main
 
-    if not connected:
-        exit(logger, "Could not connect to Game Server. Is it running?")
+# Set up logger
+logger = setup_logger("Player Manager", sio=sio)
 
+connect_to_server(logger, sio)
 
-# Main function to start the program
-if __name__ == "__main__":
-    # Change log file name to include AI name
-    logger = setup_logger("player_manager.log")
+# Create AI Worker
+player_manager = PlayerManager(
+    init_filename=get_critical_env_variable("AI_PLAYER_FILE_NAME"),
+)
 
-    # TODO #99 Refactor so that common service behaviour is in a common module
-    hostname: str = environ.get("GAMESERVER_HOSTNAME") or "127.0.0.1"
-    # TODO #65 Do not allow default port, and make this common
-    port: str = environ.get("GAMESERVER_PORT", "3001")
-    logger.info(f"Starting up Player Manager on hostname {hostname}")
-    # Connect to the server. If can't connect, warn user that the Game Server may not be running.
-    try:
-        connect_to_server(f"http://{hostname}:{port}")
-    except Exception as e:
-        exit(logger, f"Could not connect to server: {e}\nIs the Game Server running?")
-    logger.info("Connected to server.")
-    # Create AI Worker
-    player_manager = PlayerManager(
-        init_filename=get_critical_env_variable("AI_PLAYER_FILE_NAME"),
-    )
+# Check for outstanding requests
+sio.emit("missing_summon_player_request", {})
+logger.info("Ready...")
 
-    # Check for outstanding requests
-    sio.emit("missing_summon_player_request", {})
-
-    # This is where the main processing of inputs happens
-    eventlet.spawn(player_manager.work_loop())
-
-    # This keeps the SocketIO event processing going
-    sio.wait()
+# This keeps the SocketIO event processing going
+sio.wait()

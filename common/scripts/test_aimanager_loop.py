@@ -1,6 +1,6 @@
 import aimanager
 import sys
-from logger import setup_logger
+from utils import setup_logger
 
 logger = setup_logger()
 

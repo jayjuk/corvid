@@ -12,8 +12,3 @@ if exist restart.tmp (
     del restart.tmp
     goto :loop
 )
-
-rem echo About to restart...
-rem pause
-rem goto loop
-rem call conda deactivate

@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional, Union
-from logger import setup_logger, exit
+from utils import setup_logger, exit
 from utils import get_critical_env_variable
 import json
 from os import path, makedirs

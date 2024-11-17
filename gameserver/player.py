@@ -1,5 +1,5 @@
 from typing import Optional, Dict, List, Any
-from logger import setup_logger, exit
+from utils import setup_logger, exit
 import os
 import time
 from entity import Entity

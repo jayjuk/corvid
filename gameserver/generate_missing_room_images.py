@@ -1,5 +1,5 @@
 # Set up logger first
-from logger import setup_logger
+from utils import setup_logger
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv

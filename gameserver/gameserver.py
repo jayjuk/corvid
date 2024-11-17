@@ -1,16 +1,16 @@
 # Set up logger first
-from logger import setup_logger, exit, get_logs_folder
+from utils import setup_logger, exit, get_logs_folder
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv
 import time
 from os import path, makedirs
-
-logger = setup_logger("gameserver")
-
 import socket
 import socketio
 import eventlet
+
+# Set up logger before importing other own modules
+logger = setup_logger("Game Server", sio=None)
 
 from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager
@@ -79,13 +79,6 @@ def set_player_name(sid: str, player_info: Dict[str, str]) -> None:
 
 # Player input from the client
 def process_user_action(sid: str, player_input: str) -> None:
-    # sleep to debug
-    # player: Player = game_manager.players[sid]
-    # if player.name == "Jay":
-    #     eventlet.sleep(10)
-    #     sio.emit("game_update", "slept", sid)
-    # else:
-    #     sio.emit("game_update", "not Jay", sid)
     if sid in game_manager.players:
         player: Player = game_manager.players[sid]
         logger.info(f"Received user action: {player_input} from {sid} ({player.name})")

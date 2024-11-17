@@ -1,4 +1,4 @@
-from logger import setup_logger, exit
+from utils import setup_logger, exit
 
 # Set up logger first
 logger = setup_logger()

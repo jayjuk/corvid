@@ -1,6 +1,5 @@
-from logger import setup_logger
 from typing import List, Dict
-from utils import get_critical_env_variable
+from utils import get_critical_env_variable, setup_logger
 
 
 # Set up logger

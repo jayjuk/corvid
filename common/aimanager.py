@@ -3,8 +3,7 @@ import traceback
 from os import path, makedirs, environ, sep
 import json
 import time
-from logger import setup_logger, exit, get_logs_folder
-from utils import get_critical_env_variable
+from utils import setup_logger, exit, get_logs_folder
 
 
 # TODO #90 Consider redesigning such that the AI Manager only imports the necessary LLM client libraries according to runtime model choices

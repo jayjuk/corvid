@@ -1,13 +1,12 @@
 from os import path, environ, makedirs
 from typing import Optional, Union
-from logger import setup_logger
 from flask import Flask, send_from_directory, Response
 from azurestoragemanager import AzureStorageManager
 from storagemanager import StorageManager
-from utils import get_critical_env_variable
+from utils import get_critical_env_variable, setup_logger
 
 # Set up logger
-logger = setup_logger()
+logger = setup_logger("Image Server", sio=None)
 
 
 class ImageServer:

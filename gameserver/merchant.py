@@ -1,5 +1,5 @@
 from typing import List, Optional
-from logger import setup_logger
+from utils import setup_logger
 from entity import Entity
 from gameitem import GameItem
 

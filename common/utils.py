@@ -1,6 +1,124 @@
 from os import environ
 from typing import Optional
 import sys
+import socketio
+import eventlet
+
+
+import logging
+import sys
+import os
+import time
+from typing import Any
+import signal
+
+# INSTRUCTIONS TO USE THIS MODULE
+# At the top of your module, add the following:
+# 1. Import it into your module: from utils import setup_logger
+# 2. Set up logging passing in the name of the current file: logger = setup_logger()
+# This will create a log file in the logs directory with the same name as the module (e.g. player.log)
+# for unit testing cases, or if the module has been imported from a main file, the parent log file will be used
+# (e.g. gameserver.log)
+
+
+# Get the logs folder
+def get_logs_folder() -> str:
+    return "logs"
+
+
+# Shortest  way to quickly output some content, whatever the mode, easy to then find these statements and remove them later
+def debug(*args: Any) -> None:
+    """
+    This function is used for debugging purposes.
+    It takes any number of arguments, prints them, and then sleeps for 1 second.
+    """
+    debug_content: str = " ".join(str(arg) for arg in args)
+    print(f"*** DEBUG: {debug_content} ***")
+    sleep_time: int = 1
+    print(f"Sleeping {sleep_time} seconds...")
+    time.sleep(sleep_time)
+
+
+# Flag for regular/semipermanent debug logging to be made visible at runtime
+def is_debug_mode() -> bool:
+    return len(sys.argv) > 1 and sys.argv[1].lower() == "debug"
+
+
+# Signal handler for SIGINT
+def signal_handler(logger, sig, frame, sio=None):
+    logger.info("Signal Interrupt Received - Shutting down...")
+    if sio:
+        sio.disconnect()
+    exit(0)
+
+
+# Register signal handler for SIGINT
+def register_signal_handler(logger, sio=None):
+    # signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(
+        signal.SIGINT, lambda sig, frame: signal_handler(logger, sig, frame, sio)
+    )
+
+
+# Function invoked by most modules for shared and common logging
+def setup_logger(
+    module_name: str = "Unit Testing", logging_level_override: str = "", sio=None
+) -> logging.Logger:
+    # If logger already set up, return it
+    if logging.getLogger().hasHandlers():
+        return logging.getLogger()
+
+    # Otherwise....
+
+    file_name = module_name.lower().replace(" ", "") + ".log"
+
+    # Append .log to file name if not already there
+    if not file_name.endswith(".log"):
+        file_name = file_name + ".log"
+
+    # Create logs directory if it doesn't exist
+    if not os.path.exists(get_logs_folder()):
+        os.makedirs(get_logs_folder())
+
+    # Set logging level based on waterfall of settings
+    logging_level: int = logging.INFO
+    if is_debug_mode():
+        logging_level = logging.DEBUG
+    elif logging_level_override:
+        logging_level = logging.getLevelName(logging_level_override)
+    elif os.environ.get("LOGGER_LOG_LEVEL"):
+        logging_level = logging.getLevelName(os.environ.get("LOGGER_LOG_LEVEL"))
+
+    # Set up logging to file and console
+    logging.basicConfig(
+        level=logging_level,
+        format="%(asctime)s %(levelname)s %(message)s",
+        handlers=[
+            logging.FileHandler(os.path.join(get_logs_folder(), file_name)),
+            logging.StreamHandler(),
+        ],
+    )
+    register_signal_handler(logging.getLogger(), sio)
+
+    logging.getLogger().info(f"Started {module_name}, logging to {file_name}")
+
+    return logging.getLogger()
+
+
+# Default common exit logic which logs a critical error and exits at the same time.
+def exit(logger: logging.Logger, error_message: str = None) -> None:
+    # If no message, assume normal exit.
+    exit_code: int = 0
+    if error_message:
+        logger.critical(error_message)
+        exit_code: int = 1
+    else:
+        # Check logger not a string
+        if isinstance(logger, str):
+            print(
+                f"I suspect an error message was passed into the logger parameter: {logger}"
+            )
+    sys.exit(exit_code)
 
 
 # Check if mandatory environment variable is set
@@ -12,3 +130,27 @@ def get_critical_env_variable(env_var_name: str) -> Optional[str]:
     # Otherwise, exit
     print(f"{env_var_name} not set. Exiting.")
     sys.exit(1)
+
+
+# Connect to SocketIO server, trying again if it fails
+def connect_to_server(logger, sio, connection_url: str = None) -> None:
+    if not connection_url:
+        # Set hostname (default is "localhost" to support local pre container testing)
+        # TODO #65 Do not allow default port, and make this common
+        connection_url = f"http://{environ.get('GAMESERVER_HOSTNAME', 'localhost')}:{environ.get('GAMESERVER_PORT', '3001')}"
+    logger.info(f"Connecting to SocketIO server on {connection_url}")
+    connected: bool = False
+    max_wait: int = 240  # 4 minutes
+    wait_time: int = 4
+    while not connected and wait_time <= max_wait:
+        try:
+            sio.connect(connection_url)
+            connected = True
+        except Exception:
+            logger.info(
+                f"Could not connect to server on {connection_url}. Retrying in {wait_time} seconds..."
+            )
+            eventlet.sleep(wait_time)
+            wait_time = int(wait_time * 1.5)
+    if not connected:
+        exit(logger, "Could not connect to Game Server. Is it running?")

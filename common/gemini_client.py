@@ -1,4 +1,4 @@
-from logger import setup_logger
+from utils import setup_logger
 import os
 from typing import List, Dict, Union, Iterable
 import json
