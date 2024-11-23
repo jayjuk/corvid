@@ -7,7 +7,9 @@ from aimanager import AIManager
 # Sets up the AI Manager with the specified model name
 class TestAIManager(unittest.TestCase):
     def setUp(self) -> None:
-        self.ai_manager = AIManager(model_name=self.test_model_name)
+        self.ai_manager = AIManager(
+            model_name=self.test_model_name, system_message="This is a unit test"
+        )
 
 
 # Each specific LLM test class inherits from the parent class and sets the model name
