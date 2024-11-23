@@ -406,15 +406,24 @@ class GameManager:
         )
 
     # Create item
-    def do_create(self, player: Player, item_name: str, description: str) -> str:
+    def do_create(
+        self, player: Player, item_name: str, description: str, price: int = 0
+    ) -> str:
 
         # Check the item name is valid
         if item_name == "":
             return self.item_name_empty_message
 
+        # Check the price is valid
+        MAX_PRICE = 1000
+        if price < 0:
+            return "Invalid input: price cannot be negative."
+        elif price > MAX_PRICE:
+            return f"Invalid input: price must be less than {MAX_PRICE}."
+
         # Check if the item is in the room
         item: Optional[GameItem] = self.world.search_item(
-            item_name, player.get_current_location()
+            item_name, player.get_current_location(), exact_match=True
         )
         if item:
             return f"{item.get_name(article='The')} is already here."
@@ -426,7 +435,7 @@ class GameManager:
         if description[-1] != ".":
             description += "."
         outcome: Optional[str] = self.world.create_item(
-            item_name, description, player.get_current_location()
+            item_name, description, price, player.get_current_location()
         )
         if outcome:
             return outcome
@@ -480,6 +489,11 @@ class GameManager:
         # Check if they named an item
         elif self.world.search_item(animal_name, player.get_current_location()):
             return f"{animal_name} is already the name of an item."
+
+        # Check list of actions is valid
+        if list_of_actions and list_of_actions.isdigit():
+            return "Invalid input: list of actions cannot be a number. Were you trying to create an item? If so, use command 'create' instead."
+
         # Spawn the animal using same dictionary as per the world file
         entity_dict = {
             "name": animal_name,

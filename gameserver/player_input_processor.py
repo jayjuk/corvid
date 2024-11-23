@@ -414,14 +414,11 @@ class PlayerInputProcessor:
                 phrases = self.get_phrases(rest_of_response)
 
                 # You: create "Big bug" "A big bug that's nice."
-                # Please specify item name and description in quotes.
-                # NOT WORKING
-                # Check the number of phrases
-                if len(phrases) != 2:
+                if len(phrases) < 2 or len(phrases) > 3:
                     return (
                         None,
                         None,
-                        "Please specify item name and description in quotes.",
+                        "Please specify item name and description in quotes, then optional price.",
                     )
 
                 # Check item name is not empty
@@ -429,9 +426,16 @@ class PlayerInputProcessor:
 
                 description: str = phrases[1]
 
+                if len(phrases) == 3:
+                    if not phrases[2].isdigit():
+                        return None, None, "Price must be a number."
+                    price = int(phrases[2])
+                else:
+                    price = 0
+
                 return (
                     self.command_functions[command]["function"],
-                    (player, item_name, description),
+                    (player, item_name, description, price),
                     None,
                 )
             # Normal command

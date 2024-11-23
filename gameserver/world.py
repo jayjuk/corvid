@@ -473,12 +473,15 @@ class World:
         return f"Room {room_name} has been deleted."
 
     # Search room for item by name and return reference to it if found
-    def search_item(self, item_name: str, location: str) -> Optional[GameItem]:
+    def search_item(
+        self, item_name: str, location: str, exact_match: bool = False
+    ) -> Optional[GameItem]:
         for item in self.room_items.get(location, []):
             # Return the first item that includes the given item name
             # So "get clock" will find "dusty clock" and "grandfather clock"
             if item_name and (
-                item_name.lower() in item.get_name().lower()
+                (item_name.lower() in item.get_name().lower() and exact_match is False)
+                or item_name.lower() == item.get_name().lower()
                 or item_name.lower() == "all"
             ):
                 return item
@@ -528,7 +531,9 @@ class World:
             self.register_item(o)
             self.storage_manager.store_game_object(self.name, o)
 
-    def create_item(self, name: str, description: str, location: str) -> Optional[str]:
+    def create_item(
+        self, name: str, description: str, price: int, location: str
+    ) -> Optional[str]:
         for reserved_word in (" from ", " up ", " to "):
             if reserved_word in name.lower():
                 return f"Problems will arise if an item is created that contains '{reserved_word}'."
@@ -540,7 +545,11 @@ class World:
 
         # Create and store item
         o: GameItem = GameItem(
-            world=self, name=name, description=description, location=location
+            world=self,
+            name=name,
+            description=description,
+            price=price,
+            location=location,
         )
         self.register_item(o)
         self.storage_manager.store_game_object(self.name, o)
