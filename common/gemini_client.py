@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Iterable
 import json
 import base64
 from typing import Optional
-from utils import get_critical_env_variable, setup_logger
+from utils import get_critical_env_variable, setup_logger, exit
 from io import BytesIO
 
 # Set up logger
@@ -14,6 +14,7 @@ import vertexai
 from vertexai.preview.generative_models import (
     GenerativeModel,
     GenerationResponse,
+    ImageGenerationResponse,
     Content,
     Part,
     Candidate,
@@ -84,13 +85,15 @@ def do_request(model_client: GenerativeModel, messages: List[Dict[str, str]]) ->
     candidate: Candidate = model_response.candidates[0]
     if candidate.finish_reason.name != "STOP":
         logger.error(f"Model has issue: {str(model_response)}")
+        return ""
     else:
         return candidate.content.parts[0].text
-    return ""
 
 
 # Execute image generation request
 def get_image_binary(image_list):
+    if len(image_list.images) < 1:
+        raise AttributeError("GeneratedImage list is empty")
     image = image_list[0]
     if hasattr(image, "_pil_image"):
         buffer = BytesIO()
@@ -120,12 +123,11 @@ def do_image_request(prompt: str) -> Union[bytes, None]:
 
     generation_model = ImageGenerationModel.from_pretrained("imagen-3.0-generate-001")
 
-    image_list = generation_model.generate_images(
+    image_list: ImageGenerationResponse = generation_model.generate_images(
         prompt=prompt,
         number_of_images=1,
         aspect_ratio="1:1",
         # safety_filter_level="block_some",
         # person_generation="allow_all",
     )
-
     return get_image_binary(image_list)

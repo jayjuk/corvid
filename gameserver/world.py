@@ -24,6 +24,7 @@ class World:
         storage_manager: Any,
         mode: Optional[str] = None,
         ai_manager: AIManager = None,
+        landscape: Optional[str] = None,
     ) -> None:
 
         logger.info(f"Creating world {name}")
@@ -32,7 +33,12 @@ class World:
         # Only set to true if we load from empty.json
         self.is_empty: bool = False
 
+        # World name
         self.name: str = name
+
+        # Optional landscape description for use e.g. in consistent image generation
+        self.landscape: Optional[str] = landscape
+
         self.ai_manager: AIManager = ai_manager
         self.storage_manager: Any = storage_manager
         self.directions: Dict[str, Tuple[int, int, str]] = {
@@ -57,14 +63,19 @@ class World:
 
     # Get the objective of the game
     def get_objective(self, player: Optional[Player] = None) -> str:
+        world_theme: str = self.landscape or self.name
         if player and player.role == "builder":
-            return "You are a builder and your objective is to create a wonderful game world."
-        return (
-            "The aim of this game is to earn enough money to buy The Button. "
-            + "You don't know what will happen when you press The Button, but you know it will be good. "
-            + "The first player to press the button (in their possession) wins the game! "
-            + "Hint: earn money buy exploring the game world, finding items and selling them to a merchant."
-        )
+            return (
+                "You are a builder and your objective is to create a wonderful game world. The theme: "
+                + world_theme
+            )
+        # return (
+        #     "The aim of this game is to earn enough money to buy The Button. "
+        #     + "You don't know what will happen when you press The Button, but you know it will be good. "
+        #     + "The first player to press the button (in their possession) wins the game! "
+        #     + "Hint: earn money buy exploring the game world, finding items and selling them to a merchant."
+        # )
+        return f"Welcome to this world: {world_theme}\nYour objective for now is simply to explore and have fun!"
 
     def load_rooms(self) -> Dict[str, Room]:
 
@@ -384,8 +395,11 @@ class World:
             self.rooms[room].description for room in self.rooms.keys()
         ]
 
+        # Get the theme of the world
+        world_theme: str = self.landscape or self.name
+
         prompt: str = (
-            f"Generate an appropriate 30-50 word description for a new location in my adventure game world called '{self.name}'."
+            f"Generate an appropriate 30-50 word description for a new location in my adventure game world '{world_theme}'."
         )
         if len(existing_room_descriptions) > 1:
             prompt += " Pre-existing descriptions for inspiration:\n" + "\n,\n".join(
@@ -700,6 +714,14 @@ class World:
         stored_player_data = self.storage_manager.get_game_object(
             self.name, object_type="Player", rowkey_value=name
         )
+        if stored_player_data:
+            logger.info(f"Player {name} has played before")
+            # Check room is still valid
+            if stored_player_data["location"] not in self.rooms:
+                stored_player_data["location"] = self.default_location
+                logger.info(
+                    f"Player {name} has invalid location, resetting to {self.default_location}"
+                )
         p: Player = Player(self, sid, name, role, stored_player_data=stored_player_data)
         # Store player's data again (updates last login timestamp if nothing else)
         self.storage_manager.store_game_object(self.name, p)

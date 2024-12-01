@@ -3,15 +3,16 @@ import eventlet
 import time
 from os import environ
 import re
-from aimanager import AIManager
 from utils import get_critical_env_variable, connect_to_server, setup_logger, exit
 import socketio
 
 # Register the client with the server
 sio = socketio.Client()
 
-# Set up logger
+# Set up logger before importing other modules that use it
 logger = setup_logger("AI Broker", sio=sio)
+
+from aimanager import AIManager
 
 
 # Class to manage the AI's interaction with the game server
@@ -138,7 +139,11 @@ class AIBroker:
     # Log the game events for the AI to process
     def log_event(self, event_text: str) -> None:
         # If the input is just echoing back what you said, do nothing
-        if str(event_text).startswith("You say") or str(event_text).startswith("You:"):
+        if (
+            str(event_text).startswith("You say")
+            or str(event_text).startswith("You:")
+            or str(event_text) == "I'm trying to guess what you meant by that."
+        ):
             return
         # Otherwise, add this to the user input backlog
         # Strip anything inside curly braces as this is detail human players will enjoy but it will just cost money for the AI
@@ -261,9 +266,9 @@ def catch_all(data: Dict) -> None:
 
 
 # Catch all other events
-@sio.on("*")
-def catch_all(event, data: Dict) -> None:
-    logger.warning(f"Received other unexpected event '{event}': {data}")
+# @sio.on("*")
+# def catch_all(event, data: Dict) -> None:
+#     logger.warning(f"Received other unexpected event '{event}': {data}")
 
 
 # SocketIO connection handlers
@@ -295,13 +300,14 @@ def catch_all(data: Dict) -> None:
 @sio.event
 def connect_error(data: Dict) -> None:
     logger.error(data)
-    # exit(logger, "Connection failure!")
+    exit(logger, "Connection failure!")
 
 
 # Disconnection event handler
 @sio.event
 def disconnect() -> None:
     logger.info("Disconnected from Server.")
+    exit(logger, "Disconnect event received.")
 
 
 # Main function to start the AI Broker
@@ -314,10 +320,11 @@ if __name__ == "__main__":
     # If AI_MODE is not set, default to "player"
     ai_mode: str = environ.get("AI_MODE") or "player"
     # Check AI_MODE is set to a valid value
-    if ai_mode not in ("player", "builder", "observer"):
+    valid_ai_modes = ["player", "builder"]
+    if ai_mode not in valid_ai_modes:
         exit(
             logger,
-            f"ERROR: AI_MODE is set to {ai_mode} but must be either 'player' or 'observer'. Exiting.",
+            f"ERROR: AI_MODE is set to {ai_mode} but must be one of: {valid_ai_modes}. Exiting.",
         )
 
     # If AI_COUNT is not set, sleep forever (if you exit, the container will restart)

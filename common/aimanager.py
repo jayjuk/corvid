@@ -178,6 +178,7 @@ class AIManager:
         temperature: float = 0.7,
         history: bool = True,
         system_message: Optional[str] = None,
+        cleanup_output: bool = True,
     ) -> str:
         try_count: int = 0
         max_tries: int = 10
@@ -279,10 +280,18 @@ class AIManager:
                     exit(logger, f"Unsupported model type: {self.model_name}")
 
                 # Clean up response
-                if "```" in model_response:
-                    model_response = model_response.split("```")[0].strip()
-                if "#" in model_response:
-                    model_response = model_response.split("#")[0].strip()
+                if cleanup_output and model_response:
+                    if "```" in model_response:
+                        model_response = model_response.split("```")[0].strip()
+
+                    # Remove any emojis
+                    model_response = model_response.encode("ascii", "ignore").decode()
+
+                    # Remove any leading hash
+                    model_response = model_response.lstrip("# ")
+
+                    if "#" in model_response:
+                        model_response = model_response.split("#")[0].strip()
 
             except Exception as e:
                 traceback.print_exc()

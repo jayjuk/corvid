@@ -27,7 +27,8 @@ class GameManager:
         sio: str,
         storage_manager: StorageManager,
         world_name: str = "jaysgame",
-        model_name: str = None,
+        model_name: Optional[str] = None,
+        landscape: Optional[str] = None,
     ) -> None:
 
         # Static variables
@@ -64,6 +65,7 @@ class GameManager:
             storage_manager,
             mode=None,
             ai_manager=self.ai_manager,
+            landscape=landscape,
         )
 
         self.item_name_empty_message: str = "Invalid input: item name is empty."
@@ -194,7 +196,7 @@ class GameManager:
         if entity:
             return entity.get_description()
         # If you get here, can't find anything that matches that name
-        return f"There is no '{item_name}' here."
+        return f"There is no '{item_name}' here. You can look around (just say look) or look at a specific item."
 
     def do_say(self, player: Player, rest_of_response: str, shout: bool = False) -> str:
         verb: str = "shouts" if shout else "says"
@@ -211,7 +213,7 @@ class GameManager:
                 player.sid, f'{player.name} {verb}, "{rest_of_response}"', shout
             )
             if not told_count:
-                player_response = "There is no one else here to hear you!"
+                player_response = "There is no one else here to hear you! You can shout to communicate with people in other locations."
             else:
                 player_response = f"You {verb[:-1]}, '{rest_of_response}'."
         return player_response
@@ -255,7 +257,7 @@ class GameManager:
     def do_quit(self, player: Player, rest_of_response: str) -> None:
         self.remove_player(player.sid, "You have left the game.")
 
-    def emit_request(self, request_id: str, request: str) -> None:
+    def emit_summon_request(self, request_id: str, request: str) -> None:
         emit_data = {"request_id": request_id, "request_data": request}
         self.sio.emit("summon_player_request", emit_data)
 
@@ -267,7 +269,7 @@ class GameManager:
         player_briefing = rest_of_response.strip("'")
         # Trigger a summon request
         self.summon_requests[request_id] = player_briefing
-        self.emit_request(request_id, player_briefing)
+        self.emit_summon_request(request_id, player_briefing)
 
     def do_build(
         self,
@@ -280,8 +282,12 @@ class GameManager:
         if direction in self.world.get_exits(player.get_current_location()):
             return f"There is already a room to the {direction}."
 
+        # Remove 'The ' from the room name
+        if room_name.startswith("The "):
+            room_name = room_name[4:]
+
         # Format the room name to be title case
-        room_name = room_name.title()
+        room_name = room_name.title().replace("'S", "'s")
 
         # Check and add the room
         response_text, description_prompt, new_grid_reference = (
@@ -402,6 +408,7 @@ class GameManager:
                 "world_name": self.world.name,
                 "room_name": room_name,
                 "description": room_description,
+                "landscape": self.world.landscape,
             },
         )
 
@@ -409,6 +416,13 @@ class GameManager:
     def do_create(
         self, player: Player, item_name: str, description: str, price: int = 0
     ) -> str:
+
+        # Strip trailing non alphabet characters from item name
+        item_name = item_name.rstrip(".,!?")
+
+        # Check the item name is valid - alphabet characters only
+        if not item_name.isalpha():
+            return "Invalid input: item name must contain only letters."
 
         # Check the item name is valid
         if item_name == "":
@@ -856,8 +870,9 @@ class GameManager:
                     )
                     if item:
                         self.world.update_item_description(item, new_description)
-            for item_name in response_json.get("deleted_items", []):
-                self.world.delete_item(item_name, player)
+            if response_json.get("deleted_items"):
+                for item_name in response_json["deleted_items"]:
+                    self.world.delete_item(item_name, player)
             if response_json.get("new_items"):
                 for item_name, new_description in response_json["new_items"].items():
                     # Create item
@@ -1070,7 +1085,10 @@ class GameManager:
                 if exit_room.lower() in direction.lower():
                     return self.move_entity(entity, exit_dir)
 
-            return f"{direction} is not a valid direction or room name."
+            return (
+                f"{direction} is not a valid direction or room name. "
+                + self.world.get_room_exits_description(entity.get_current_location())
+            )
 
         # Check for other players you are leaving / joining
         for other_entity in self.get_other_entities(entity.sid, players_only=True):

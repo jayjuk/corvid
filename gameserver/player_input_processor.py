@@ -91,7 +91,7 @@ class PlayerInputProcessor:
             },
             "build": {
                 "function": self.game_manager.do_build,  # Called with special inputs - see process_player_input below
-                "description": "Build a new location. Specify the direction, name and description using single quotes "
+                "description": "Build a new location. Specify the direction, name and description (avoid confusion by not describing specific items, those are created separately) using single quotes "
                 + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'",
             },
             "create": {
@@ -111,8 +111,9 @@ class PlayerInputProcessor:
             "summon": {
                 "function": self.game_manager.do_summon,
                 "description": (
-                    "Summon a new player into the game. Specify the instructions for the new player using single quotes "
-                    + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
+                    ""  # Hidden from AI for now
+                    # "Summon a new player into the game. Specify the instructions for the new player using single quotes "
+                    # + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
                 ),
             },
             "buy": {

@@ -37,7 +37,7 @@ class AIRequester:
             f"Submitting request: {prompt} with system message: {this_system_message}"
         )
         return self.ai_manager.submit_request(
-            request=prompt, system_message=this_system_message
+            request=prompt, system_message=this_system_message, history=False
         )
 
 

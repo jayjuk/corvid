@@ -1,0 +1,4 @@
+role: user
+parts: Testing, testing, 1, 2, 3...
+role: model
+parts: Testing, testing, 1, 2, 3... I hear you loud and clear! How can I assist you today?

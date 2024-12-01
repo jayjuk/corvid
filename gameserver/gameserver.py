@@ -215,6 +215,7 @@ if __name__ == "__main__":
         storage_manager,
         world_name=world_name,
         model_name=environ.get("MODEL_NAME"),
+        landscape=environ.get("LANDSCAPE_DESCRIPTION"),
     )
     player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
     logger.info(f"Launching WSGI server on {hostname}:{port}")

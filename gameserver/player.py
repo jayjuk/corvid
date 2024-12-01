@@ -35,7 +35,7 @@ class Player(Entity):
 
         # Set up player
         # TODO #74 Remove this, it's for simulating AI builders
-        if player_name == "Doug":
+        if player_name in ("Doug", "Alice", "Bob"):
             player_role = "builder"
 
         # Call superclass constructor
