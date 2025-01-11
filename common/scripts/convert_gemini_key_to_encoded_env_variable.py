@@ -1,4 +1,7 @@
 import base64
+import sys
+
+file_name = sys.argv[1] if len(sys.argv) > 1 else "gemini.key"
 
 with open("gemini.key", "rb") as key_file:
     key_data = key_file.read()

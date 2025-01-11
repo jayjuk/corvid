@@ -11,18 +11,19 @@ logger = setup_logger()
 
 # Avoid mixing up loggers by importing third party modules after logger
 import vertexai
-from vertexai.preview.generative_models import (
+from vertexai.generative_models import (
     GenerativeModel,
     GenerationResponse,
-    ImageGenerationResponse,
     Content,
     Part,
     Candidate,
 )
+from vertexai.vision_models import ImageGenerationModel, ImageGenerationResponse
+
 from google.oauth2.service_account import Credentials
 from google.cloud.aiplatform_v1beta1.types.content import SafetySetting
-from vertexai.preview.generative_models import HarmCategory, HarmBlockThreshold
-from vertexai.preview.vision_models import ImageGenerationModel
+from vertexai.generative_models import HarmCategory, HarmBlockThreshold
+from vertexai.vision_models import ImageGenerationModel
 
 
 # Connect to the LLM API
