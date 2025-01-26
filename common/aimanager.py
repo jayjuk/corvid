@@ -20,7 +20,7 @@ logger = setup_logger()
 # Class to handle interaction with the AI
 class AIManager:
     def __init__(
-        self, model_name: str, system_message: str, sio: object = None
+        self, model_name: str, system_message: str, mbh: object = None
     ) -> None:
 
         # Static variables
@@ -31,7 +31,7 @@ class AIManager:
         self.input_token_count: int = 0
         self.output_token_count: int = 0
         # SocketIO object - only provided to some instances where remote requests are required
-        self.sio = sio
+        self.mbh = mbh
 
         # Chat history / context
         self.reset()
@@ -397,15 +397,15 @@ class AIManager:
         self.remote_requests[request_id]["player"] = player
         self.remote_requests[request_id]["player_context"] = player_context
 
-        # Check if we have SocketIO set up
-        if not self.sio:
+        # Check if we have message helper set up
+        if not self.mbh:
             exit(
                 logger,
-                "This AI Manager does not have SocketIO set up for remote requests",
+                "This AI Manager does not have a message helper set up for remote requests",
             )
 
         # Emit the request to the server
-        self.sio.emit("ai_request", emission_dict)
+        self.mbh.publish("ai_request", emission_dict)
         logger.info(
             f"Remote request submitted with request_id {request_id}: {self.remote_requests[request_id]}"
         )
@@ -417,7 +417,7 @@ class AIManager:
             del emission_dict["response_handler"]
             del emission_dict["player"]
             del emission_dict["player_context"]
-            self.sio.emit("ai_request", emission_dict)
+            self.mbh.publish("ai_request", emission_dict)
             logger.info(
                 f"Re-emitting missing AI request with request_id {request_id}: {self.remote_requests[request_id]}"
             )

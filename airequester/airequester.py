@@ -1,15 +1,13 @@
 from typing import Dict
 from os import environ
 from utils import get_critical_env_variable, setup_logger, exit, connect_to_server
-import socketio
 
-# Register the client with the server
-sio = socketio.Client()
 # Set up logger here BEFORE importing AI manager
 # (registers signal handler too hence sio passed in)
-logger = setup_logger("AI Requester", sio=sio)
+logger = setup_logger("AI Requester", sio=None)
 
 from aimanager import AIManager
+from messagebroker_helper import MessageBrokerHelper
 
 
 # Class to manage the AI's interaction with the game server
@@ -44,57 +42,37 @@ class AIRequester:
 # Non-class functions below here (SocketIO event handlers etc.)
 
 
-# SocketIO event handlers
+# Event handlers
 
 
-if sio:
-    # Game update event handler
-    @sio.on("ai_request")
-    def catch_all(data: Dict) -> None:
-        logger.info(f"Received AI request: {data}")
-        if data:
-            if "prompt" not in data:
-                exit(logger, "Received invalid AI request")
-            # Submit the request to the AI
-            ai_response = ai_requester.submit_request(
-                prompt=data["prompt"],
-                system_message=data.get(
-                    "system_message",
-                    "You are a helpful AI assistant for a game server.",
-                ),
+def catch_all(data: Dict) -> None:
+    logger.info(f"Received AI request: {data}")
+    if data:
+        if "prompt" not in data:
+            exit(logger, "Received invalid AI request")
+        # Submit the request to the AI
+        ai_response = ai_requester.submit_request(
+            prompt=data["prompt"],
+            system_message=data.get(
+                "system_message",
+                "You are a helpful AI assistant for a game server.",
+            ),
+        )
+        if ai_response:
+            response_package = {
+                "ai_response": ai_response,
+                "request_id": data["request_id"],
+            }
+            # Emit event back to server
+            mbh.publish(
+                "ai_response",
+                response_package,
             )
-            if ai_response:
-                response_package = {
-                    "ai_response": ai_response,
-                    "request_id": data["request_id"],
-                }
-                # Emit event back to server
-                sio.emit(
-                    "ai_response",
-                    response_package,
-                )
-            else:
-                exit(logger, "AI request returned no response")
-
         else:
-            exit(logger, "Received invalid event")
+            exit(logger, "AI request returned no response")
 
-    # SocketIO connection handlers
-
-    # Connection event handler
-    @sio.event
-    def connect() -> None:
-        logger.info("Connected to Server.")
-
-    # Connection error event handler
-    @sio.event
-    def connect_error(data: Dict) -> None:
-        logger.error(data)
-
-    # Disconnection event handler
-    @sio.event
-    def disconnect() -> None:
-        logger.info("Disconnected from Server.")
+    else:
+        exit(logger, "Received invalid event")
 
 
 # Create AI Worker
@@ -103,12 +81,13 @@ ai_requester = AIRequester(
     system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
 )
 
-# Connect to the server.
-connect_to_server(logger, sio)
 
-# Check for outstanding requests
-sio.emit("missing_ai_request", {})
-logger.info("Ready...")
-
-# This keeps the SocketIO event processing going
-sio.wait()
+mbh = MessageBrokerHelper(
+    environ.get("GAMESERVER_HOSTNAME", "localhost"),
+    {
+        "missing_ai_request": {"mode": "publish", "startup": True},
+        "ai_request": {"mode": "subscribe", "callback": catch_all},
+        "ai_response": {"mode": "publish"},
+    },
+    use_threading=True,
+)

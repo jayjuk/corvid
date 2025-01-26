@@ -11,13 +11,11 @@ from threading import Thread
 from typing import Dict, Optional, Tuple
 from os import environ
 from utils import get_critical_env_variable, connect_to_server, setup_logger, exit
-
-# Register the client with the server
-sio = socketio.Client()
+from messagebroker_helper import MessageBrokerHelper
 
 # Set up logger before importing other modules
 # (registers signal handler too hence sio passed in)
-logger = setup_logger("Image Creator", sio=sio)
+logger = setup_logger("Image Creator", sio=None)
 
 from aimanager import AIManager
 from azurestoragemanager import AzureStorageManager
@@ -26,11 +24,27 @@ from azurestoragemanager import AzureStorageManager
 event_queue = Queue()
 
 
+def add_to_queue(data: Dict) -> None:
+    logger.info(f"Received image creation request: {data}")
+    # Add to queue
+    event_queue.put(("work_request", data))
+
+
+mbh = MessageBrokerHelper(
+    environ.get("GAMESERVER_HOSTNAME", "localhost"),
+    {
+        "missing_image_request": {"mode": "publish", "startup": True},
+        "image_creation_request": {"mode": "subscribe", "callback": add_to_queue},
+    },
+)
+
+
 # Class to manage the AI's interaction with the game server
 class ImageCreator:
 
     def __init__(
         self,
+        mbh: MessageBrokerHelper,
         image_model_name: str = None,
         text_model_name: str = None,
         system_message: Optional[str] = None,
@@ -38,6 +52,7 @@ class ImageCreator:
     ) -> None:
         # Constructor
         self.landscape = landscape
+        self.mbh = mbh
 
         # Set up the AI managers
         self.image_ai_manager = AIManager(
@@ -55,7 +70,10 @@ class ImageCreator:
                     model_name=text_model_name,
                     system_message=system_message,
                 )
-            test_response = self.text_ai_manager.submit_request("ping", history=False)
+            test_response = self.text_ai_manager.submit_request(
+                "Checking connectivity - if you got this, respond with just 'OK'.",
+                history=False,
+            )
             logger.info(f"Text model test response: {test_response}")
         else:
             self.text_ai_manager = None
@@ -72,6 +90,8 @@ class ImageCreator:
                 if event == "work_request":
                     self.process_work_request(data)
                 # Add more event types as needed
+                else:
+                    logger.error(f"Unknown event type: {event}")
             except Exception as e:
                 logger.error(f"Error processing event {event}: {e}")
             finally:
@@ -92,7 +112,7 @@ class ImageCreator:
                 f"Image creation success: {success}, filename: {image_filename}"
             )
             # Emit event back to server
-            sio.emit(
+            self.mbh.emit(
                 "image_creation_response",
                 {
                     "room_name": data["room_name"],
@@ -182,47 +202,12 @@ class ImageCreator:
             return False, None
 
 
-# SocketIO event handlers
-
-
-# Game update event handler
-@sio.on("image_creation_request")
-def catch_all(data: Dict) -> None:
-    logger.info(f"Received image creation request: {data}")
-    # Add to queue
-    event_queue.put(("work_request", data))
-
-
-# SocketIO event handlers:
-
-
-# Connection event handler
-@sio.event
-def connect() -> None:
-    logger.info("Connected to Server.")
-
-
-# Connection error event handler
-@sio.event
-def connect_error(data: Dict) -> None:
-    logger.error(data)
-
-
-# Disconnection event handler
-@sio.event
-def disconnect() -> None:
-    # TODO #95 Handle reconnection e.g. when Game Server restarts
-    logger.info("Disconnected from Server.")
-
-
 # Main function to start the program
 if __name__ == "__main__":
 
-    # Connect to the game server.
-    connect_to_server(logger, sio)
-
     # Create AI Worker
     image_creator = ImageCreator(
+        mbh=mbh,
         image_model_name=get_critical_env_variable("IMAGE_MODEL_NAME"),
         text_model_name=get_critical_env_variable("MODEL_NAME"),
         system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
@@ -233,11 +218,3 @@ if __name__ == "__main__":
     worker_thread = Thread(target=image_creator.process_events)
     worker_thread.daemon = True
     worker_thread.start()
-
-    # Check for missing images by emitting missing_image_request
-    sio.emit("missing_image_request", {})
-
-    logger.info("Ready...")
-
-    # This keeps the SocketIO event processing going
-    sio.wait()

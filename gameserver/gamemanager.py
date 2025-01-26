@@ -24,7 +24,8 @@ class GameManager:
     # Constructor
     def __init__(
         self,
-        sio: str,
+        sio: Any,
+        mbh: object,
         storage_manager: StorageManager,
         world_name: str = "jaysgame",
         model_name: Optional[str] = None,
@@ -37,7 +38,8 @@ class GameManager:
         self.game_loop_time_secs: int = 30  # Animals etc move on this cycle
 
         # Set up game state
-        self.sio: str = sio
+        self.mbh: object = mbh
+        self.sio: Any = sio
         # Register of players currently in the game
         self.players: Dict[str, Player] = {}
         # Register of summon requests
@@ -54,7 +56,7 @@ class GameManager:
         self.ai_manager: Optional[AIManager]
         if model_name:
             self.ai_manager: AIManager = AIManager(
-                model_name=model_name, system_message="", sio=self.sio
+                model_name=model_name, system_message="", mbh=self.mbh
             )
         else:
             self.ai_manager = None
@@ -259,7 +261,7 @@ class GameManager:
 
     def emit_summon_request(self, request_id: str, request: str) -> None:
         emit_data = {"request_id": request_id, "request_data": request}
-        self.sio.emit("summon_player_request", emit_data)
+        self.mbh.publish("summon_player_request", emit_data)
 
     def do_summon(self, player: Player, rest_of_response: str) -> str:
         logger.info(f"Summon command received: {rest_of_response}")
@@ -402,7 +404,7 @@ class GameManager:
     ) -> None:
         logger.info(f"Requesting image creation for room {room_name}")
         # Emit event to trigger a room image creation
-        self.sio.emit(
+        self.mbh.publish(
             "image_creation_request",
             {
                 "world_name": self.world.name,
