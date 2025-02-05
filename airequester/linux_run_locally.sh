@@ -1,0 +1,3 @@
+source ../common/load_dotenv.sh
+echo Running Game Server...
+python airequester.py
