@@ -1,15 +1,11 @@
 # Set up logger first
-from utils import setup_logger, exit, get_logs_folder
+from utils import setup_logger, exit, get_logs_folder, connect_to_server
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv
 import time
 from os import path, makedirs
-import socket
 import socketio
-import eventlet
-
-# eventlet.monkey_patch()  # Make standard libraries non-blocking
 
 # Set up logger before importing other own modules
 logger = setup_logger("Game Server", sio=None)
@@ -20,11 +16,8 @@ from player import Player
 from player_input_processor import PlayerInputProcessor
 from messagebroker_helper import MessageBrokerHelper
 
-# This is the main game server file. It sets up the SocketIO server and handles events only
-
-logger.info("Setting up SocketIO")
-sio = socketio.Server(cors_allowed_origins="*")
-app = socketio.WSGIApp(sio)
+# Register the client with the server
+sio = socketio.Client()
 
 # Transcript management
 
@@ -50,18 +43,10 @@ def log_to_player_transcript(
         f.write(f"{timestamp} Game: {response}\n\n")
 
 
-# Event handlers
-
-
-# Connection
-@sio.event
-def connect(sid: str, environ: Dict[str, Any]) -> None:
-    logger.info(f"Client connected: {sid}")
-
-
 # Player setup
-@sio.event
-def set_player_name(sid: str, player_info: Dict[str, str]) -> None:
+def set_player_name(data: Dict[str, str]) -> None:
+    sid: str = data["sid"]
+    player_info: Dict[str, str] = data["player_info"]
     logger.info(
         f"Client requesting player setup: {sid}, {player_info.get('name')}, {player_info.get('role')}"
     )
@@ -80,8 +65,11 @@ def set_player_name(sid: str, player_info: Dict[str, str]) -> None:
         create_player_transcript(player_info.get("name"))
 
 
-# Player input from the client
-def process_user_action(sid: str, player_input: str) -> None:
+# User action
+def user_action(data: Dict[str, str]):
+    sid: str = data["sid"]
+    player_input: str = data["player_input"]
+
     if sid in game_manager.players:
         player: Player = game_manager.players[sid]
         logger.info(f"Received user action: {player_input} from {sid} ({player.name})")
@@ -116,15 +104,9 @@ def process_user_action(sid: str, player_input: str) -> None:
         )
 
 
-@sio.event
-def user_action(sid: str, player_input: str):
-    # eventlet.spawn(greenthread_user_action, sid, player_input)
-    process_user_action(sid, player_input)
-
-
 # Disconnection
-@sio.event
-def disconnect(sid: str) -> None:
+def user_disconnect(data: Dict[str, str]) -> None:
+    sid: str = data["sid"]
     logger.info(f"Client disconnected: {sid}")
     # TODO #72 Allow players to reconnect (for now disconnect is same as quit)
     game_manager.remove_player(
@@ -195,12 +177,6 @@ def ai_response(data: Dict) -> None:
 
 
 if __name__ == "__main__":
-    hostname: str = socket.getfqdn()
-    if hostname.endswith(".lan"):
-        hostname = hostname[:-4]
-    # TODO #65 Do not allow default port, and make this common
-    port: int = int(environ.get("GAMESERVER_PORT", "3001"))
-
     # Instantiate the message broker helper
     def message_broker_callback(message: str) -> None:
         logger.info(f"Received message: {message}")
@@ -208,7 +184,7 @@ if __name__ == "__main__":
     # Set up the message broker
     logger.info("Setting up message broker")
     mbh = MessageBrokerHelper(
-        hostname,
+        environ.get("GAMESERVER_HOSTNAME", "localhost"),
         {
             # Image creation
             "missing_image_request": {
@@ -234,6 +210,9 @@ if __name__ == "__main__":
                 "mode": "subscribe",
                 "callback": summon_player_response,
             },
+            "user_disconnect": {"mode": "subscribe", "callback": user_disconnect},
+            "set_player_name": {"mode": "subscribe", "callback": set_player_name},
+            "user_action": {"mode": "subscribe", "callback": user_action},
         },
         use_threading=True,
     )
@@ -258,14 +237,8 @@ if __name__ == "__main__":
     )
     player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
 
-    # Launch the WSGI server for the SocketIO app
-    logger.info(f"Launching WSGI server on {hostname}:{port}")
+    # Connect to the server. If can't connect, warn user that the Game Server may not be running.
+    connect_to_server(logger, sio)
 
-    def rabbitmq_poll():
-        """Non-blocking RabbitMQ polling."""
-        while True:
-            mbh.check_for_messages()  # Process one message at a time
-            time.sleep(0.2)  # Small delay to avoid busy-waiting
-
-    eventlet.spawn(rabbitmq_poll)
-    eventlet.wsgi.server(eventlet.listen(("0.0.0.0", port)), app)
+    # Start the Socket.IO client
+    sio.wait()
