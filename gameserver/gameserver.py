@@ -9,6 +9,8 @@ import socket
 import socketio
 import eventlet
 
+# eventlet.monkey_patch()  # Make standard libraries non-blocking
+
 # Set up logger before importing other own modules
 logger = setup_logger("Game Server", sio=None)
 
@@ -16,6 +18,7 @@ from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager
 from player import Player
 from player_input_processor import PlayerInputProcessor
+from messagebroker_helper import MessageBrokerHelper
 
 # This is the main game server file. It sets up the SocketIO server and handles events only
 
@@ -129,41 +132,38 @@ def disconnect(sid: str) -> None:
     )
 
 
+game_manager: GameManager
+
+
 # process_missing_image_request
-@sio.event
-def missing_image_request(sid: str, data: Dict) -> None:
+def missing_image_request(data: Dict) -> None:
     logger.info("Received missing images request")
     game_manager.process_missing_image_request()
 
 
-@sio.event
-def image_creation_response(sid: str, data: Dict) -> None:
+def image_creation_response(data: Dict) -> None:
     logger.info(f"Received image creation response: {data}")
     game_manager.process_image_creation_response(
         data["room_name"], data["image_filename"], data["success"]
     )
 
 
-@sio.event
-def missing_ai_request(sid: str, data: Dict) -> None:
+def missing_ai_request(data: Dict) -> None:
     logger.info("Received request for missing AI requests ")
     game_manager.ai_manager.process_missing_ai_request()
 
 
-@sio.event
-def missing_summon_player_request(sid: str, data: Dict) -> None:
+def missing_summon_player_request(data: Dict) -> None:
     logger.info("Received request for missing Summon Player requests ")
     game_manager.process_missing_summon_player_request()
 
 
-@sio.event
-def summon_player_response(sid: str, data: Dict) -> None:
+def summon_player_response(data: Dict) -> None:
     logger.info(f"Received summon player response: {data}")
     game_manager.process_summon_player_response(data["request_id"])
 
 
-@sio.event
-def ai_response(sid: str, data: Dict) -> None:
+def ai_response(data: Dict) -> None:
     logger.info(f"Received AI response: {data}")
     if (
         "request_id" in data
@@ -201,6 +201,44 @@ if __name__ == "__main__":
     # TODO #65 Do not allow default port, and make this common
     port: int = int(environ.get("GAMESERVER_PORT", "3001"))
 
+    # Instantiate the message broker helper
+    def message_broker_callback(message: str) -> None:
+        logger.info(f"Received message: {message}")
+
+    # Set up the message broker
+    logger.info("Setting up message broker")
+    mbh = MessageBrokerHelper(
+        hostname,
+        {
+            # Image creation
+            "missing_image_request": {
+                "mode": "subscribe",
+                "callback": missing_image_request,
+            },
+            "image_creation_request": {"mode": "publish"},
+            "image_creation_response": {
+                "mode": "subscribe",
+                "callback": image_creation_response,
+            },
+            # General AI requests
+            "missing_ai_request": {"mode": "subscribe", "callback": missing_ai_request},
+            "ai_request": {"mode": "publish"},
+            "ai_response": {"mode": "subscribe", "callback": ai_response},
+            # Summon player
+            "missing_summon_player_request": {
+                "mode": "subscribe",
+                "callback": missing_summon_player_request,
+            },
+            "summon_player_request": {"mode": "publish"},
+            "summon_player_response": {
+                "mode": "subscribe",
+                "callback": summon_player_response,
+            },
+        },
+        use_threading=True,
+    )
+    logger.info("Message broker set up")
+
     # Get world name from command line or environment variable
     world_name: str
     if len(argv) > 1:
@@ -212,11 +250,22 @@ if __name__ == "__main__":
     storage_manager: AzureStorageManager = AzureStorageManager()
     game_manager: GameManager = GameManager(
         sio,
+        mbh,
         storage_manager,
         world_name=world_name,
         model_name=environ.get("MODEL_NAME"),
         landscape=environ.get("LANDSCAPE_DESCRIPTION"),
     )
     player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
+
+    # Launch the WSGI server for the SocketIO app
     logger.info(f"Launching WSGI server on {hostname}:{port}")
+
+    def rabbitmq_poll():
+        """Non-blocking RabbitMQ polling."""
+        while True:
+            mbh.check_for_messages()  # Process one message at a time
+            time.sleep(0.2)  # Small delay to avoid busy-waiting
+
+    eventlet.spawn(rabbitmq_poll)
     eventlet.wsgi.server(eventlet.listen(("0.0.0.0", port)), app)
