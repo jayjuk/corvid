@@ -9,6 +9,8 @@ import socket
 import socketio
 import eventlet
 
+# eventlet.monkey_patch()  # Make standard libraries non-blocking
+
 # Set up logger before importing other own modules
 logger = setup_logger("Game Server", sio=None)
 
@@ -204,6 +206,7 @@ if __name__ == "__main__":
         logger.info(f"Received message: {message}")
 
     # Set up the message broker
+    logger.info("Setting up message broker")
     mbh = MessageBrokerHelper(
         hostname,
         {
@@ -257,4 +260,12 @@ if __name__ == "__main__":
 
     # Launch the WSGI server for the SocketIO app
     logger.info(f"Launching WSGI server on {hostname}:{port}")
+
+    def rabbitmq_poll():
+        """Non-blocking RabbitMQ polling."""
+        while True:
+            mbh.check_for_messages()  # Process one message at a time
+            time.sleep(0.2)  # Small delay to avoid busy-waiting
+
+    eventlet.spawn(rabbitmq_poll)
     eventlet.wsgi.server(eventlet.listen(("0.0.0.0", port)), app)
