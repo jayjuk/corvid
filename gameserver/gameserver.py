@@ -56,7 +56,7 @@ def set_player_name(data: Dict[str, str]) -> None:
     # Blank outcome = success
     if outcome:
         # Issue with player name setting - indicate using name_invalid event, with error message
-        sio.emit(
+        mbh.emit(
             "name_invalid",
             outcome,
             sid,
@@ -73,7 +73,7 @@ def user_action(data: Dict[str, str]):
     if sid in game_manager.players:
         player: Player = game_manager.players[sid]
         logger.info(f"Received user action: {player_input} from {sid} ({player.name})")
-        sio.emit("game_update", f"You: {player_input}", sid)
+        mbh.emit("game_update", f"You: {player_input}", sid)
         command_function: Callable
         command_args: Tuple
         response_to_player: Optional[str]
@@ -91,13 +91,13 @@ def user_action(data: Dict[str, str]):
         # Respond to player
         if response_to_player:
             player.add_input_history(f"Game: {response_to_player}")
-            sio.emit("game_update", response_to_player, sid)
+            mbh.emit("game_update", response_to_player, sid)
 
         # Log player input and response
         log_to_player_transcript(player.name, player_input, response_to_player)
     else:
         logger.info(f"Received user action from non-existent player {sid}")
-        sio.emit(
+        mbh.emit(
             "logout",
             "You have been logged out due to a server error. Please log in again.",
             sid,
@@ -161,7 +161,7 @@ def ai_response(data: Dict) -> None:
         pprint(response_to_player)
         if response_to_player:
             player.add_input_history(f"Game: {response_to_player}")
-            sio.emit("game_update", response_to_player, player.sid)
+            mbh.emit("game_update", response_to_player, player.sid)
             logger.info(
                 f"Emitting this response from the handler of this response: {response_to_player}"
             )
@@ -186,6 +186,8 @@ if __name__ == "__main__":
     mbh = MessageBrokerHelper(
         environ.get("GAMESERVER_HOSTNAME", "localhost"),
         {
+            # Client messages
+            "client_message": {"mode": "publish"},
             # Image creation
             "missing_image_request": {
                 "mode": "subscribe",
@@ -237,8 +239,11 @@ if __name__ == "__main__":
     )
     player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
 
-    # Connect to the server. If can't connect, warn user that the Game Server may not be running.
+    # Connect to the SockerIO server (for publishing to clients)
     connect_to_server(logger, sio)
+
+    # Start consuming messages
+    mbh.start_consuming()
 
     # Start the Socket.IO client
     sio.wait()

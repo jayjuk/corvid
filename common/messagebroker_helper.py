@@ -13,6 +13,7 @@ class MessageBrokerHelper:
         self.host = host or "localhost"
         self.queue_map = queue_map
         self.callback_functions = {}
+        self.use_threading = use_threading
 
         # Create a separate connection & channel for publishing
         logger.info(f"Setting up message broker for host {self.host}")
@@ -23,7 +24,7 @@ class MessageBrokerHelper:
 
         self.publisher_queues = {}
 
-        am_consumer = False
+        self.am_consumer = False
         startup_messages = []
 
         for queue_name, queue_properties in queue_map.items():
@@ -37,7 +38,7 @@ class MessageBrokerHelper:
                         (queue_name, queue_properties.get("startup_message", ""))
                     )
             elif queue_properties.get("mode", "") == "subscribe":
-                am_consumer = True
+                self.am_consumer = True
                 self.callback_functions[queue_name] = queue_properties.get(
                     "callback", None
                 )
@@ -47,21 +48,22 @@ class MessageBrokerHelper:
         for queue_name, message in startup_messages:
             self.publish(queue_name, message)
 
-        if am_consumer:
-            if use_threading:
+    def start_consuming(self):
+        if self.am_consumer:
+            if self.use_threading:
                 logger.info("Registering as message consumer in background thread.")
                 self.use_threading = True
-                # self.consumer_thread = threading.Thread(
-                #     target=self.consumer_thread_func, daemon=True
-                # )
-                # self.consumer_thread.start()
+                self.consumer_thread = threading.Thread(
+                    target=self.consumer_thread_func, daemon=True
+                )
+                self.consumer_thread.start()
             else:
                 logger.info("Registering as message consumer.")
-            self.consumer_thread_func()  # Run in main thread if no threading
+                self.consumer_thread_func()  # Run in main thread if no threading
 
     def consumer_thread_func(self):
         logger.info("Starting messaging consumer thread.")
-        """Runs the consumer in a separate thread with its own connection."""
+        """Runs the consumer """
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.host))
         self.channel = self.connection.channel()
 
@@ -74,8 +76,8 @@ class MessageBrokerHelper:
                 auto_ack=True,
             )
 
-        # logger.info("RabbitMQ Consumer Thread: Waiting for messages...")
-        # channel.start_consuming()
+        logger.info("RabbitMQ Consumer Thread: Waiting for messages...")
+        self.channel.start_consuming()
 
     def check_for_messages(self):
         self.channel.process_data_events()
@@ -94,6 +96,13 @@ class MessageBrokerHelper:
                 callback(body.decode())
         else:
             logger.warning(f"No callback function for queue {queue_name}")
+
+    def emit(self, event_name: str, data: any, sid: str = None):
+        """Emit a client message to a sid."""
+        if not isinstance(data, dict):
+            data = {"data": data}
+        data["sid"] = sid
+        self.publish("client_message", {"event_name": event_name, "data": data})
 
     def publish(self, queue: str, message: any):
         """Publish a message to a queue."""

@@ -9,22 +9,23 @@ try:
     channel = connection.channel()
 except pika.exceptions.AMQPConnectionError as e:
     print(f"Failed to connect to RabbitMQ: {e}")
+    exit(1)
 
+queues = [
+    # "ai_request",
+    # "ai_response",
+    "set_player_name",
+    "client_message",
+    # "user_action",
+    # "user_disconnect",
+]
 
-def callback(ch, method, properties, body):
-    print(f"\n\nReceived message: {body}\n\n")
-
-
-queues = ["ai_request", "ai_response"]
-
-for queue in queues:
-    channel.queue_declare(queue=queue, passive=True)
-    channel.basic_get(queue=queue, on_message_callback=callback, auto_ack=False)
-
-try:
-    print("Waiting for messages. To exit press CTRL+C")
-    channel.start_consuming()
-except KeyboardInterrupt:
-    print("Interrupted by user")
-finally:
-    connection.close()
+while True:
+    for queue in queues:
+        # print(f"Checking queue {queue}")
+        method_frame, header_frame, body = channel.basic_get(
+            queue=queue, auto_ack=False
+        )
+        if method_frame:
+            print(f"\n\nReceived message from {queue}: {body}\n\n")
+    time.sleep(1)  # Sleep for a while before checking again

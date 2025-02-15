@@ -224,6 +224,7 @@ def catch_all(data: Dict) -> None:
 # Instructions event handler
 @sio.on("instructions")
 def catch_all(data: Dict) -> None:
+    logger.info(f"Received instructions event: {data}")
     ai_broker.record_instructions(data)
 
 
@@ -279,7 +280,13 @@ def catch_all(data: Dict) -> None:
 def connect() -> None:
     logger.info("Connected to Server.")
     # Emit the AI's chosen name to the server
-    sio.emit("set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode})
+    logger.info(
+        f"AI's chosen name is: {ai_broker.player_name} and this is being emitted from sid {sio.sid}"
+    )
+    sio.emit(
+        "set_player_name",
+        {"name": ai_broker.player_name, "role": ai_broker.mode, "player_sid": sio.sid},
+    )
 
 
 # Invalid name, try again
@@ -308,6 +315,12 @@ def connect_error(data: Dict) -> None:
 def disconnect() -> None:
     logger.info("Disconnected from Server.")
     exit(logger, "Disconnect event received.")
+
+
+# Print all other events
+@sio.on("*")
+def catch_all(event, data: Dict) -> None:
+    logger.info(f"Received unexpected event '{event}': {data}")
 
 
 # Main function to start the AI Broker
@@ -351,6 +364,9 @@ if __name__ == "__main__":
 
     # Connect to the server. If can't connect, warn user that the Game Server may not be running.
     connect_to_server(logger, sio)
+
+    # Log my sid
+    logger.info(f"My sid is: {sio.sid}")
 
     # This is where the main processing of inputs happens
     eventlet.spawn(ai_broker.ai_response_loop())

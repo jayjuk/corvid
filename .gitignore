@@ -38,3 +38,4 @@ terraform/**/.terraform/
 
 # Optional: Ignore any hidden files or directories, which may contain sensitive information
 terraform/.env
+common/Transfer - Shortcut.lnk

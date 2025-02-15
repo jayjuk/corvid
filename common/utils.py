@@ -145,6 +145,7 @@ def connect_to_server(logger, sio, connection_url: str = None) -> None:
     while not connected and wait_time <= max_wait:
         try:
             sio.connect(connection_url)
+            logger.info(f"Connected.")
             connected = True
         except Exception:
             logger.info(

@@ -113,7 +113,7 @@ class GameManager:
                     self.tell_everyone(f"{i}...")
                 eventlet.sleep(1)
                 self.create_restart_file()
-                self.sio.emit("shutdown", message)
+                self.mbh.emit("shutdown", message)
                 # TODO #15 Restart game without actually restarting the process
                 exit(logger, "Game ended by player pushing The Button!")
             else:
@@ -252,7 +252,7 @@ class GameManager:
         self.tell_everyone(message)
         # TODO #68 Web client should do something when the back end is down, can we terminate the client too?
         # TODO #69 Make shutdown command restart process not shut down
-        self.sio.emit("shutdown", message)
+        self.mbh.emit("shutdown", message)
         eventlet.sleep(1)
         exit(logger, "Shutdown command invoked")
 
@@ -1126,7 +1126,7 @@ class GameManager:
     # Emit a message about a room to a specific player
     def emit_player_room_update(self, player: Player, room: str) -> None:
         # Tell the player about the room including the image name
-        self.sio.emit(
+        self.mbh.emit(
             "room_update",
             {
                 "image": self.world.get_room_image_url(room),
@@ -1167,7 +1167,7 @@ class GameManager:
         self, player: Player, message: str, type: str = "game_update"
     ) -> None:
         message = message.strip()
-        self.sio.emit(type, message, player.sid)
+        self.mbh.emit(type, message, player.sid)
         player.add_input_history(f"Game: {message}")
 
     # Get other entities
@@ -1189,7 +1189,7 @@ class GameManager:
     def emit_game_data_update(self) -> None:
         if self.get_player_count() > 0:
             game_data: Dict[str, int] = {"player_count": self.get_player_count()}
-            self.sio.emit(
+            self.mbh.emit(
                 "game_data_update",
                 game_data,
             )
@@ -1231,7 +1231,7 @@ class GameManager:
             self.emit_game_data_update()
             # Give player time to read the messages before logging them out
             eventlet.sleep(2)
-            self.sio.emit("logout", reason, sid)
+            self.mbh.emit("logout", reason, sid)
             # Check again (race condition)
             if sid in self.players:
                 del self.players[sid]
