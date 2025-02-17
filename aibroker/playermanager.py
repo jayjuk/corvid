@@ -161,8 +161,6 @@ player_manager = PlayerManager(
     init_filename=get_critical_env_variable("AI_PLAYER_FILE_NAME"),
 )
 
-# Check for outstanding requests
-sio.emit("missing_summon_player_request", {})
 logger.info("Ready...")
 
 # This keeps the SocketIO event processing going

@@ -281,11 +281,15 @@ def connect() -> None:
     logger.info("Connected to Server.")
     # Emit the AI's chosen name to the server
     logger.info(
-        f"AI's chosen name is: {ai_broker.player_name} and this is being emitted from sid {sio.sid}"
+        f"AI's chosen name is: {ai_broker.player_name} and this is being emitted from player_id {sio.player_id}"
     )
     sio.emit(
         "set_player_name",
-        {"name": ai_broker.player_name, "role": ai_broker.mode, "player_sid": sio.sid},
+        {
+            "name": ai_broker.player_name,
+            "role": ai_broker.mode,
+            "player_id": sio.player_id,
+        },
     )
 
 
@@ -365,8 +369,8 @@ if __name__ == "__main__":
     # Connect to the server. If can't connect, warn user that the Game Server may not be running.
     connect_to_server(logger, sio)
 
-    # Log my sid
-    logger.info(f"My sid is: {sio.sid}")
+    # Log my player_id
+    logger.info(f"My player_id is: {sio.player_id}")
 
     # This is where the main processing of inputs happens
     eventlet.spawn(ai_broker.ai_response_loop())

@@ -85,9 +85,7 @@ ai_requester = AIRequester(
 mbh = MessageBrokerHelper(
     environ.get("GAMESERVER_HOSTNAME", "localhost"),
     {
-        "missing_ai_request": {"mode": "publish", "startup": True},
         "ai_request": {"mode": "subscribe", "callback": catch_all},
         "ai_response": {"mode": "publish"},
     },
-    use_threading=True,
 )

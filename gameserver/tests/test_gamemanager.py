@@ -18,7 +18,7 @@ class TestGameManager(unittest.TestCase):
         self.player = Player(self.game_manager.world, 0, "TestPlayer")
 
     def tearDown(self):
-        self.game_manager.remove_player(self.player.sid, "Cleanup after testing")
+        self.game_manager.remove_player(self.player.player_id, "Cleanup after testing")
 
     def test_get_player_count(self):
         expected_count = 0

@@ -242,7 +242,7 @@ class PlayerInputProcessor:
         return verb, rest
 
     # Translate player input and try to process it again
-    def translate_and_process(
+    async def translate_and_process(
         self, player: Player, player_input: str
     ) -> Optional[Tuple[str, str, str]]:
         # Try to translate the user input into a valid command using AI :-)
@@ -266,7 +266,7 @@ class PlayerInputProcessor:
         )
 
         self.game_manager.ai_manager.submit_remote_request(
-            self.handle_translation_response,
+            await self.handle_translation_response,
             player,
             request_type="translation_request",
             prompt=prompt,
@@ -274,7 +274,7 @@ class PlayerInputProcessor:
         )
         return None, None, output
 
-    def handle_translation_response(
+    async def handle_translation_response(
         self, ai_response: str, request_data: str = ""
     ) -> Optional[Tuple[str, str, str]]:
         player = request_data["player"]
@@ -289,7 +289,7 @@ class PlayerInputProcessor:
                 f"\nI think you meant '{ai_response}', and will proceed accordingly.\n"
             )
             command_function, command_args, response_to_player = (
-                self.process_player_input(player, ai_response, translated=True)
+                await self.process_player_input(player, ai_response, translated=True)
             )
             if command_function:
                 # Run it
@@ -326,7 +326,7 @@ class PlayerInputProcessor:
         return phrases
 
     # Process player input. Returns a function pointer, a tuple of arguments, and an error message if any.
-    def process_player_input(
+    async def process_player_input(
         self, player: Player, player_input: str, translated: bool = False
     ) -> Optional[
         Tuple[
@@ -406,7 +406,7 @@ class PlayerInputProcessor:
                             )
                         room_description = self.strip_outer_quotes(room_description)
                 return (
-                    self.command_functions[command]["function"],
+                    await self.command_functions[command]["function"],
                     (player, direction, room_name, room_description),
                     None,
                 )
@@ -451,8 +451,7 @@ class PlayerInputProcessor:
         # Different return if the command is a direction
         elif command in self.directions:
             return (
-                self.game_manager.move_entity,
-                (player, command, rest_of_response),
+                await self.game_manager.move_entity(player, command, rest_of_response),
                 None,
             )
         elif command == "custom":

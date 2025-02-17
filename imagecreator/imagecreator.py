@@ -33,7 +33,7 @@ def add_to_queue(data: Dict) -> None:
 mbh = MessageBrokerHelper(
     environ.get("GAMESERVER_HOSTNAME", "localhost"),
     {
-        "missing_image_request": {"mode": "publish", "startup": True},
+        "image_creation_response": {"mode": "publish"},
         "image_creation_request": {"mode": "subscribe", "callback": add_to_queue},
     },
 )
@@ -97,7 +97,7 @@ class ImageCreator:
             finally:
                 event_queue.task_done()
 
-    def process_work_request(self, data: Dict) -> None:
+    async def process_work_request(self, data: Dict) -> None:
         logger.info(f"Processing work request: {data}")
 
         if data and "room_name" in data and "description" in data:
@@ -112,7 +112,7 @@ class ImageCreator:
                 f"Image creation success: {success}, filename: {image_filename}"
             )
             # Emit event back to server
-            self.mbh.emit(
+            await self.mbh.publish(
                 "image_creation_response",
                 {
                     "room_name": data["room_name"],

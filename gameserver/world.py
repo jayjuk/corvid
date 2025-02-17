@@ -709,7 +709,7 @@ class World:
         elif amount > 1 or amount == 0:
             return str(amount) + " pennies"
 
-    def create_player(self, sid: str, name: str, role: str) -> Union[str, Player]:
+    def create_player(self, player_id: str, name: str, role: str) -> Union[str, Player]:
         # Access player's initial state if they have played before.
         stored_player_data = self.storage_manager.get_game_object(
             self.name, object_type="Player", rowkey_value=name
@@ -722,7 +722,9 @@ class World:
                 logger.info(
                     f"Player {name} has invalid location, resetting to {self.default_location}"
                 )
-        p: Player = Player(self, sid, name, role, stored_player_data=stored_player_data)
+        p: Player = Player(
+            self, player_id, name, role, stored_player_data=stored_player_data
+        )
         # Store player's data again (updates last login timestamp if nothing else)
         self.storage_manager.store_game_object(self.name, p)
 

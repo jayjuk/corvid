@@ -5,7 +5,7 @@ from os import environ
 from sys import argv
 import time
 from os import path, makedirs
-import socketio
+import asyncio
 
 # Set up logger before importing other own modules
 logger = setup_logger("Game Server", sio=None)
@@ -17,7 +17,7 @@ from player_input_processor import PlayerInputProcessor
 from messagebroker_helper import MessageBrokerHelper
 
 # Register the client with the server
-sio = socketio.Client()
+sio = None  # socketio.Client()
 
 # Transcript management
 
@@ -43,143 +43,119 @@ def log_to_player_transcript(
         f.write(f"{timestamp} Game: {response}\n\n")
 
 
-# Player setup
-def set_player_name(data: Dict[str, str]) -> None:
-    sid: str = data["sid"]
-    player_info: Dict[str, str] = data["player_info"]
-    logger.info(
-        f"Client requesting player setup: {sid}, {player_info.get('name')}, {player_info.get('role')}"
-    )
-    outcome: Optional[str] = game_manager.process_player_setup(
-        sid, player_info, player_input_processor.get_help_text()
-    )
-    # Blank outcome = success
-    if outcome:
-        # Issue with player name setting - indicate using name_invalid event, with error message
-        mbh.emit(
-            "name_invalid",
-            outcome,
-            sid,
+async def main() -> None:
+
+    # Event handlers
+
+    # Player setup
+    async def set_player_name(player_info: Dict[str, str]) -> None:
+        player_id: str = player_info["name"]
+        logger.info(
+            f"Client requesting player setup: {player_id}, {player_info.get('name')}, {player_info.get('role')}"
         )
-    else:
-        create_player_transcript(player_info.get("name"))
-
-
-# User action
-def user_action(data: Dict[str, str]):
-    sid: str = data["sid"]
-    player_input: str = data["player_input"]
-
-    if sid in game_manager.players:
-        player: Player = game_manager.players[sid]
-        logger.info(f"Received user action: {player_input} from {sid} ({player.name})")
-        mbh.emit("game_update", f"You: {player_input}", sid)
-        command_function: Callable
-        command_args: Tuple
-        response_to_player: Optional[str]
-
-        # Process player input to resolve the command and arguments, or return an error message
-        command_function, command_args, response_to_player = (
-            player_input_processor.process_player_input(player, player_input)
+        outcome: Optional[str] = await game_manager.process_player_setup(
+            player_id, player_info, player_input_processor.get_help_text()
         )
-        if command_function:
-            logger.info(
-                f"Command function: {command_function.__name__}, Args: {command_args}"
+        # Blank outcome = success
+        if outcome:
+            # Issue with player name setting - indicate using name_invalid event, with error message
+            await mbh.publish(
+                "name_invalid",
+                outcome,
+                player_id,
             )
-            response_to_player = command_function(*command_args)
+        else:
+            create_player_transcript(player_info.get("name"))
 
-        # Respond to player
-        if response_to_player:
-            player.add_input_history(f"Game: {response_to_player}")
-            mbh.emit("game_update", response_to_player, sid)
+    # User action
+    async def user_action(data: Dict[str, str]):
+        player_id: str = data["player_id"]
+        player_input: str = data["player_input"]
 
-        # Log player input and response
-        log_to_player_transcript(player.name, player_input, response_to_player)
-    else:
-        logger.info(f"Received user action from non-existent player {sid}")
-        mbh.emit(
-            "logout",
-            "You have been logged out due to a server error. Please log in again.",
-            sid,
-        )
-
-
-# Disconnection
-def user_disconnect(data: Dict[str, str]) -> None:
-    sid: str = data["sid"]
-    logger.info(f"Client disconnected: {sid}")
-    # TODO #72 Allow players to reconnect (for now disconnect is same as quit)
-    game_manager.remove_player(
-        sid, "You have been logged out as your client disconnected."
-    )
-
-
-game_manager: GameManager
-
-
-# process_missing_image_request
-def missing_image_request(data: Dict) -> None:
-    logger.info("Received missing images request")
-    game_manager.process_missing_image_request()
-
-
-def image_creation_response(data: Dict) -> None:
-    logger.info(f"Received image creation response: {data}")
-    game_manager.process_image_creation_response(
-        data["room_name"], data["image_filename"], data["success"]
-    )
-
-
-def missing_ai_request(data: Dict) -> None:
-    logger.info("Received request for missing AI requests ")
-    game_manager.ai_manager.process_missing_ai_request()
-
-
-def missing_summon_player_request(data: Dict) -> None:
-    logger.info("Received request for missing Summon Player requests ")
-    game_manager.process_missing_summon_player_request()
-
-
-def summon_player_response(data: Dict) -> None:
-    logger.info(f"Received summon player response: {data}")
-    game_manager.process_summon_player_response(data["request_id"])
-
-
-def ai_response(data: Dict) -> None:
-    logger.info(f"Received AI response: {data}")
-    if (
-        "request_id" in data
-        and data["request_id"] in game_manager.ai_manager.remote_requests
-    ):
-        # TODO #98 should game server be allowed to access ai manager directly?
-        player: Player
-        response_to_player: str
-        player, response_to_player = game_manager.ai_manager.process_ai_response(data)
-        print(f"ai_response: Response to player: {response_to_player}")
-        from pprint import pprint
-
-        pprint(response_to_player)
-        if response_to_player:
-            player.add_input_history(f"Game: {response_to_player}")
-            mbh.emit("game_update", response_to_player, player.sid)
+        if player_id in game_manager.players:
+            player: Player = game_manager.players[player_id]
             logger.info(
-                f"Emitting this response from the handler of this response: {response_to_player}"
+                f"Received user action: {player_input} from {player_id} ({player.name})"
+            )
+            await mbh.publish("game_update", f"You: {player_input}", player_id)
+            command_function: Callable
+            command_args: Tuple
+            response_to_player: Optional[str]
+
+            # Process player input to resolve the command and arguments, or return an error message
+            command_function, command_args, response_to_player = (
+                await player_input_processor.process_player_input(player, player_input)
+            )
+            if command_function:
+                logger.info(
+                    f"Command function: {command_function.__name__}, Args: {command_args}"
+                )
+                response_to_player = command_function(*command_args)
+
+            # Respond to player
+            if response_to_player:
+                player.add_input_history(f"Game: {response_to_player}")
+                await mbh.publish("game_update", response_to_player, player_id)
+
+            # Log player input and response
+            log_to_player_transcript(player.name, player_input, response_to_player)
+        else:
+            logger.info(f"Received user action from non-existent player {player_id}")
+            await mbh.publish(
+                "logout",
+                "You have been logged out due to a server error. Please log in again.",
+                player_id,
             )
 
-        # Log player input and response
-        log_to_player_transcript(player.name, "[AI response]", response_to_player)
+    # Disconnection
+    def user_disconnect(data: Dict[str, str]) -> None:
+        player_id: str = data["player_id"]
+        logger.info(f"Client disconnected: {player_id}")
+        # TODO #72 Allow players to reconnect (for now disconnect is same as quit)
+        game_manager.remove_player(
+            player_id, "You have been logged out as your client disconnected."
+        )
 
-    else:
-        exit(logger, f"Valid request ID not found: data {data}")
+    def image_creation_response(data: Dict) -> None:
+        logger.info(f"Received image creation response: {data}")
+        game_manager.process_image_creation_response(
+            data["room_name"], data["image_filename"], data["success"]
+        )
 
+    def summon_player_response(data: Dict) -> None:
+        logger.info(f"Received summon player response: {data}")
+        game_manager.process_summon_player_response(data["request_id"])
 
-# End of event handlers
+    async def ai_response(data: Dict) -> None:
+        logger.info(f"Received AI response: {data}")
+        if (
+            "request_id" in data
+            and data["request_id"] in game_manager.ai_manager.remote_requests
+        ):
+            # TODO #98 should game server be allowed to access ai manager directly?
+            player: Player
+            response_to_player: str
+            player, response_to_player = game_manager.ai_manager.process_ai_response(
+                data
+            )
+            print(f"ai_response: Response to player: {response_to_player}")
+            from pprint import pprint
 
+            pprint(response_to_player)
+            if response_to_player:
+                player.add_input_history(f"Game: {response_to_player}")
+                await mbh.publish("game_update", response_to_player, player.player_id)
+                logger.info(
+                    f"Emitting this response from the handler of this response: {response_to_player}"
+                )
 
-if __name__ == "__main__":
-    # Instantiate the message broker helper
-    def message_broker_callback(message: str) -> None:
-        logger.info(f"Received message: {message}")
+            # Log player input and response
+            log_to_player_transcript(player.name, "[AI response]", response_to_player)
+
+        else:
+            exit(logger, f"Valid request ID not found: data {data}")
+
+    # End of event handlers
 
     # Set up the message broker
     logger.info("Setting up message broker")
@@ -187,26 +163,20 @@ if __name__ == "__main__":
         environ.get("GAMESERVER_HOSTNAME", "localhost"),
         {
             # Client messages
-            "client_message": {"mode": "publish"},
+            "instructions": {"mode": "publish"},
+            "room_update": {"mode": "publish"},
+            "game_update": {"mode": "publish"},
+            "game_data_update": {"mode": "publish"},
             # Image creation
-            "missing_image_request": {
-                "mode": "subscribe",
-                "callback": missing_image_request,
-            },
             "image_creation_request": {"mode": "publish"},
             "image_creation_response": {
                 "mode": "subscribe",
                 "callback": image_creation_response,
             },
             # General AI requests
-            "missing_ai_request": {"mode": "subscribe", "callback": missing_ai_request},
             "ai_request": {"mode": "publish"},
             "ai_response": {"mode": "subscribe", "callback": ai_response},
             # Summon player
-            "missing_summon_player_request": {
-                "mode": "subscribe",
-                "callback": missing_summon_player_request,
-            },
             "summon_player_request": {"mode": "publish"},
             "summon_player_response": {
                 "mode": "subscribe",
@@ -216,7 +186,6 @@ if __name__ == "__main__":
             "set_player_name": {"mode": "subscribe", "callback": set_player_name},
             "user_action": {"mode": "subscribe", "callback": user_action},
         },
-        use_threading=True,
     )
     logger.info("Message broker set up")
 
@@ -239,11 +208,11 @@ if __name__ == "__main__":
     )
     player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
 
-    # Connect to the SockerIO server (for publishing to clients)
-    connect_to_server(logger, sio)
-
     # Start consuming messages
-    mbh.start_consuming()
+    await mbh.setup_nats()
 
-    # Start the Socket.IO client
-    sio.wait()
+    await asyncio.Event().wait()  # Keeps the event loop running
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

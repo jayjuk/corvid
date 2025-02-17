@@ -15,7 +15,7 @@ class Player(Entity):
     def __init__(
         self,
         world: Any,
-        sid: str,
+        player_id: str,
         player_name: str,
         player_role: str = "player",
         stored_player_data: Optional[Dict[str, Any]] = None,
@@ -44,11 +44,11 @@ class Player(Entity):
         if stored_player_data:
             logger.info(f"Retrieved player {player_name} data from database")
             self.__dict__.update(stored_player_data)
-            # But use latest sid and make world object
-            self.sid = sid
+            # But use latest player_id and make world object
+            self.player_id = player_id
             self.world = world
         else:
-            logger.info(f"Creating player {player_name}, sid {sid}")
+            logger.info(f"Creating player {player_name}, player_id {player_id}")
 
             # Set flag to indicate this is a player
             self.is_player = True
@@ -61,8 +61,8 @@ class Player(Entity):
             self.seen_rooms: Dict[str, bool] = {}
             self.seen_rooms[self.location] = True
 
-            # SID is the unique identifier for this player used by SocketIO
-            self.sid = sid
+            # player_id is the unique identifier for this player used by SocketIO
+            self.player_id = player_id
 
         # Define history - this resets each time the player logs in
         self.max_input_history_length = 1000

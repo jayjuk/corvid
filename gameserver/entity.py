@@ -19,7 +19,7 @@ class Entity:
         self.name: str = entity_name
         self.role: str = entity_role
         self.is_player: bool = False
-        self.sid: Optional[str] = None  # Overridden for players
+        self.player_id: Optional[str] = None  # Overridden for players
         self.description: Optional[str] = description
 
         # Default starting location

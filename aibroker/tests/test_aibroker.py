@@ -46,7 +46,7 @@ class TestAIBroker(unittest.TestCase):
 
     def test_set_ai_name(self):
         # Set up side_effect to return a name with a space, then a valid name
-        self.mock_ai_manager.submit_request.side_effect = [
+        self.mock_ai_manager.submit_request.player_ide_effect = [
             self.test_invalid_name,
             self.test_valid_name,
         ]

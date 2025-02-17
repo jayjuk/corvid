@@ -383,7 +383,7 @@ class AIManager:
         system_message: str = "",
         player_context: Any = "",
     ) -> None:
-        request_id = str(player.sid) + str(time.time())  # Unique request ID
+        request_id = str(player.player_id) + str(time.time())  # Unique request ID
         self.remote_requests[request_id] = {
             "request_id": request_id,
             "request_type": request_type,
@@ -409,18 +409,6 @@ class AIManager:
         logger.info(
             f"Remote request submitted with request_id {request_id}: {self.remote_requests[request_id]}"
         )
-
-    def process_missing_ai_request(self) -> None:
-        # Check for open requests and re-emit them, first removing the handler, player and player context as above
-        for request_id, request in self.remote_requests.items():
-            emission_dict = request.copy()
-            del emission_dict["response_handler"]
-            del emission_dict["player"]
-            del emission_dict["player_context"]
-            self.mbh.publish("ai_request", emission_dict)
-            logger.info(
-                f"Re-emitting missing AI request with request_id {request_id}: {self.remote_requests[request_id]}"
-            )
 
     def process_ai_response(self, data: Dict) -> Tuple[object, str]:
         # Look up the request ID in the remote requests

@@ -1,0 +1,12 @@
+version: "3"
+services:
+  nats:
+    image: nats:latest
+    restart: always
+    ports:
+      - "4222:4222" # Default NATS client port
+      - "8222:8222" # HTTP monitoring
+      - "9222:9222" # WebSocket port
+    volumes:
+      - ./nats-server.conf:/etc/nats/nats-server.conf
+    command: ["-c", "/etc/nats/nats-server.conf"]
