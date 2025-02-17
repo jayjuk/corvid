@@ -90,7 +90,7 @@ async def main() -> None:
                 logger.info(
                     f"Command function: {command_function.__name__}, Args: {command_args}"
                 )
-                response_to_player = command_function(*command_args)
+                response_to_player = await command_function(*command_args)
 
             # Respond to player
             if response_to_player:

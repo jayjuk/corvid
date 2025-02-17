@@ -68,7 +68,7 @@ class PlayerManager:
 
         def run_player_process(env_vars):
 
-            print("**************** Running player process")
+            logger.info(f"Starting player process with env vars: {env_vars}")
 
             env = {**os.environ, **env_vars}
             # Generate unique log file name based on timestamp

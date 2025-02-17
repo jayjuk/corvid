@@ -68,42 +68,34 @@ export default function HomePage() {
         const sc = StringCodec();
 
         // Subscribe to instructions
-        const instructionsSub = natsConnection.current.subscribe("instructions");
+        const instructionsSub = natsConnection.current.subscribe(`instructions.${playerName}`);
         (async () => {
           for await (const msg of instructionsSub) {
             setGameLog((prevLog) => [...prevLog, sc.decode(msg.data)]);
           }
         })();
 
-        // Subscribe to game updates
-        const gameUpdateSub = natsConnection.current.subscribe("game_update");
-        (async () => {
-          for await (const msg of gameUpdateSub) {
+        // Function to handle game updates
+        const handleGameUpdate = async (sub: any) => {
+          for await (const msg of sub) {
             let message = sc.decode(msg.data).replace(/[{|}]/g, "");
             setGameLog((prevLog) => {
               const newLog = [...prevLog, message];
               return newLog.slice(-10);
             });
           }
-        })();
+        };
+
+        // Subscribe to game updates
+        handleGameUpdate(natsConnection.current.subscribe("game_update"));
 
         // Subscribe to player-specific game updates
         if (playerName) {
-          const playerGameUpdateSub = natsConnection.current.subscribe(`${playerName}.game_update`);
-          (async () => {
-            for await (const msg of playerGameUpdateSub) {
-              let message = sc.decode(msg.data).replace(/[{|}]/g, "");
-              setGameLog((prevLog) => {
-          const newLog = [...prevLog, message];
-          return newLog.slice(-10);
-              });
-            }
-          })();
+          handleGameUpdate(natsConnection.current.subscribe(`game_update.${playerName}`));
         }
-        
 
         // Subscribe to room updates
-        const roomUpdateSub = natsConnection.current.subscribe("room_update");
+        const roomUpdateSub = natsConnection.current.subscribe(`room_update.${playerName}`);
         (async () => {
           for await (const msg of roomUpdateSub) {
             const message = JSON.parse(sc.decode(msg.data));
@@ -129,7 +121,7 @@ export default function HomePage() {
         })();
 
         // Subscribe to logout events
-        const logoutSub = natsConnection.current.subscribe("logout");
+        const logoutSub = natsConnection.current.subscribe(`logout.${playerName}`);
         (async () => {
           for await (const msg of logoutSub) {
             let message = sc.decode(msg.data);
@@ -142,7 +134,7 @@ export default function HomePage() {
         })();
 
         // Subscribe to name invalid events
-        const nameInvalidSub = natsConnection.current.subscribe("name_invalid");
+        const nameInvalidSub = natsConnection.current.subscribe(`name_invalid.${playerName}`);
         (async () => {
           for await (const msg of nameInvalidSub) {
             let message = sc.decode(msg.data);
@@ -165,7 +157,7 @@ export default function HomePage() {
         natsConnection.current.close();
       }
     };
-  }, [gameServerHostName]);
+  }, [gameServerHostName, playerName]);
 
   useEffect(() => {
     if (gameLogRef.current) {

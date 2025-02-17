@@ -96,10 +96,7 @@ class MessageBrokerHelper:
 
         if player_id:
             # Add player ID to queue
-            # queue = f"{queue}.{player_id}"
-            logger.warning(
-                "********************************* Player ID not implemented"
-            )
+            queue = f"{queue}.{player_id}"
 
         await self.nc.publish(queue, message.encode())
         logger.info(f"Sent message to queue {queue}: {message}")

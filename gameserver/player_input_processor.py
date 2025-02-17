@@ -406,7 +406,7 @@ class PlayerInputProcessor:
                             )
                         room_description = self.strip_outer_quotes(room_description)
                 return (
-                    await self.command_functions[command]["function"],
+                    self.command_functions[command]["function"],
                     (player, direction, room_name, room_description),
                     None,
                 )
@@ -451,7 +451,8 @@ class PlayerInputProcessor:
         # Different return if the command is a direction
         elif command in self.directions:
             return (
-                await self.game_manager.move_entity(player, command, rest_of_response),
+                self.game_manager.move_entity,
+                (player, command, rest_of_response),
                 None,
             )
         elif command == "custom":
