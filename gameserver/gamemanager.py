@@ -1227,7 +1227,8 @@ class GameManager:
         if player_id in self.players:
             player = self.players[player_id]
             # Make player drop all items in their inventory
-            await self.tell_player(player, self.do_drop(player, "all"))
+            drop_outcome: str = await self.do_drop(player, "all")
+            await self.tell_player(player, drop_outcome)
             # TODO #6 Create coin items corresponding to their money
             await self.tell_player(
                 player,

@@ -83,9 +83,10 @@ async def main() -> None:
             response_to_player: Optional[str]
 
             # Process player input to resolve the command and arguments, or return an error message
-            command_function, command_args, response_to_player = (
-                await player_input_processor.process_player_input(player, player_input)
+            result = await player_input_processor.process_player_input(
+                player, player_input
             )
+            command_function, command_args, response_to_player = result
             if command_function:
                 logger.info(
                     f"Command function: {command_function.__name__}, Args: {command_args}"
@@ -164,6 +165,7 @@ async def main() -> None:
         {
             # Client messages
             "instructions": {"mode": "publish"},
+            "name_invalid": {"mode": "publish"},
             "room_update": {"mode": "publish"},
             "game_update": {"mode": "publish"},
             "game_data_update": {"mode": "publish"},
