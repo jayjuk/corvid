@@ -92,7 +92,10 @@ class MessageBrokerHelper:
         if isinstance(message, dict):
             message = json.dumps(message)
         elif not isinstance(message, str):
-            raise ValueError("Message must be a dictionary or a string")
+            exit(
+                logger,
+                f"Message must be a dictionary or a string. Message {message} is of type: {type(message)}",
+            )
 
         if player_id:
             # Add player ID to queue

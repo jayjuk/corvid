@@ -3,6 +3,7 @@ import traceback
 from os import path, makedirs, environ, sep
 import json
 import time
+import asyncio
 from utils import setup_logger, exit, get_logs_folder
 
 
@@ -374,7 +375,7 @@ class AIManager:
             self.dump_chat_history()
         return model_response
 
-    def submit_remote_request(
+    async def submit_remote_request(
         self,
         handler,
         player: object,
@@ -405,12 +406,12 @@ class AIManager:
             )
 
         # Emit the request to the server
-        self.mbh.publish("ai_request", emission_dict)
+        await self.mbh.publish("ai_request", emission_dict)
         logger.info(
             f"Remote request submitted with request_id {request_id}: {self.remote_requests[request_id]}"
         )
 
-    def process_ai_response(self, data: Dict) -> Tuple[object, str]:
+    async def process_ai_response(self, data: Dict) -> Tuple[object, str]:
         # Look up the request ID in the remote requests
         request_id = data.get("request_id")
         if request_id not in self.remote_requests:
@@ -426,7 +427,7 @@ class AIManager:
         if "ai_response" not in data:
             exit(logger, f"AI response not found in data: {data}")
         if data["ai_response"]:
-            return_text = self.remote_requests[request_id]["response_handler"](
+            return_text = await self.remote_requests[request_id]["response_handler"](
                 data["ai_response"], self.remote_requests[request_id]
             )
         else:

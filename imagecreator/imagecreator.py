@@ -1,8 +1,4 @@
-import eventlet
-
-eventlet.monkey_patch()
-
-import socketio
+import asyncio
 import logging
 from queue import Queue
 from threading import Thread
@@ -19,24 +15,6 @@ logger = setup_logger("Image Creator", sio=None)
 
 from aimanager import AIManager
 from azurestoragemanager import AzureStorageManager
-
-# Create a queue to hold events
-event_queue = Queue()
-
-
-def add_to_queue(data: Dict) -> None:
-    logger.info(f"Received image creation request: {data}")
-    # Add to queue
-    event_queue.put(("work_request", data))
-
-
-mbh = MessageBrokerHelper(
-    environ.get("GAMESERVER_HOSTNAME", "localhost"),
-    {
-        "image_creation_response": {"mode": "publish"},
-        "image_creation_request": {"mode": "subscribe", "callback": add_to_queue},
-    },
-)
 
 
 # Class to manage the AI's interaction with the game server
@@ -82,31 +60,16 @@ class ImageCreator:
         # Set up the storage manager
         self.storage_manager: AzureStorageManager = AzureStorageManager()
 
-    # Function to process events from the queue
-    def process_events(self) -> None:
-        while True:
-            event, data = event_queue.get()
-            try:
-                if event == "work_request":
-                    self.process_work_request(data)
-                # Add more event types as needed
-                else:
-                    logger.error(f"Unknown event type: {event}")
-            except Exception as e:
-                logger.error(f"Error processing event {event}: {e}")
-            finally:
-                event_queue.task_done()
-
-    async def process_work_request(self, data: Dict) -> None:
+    async def process_image_request(self, data: Dict) -> None:
         logger.info(f"Processing work request: {data}")
 
         if data and "room_name" in data and "description" in data:
             # Do some work here
-            success, image_filename = image_creator.create_room_image(
+            success, image_filename = self.create_room_image(
                 data["world_name"],
                 data["room_name"],
                 data["description"],
-                data.get("landscape", image_creator.landscape),
+                data.get("landscape", self.landscape),
             )
             logger.info(
                 f"Image creation success: {success}, filename: {image_filename}"
@@ -202,8 +165,21 @@ class ImageCreator:
             return False, None
 
 
-# Main function to start the program
-if __name__ == "__main__":
+async def main() -> None:
+    async def process_image_request(data: Dict) -> None:
+        logger.info(f"Received image creation request: {data}")
+        await image_creator.process_image_request(data)
+
+    mbh = MessageBrokerHelper(
+        environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        {
+            "image_creation_response": {"mode": "publish"},
+            "image_creation_request": {
+                "mode": "subscribe",
+                "callback": process_image_request,
+            },
+        },
+    )
 
     # Create AI Worker
     image_creator = ImageCreator(
@@ -214,7 +190,12 @@ if __name__ == "__main__":
         landscape=environ.get("LANDSCAPE_DESCRIPTION"),
     )
 
-    # Start the worker thread
-    worker_thread = Thread(target=image_creator.process_events)
-    worker_thread.daemon = True
-    worker_thread.start()
+    # Start consuming messages
+    await mbh.setup_nats()
+
+    await asyncio.Event().wait()  # Keeps the event loop running
+
+
+# Main function to start the program
+if __name__ == "__main__":
+    asyncio.run(main())

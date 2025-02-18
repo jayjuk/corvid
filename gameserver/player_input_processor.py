@@ -265,7 +265,7 @@ class PlayerInputProcessor:
             + "\nRespond with only a valid command phrase or the word 'custom', nothing else.\n"
         )
 
-        self.game_manager.ai_manager.submit_remote_request(
+        await self.game_manager.ai_manager.submit_remote_request(
             await self.handle_translation_response,
             player,
             request_type="translation_request",

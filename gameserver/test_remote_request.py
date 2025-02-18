@@ -4,6 +4,7 @@ from player import Player
 from player_input_processor import PlayerInputProcessor
 import eventlet
 import time
+import asyncio
 from os import environ
 
 # import socket
@@ -29,7 +30,7 @@ eventlet.wsgi.server(eventlet.listen(("0.0.0.0", port)), app)
 time.sleep(10)
 
 print("Submitting remote request")
-game_manager.ai_manager.submit_remote_request(
+await game_manager.ai_manager.submit_remote_request(
     player, "ai_request", "test prompt", "you are testing a remote request"
 )
 

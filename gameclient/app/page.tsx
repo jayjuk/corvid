@@ -65,15 +65,7 @@ export default function HomePage() {
       console.log(`Connecting to NATS at ws://${gameServerHostName}`);
       const nc = await connect({ servers: `ws://${gameServerHostName}` });
       natsConnection.current = nc;
-      const sc = StringCodec();
 
-      // Subscribe to game updates
-      const globalSub = nc.subscribe("game_update");
-      (async () => {
-        for await (const msg of globalSub) {
-          setGameLog((prev) => [...prev, sc.decode(msg.data)]);
-        }
-      })();
     } catch (error) {
       console.error("Failed to connect to NATS:", error);
     }
@@ -97,7 +89,26 @@ useEffect(() => {
   const nc = natsConnection.current;
   const sc = StringCodec();
 
+    // Function to handle game updates
+  const handleGameUpdate = async (sub: any) => {
+    for await (const msg of sub) {
+      let message = sc.decode(msg.data).replace(/[{|}]/g, "");
+      setGameLog((prevLog) => {
+        const newLog = [...prevLog, message];
+        return newLog.slice(-10);
+      });
+    }
+  };
+
+  // Subscribe to game updates
+  handleGameUpdate(natsConnection.current.subscribe("game_update"));
+
   console.log(`Subscribing to player-specific topics for ${playerName}`);
+
+    // Subscribe to player-specific game updates
+  if (playerName) {
+    handleGameUpdate(natsConnection.current.subscribe(`game_update.${playerName}`));
+  }
 
   // Subscribe to player-specific instructions
   const instructionSub = nc.subscribe(`instructions.${playerName}`);
@@ -123,7 +134,7 @@ useEffect(() => {
     instructionSub.unsubscribe();
     roomSub.unsubscribe();
   };
-}, [playerName]); // Only runs when playerName is set/changes
+}, [nameSet]); // Only runs when playerName is set/changes
 
 
 

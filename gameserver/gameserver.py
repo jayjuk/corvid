@@ -86,12 +86,22 @@ async def main() -> None:
             result = await player_input_processor.process_player_input(
                 player, player_input
             )
-            command_function, command_args, response_to_player = result
+            print(result)
+            (command_function, command_args, response_to_player) = result
             if command_function:
-                logger.info(
-                    f"Command function: {command_function.__name__}, Args: {command_args}"
-                )
-                response_to_player = await command_function(*command_args)
+                if isinstance(command_function, Callable):
+                    logger.info(
+                        f"Command function: {command_function.__name__}, Args: {command_args}"
+                    )
+                    if asyncio.iscoroutinefunction(command_function):
+                        response_to_player = await command_function(*command_args)
+                    else:
+                        response_to_player = command_function(*command_args)
+                else:
+                    exit(
+                        logger,
+                        f"Command function not found for input: {player_input}, command_function = {command_function}",
+                    )
 
             # Respond to player
             if response_to_player:
@@ -136,13 +146,10 @@ async def main() -> None:
             # TODO #98 should game server be allowed to access ai manager directly?
             player: Player
             response_to_player: str
-            player, response_to_player = game_manager.ai_manager.process_ai_response(
-                data
+            (player, response_to_player) = (
+                await game_manager.ai_manager.process_ai_response(data)
             )
             print(f"ai_response: Response to player: {response_to_player}")
-            from pprint import pprint
-
-            pprint(response_to_player)
             if response_to_player:
                 player.add_input_history(f"Game: {response_to_player}")
                 await mbh.publish("game_update", response_to_player, player.player_id)
