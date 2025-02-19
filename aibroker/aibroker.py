@@ -1,18 +1,14 @@
+import asyncio
 from typing import List, Dict, Optional
 import eventlet
 import time
 from os import environ
 import re
-from utils import get_critical_env_variable, connect_to_server, setup_logger, exit
-import socketio
+from utils import get_critical_env_variable, setup_logger, exit
 
-# Register the client with the server
-sio = socketio.Client()
-
-# Set up logger before importing other modules that use it
-logger = setup_logger("AI Broker", sio=sio)
 
 from aimanager import AIManager
+from messagebroker_helper import MessageBrokerHelper
 
 
 # Class to manage the AI's interaction with the game server
@@ -134,6 +130,7 @@ class AIBroker:
             else:
                 eventlet.sleep(3)
         self.player_name = ai_name
+        self.player_id = self.player_name.lower().replace(" ", "_")
         return ai_name
 
     # Log the game events for the AI to process
@@ -205,130 +202,66 @@ class AIBroker:
             exit(logger, f"Repeated error: {error_message}")
 
 
-# Non-class functions below here (SocketIO event handlers etc.)
-
-
-# SocketIO event handlers
-
-
-# Game update event handler
-@sio.on("game_update")
-def catch_all(data: Dict) -> None:
-    if data:
-        logger.info(f"Received game update event: {data}")
-        ai_broker.log_event(data)
-    else:
-        exit(logger, "Received empty game update event")
-
-
-# Instructions event handler
-@sio.on("instructions")
-def catch_all(data: Dict) -> None:
-    logger.info(f"Received instructions event: {data}")
-    ai_broker.record_instructions(data)
-
-
-# Shutdown event handler
-@sio.on("shutdown")
-def catch_all(data: Dict) -> None:
-    logger.info(f"Shutdown event received: {data}. Exiting immediately.")
-    ai_broker.time_to_die = True
-    sio.disconnect()
-    sio.eio.disconnect()
-    exit(logger, "AI Broker shutting down.")
-
-
-# This might happen if the AI quits!
-@sio.on("logout")
-def catch_all(data: Dict) -> None:
-    logger.info(f"Logout event received: {data} did AI quit?")
-    sio.disconnect()
-    exit(logger, "AI Broker logout received.")
-
-
-# Room update event handler
-@sio.on("room_update")
-def catch_all(data: Dict) -> None:
-    # For now nothing, do not even log - this consists of the room description, and the image URL, not relevant to AI
-    pass
-
-
-# Player update event handler
-@sio.on("game_data_update")
-def catch_all(data: Dict) -> None:
-    if "player_count" in data:
-        if data["player_count"] == 1 and ai_broker.mode != "builder":
-            logger.info("No players apart from me, so I won't do anything.")
-            ai_broker.active = False
-        else:
-            if not ai_broker.active:
-                logger.info("I can wake up again!")
-                ai_broker.active = True
-
-
-# Catch all other events
-# @sio.on("*")
-# def catch_all(event, data: Dict) -> None:
-#     logger.warning(f"Received other unexpected event '{event}': {data}")
-
-
-# SocketIO connection handlers
-
-
-# Connection event handler
-@sio.event
-def connect() -> None:
-    logger.info("Connected to Server.")
-    # Emit the AI's chosen name to the server
-    logger.info(
-        f"AI's chosen name is: {ai_broker.player_name} and this is being emitted from player_id {sio.player_id}"
-    )
-    sio.emit(
-        "set_player_name",
-        {
-            "name": ai_broker.player_name,
-            "role": ai_broker.mode,
-            "player_id": sio.player_id,
-        },
-    )
-
-
-# Invalid name, try again
-@sio.on("name_invalid")
-def catch_all(data: Dict) -> None:
-    error_message: str = f"Invalid name event received: {data}"
-    logger.info(error_message)
-    ai_broker.log_error(error_message)
-    # If AI_NAME is set in the environment and was the invalid name, reset it
-    if environ.get("AI_NAME", "") in data:
-        # Set AI_NAME to empty string to force a new name to be chosen
-        environ["AI_NAME"] = ""
-    ai_broker.set_ai_name(data)
-    sio.emit("set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode})
-
-
-# Connection error event handler
-@sio.event
-def connect_error(data: Dict) -> None:
-    logger.error(data)
-    exit(logger, "Connection failure!")
-
-
-# Disconnection event handler
-@sio.event
-def disconnect() -> None:
-    logger.info("Disconnected from Server.")
-    exit(logger, "Disconnect event received.")
-
-
-# Print all other events
-@sio.on("*")
-def catch_all(event, data: Dict) -> None:
-    logger.info(f"Received unexpected event '{event}': {data}")
-
-
 # Main function to start the AI Broker
-if __name__ == "__main__":
+async def main() -> None:
+
+    # Game update event handler
+    def game_update(data: Dict) -> None:
+        if data:
+            logger.info(f"Received game update event: {data}")
+            ai_broker.log_event(data)
+        else:
+            exit(logger, "Received empty game update event")
+
+    # Instructions event handler
+    def instructions(data: Dict) -> None:
+        logger.info(f"Received instructions event: {data}")
+        ai_broker.record_instructions(data)
+
+    # Shutdown event handler
+    def shutdown(data: Dict) -> None:
+        logger.info(f"Shutdown event received: {data}. Exiting immediately.")
+        ai_broker.time_to_die = True
+        exit(logger, "AI Broker shutting down.")
+
+    # This might happen if the AI quits!
+    def logout(data: Dict) -> None:
+        logger.info(f"Logout event received: {data} did AI quit?")
+        sio.disconnect()
+        exit(logger, "AI Broker logout received.")
+
+    # Room update event handler
+    def room_update(data: Dict) -> None:
+        # For now nothing, do not even log - this consists of the room description, and the image URL, not relevant to AI
+        pass
+
+    # Player update event handler
+    def game_data_update(data: Dict) -> None:
+        if "player_count" in data:
+            if data["player_count"] == 1 and ai_broker.mode != "builder":
+                logger.info("No players apart from me, so I won't do anything.")
+                ai_broker.active = False
+            else:
+                if not ai_broker.active:
+                    logger.info("I can wake up again!")
+                    ai_broker.active = True
+
+    # Invalid name, try again
+    async def name_invalid(data: Dict) -> None:
+        error_message: str = f"Invalid name event received: {data}"
+        logger.info(error_message)
+        ai_broker.log_error(error_message)
+        # If AI_NAME is set in the environment and was the invalid name, reset it
+        if environ.get("AI_NAME", "") in data:
+            # Set AI_NAME to empty string to force a new name to be chosen
+            environ["AI_NAME"] = ""
+        ai_broker.set_ai_name(data)
+        await mbh.emit(
+            "set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode}
+        )
+
+    # Set up logger before importing other modules that use it
+    logger = setup_logger("AI Broker")
 
     # Set up AIs according to config
     # Keep string in case not set properly
@@ -363,17 +296,43 @@ if __name__ == "__main__":
             system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
         )
 
+    mbh = MessageBrokerHelper(
+        environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        {
+            "summon_player_response": {"mode": "publish"},
+            "game_update": {"mode": "subscribe", "callback": game_update},
+            "instructions": {"mode": "subscribe", "callback": instructions},
+            "shutdown": {"mode": "subscribe", "callback": shutdown},
+            "logout": {"mode": "subscribe", "callback": logout},
+            "room_update": {"mode": "subscribe", "callback": room_update},
+            "game_data_update": {"mode": "subscribe", "callback": game_data_update},
+            "name_invalid": {"mode": "subscribe", "callback": name_invalid},
+        },
+    )
     # Change log file name to include AI name
-    logger = setup_logger(f"ai_broker_{ai_broker.player_name}.log", sio=sio)
+    logger = setup_logger(f"ai_broker_{ai_broker.player_name}.log")
 
-    # Connect to the server. If can't connect, warn user that the Game Server may not be running.
-    connect_to_server(logger, sio)
+    logger.info(
+        f"AI's chosen name is: {ai_broker.player_name} and this is being emitted from player_id {ai_broker.player_id}"
+    )
 
-    # Log my player_id
-    logger.info(f"My player_id is: {sio.player_id}")
+    # Start consuming messages
+    await mbh.setup_nats()
+
+    await mbh.publish(
+        "set_player_name",
+        {
+            "name": ai_broker.player_name,
+            "role": ai_broker.mode,
+            "player_id": ai_broker.player_id,
+        },
+    )
 
     # This is where the main processing of inputs happens
     eventlet.spawn(ai_broker.ai_response_loop())
 
-    # This keeps the SocketIO event processing going
-    sio.wait()
+    await asyncio.Event().wait()  # Keeps the event loop running
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

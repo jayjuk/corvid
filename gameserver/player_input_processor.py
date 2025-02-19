@@ -136,11 +136,6 @@ class PlayerInputProcessor:
                 "function": self.game_manager.do_inventory,
                 "description": "List the items you are carrying",
             },
-            "xoxtest": {
-                "function": self.game_manager.do_test,
-                # Keep this one hidden - used for testing various features
-                "description": "",
-            },
             "xox": {
                 "function": self.game_manager.do_shutdown,
                 # Keep this one hidden - it shuts down the game server and AI broker!
@@ -266,7 +261,7 @@ class PlayerInputProcessor:
         )
 
         await self.game_manager.ai_manager.submit_remote_request(
-            await self.handle_translation_response,
+            self.handle_translation_response,
             player,
             request_type="translation_request",
             prompt=prompt,
@@ -293,7 +288,8 @@ class PlayerInputProcessor:
             )
             if command_function:
                 # Run it
-                return command_function(*command_args)
+                outcome = await command_function(*command_args)
+                return outcome
             elif response_to_player:
                 return None, None, response_to_player
             else:
@@ -307,7 +303,6 @@ class PlayerInputProcessor:
 
     # Get phrases. Each phrase is either a single word, or a number of words in quotes. There can be multiple phrases. Different quotes could be used from one phrase to the next.
     def get_phrases(self, rest_of_response: str) -> List[str]:
-        print(f"Rest of response: {rest_of_response}")
         phrases: List[str] = []
 
         # Regex pattern to match phrases in single or double quotes or unquoted words
@@ -322,7 +317,6 @@ class PlayerInputProcessor:
                 phrases.append(match[1].strip())
             elif match[2]:  # This is an unquoted word
                 phrases.append(match[2].strip())
-        print(f"Phrases: {phrases}")
         return phrases
 
     # Process player input. Returns a function pointer, a tuple of arguments, and an error message if any.
@@ -451,7 +445,7 @@ class PlayerInputProcessor:
         # Different return if the command is a direction
         elif command in self.directions:
             return (
-                self.game_manager.move_entity,
+                await self.game_manager.move_entity,
                 (player, command, rest_of_response),
                 None,
             )
@@ -464,7 +458,8 @@ class PlayerInputProcessor:
         else:
             # If the command is not recognised, try to translate it using AI (unless this is already a translation)
             if not translated:
-                return self.translate_and_process(player, player_input)
+                outcome = await self.translate_and_process(player, player_input)
+                return outcome
             # Invalid command
             return (
                 None,

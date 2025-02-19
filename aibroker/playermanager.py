@@ -1,7 +1,4 @@
 import eventlet
-
-eventlet.monkey_patch()
-
 from typing import Dict
 import os
 from utils import (
@@ -9,12 +6,15 @@ from utils import (
     setup_logger,
     exit,
     get_logs_folder,
-    connect_to_server,
 )
 import subprocess
 import json
 import time
-import socketio
+import asyncio
+from messagebroker_helper import MessageBrokerHelper
+
+# Set up logger
+logger = setup_logger("Player Manager")
 
 
 # Class to manage the AI's interaction with the game server
@@ -35,7 +35,7 @@ class PlayerManager:
             player_count += 1
             # Add the team briefing to the player data
             player["team_briefing"] = self.player_data["team_briefing"]
-            print(f"Creating player {player_count}")
+            logger.info(f"Creating player {player_count}")
             self.create_player(player)  # Create the player
 
     # Check file is JSON and parse it into a dictionary
@@ -94,74 +94,47 @@ class PlayerManager:
         logger.info(f"Player created: {env_vars}")
 
 
-# Register the client with the server
-sio = socketio.Client()
-
-# SocketIO event handlers
-
-
-# Game update event handler
-@sio.on("summon_player_request")
-def catch_all(data: Dict) -> None:
-    logger.info(f"Received Summon Player request: {data}")
-    if "request_data" in data and "request_id" in data:
-        # If data["request_data"] is a string, expect that to just be the player briefing
-        if isinstance(data["request_data"], str):
-            logger.info(
-                f"Assuming request is just a player briefing: {data['request_data']}"
-            )
-            data["request_data"] = {"player_briefing": data["request_data"]}
-        player_manager.create_player(data["request_data"])
-        sio.emit("summon_player_response", {"request_id": data["request_id"]})
-    else:
-        exit(logger, f"Invalid request data: {data}")
-
-
-# Shutdown event handler
-@sio.on("shutdown")
-def catch_all(data: Dict) -> None:
-    logger.info(f"Shutdown event received: {data}. Shutting down immediately.")
-    player_manager.time_to_die = True
-    sio.disconnect()
-    sio.eio.disconnect()
-    exit(logger, "All done.")
-
-
-# SocketIO connection handlers
-
-
-# Connection event handler
-@sio.event
-def connect() -> None:
-    logger.info("Connected to Server.")
-
-
-# Connection error event handler
-@sio.event
-def connect_error(data: Dict) -> None:
-    logger.error(data)
-
-
-# Disconnection event handler
-@sio.event
-def disconnect() -> None:
-    # TODO #95 Handle reconnection e.g. when Game Server restarts
-    logger.info("Disconnected from Server.")
-
-
 # Main
+async def main() -> None:
 
-# Set up logger
-logger = setup_logger("Player Manager", sio=sio)
+    async def summon_player_request(data: Dict) -> None:
+        logger.info(f"Received Summon Player request: {data}")
+        if "request_data" in data and "request_id" in data:
+            # If data["request_data"] is a string, expect that to just be the player briefing
+            if isinstance(data["request_data"], str):
+                logger.info(
+                    f"Assuming request is just a player briefing: {data['request_data']}"
+                )
+                data["request_data"] = {"player_briefing": data["request_data"]}
+            player_manager.create_player(data["request_data"])
+            await mbh.publish(
+                "summon_player_response", {"request_id": data["request_id"]}
+            )
+        else:
+            exit(logger, f"Invalid request data: {data}")
 
-connect_to_server(logger, sio)
+    mbh = MessageBrokerHelper(
+        os.environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        {
+            "summon_player_response": {"mode": "publish"},
+            "summon_player_request": {
+                "mode": "subscribe",
+                "callback": summon_player_request,
+            },
+        },
+    )
 
-# Create AI Worker
-player_manager = PlayerManager(
-    init_filename=get_critical_env_variable("AI_PLAYER_FILE_NAME"),
-)
+    # Create AI Worker
+    player_manager = PlayerManager(
+        init_filename=get_critical_env_variable("AI_PLAYER_FILE_NAME"),
+    )
 
-logger.info("Ready...")
+    # Start consuming messages
+    await mbh.setup_nats()
 
-# This keeps the SocketIO event processing going
-sio.wait()
+    await asyncio.Event().wait()  # Keeps the event loop running
+
+
+# Main function to start the program
+if __name__ == "__main__":
+    asyncio.run(main())

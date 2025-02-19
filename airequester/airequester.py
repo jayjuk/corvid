@@ -5,7 +5,7 @@ from utils import get_critical_env_variable, setup_logger, exit
 
 # Set up logger here BEFORE importing AI manager
 # (registers signal handler too hence sio passed in)
-logger = setup_logger("AI Requester", sio=None)
+logger = setup_logger("AI Requester")
 
 from aimanager import AIManager
 from messagebroker_helper import MessageBrokerHelper
@@ -41,7 +41,7 @@ class AIRequester:
         return response
 
 
-# Non-class functions below here (SocketIO event handlers etc.)
+# Main
 
 
 async def main() -> None:

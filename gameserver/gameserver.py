@@ -1,5 +1,5 @@
 # Set up logger first
-from utils import setup_logger, exit, get_logs_folder, connect_to_server
+from utils import setup_logger, exit, get_logs_folder
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv
@@ -8,7 +8,7 @@ from os import path, makedirs
 import asyncio
 
 # Set up logger before importing other own modules
-logger = setup_logger("Game Server", sio=None)
+logger = setup_logger("Game Server")
 
 from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager
@@ -86,7 +86,6 @@ async def main() -> None:
             result = await player_input_processor.process_player_input(
                 player, player_input
             )
-            print(result)
             (command_function, command_args, response_to_player) = result
             if command_function:
                 if isinstance(command_function, Callable):
@@ -149,7 +148,6 @@ async def main() -> None:
             (player, response_to_player) = (
                 await game_manager.ai_manager.process_ai_response(data)
             )
-            print(f"ai_response: Response to player: {response_to_player}")
             if response_to_player:
                 player.add_input_history(f"Game: {response_to_player}")
                 await mbh.publish("game_update", response_to_player, player.player_id)

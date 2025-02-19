@@ -61,7 +61,7 @@ class Player(Entity):
             self.seen_rooms: Dict[str, bool] = {}
             self.seen_rooms[self.location] = True
 
-            # player_id is the unique identifier for this player used by SocketIO
+            # player_id is the unique identifier for this player used in messaging etc
             self.player_id = player_id
 
         # Define history - this resets each time the player logs in

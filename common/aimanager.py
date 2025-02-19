@@ -31,7 +31,7 @@ class AIManager:
         self.active: bool = True
         self.input_token_count: int = 0
         self.output_token_count: int = 0
-        # SocketIO object - only provided to some instances where remote requests are required
+        # Message broker object - only provided to some instances where remote requests are required
         self.mbh = mbh
 
         # Chat history / context

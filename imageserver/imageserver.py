@@ -6,7 +6,7 @@ from storagemanager import StorageManager
 from utils import get_critical_env_variable, setup_logger
 
 # Set up logger
-logger = setup_logger("Image Server", sio=None)
+logger = setup_logger("Image Server")
 
 
 class ImageServer:

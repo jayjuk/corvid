@@ -72,21 +72,6 @@ class GameManager:
 
         self.item_name_empty_message: str = "Invalid input: item name is empty."
 
-    async def do_test(self, player: Player, rest_of_response: str) -> str:
-        print("Test command received:", rest_of_response)
-        await self.ai_manager.submit_remote_request(
-            self.handle_test_response,
-            player,
-            "test_request",
-            f"test prompt: {rest_of_response}",
-            system_message="You are a helpful AI assistant providing a response to a test command in a game.",
-        )
-        return "Test command received."
-
-    def handle_test_response(self, ai_response: Dict, request_data: str = "") -> str:
-        print("Test response received:", ai_response, request_data)
-        return f"Test response received: {ai_response}, {request_data}"
-
     # All these 'do_' functions are for processing commands from the player.
     # They all take the player item and the rest of the response as arguments,
     # Even if they're not needed. This is to keep the command processing simple.
@@ -855,8 +840,11 @@ class GameManager:
             )
             return_text: str = response_json.get("success_response")
             if response_json.get("player_utterance"):
-                return_text += " " + self.do_say(
-                    player, response_json.get("player_utterance", "")
+                return_text += (
+                    if return_text:
+                        return_text + " "
+                    f"You say '{response_json['player_utterance']}'. "
+                    + await self.do_say(player, response_json["player_utterance"])
                 )
             if response_json.get("updated_location"):
                 self.world.update_room_description(
@@ -884,10 +872,11 @@ class GameManager:
             if response_json.get("new_items"):
                 for item_name, new_description in response_json["new_items"].items():
                     # Create item
-                    outcome = self.world.create_item(
+                    outcome: Optional[str] = self.world.create_item(
                         item_name,
                         new_description,
-                        player.get_current_location(),
+                        price=None,
+                        location=player.get_current_location(),
                     )
                     # If there is an issue, return it
                     # TODO #91 Handle errors in custom actions better
@@ -1284,7 +1273,6 @@ class GameManager:
         if not self.background_loop_active:
             logger.info("Activating background loop.")
             self.background_loop_active = True
-            print("Spawning background loop")
             eventlet.spawn(self.game_background_loop)
 
     # Cause the game background loop to exit

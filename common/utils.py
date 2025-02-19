@@ -1,8 +1,6 @@
 from os import environ
 from typing import Optional
 import sys
-import socketio
-import eventlet
 
 
 import logging
@@ -45,24 +43,20 @@ def is_debug_mode() -> bool:
 
 
 # Signal handler for SIGINT
-def signal_handler(logger, sig, frame, sio=None):
+def signal_handler(logger, sig, frame):
     logger.info("Signal Interrupt Received - Shutting down...")
-    if sio:
-        sio.disconnect()
     exit(0)
 
 
 # Register signal handler for SIGINT
-def register_signal_handler(logger, sio=None):
+def register_signal_handler(logger):
     # signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(
-        signal.SIGINT, lambda sig, frame: signal_handler(logger, sig, frame, sio)
-    )
+    signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(logger, sig, frame))
 
 
 # Function invoked by most modules for shared and common logging
 def setup_logger(
-    module_name: str = "Unit Testing", logging_level_override: str = "", sio=None
+    module_name: str = "Unit Testing", logging_level_override: str = ""
 ) -> logging.Logger:
     # If logger already set up, return it
     if logging.getLogger().hasHandlers():
@@ -98,7 +92,7 @@ def setup_logger(
             logging.StreamHandler(),
         ],
     )
-    register_signal_handler(logging.getLogger(), sio)
+    register_signal_handler(logging.getLogger())
 
     logging.getLogger().info(f"Started {module_name}, logging to {file_name}")
 
@@ -130,28 +124,3 @@ def get_critical_env_variable(env_var_name: str) -> Optional[str]:
     # Otherwise, exit
     print(f"{env_var_name} not set. Exiting.")
     sys.exit(1)
-
-
-# Connect to SocketIO server, trying again if it fails
-def connect_to_server(logger, sio, connection_url: str = None) -> None:
-    if not connection_url:
-        # Set hostname (default is "localhost" to support local pre container testing)
-        # TODO #65 Do not allow default port, and make this common
-        connection_url = f"http://{environ.get('GAMESERVER_HOSTNAME', 'localhost')}:{environ.get('GAMESERVER_PORT', '3001')}"
-    logger.info(f"Connecting to SocketIO server on {connection_url}")
-    connected: bool = False
-    max_wait: int = 240  # 4 minutes
-    wait_time: int = 4
-    while not connected and wait_time <= max_wait:
-        try:
-            sio.connect(connection_url)
-            logger.info(f"Connected.")
-            connected = True
-        except Exception:
-            logger.info(
-                f"Could not connect to server on {connection_url}. Retrying in {wait_time} seconds..."
-            )
-            eventlet.sleep(wait_time)
-            wait_time = int(wait_time * 1.5)
-    if not connected:
-        exit(logger, "Could not connect to Game Server. Is it running?")

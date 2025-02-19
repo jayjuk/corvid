@@ -1,18 +1,11 @@
 import asyncio
-import logging
-from queue import Queue
-from threading import Thread
-
-# Set up logger first
 from typing import Dict, Optional, Tuple
 from os import environ
-from utils import get_critical_env_variable, connect_to_server, setup_logger, exit
-from messagebroker_helper import MessageBrokerHelper
+from utils import get_critical_env_variable, setup_logger, exit
 
 # Set up logger before importing other modules
-# (registers signal handler too hence sio passed in)
-logger = setup_logger("Image Creator", sio=None)
-
+logger = setup_logger("Image Creator")
+from messagebroker_helper import MessageBrokerHelper
 from aimanager import AIManager
 from azurestoragemanager import AzureStorageManager
 
