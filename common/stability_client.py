@@ -1,10 +1,10 @@
 from typing import Union
 import os
-from utils import get_critical_env_variable, setup_logger
+from utils import get_critical_env_variable, set_up_logger
 
 
 # Set up logger
-logger = setup_logger()
+logger = set_up_logger()
 
 # Avoid mixing up loggers by importing third party modules after logger
 from stability_sdk import client

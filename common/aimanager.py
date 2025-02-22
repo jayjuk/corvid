@@ -4,7 +4,7 @@ from os import path, makedirs, environ, sep
 import json
 import time
 import asyncio
-from utils import setup_logger, exit, get_logs_folder
+from utils import set_up_logger, exit, get_logs_folder
 
 
 # TODO #90 Consider redesigning such that the AI Manager only imports the necessary LLM client libraries according to runtime model choices
@@ -15,7 +15,7 @@ import stability_client
 import groq_client
 
 # Set up logger
-logger = setup_logger()
+logger = set_up_logger()
 
 
 # Class to handle interaction with the AI

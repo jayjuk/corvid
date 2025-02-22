@@ -1,10 +1,12 @@
-import asyncio
 from typing import List, Dict, Optional
-import eventlet
+import asyncio
 import time
 from os import environ
 import re
-from utils import get_critical_env_variable, setup_logger, exit
+from utils import get_critical_env_variable, set_up_logger, exit
+
+# Set up logger before importing other modules that use it
+logger = set_up_logger("AI Broker")
 
 
 from aimanager import AIManager
@@ -34,6 +36,7 @@ class AIBroker:
         self.output_token_count: int = 0
         self.error_count: Dict[str] = {}
         self.max_error_count: int = 10
+        self.player_name: str = ""
 
         this_system_message: str = self.get_ai_instructions()
         if system_message and system_message.strip():
@@ -49,12 +52,87 @@ class AIBroker:
             system_message=this_system_message,
         )
 
+    async def set_up_player(self) -> None:
+        # Set up the message broker helper
+        self.mbh = MessageBrokerHelper(
+            environ.get("GAMESERVER_HOSTNAME", "localhost"),
+            {
+                "set_player_name": {"mode": "publish"},
+                "summon_player_response": {"mode": "publish"},
+                "player_action": {"mode": "publish"},
+                "game_update": {"mode": "subscribe", "callback": self.game_update},
+                "instructions": {"mode": "subscribe", "callback": self.instructions},
+                "shutdown": {"mode": "subscribe", "callback": self.shutdown},
+                "logout": {"mode": "both", "callback": self.logout},
+                "room_update": {"mode": "subscribe", "callback": self.room_update},
+                "game_data_update": {
+                    "mode": "subscribe",
+                    "callback": self.game_data_update,
+                },
+                "name_invalid": {"mode": "subscribe", "callback": self.name_invalid},
+            },
+        )
+
+        # Start consuming messages
+        await self.mbh.set_up_nats()
+
         # Get the AI's name
         # TODO #89 Enable many AI players to be managed by the same broker
-        self.set_ai_name()
+        await self.set_ai_name()
+
+    # Game update event handler
+    async def game_update(self, data: Dict) -> None:
+        if data:
+            logger.info(f"Received game update event: {data}")
+            self.log_event(data)
+        else:
+            exit(logger, "Received empty game update event")
+
+    # Instructions event handler
+    async def instructions(self, data: Dict) -> None:
+        logger.info(f"Received instructions event: {data}")
+        self.record_instructions(data)
+
+    # Shutdown event handler
+    async def shutdown(self, data: Dict) -> None:
+        logger.info(f"Shutdown event received: {data}. Exiting immediately.")
+        self.time_to_die = True
+        exit(logger, "AI Broker shutting down.")
+
+    # This might happen if the AI quits!
+    async def logout(self, data: Dict) -> None:
+        logger.info(f"Logout event received: {data} did AI quit?")
+        exit(logger, "AI Broker logout received.")
+
+    # Room update event handler
+    async def room_update(self, data: Dict) -> None:
+        # For now nothing, do not even log - this consists of the room description, and the image URL, not relevant to AI
+        pass
+
+    # Player update event handler
+    async def game_data_update(self, data: Dict) -> None:
+        if "player_count" in data:
+            if data["player_count"] == 1 and self.mode != "builder":
+                logger.info("No players apart from me, so I won't do anything.")
+                self.active = False
+            else:
+                if not self.active:
+                    logger.info("I can wake up again!")
+                    self.active = True
+
+    # Invalid name, try again
+    async def name_invalid(self, data: Dict) -> None:
+        error_message: str = f"Invalid name event received: {data}"
+        logger.info(error_message)
+        self.log_error(error_message)
+        # If AI_NAME is set in the environment and was the invalid name, reset it
+        if environ.get("AI_NAME", "") in data:
+            # Set AI_NAME to empty string to force a new name to be chosen
+            environ["AI_NAME"] = ""
+        self.set_ai_name(data)
 
     # The main processing loop
-    def ai_response_loop(self) -> None:
+    async def ai_response_loop(self) -> None:
         while True:
             # Exit own thread when time comes
             if self.time_to_die:
@@ -64,8 +142,8 @@ class AIBroker:
             wait_time = self.max_wait - (time.time() - self.last_time)
             if wait_time > 0:
                 # don't do anything for now
-                eventlet.sleep(wait_time)
-            self.poll_event_log()
+                await asyncio.sleep(wait_time)
+            await self.poll_event_log()
             # Record time
             self.last_time = time.time()
 
@@ -103,7 +181,7 @@ class AIBroker:
         return ai_instructions
 
     # Get AI name from the LLM using the AI manager
-    def set_ai_name(self, feedback=None) -> str:
+    async def set_ai_name(self, feedback=None):
 
         # If AI_NAME is set in the environment, use that
         if environ.get("AI_NAME"):
@@ -128,10 +206,33 @@ class AIBroker:
             if ai_name:
                 logger.info(f"AI chose the name {ai_name}.")
             else:
-                eventlet.sleep(3)
+                await asyncio.sleep(3)
+
+        # Unsubscribe from the previous name
+        if self.player_name:
+            await self.mbh.unsubscribe(f"game_update.{self.player_name}")
+            await self.mbh.unsubscribe(f"logout.{self.player_name}")
+            await self.mbh.unsubscribe(f"instructions.{self.player_name}")
+            await self.mbh.unsubscribe(f"room_update.{self.player_name}")
         self.player_name = ai_name
-        self.player_id = self.player_name.lower().replace(" ", "_")
-        return ai_name
+        self.player_id = self.player_name.lower()
+
+        # Subscribe to name-specific events
+        await self.mbh.subscribe(f"game_update.{self.player_name}", self.game_update)
+        await self.mbh.subscribe(f"logout.{self.player_name}", self.logout)
+        await self.mbh.subscribe(f"instructions.{self.player_name}", self.instructions)
+        await self.mbh.subscribe(f"room_update.{self.player_name}", self.room_update)
+
+        await self.mbh.publish(
+            "set_player_name",
+            {
+                "name": self.player_name,
+                "role": self.mode,
+                "player_id": self.player_id,
+            },
+        )
+
+        return
 
     # Log the game events for the AI to process
     def log_event(self, event_text: str) -> None:
@@ -174,7 +275,7 @@ class AIBroker:
         return self.ai_manager.submit_request(message_text)
 
     # Check the event log for new events to process
-    def poll_event_log(self) -> None:
+    async def poll_event_log(self) -> None:
         if self.event_log and self.active:
             # OK, time to process the events that have built up
             response = self.submit_input()
@@ -184,7 +285,10 @@ class AIBroker:
                 return
             if response:
                 # Submit AI's response to the game server
-                sio.emit("user_action", response)
+                await self.mbh.publish(
+                    "player_action",
+                    {"player_input": response, "player_id": self.player_id},
+                )
                 # If response was to exit, exit here (after sending the exit message to the game server)
                 if response == "exit":
                     exit(logger, "AI has exited the game.")
@@ -204,64 +308,6 @@ class AIBroker:
 
 # Main function to start the AI Broker
 async def main() -> None:
-
-    # Game update event handler
-    def game_update(data: Dict) -> None:
-        if data:
-            logger.info(f"Received game update event: {data}")
-            ai_broker.log_event(data)
-        else:
-            exit(logger, "Received empty game update event")
-
-    # Instructions event handler
-    def instructions(data: Dict) -> None:
-        logger.info(f"Received instructions event: {data}")
-        ai_broker.record_instructions(data)
-
-    # Shutdown event handler
-    def shutdown(data: Dict) -> None:
-        logger.info(f"Shutdown event received: {data}. Exiting immediately.")
-        ai_broker.time_to_die = True
-        exit(logger, "AI Broker shutting down.")
-
-    # This might happen if the AI quits!
-    def logout(data: Dict) -> None:
-        logger.info(f"Logout event received: {data} did AI quit?")
-        sio.disconnect()
-        exit(logger, "AI Broker logout received.")
-
-    # Room update event handler
-    def room_update(data: Dict) -> None:
-        # For now nothing, do not even log - this consists of the room description, and the image URL, not relevant to AI
-        pass
-
-    # Player update event handler
-    def game_data_update(data: Dict) -> None:
-        if "player_count" in data:
-            if data["player_count"] == 1 and ai_broker.mode != "builder":
-                logger.info("No players apart from me, so I won't do anything.")
-                ai_broker.active = False
-            else:
-                if not ai_broker.active:
-                    logger.info("I can wake up again!")
-                    ai_broker.active = True
-
-    # Invalid name, try again
-    async def name_invalid(data: Dict) -> None:
-        error_message: str = f"Invalid name event received: {data}"
-        logger.info(error_message)
-        ai_broker.log_error(error_message)
-        # If AI_NAME is set in the environment and was the invalid name, reset it
-        if environ.get("AI_NAME", "") in data:
-            # Set AI_NAME to empty string to force a new name to be chosen
-            environ["AI_NAME"] = ""
-        ai_broker.set_ai_name(data)
-        await mbh.emit(
-            "set_player_name", {"name": ai_broker.player_name, "role": ai_broker.mode}
-        )
-
-    # Set up logger before importing other modules that use it
-    logger = setup_logger("AI Broker")
 
     # Set up AIs according to config
     # Keep string in case not set properly
@@ -295,43 +341,15 @@ async def main() -> None:
             model_name=get_critical_env_variable("MODEL_NAME"),
             system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
         )
+        logger = set_up_logger(f"ai_broker_{ai_broker.player_name}.log")
 
-    mbh = MessageBrokerHelper(
-        environ.get("GAMESERVER_HOSTNAME", "localhost"),
-        {
-            "summon_player_response": {"mode": "publish"},
-            "game_update": {"mode": "subscribe", "callback": game_update},
-            "instructions": {"mode": "subscribe", "callback": instructions},
-            "shutdown": {"mode": "subscribe", "callback": shutdown},
-            "logout": {"mode": "subscribe", "callback": logout},
-            "room_update": {"mode": "subscribe", "callback": room_update},
-            "game_data_update": {"mode": "subscribe", "callback": game_data_update},
-            "name_invalid": {"mode": "subscribe", "callback": name_invalid},
-        },
-    )
-    # Change log file name to include AI name
-    logger = setup_logger(f"ai_broker_{ai_broker.player_name}.log")
+        # Set up the player
+        await ai_broker.set_up_player()
 
-    logger.info(
-        f"AI's chosen name is: {ai_broker.player_name} and this is being emitted from player_id {ai_broker.player_id}"
-    )
+        # This is where the main processing of inputs happens
+        asyncio.create_task(ai_broker.ai_response_loop())
 
-    # Start consuming messages
-    await mbh.setup_nats()
-
-    await mbh.publish(
-        "set_player_name",
-        {
-            "name": ai_broker.player_name,
-            "role": ai_broker.mode,
-            "player_id": ai_broker.player_id,
-        },
-    )
-
-    # This is where the main processing of inputs happens
-    eventlet.spawn(ai_broker.ai_response_loop())
-
-    await asyncio.Event().wait()  # Keeps the event loop running
+        await asyncio.Event().wait()  # Keeps the event loop running
 
 
 if __name__ == "__main__":

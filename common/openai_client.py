@@ -1,9 +1,9 @@
 from typing import List, Dict, Tuple, Union, Optional
-from utils import get_critical_env_variable, setup_logger
+from utils import get_critical_env_variable, set_up_logger
 from urllib.request import urlopen
 
 # Set up logger
-logger = setup_logger()
+logger = set_up_logger()
 
 # Avoid mixing up loggers by importing third party modules after logger
 import openai

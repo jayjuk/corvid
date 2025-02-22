@@ -55,7 +55,6 @@ export default function HomePage() {
   const gameLogRef = useRef<HTMLDivElement>(null);
   const [previousCommands, setPreviousCommands] = useState<string[]>([]);
   const [commandIndex, setCommandIndex] = useState<number>(0);
-  const isConnected = useRef(false); // Add a flag to track connection status
 
   useEffect(() => {
   const connectToNats = async () => {
@@ -86,6 +85,9 @@ export default function HomePage() {
 useEffect(() => {
   if (!playerName || !natsConnection.current) return; // Wait until playerName is set
 
+  // Set variable player ID which is lower case version of playerName
+  const playerID = playerName.toLowerCase();
+
   const nc = natsConnection.current;
   const sc = StringCodec();
 
@@ -103,36 +105,69 @@ useEffect(() => {
   // Subscribe to game updates
   handleGameUpdate(natsConnection.current.subscribe("game_update"));
 
-  console.log(`Subscribing to player-specific topics for ${playerName}`);
-
     // Subscribe to player-specific game updates
+  let instructionSub, roomSub, logoutSub, nameInvalidSub;
   if (playerName) {
-    handleGameUpdate(natsConnection.current.subscribe(`game_update.${playerName}`));
+    handleGameUpdate(natsConnection.current.subscribe(`game_update.${playerID}`));
+
+    // Subscribe to player-specific instructions
+    instructionSub = nc.subscribe(`instructions.${playerID}`);
+    (async () => {
+      for await (const msg of instructionSub) {
+        setGameLog((prev) => [...prev, sc.decode(msg.data)]);
+      }
+    })();
+
+    // Subscribe to player-specific room updates
+    roomSub = nc.subscribe(`room_update.${playerID}`);
+    (async () => {
+      for await (const msg of roomSub) {
+        const message = JSON.parse(sc.decode(msg.data));
+        setRoomImageURL(message["image"]);
+        setRoomTitle(message["title"]);
+        setRoomDescription(message["description"].replace(/[{|}]/g, ""));
+        setRoomExits(message["exits"]);
+      }
+    })();
+
+    // Subscribe to player-specific logout
+    logoutSub = nc.subscribe(`logout.${playerID}`);
+    (async () => {
+      for await (const msg of logoutSub) {
+        console.log('logout event');
+        alert(sc.decode(msg.data));
+        setNameSet(false);
+        // Unsubscribe from all subscriptions
+        instructionSub.unsubscribe();
+        roomSub.unsubscribe();
+        logoutSub.unsubscribe();
+      }
+    })();
+
+    // Subscribe to player-specific name invalid
+    const nameInvalidSub = nc.subscribe(`name_invalid.${playerID}`);
+    (async () => {
+      console.log(`name invalid event name_invalid.${playerID}`);
+      for await (const msg of nameInvalidSub) {
+        console.log('name invalid event - inside for loop');
+        alert(sc.decode(msg.data));
+        setNameSet(false);
+        // Unsubscribe from all subscriptions
+        instructionSub.unsubscribe();
+        roomSub.unsubscribe();
+        logoutSub.unsubscribe();
+        nameInvalidSub.unsubscribe();
+      }
+    })();
+
   }
 
-  // Subscribe to player-specific instructions
-  const instructionSub = nc.subscribe(`instructions.${playerName}`);
-  (async () => {
-    for await (const msg of instructionSub) {
-      setGameLog((prev) => [...prev, sc.decode(msg.data)]);
-    }
-  })();
-
-  // Subscribe to room updates
-  const roomSub = nc.subscribe(`room_update.${playerName}`);
-  (async () => {
-    for await (const msg of roomSub) {
-      const message = JSON.parse(sc.decode(msg.data));
-      setRoomImageURL(message["image"]);
-      setRoomTitle(message["title"]);
-      setRoomDescription(message["description"].replace(/[{|}]/g, ""));
-      setRoomExits(message["exits"]);
-    }
-  })();
-
   return () => {
-    instructionSub.unsubscribe();
-    roomSub.unsubscribe();
+    instructionSub?.unsubscribe();
+    roomSub?.unsubscribe();
+    logoutSub?.unsubscribe();
+    nameInvalidSub?.unsubscribe();
+
   };
 }, [nameSet]); // Only runs when playerName is set/changes
 
@@ -148,7 +183,7 @@ useEffect(() => {
     e.preventDefault();
     if (natsConnection.current && playerName.trim() !== "") {
       const sc = StringCodec();
-      natsConnection.current.publish("set_player_name", sc.encode(JSON.stringify({ name: playerName })));
+      natsConnection.current.publish("set_player_name", sc.encode(JSON.stringify({ name: playerName, player_id: playerName.toLowerCase() })));
       setNameSet(true);
     }
   };
@@ -158,10 +193,10 @@ useEffect(() => {
     if (natsConnection.current && userInput.trim() !== "") {
       const sc = StringCodec();
       const message = {
-        player_id: playerName, // Use playerName as the player ID
+        player_id: playerName.toLowerCase(), // Use playerName as the player ID
         player_input: userInput,
       };
-      natsConnection.current.publish("user_action", sc.encode(JSON.stringify(message)));
+      natsConnection.current.publish("player_action", sc.encode(JSON.stringify(message)));
       setUserInput("");
     }
   };

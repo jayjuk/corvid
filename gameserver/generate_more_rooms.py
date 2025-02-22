@@ -1,13 +1,13 @@
 import time
 import aimanager
 import world
-from utils import setup_logger
+from utils import set_up_logger
 import random
 import azurestoragemanager
 from player import Player
 
 # Set up logging
-logger = setup_logger()
+logger = set_up_logger()
 
 
 def generate_name_and_description(ai_manager, room, room_exit, data):

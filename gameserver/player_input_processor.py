@@ -1,7 +1,7 @@
-from utils import setup_logger, exit
+from utils import set_up_logger, exit
 
 # Set up logger first
-logger = setup_logger()
+logger = set_up_logger()
 
 from typing import Dict, Callable, Tuple, Optional, Union, List
 from player import Player
@@ -445,7 +445,7 @@ class PlayerInputProcessor:
         # Different return if the command is a direction
         elif command in self.directions:
             return (
-                await self.game_manager.move_entity,
+                self.game_manager.move_entity,
                 (player, command, rest_of_response),
                 None,
             )

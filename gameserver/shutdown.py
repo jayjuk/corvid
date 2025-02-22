@@ -1,20 +1,20 @@
-import eventlet
-import socketio
-import sys
 from os import environ
-
-# Register the client with the server
-sio = socketio.Client()
+import asyncio
+from messagebroker_helper import MessageBrokerHelper
 
 if __name__ == "__main__":
-    # Set hostname (default is "localhost" to support local pre container testing)
-    # hostname = socket.getfqdn()
-    # if hostname.endswith(".lan"):
-    #     hostname = hostname[:-4]
-    hostname = environ.get("GAMESERVER_HOSTNAME") or "localhost"
-    port = environ.get("GAMESERVER_PORT", "3001")
-    sio.connect(f"http://{hostname}:{port}")
-    sio.emit("set_player_name", {"name": "system", "role": "player"})
-    eventlet.sleep(1)
-    sio.emit("user_action", "xox")
-    eventlet.sleep(1)
+
+    mbh = MessageBrokerHelper(
+        environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        {
+            "shutdown": {"mode": "publish"},
+        },
+    )
+    print("Message broker set up")
+    # Now shut down
+    asyncio.run(mbh.set_up_nats())
+    asyncio.run(mbh.publish("shutdown", "shutdown"))
+    print("Shutting down")
+    exit(0)
+
+# This is a simple script that sends a shutdown message to the message broker. It is used to shut down the game server.

@@ -1,12 +1,13 @@
-from utils import setup_logger, exit
-
-# Set up logger first
-logger = setup_logger()
-
+from utils import set_up_logger, exit
+import asyncio
 from typing import Any, Dict, List, Tuple, Optional, Union
-import eventlet
 import time
 import sys
+import json
+
+# Set up logger first
+logger = set_up_logger()
+
 from world import World
 from player import Player
 from entity import Entity
@@ -15,7 +16,6 @@ from gameitem import GameItem
 from room import Room
 from aimanager import AIManager
 from storagemanager import StorageManager
-import json
 
 
 class GameManager:
@@ -79,7 +79,7 @@ class GameManager:
     async def do_go(self, player: Player, rest_of_response: str) -> str:
         return await self.move_entity(player, rest_of_response, "")
 
-    async def do_push(self, player: Player, rest_of_response: str) -> None:
+    async def do_push(self, player: Player, rest_of_response: str) -> str:
         item_name: str = self.get_item_name_from_response(rest_of_response)
         if "button" in item_name:
             # Check red button in inventory
@@ -94,9 +94,9 @@ class GameManager:
                 )
                 self.tell_everyone(message)
                 for i in range(9, 0, -1):
-                    eventlet.sleep(1)
+                    await asyncio.sleep(1)
                     self.tell_everyone(f"{i}...")
-                eventlet.sleep(1)
+                await asyncio.sleep(1)
                 self.create_restart_file()
                 await self.mbh.publish("shutdown", message)
                 # TODO #15 Restart game without actually restarting the process
@@ -207,13 +207,15 @@ class GameManager:
                 player_response = f"You {verb[:-1]}, '{rest_of_response}'."
         return player_response
 
-    def do_shout(self, player: Player, rest_of_response: str) -> str:
+    async def do_shout(self, player: Player, rest_of_response: str) -> str:
         # Shout is the same as say but to everyone
-        return self.do_say(player, rest_of_response, shout=True)
+        outcome = await self.do_say(player, rest_of_response, shout=True)
+        return outcome
 
-    def do_greet(self, player: Player, rest_of_response: str) -> str:
+    async def do_greet(self, player: Player, rest_of_response: str) -> str:
         # Like say hi!
-        return self.do_say(player, "Hi " + rest_of_response)
+        outcome = await self.do_say(player, "Hi " + rest_of_response)
+        return outcome
 
     def do_wait(self, player: Player, rest_of_response: str) -> str:
         return "You decide to just wait a while."
@@ -232,7 +234,7 @@ class GameManager:
             return f"'{other_entity_name}' is not a valid player name."
 
     async def do_shutdown(self, player: Player, rest_of_response: str) -> None:
-        message: str = f"{player.name} has shut down the server."
+        message: str = f"{player.name} has triggered a shutdown of the game!"
         if rest_of_response:
             message = message[:-1] + f", saying '{rest_of_response}'."
         logger.info(message)
@@ -240,8 +242,8 @@ class GameManager:
         # TODO #68 Web client should do something when the back end is down, can we terminate the client too?
         # TODO #69 Make shutdown command restart process not shut down
         await self.mbh.publish("shutdown", message)
-        eventlet.sleep(1)
-        exit(logger, "Shutdown command invoked")
+        await asyncio.sleep(1)
+        exit(logger, "Shutdown command invoked by {player.name}")
 
     async def do_quit(self, player: Player, rest_of_response: str) -> None:
         await self.remove_player(player.player_id, "You have left the game.")
@@ -840,9 +842,9 @@ class GameManager:
             )
             return_text: str = response_json.get("success_response")
             if response_json.get("player_utterance"):
+                if return_text:
+                    return_text += " "
                 return_text += (
-                    if return_text:
-                        return_text + " "
                     f"You say '{response_json['player_utterance']}'. "
                     + await self.do_say(player, response_json["player_utterance"])
                 )
@@ -1003,7 +1005,7 @@ class GameManager:
 
         # Spawn the world-wide metadata loop when the first player is created
         # This is to minimise resource usage when no one is playing.
-        self.activate_background_loop()
+        await self.activate_background_loop()
 
     def list_players(self, player_id: str) -> str:
         if self.get_player_count() == 1:
@@ -1236,7 +1238,7 @@ class GameManager:
             )
             await self.emit_game_data_update()
             # Give player time to read the messages before logging them out
-            eventlet.sleep(2)
+            await asyncio.sleep(3)
             await self.mbh.publish("logout", reason, player_id)
             # Check again (race condition)
             if player_id in self.players:
@@ -1269,11 +1271,11 @@ class GameManager:
             del self.summon_requests[request_id]
 
     # Spawn the world-wide metadata loop when the first player is created
-    def activate_background_loop(self) -> None:
+    async def activate_background_loop(self) -> None:
         if not self.background_loop_active:
             logger.info("Activating background loop.")
             self.background_loop_active = True
-            eventlet.spawn(self.game_background_loop)
+            asyncio.create_task(self.game_background_loop())
 
     # Cause the game background loop to exit
     def deactivate_background_loop(self) -> None:
@@ -1285,7 +1287,7 @@ class GameManager:
     async def game_background_loop(self) -> None:
         while self.background_loop_active:
             # Run the loop periodically
-            eventlet.sleep(self.game_loop_time_secs)
+            await asyncio.sleep(self.game_loop_time_secs)
 
             # Time out players who do nothing for too long.
             self.check_players_activity()

@@ -2,11 +2,11 @@ from storagemanager import StorageManager
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.storage.blob import BlobServiceClient, ContainerClient
 from azure.data.tables import TableServiceClient, UpdateMode
-from utils import get_critical_env_variable, setup_logger, exit, debug
+from utils import get_critical_env_variable, set_up_logger, exit, debug
 from typing import Optional, Dict, List, Any
 
 # Set up logger
-logger = setup_logger()
+logger = set_up_logger()
 
 # This is for Azure
 import logging

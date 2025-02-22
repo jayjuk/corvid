@@ -1,8 +1,8 @@
 import aimanager
 import sys
-from utils import setup_logger
+from utils import set_up_logger
 
-logger = setup_logger()
+logger = set_up_logger()
 
 # Get model name from command line param
 model_name = sys.argv[1] if len(sys.argv) > 1 else "mixtral-8x7b-32768"

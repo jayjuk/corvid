@@ -3,11 +3,11 @@
 import sys
 from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager
-from utils import setup_logger
+from utils import set_up_logger
 from os import environ
 
 # Set up logger
-logger = setup_logger("reset_images")
+logger = set_up_logger("reset_images")
 
 
 def reset_images(world_name: str) -> None:

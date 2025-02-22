@@ -1,10 +1,10 @@
 from typing import List, Optional
-from utils import setup_logger
+from utils import set_up_logger
 from entity import Entity
 import random
 
 # Set up logger
-logger = setup_logger()
+logger = set_up_logger()
 
 
 # Animal class

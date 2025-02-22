@@ -7,8 +7,8 @@ import signal
 
 # INSTRUCTIONS TO USE THIS MODULE
 # At the top of your module, add the following:
-# 1. Import it into your module: from utils import setup_logger
-# 2. Set up logging passing in the name of the current file: logger = setup_logger()
+# 1. Import it into your module: from utils import set_up_logger
+# 2. Set up logging passing in the name of the current file: logger = set_up_logger()
 # This will create a log file in the logs directory with the same name as the module (e.g. player.log)
 # for unit testing cases, or if the module has been imported from a main file, the parent log file will be used
 # (e.g. gameserver.log)
@@ -50,7 +50,7 @@ def register_signal_handler(logger):
 
 
 # Function invoked by most modules for shared and common logging
-def setup_logger(
+def set_up_logger(
     file_name: str = "unit_testing.log", logging_level_override: str = ""
 ) -> logging.Logger:
     # If logger already set up, return it

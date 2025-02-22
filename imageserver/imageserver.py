@@ -3,10 +3,10 @@ from typing import Optional, Union
 from flask import Flask, send_from_directory, Response
 from azurestoragemanager import AzureStorageManager
 from storagemanager import StorageManager
-from utils import get_critical_env_variable, setup_logger
+from utils import get_critical_env_variable, set_up_logger
 
 # Set up logger
-logger = setup_logger("Image Server")
+logger = set_up_logger("Image Server")
 
 
 class ImageServer:

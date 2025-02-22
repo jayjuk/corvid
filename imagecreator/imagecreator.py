@@ -1,10 +1,10 @@
 import asyncio
 from typing import Dict, Optional, Tuple
 from os import environ
-from utils import get_critical_env_variable, setup_logger, exit
+from utils import get_critical_env_variable, set_up_logger, exit
 
 # Set up logger before importing other modules
-logger = setup_logger("Image Creator")
+logger = set_up_logger("Image Creator")
 from messagebroker_helper import MessageBrokerHelper
 from aimanager import AIManager
 from azurestoragemanager import AzureStorageManager
@@ -184,7 +184,7 @@ async def main() -> None:
     )
 
     # Start consuming messages
-    await mbh.setup_nats()
+    await mbh.set_up_nats()
 
     await asyncio.Event().wait()  # Keeps the event loop running
 

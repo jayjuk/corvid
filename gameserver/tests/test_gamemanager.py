@@ -10,7 +10,7 @@ class TestGameManager(unittest.TestCase):
         print("*** Setting up ***")
         self.storage_manager = StorageManager()
         self.game_manager = GameManager(
-            sio=None,
+            mbh=None,
             storage_manager=self.storage_manager,
             world_name="unittest",
         )

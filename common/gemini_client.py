@@ -3,11 +3,11 @@ from typing import List, Dict, Union, Iterable
 import json
 import base64
 from typing import Optional
-from utils import get_critical_env_variable, setup_logger, exit
+from utils import get_critical_env_variable, set_up_logger, exit
 from io import BytesIO
 
 # Set up logger
-logger = setup_logger()
+logger = set_up_logger()
 
 # Avoid mixing up loggers by importing third party modules after logger
 import vertexai

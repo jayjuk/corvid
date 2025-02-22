@@ -3,7 +3,7 @@ from typing import Dict
 import os
 from utils import (
     get_critical_env_variable,
-    setup_logger,
+    set_up_logger,
     exit,
     get_logs_folder,
 )
@@ -14,7 +14,7 @@ import asyncio
 from messagebroker_helper import MessageBrokerHelper
 
 # Set up logger
-logger = setup_logger("Player Manager")
+logger = set_up_logger("Player Manager")
 
 
 # Class to manage the AI's interaction with the game server
@@ -130,7 +130,7 @@ async def main() -> None:
     )
 
     # Start consuming messages
-    await mbh.setup_nats()
+    await mbh.set_up_nats()
 
     await asyncio.Event().wait()  # Keeps the event loop running
 

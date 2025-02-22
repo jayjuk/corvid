@@ -1,11 +1,11 @@
 # Set up logger first
-from utils import setup_logger
+from utils import set_up_logger
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv
 from os import path, makedirs
 
-logger = setup_logger("gameserver")
+logger = set_up_logger("gameserver")
 
 from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager

@@ -1,7 +1,7 @@
-from utils import setup_logger, exit
+from utils import set_up_logger, exit
 
 # Set up logger before all other imports
-logger = setup_logger()
+logger = set_up_logger()
 
 from typing import Dict, Optional, Tuple, Any, List
 from aimanager import AIManager

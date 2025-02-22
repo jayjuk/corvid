@@ -1,5 +1,5 @@
 # Set up logger first
-from utils import setup_logger, exit, get_logs_folder
+from utils import set_up_logger, exit, get_logs_folder
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv
@@ -8,7 +8,7 @@ from os import path, makedirs
 import asyncio
 
 # Set up logger before importing other own modules
-logger = setup_logger("Game Server")
+logger = set_up_logger("Game Server")
 
 from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager
@@ -49,7 +49,7 @@ async def main() -> None:
 
     # Player setup
     async def set_player_name(player_info: Dict[str, str]) -> None:
-        player_id: str = player_info["name"]
+        player_id: str = player_info["player_id"]
         logger.info(
             f"Client requesting player setup: {player_id}, {player_info.get('name')}, {player_info.get('role')}"
         )
@@ -68,7 +68,7 @@ async def main() -> None:
             create_player_transcript(player_info.get("name"))
 
     # User action
-    async def user_action(data: Dict[str, str]):
+    async def player_action(data: Dict[str, str]):
         player_id: str = data["player_id"]
         player_input: str = data["player_input"]
 
@@ -174,6 +174,7 @@ async def main() -> None:
             "room_update": {"mode": "publish"},
             "game_update": {"mode": "publish"},
             "game_data_update": {"mode": "publish"},
+            "logout": {"mode": "publish"},
             # Image creation
             "image_creation_request": {"mode": "publish"},
             "image_creation_response": {
@@ -191,7 +192,7 @@ async def main() -> None:
             },
             "user_disconnect": {"mode": "subscribe", "callback": user_disconnect},
             "set_player_name": {"mode": "subscribe", "callback": set_player_name},
-            "user_action": {"mode": "subscribe", "callback": user_action},
+            "player_action": {"mode": "subscribe", "callback": player_action},
         },
     )
     logger.info("Message broker set up")
@@ -216,7 +217,7 @@ async def main() -> None:
     player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
 
     # Start consuming messages
-    await mbh.setup_nats()
+    await mbh.set_up_nats()
 
     await asyncio.Event().wait()  # Keeps the event loop running
 

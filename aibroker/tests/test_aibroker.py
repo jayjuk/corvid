@@ -115,7 +115,7 @@ class TestAIBroker(unittest.TestCase):
         # Check that the event log is empty
         self.assertEqual(len(self.ai_broker.event_log), 0)
         # Check the mock emit was called with the expected event
-        mock_emit.assert_called_once_with("user_action", test_ai_output)
+        mock_emit.assert_called_once_with("player_action", test_ai_output)
 
 
 if __name__ == "__main__":

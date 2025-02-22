@@ -1,5 +1,5 @@
 from typing import Optional, Dict, List, Any
-from utils import setup_logger, exit
+from utils import set_up_logger, exit
 import os
 import time
 from entity import Entity
@@ -7,7 +7,7 @@ from typing import List, Optional
 from gameitem import GameItem
 
 # Set up logger
-logger = setup_logger()
+logger = set_up_logger()
 
 
 # Player class

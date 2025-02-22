@@ -1,11 +1,11 @@
 from typing import Dict
 from os import environ
 import asyncio
-from utils import get_critical_env_variable, setup_logger, exit
+from utils import get_critical_env_variable, set_up_logger, exit
 
 # Set up logger here BEFORE importing AI manager
 # (registers signal handler too hence sio passed in)
-logger = setup_logger("AI Requester")
+logger = set_up_logger("AI Requester")
 
 from aimanager import AIManager
 from messagebroker_helper import MessageBrokerHelper
@@ -90,7 +90,7 @@ async def main() -> None:
     )
 
     # Start consuming messages
-    await mbh.setup_nats()
+    await mbh.set_up_nats()
 
     await asyncio.Event().wait()  # Keeps the event loop running
 
