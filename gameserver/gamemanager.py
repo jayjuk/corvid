@@ -30,12 +30,14 @@ class GameManager:
         world_name: str = "jaysgame",
         model_name: Optional[str] = None,
         landscape: Optional[str] = None,
+        animals_active: bool = True,
     ) -> None:
 
         # Static variables
         self.max_inactive_time: int = 300  # 5 minutes
         self.background_loop_active: bool = False
         self.game_loop_time_secs: int = 30  # Animals etc move on this cycle
+        self.animals_active: bool = animals_active
 
         # Set up game state
         self.mbh: object = mbh
@@ -92,10 +94,10 @@ class GameManager:
                 message: str = (
                     f"The Button has been pressed!!! Congratulations to {player.get_name()}!!! The game will restart in 10 seconds..."
                 )
-                self.tell_everyone(message)
+                await self.tell_everyone(message)
                 for i in range(9, 0, -1):
                     await asyncio.sleep(1)
-                    self.tell_everyone(f"{i}...")
+                    await self.tell_everyone(f"{i}...")
                 await asyncio.sleep(1)
                 self.create_restart_file()
                 await self.mbh.publish("shutdown", message)
@@ -190,19 +192,20 @@ class GameManager:
     ) -> str:
         verb: str = "shouts" if shout else "says"
         # Remove 'to' and player name
-        if rest_of_response.startswith("to "):
+        if rest_of_response.startswith("to ") or rest_of_response.startswith("only "):
             return "You can't currently speak to just one person in the room. To converse, just use 'say' followed by what you want to say, everyone in the room will hear you."
 
         logger.info(f"User {player.name} {verb}: {rest_of_response}")
+        mutter_response: str = f"You mutter to yourself, '{rest_of_response}'."
         player_response: str
         if self.get_player_count() == 1:
-            player_response = "You are the only player in the game currently!"
+            player_response = mutter_response
         else:
             told_count: int = await self.tell_others(
                 player.player_id, f'{player.name} {verb}, "{rest_of_response}"', shout
             )
             if not told_count:
-                player_response = "There is no one else here to hear you! You can shout to communicate with people in other locations."
+                player_response = mutter_response
             else:
                 player_response = f"You {verb[:-1]}, '{rest_of_response}'."
         return player_response
@@ -238,7 +241,7 @@ class GameManager:
         if rest_of_response:
             message = message[:-1] + f", saying '{rest_of_response}'."
         logger.info(message)
-        self.tell_everyone(message)
+        await self.tell_everyone(message)
         # TODO #68 Web client should do something when the back end is down, can we terminate the client too?
         # TODO #69 Make shutdown command restart process not shut down
         await self.mbh.publish("shutdown", message)
@@ -792,7 +795,7 @@ class GameManager:
             f"\nThe player issues this command: {action}"
             + "\nRespond with a JSON object as follows:"
             + "\nIf this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with feedback to the player in string property 'success_response' and any combination (or none) of the following:"
-            + "\n* Something the player says in string property 'player_utterance'."
+            + "\n* Something the player says (only if appropriate) in string property 'player_utterance'."
             + "\n* The updated description of the current location in string property 'updated_location'."
             + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
             + "\n* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values."
@@ -844,9 +847,8 @@ class GameManager:
             if response_json.get("player_utterance"):
                 if return_text:
                     return_text += " "
-                return_text += (
-                    f"You say '{response_json['player_utterance']}'. "
-                    + await self.do_say(player, response_json["player_utterance"])
+                return_text += await self.do_say(
+                    player, response_json["player_utterance"]
                 )
             if response_json.get("updated_location"):
                 self.world.update_room_description(
@@ -1009,7 +1011,7 @@ class GameManager:
 
     def list_players(self, player_id: str) -> str:
         if self.get_player_count() == 1:
-            return "You are the only player in the game currently."
+            return "You are currently the only player in the game."
         player_list = "Other players in the game: "
         for other_player_id, player_name in self.player_id_to_name_map.items():
             if other_player_id != player_id:
@@ -1252,15 +1254,15 @@ class GameManager:
             )
 
     # Process image creation response from AI image generator
-    def process_image_creation_response(
+    async def process_image_creation_response(
         self, room_name: str, image_filename: str, success: str
     ) -> None:
         logger.info(f"Image creation response for {room_name}: {success}")
         if success:
             self.world.update_room_image(room_name, image_filename)
-            self.tell_everyone(f"Room image for {room_name} has been created.")
+            await self.tell_everyone(f"Room image for {room_name} has been created.")
         else:
-            self.tell_everyone(
+            await self.tell_everyone(
                 f"Room image creation for {room_name} failed: {image_filename}"
             )
 
@@ -1290,32 +1292,31 @@ class GameManager:
             await asyncio.sleep(self.game_loop_time_secs)
 
             # Time out players who do nothing for too long.
-            self.check_players_activity()
-
-            # Broadcast player count
-            # So that AI players can pause when there are no human players, saving money
-            await self.emit_game_data_update()
+            await self.check_players_activity()
 
             # Move animals around
-            direction: str
-            for animal in self.get_entities("animal"):
-                direction = animal.maybe_pick_direction_to_move()
-                if direction:
-                    logger.info(f"Moving {animal.name} {direction}")
-                    await self.move_entity(animal, direction)
-                else:
-                    gesture_description: str = animal.maybe_gesture()
-                    if gesture_description:
-                        logger.info(f"{animal.name} will gesture {gesture_description}")
-                        # Check for other players who will witness the gesture
-                        for other_entity in self.get_other_entities(
-                            None, players_only=True
-                        ):
-                            if (
-                                other_entity.get_current_location()
-                                == animal.get_current_location()
+            if self.animals_active:
+                direction: str
+                for animal in self.get_entities("animal"):
+                    direction = animal.maybe_pick_direction_to_move()
+                    if direction:
+                        logger.info(f"Moving {animal.name} {direction}")
+                        await self.move_entity(animal, direction)
+                    else:
+                        gesture_description: str = animal.maybe_gesture()
+                        if gesture_description:
+                            logger.info(
+                                f"{animal.name} will gesture {gesture_description}"
+                            )
+                            # Check for other players who will witness the gesture
+                            for other_entity in self.get_other_entities(
+                                None, players_only=True
                             ):
-                                await self.tell_player(
-                                    other_entity,
-                                    gesture_description,
-                                )
+                                if (
+                                    other_entity.get_current_location()
+                                    == animal.get_current_location()
+                                ):
+                                    await self.tell_player(
+                                        other_entity,
+                                        gesture_description,
+                                    )

@@ -126,9 +126,9 @@ async def main() -> None:
             player_id, "You have been logged out as your client disconnected."
         )
 
-    def image_creation_response(data: Dict) -> None:
+    async def image_creation_response(data: Dict) -> None:
         logger.info(f"Received image creation response: {data}")
-        game_manager.process_image_creation_response(
+        await game_manager.process_image_creation_response(
             data["room_name"], data["image_filename"], data["success"]
         )
 
@@ -213,6 +213,7 @@ async def main() -> None:
         world_name=world_name,
         model_name=environ.get("MODEL_NAME"),
         landscape=environ.get("LANDSCAPE_DESCRIPTION"),
+        animals_active=environ.get("ANIMALS_ACTIVE", "True").lower() == "true",
     )
     player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
 

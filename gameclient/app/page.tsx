@@ -57,117 +57,121 @@ export default function HomePage() {
   const [commandIndex, setCommandIndex] = useState<number>(0);
 
   useEffect(() => {
-    const connectToNats = async () => {
-      if (natsConnection.current || !gameServerHostName) return; // Prevent multiple connections
+  const connectToNats = async () => {
+    if (natsConnection.current || !gameServerHostName) return; // Prevent multiple connections
 
-      try {
-        console.log(`Connecting to NATS at ws://${gameServerHostName}`);
-        const nc = await connect({ servers: `ws://${gameServerHostName}` });
-        natsConnection.current = nc;
+    try {
+      console.log(`Connecting to NATS at ws://${gameServerHostName}`);
+      const nc = await connect({ servers: `ws://${gameServerHostName}` });
+      natsConnection.current = nc;
 
-      } catch (error) {
-        console.error("Failed to connect to NATS:", error);
-      }
-    };
+    } catch (error) {
+      console.error("Failed to connect to NATS:", error);
+    }
+  };
 
-    connectToNats();
+  connectToNats();
 
-    return () => {
-      if (natsConnection.current) {
-        console.log("Closing NATS connection...");
-        natsConnection.current.close();
-        natsConnection.current = null;
-      }
-    };
-  }, [gameServerHostName]); // Only runs once when gameServerHostName is set
+  return () => {
+    if (natsConnection.current) {
+      console.log("Closing NATS connection...");
+      natsConnection.current.close();
+      natsConnection.current = null;
+    }
+  };
+}, [gameServerHostName]); // Only runs once when gameServerHostName is set
 
-  useEffect(() => {
-    if (!playerName || !natsConnection.current) return; // Wait until playerName is set
 
-    const nc = natsConnection.current;
-    const sc = StringCodec();
+useEffect(() => {
+  if (!playerName || !natsConnection.current) return; // Wait until playerName is set
+
+  // Set variable player ID which is lower case version of playerName
+  const playerID = playerName.toLowerCase();
+
+  const nc = natsConnection.current;
+  const sc = StringCodec();
 
     // Function to handle game updates
-    const handleGameUpdate = async (sub: any) => {
-      for await (const msg of sub) {
-        let message = sc.decode(msg.data).replace(/[{|}]/g, "");
-        setGameLog((prevLog) => {
-          const newLog = [...prevLog, message];
-          return newLog.slice(-10);
-        });
-      }
-    };
+  const handleGameUpdate = async (sub: any) => {
+    for await (const msg of sub) {
+      let message = sc.decode(msg.data).replace(/[{|}]/g, "");
+      setGameLog((prevLog) => {
+        const newLog = [...prevLog, message];
+        return newLog.slice(-10);
+      });
+    }
+  };
 
-    // Subscribe to game updates
-    handleGameUpdate(natsConnection.current.subscribe("game_update"));
+  // Subscribe to game updates
+  handleGameUpdate(natsConnection.current.subscribe("game_update"));
 
     // Subscribe to player-specific game updates
-    let instructionSub, roomSub, logoutSub, nameInvalidSub;
+  let instructionSub, roomSub, logoutSub, nameInvalidSub;
+  if (playerName) {
+    handleGameUpdate(natsConnection.current.subscribe(`game_update.${playerID}`));
 
-    if (playerName) {
-      // Player ID is lower case playerName
-      const playerID = playerName.toLowerCase();
+    // Subscribe to player-specific instructions
+    instructionSub = nc.subscribe(`instructions.${playerID}`);
+    (async () => {
+      for await (const msg of instructionSub) {
+        setGameLog((prev) => [...prev, sc.decode(msg.data)]);
+      }
+    })();
 
-      handleGameUpdate(natsConnection.current.subscribe(`game_update.${playerID}`));
+    // Subscribe to player-specific room updates
+    roomSub = nc.subscribe(`room_update.${playerID}`);
+    (async () => {
+      for await (const msg of roomSub) {
+        const message = JSON.parse(sc.decode(msg.data));
+        setRoomImageURL(message["image"]);
+        setRoomTitle(message["title"]);
+        setRoomDescription(message["description"].replace(/[{|}]/g, ""));
+        setRoomExits(message["exits"]);
+      }
+    })();
 
-      // Subscribe to player-specific instructions
-      instructionSub = nc.subscribe(`instructions.${playerID}`);
-      (async () => {
-        for await (const msg of instructionSub) {
-          setGameLog((prev) => [...prev, sc.decode(msg.data)]);
-        }
-      })();
+    // Subscribe to player-specific logout
+    logoutSub = nc.subscribe(`logout.${playerID}`);
+    (async () => {
+      for await (const msg of logoutSub) {
+        console.log('logout event');
+        alert(sc.decode(msg.data));
+        setNameSet(false);
+        // Unsubscribe from all subscriptions
+        instructionSub.unsubscribe();
+        roomSub.unsubscribe();
+        logoutSub.unsubscribe();
+      }
+    })();
 
-      // Subscribe to player-specific room updates
-      roomSub = nc.subscribe(`room_update.${playerID}`);
-      (async () => {
-        for await (const msg of roomSub) {
-          const message = JSON.parse(sc.decode(msg.data));
-          setRoomImageURL(message["image"]);
-          setRoomTitle(message["title"]);
-          setRoomDescription(message["description"].replace(/[{|}]/g, ""));
-          setRoomExits(message["exits"]);
-        }
-      })();
+    // Subscribe to player-specific name invalid
+    const nameInvalidSub = nc.subscribe(`name_invalid.${playerID}`);
+    (async () => {
+      console.log(`name invalid event name_invalid.${playerID}`);
+      for await (const msg of nameInvalidSub) {
+        console.log('name invalid event - inside for loop');
+        alert(sc.decode(msg.data));
+        setNameSet(false);
+        // Unsubscribe from all subscriptions
+        instructionSub.unsubscribe();
+        roomSub.unsubscribe();
+        logoutSub.unsubscribe();
+        nameInvalidSub.unsubscribe();
+      }
+    })();
 
-      // Subscribe to player-specific logout
-      logoutSub = nc.subscribe(`logout.${playerID}`);
-      (async () => {
-        for await (const msg of logoutSub) {
-          console.log('logout event');
-          alert(sc.decode(msg.data));
-          setNameSet(false);
-          // Unsubscribe from all subscriptions
-          instructionSub.unsubscribe();
-          roomSub.unsubscribe();
-          logoutSub.unsubscribe();
-        }
-      })();
+  }
 
-      // Subscribe to player-specific name invalidation
-      nameInvalidSub = nc.subscribe(`name_invalid.${playerID}`);
-      (async () => {
-        console.log(`name invalid event name_invalid.${playerID}`);
-        for await (const msg of nameInvalidSub) {
-          console.log('name invalid event - inside for loop');
-          alert(sc.decode(msg.data));
-          setNameSet(false);
-          // Unsubscribe from all subscriptions
-          instructionSub.unsubscribe();
-          roomSub.unsubscribe();
-          logoutSub.unsubscribe();
-          nameInvalidSub.unsubscribe();
-        }
-      })();
-    }
+  return () => {
+    instructionSub?.unsubscribe();
+    roomSub?.unsubscribe();
+    logoutSub?.unsubscribe();
+    nameInvalidSub?.unsubscribe();
 
-    return () => {
-      instructionSub?.unsubscribe();
-      roomSub?.unsubscribe();
-      logoutSub?.unsubscribe();
-      nameInvalidSub?.unsubscribe();
-    };
-  }, [playerName, nameSet]); // Only runs when playerName or nameSet changes
+  };
+}, [nameSet]); // Only runs when playerName is set/changes
+
+
 
   useEffect(() => {
     if (gameLogRef.current) {

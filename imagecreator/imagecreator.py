@@ -8,6 +8,8 @@ logger = set_up_logger("Image Creator")
 from messagebroker_helper import MessageBrokerHelper
 from aimanager import AIManager
 from azurestoragemanager import AzureStorageManager
+import random
+from PIL import Image
 
 
 # Class to manage the AI's interaction with the game server
@@ -119,43 +121,72 @@ class ImageCreator:
         logger.info(
             f"Creating image for room {room_name} with description {description}"
         )
-
-        # Convert the description into a more suitable prompt for image generation
-        if self.text_ai_manager:
+        image_filename: str = None
+        image_data: bytes = None
+        if environ.get("TEST_MODE"):
+            logger.info("TEST_MODE is enabled, generating a random image locally")
             try:
-                prompt = self.convert_description_to_prompt(
-                    world_name, description, landscape
+
+                # Generate a random image
+                width, height = 256, 256
+                image = Image.new(
+                    "RGB",
+                    (width, height),
+                    (
+                        random.randint(0, 255),
+                        random.randint(0, 255),
+                        random.randint(0, 255),
+                    ),
                 )
-                logger.info(f"Generated better prompt for image creation: {prompt}")
+                image_filename = f"{room_name}_test_image.png"
+                image_path = f"{image_filename}"
+                image.save(image_path)
+                logger.info(f"Random test image created: {image_path}")
+
+                with open(image_path, "rb") as image_file:
+                    image_data = image_file.read()
+
             except Exception as e:
-                logger.error(f"Error generating prompt ({e})")
+                logger.error(f"Error generating random test image ({e})")
                 return False, None
         else:
-            prompt = description + "\n Background context: " + landscape
-            logger.info("Using original description as prompt for image creation")
-
-        try:
-            image_data: bytes
-            image_filename, image_data = self.image_ai_manager.create_image(
-                room_name, prompt
-            )
-            logger.info(f"Image created: {image_filename}")
-            # Output length of image data in bytes
-            logger.info(f"Image data length: {len(image_data)} bytes")
-            if image_data and image_filename:
-                logger.info("Saving image to storage")
-                return (
-                    self.storage_manager.store_image(
-                        world_name, image_filename, image_data
-                    ),
-                    image_filename,
-                )
+            if self.text_ai_manager:
+                # Convert the description into a more suitable prompt for image generation
+                try:
+                    prompt = self.convert_description_to_prompt(
+                        world_name, description, landscape
+                    )
+                    logger.info(f"Generated better prompt for image creation: {prompt}")
+                except Exception as e:
+                    logger.error(f"Error generating prompt ({e})")
+                    return False, None
             else:
-                logger.error("Error creating/saving image - returned no data")
-                return (False, image_filename)
-        except Exception as e:
-            logger.error(f"Error creating/saving image ({e})")
-            return False, None
+                prompt = description + "\n Background context: " + landscape
+                logger.info("Using original description as prompt for image creation")
+
+            try:
+                image_data: bytes
+                image_filename, image_data = self.image_ai_manager.create_image(
+                    room_name, prompt
+                )
+                logger.info(f"AI Image created: {image_filename}")
+            except Exception as e:
+                logger.error(f"Error creating/saving image ({e})")
+                return False, None
+
+        # Output length of image data in bytes
+        logger.info(f"Image data length: {len(image_data)} bytes")
+        if image_data and image_filename:
+            logger.info("Saving image to storage")
+            return (
+                self.storage_manager.store_image(
+                    world_name, image_filename, image_data
+                ),
+                image_filename,
+            )
+        else:
+            logger.error("Error creating/saving image - returned no data")
+            return (False, image_filename)
 
 
 async def main() -> None:

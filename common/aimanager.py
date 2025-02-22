@@ -398,6 +398,11 @@ class AIManager:
         self.remote_requests[request_id]["player"] = player
         self.remote_requests[request_id]["player_context"] = player_context
 
+        from pprint import pprint
+
+        print("********* Remote request *********")
+        pprint(self.remote_requests[request_id])
+
         # Check if we have message helper set up
         if not self.mbh:
             exit(

@@ -210,18 +210,18 @@ class AIBroker:
 
         # Unsubscribe from the previous name
         if self.player_name:
-            await self.mbh.unsubscribe(f"game_update.{self.player_name}")
-            await self.mbh.unsubscribe(f"logout.{self.player_name}")
-            await self.mbh.unsubscribe(f"instructions.{self.player_name}")
-            await self.mbh.unsubscribe(f"room_update.{self.player_name}")
+            await self.mbh.unsubscribe(f"game_update.{self.player_id}")
+            await self.mbh.unsubscribe(f"logout.{self.player_id}")
+            await self.mbh.unsubscribe(f"instructions.{self.player_id}")
+            await self.mbh.unsubscribe(f"room_update.{self.player_id}")
         self.player_name = ai_name
         self.player_id = self.player_name.lower()
 
         # Subscribe to name-specific events
-        await self.mbh.subscribe(f"game_update.{self.player_name}", self.game_update)
-        await self.mbh.subscribe(f"logout.{self.player_name}", self.logout)
-        await self.mbh.subscribe(f"instructions.{self.player_name}", self.instructions)
-        await self.mbh.subscribe(f"room_update.{self.player_name}", self.room_update)
+        await self.mbh.subscribe(f"game_update.{self.player_id}", self.game_update)
+        await self.mbh.subscribe(f"logout.{self.player_id}", self.logout)
+        await self.mbh.subscribe(f"instructions.{self.player_id}", self.instructions)
+        await self.mbh.subscribe(f"room_update.{self.player_id}", self.room_update)
 
         await self.mbh.publish(
             "set_player_name",

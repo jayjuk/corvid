@@ -266,6 +266,7 @@ class PlayerInputProcessor:
             request_type="translation_request",
             prompt=prompt,
             system_message="You are a game command interpreter",
+            player_context=player_input,
         )
         return None, None, output
 
@@ -277,6 +278,8 @@ class PlayerInputProcessor:
         logger.info("AI translation: %s", ai_response)
         # If the AI translation is 'custom', prompt the player for a custom action
         if ai_response == "custom":
+            if not request_data["player_context"]:
+                exit(logger, "Custom action requested but no context provided!")
             ai_response += " " + request_data["player_context"]
         if ai_response:
             # Try to process the AI translation as a command, but only try this once
@@ -450,6 +453,8 @@ class PlayerInputProcessor:
                 None,
             )
         elif command == "custom":
+            if not rest_of_response:
+                exit(logger, "Custom action requested but no context provided!")
             return (
                 self.game_manager.do_custom_action,
                 (player, rest_of_response),
