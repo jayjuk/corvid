@@ -83,6 +83,7 @@ async def main() -> None:
 
     mbh = MessageBrokerHelper(
         environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        environ.get("GAMESERVER_PORT", 4222),
         {
             "ai_request": {"mode": "subscribe", "callback": catch_all},
             "ai_response": {"mode": "publish"},

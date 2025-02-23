@@ -84,6 +84,7 @@ async def main() -> None:
 
     mbh = MessageBrokerHelper(
         environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        environ.get("GAMESERVER_PORT", 4222),
         {
             "set_player_name": {"mode": "publish"},
             "player_action": {"mode": "publish"},

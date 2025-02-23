@@ -115,6 +115,7 @@ async def main() -> None:
 
     mbh = MessageBrokerHelper(
         os.environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        os.environ.get("GAMESERVER_PORT", 4222),
         {
             "summon_player_response": {"mode": "publish"},
             "summon_player_request": {

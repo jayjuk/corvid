@@ -167,6 +167,7 @@ async def main() -> None:
     logger.info("Setting up message broker")
     mbh = MessageBrokerHelper(
         environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        environ.get("GAMESERVER_PORT", 4222),
         {
             # Client messages
             "instructions": {"mode": "publish"},

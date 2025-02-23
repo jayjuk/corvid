@@ -145,13 +145,53 @@ resource "docker_container" "gameclient_container" {
   }
 }
 
+locals {
+  module_path_tmp = "/${replace(abspath(path.root), ":", "")}"
+  module_path     = replace(local.module_path_tmp, "////", "/")
+}
+resource "docker_container" "nats_container" {
+  image = "nats:latest"
+  name  = "nats"
+
+  # Default NATS client port
+  ports {
+    internal = 4222
+    external = 4222
+  }
+
+  # HTTP monitoring
+  ports {
+    internal = 8222
+    external = 8222
+  }
+
+  # WebSocket port
+  ports {
+    internal = 9222
+    external = 9222
+  }
+
+  volumes {
+    host_path      = "${local.module_path}/nats-server.conf"
+    container_path = "/etc/nats/nats-server.conf"
+  }
+
+  command = ["-c", "/etc/nats/nats-server.conf"]
+
+  restart = "always"
+
+  networks_advanced {
+    name = docker_network.jaysgame_network.name
+  }
+}
+
 resource "docker_container" "gameserver_container" {
   image = "${var.CONTAINER_REGISTRY_REPOSITORY}/gameserver"
   name  = "gameserver"
 
   env = [
     "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "GAMESERVER_PORT=3001",
+    "GAMESERVER_PORT=4222",
     "IMAGESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
     "IMAGESERVER_PORT=3002",
     "GAMESERVER_WORLD_NAME=${var.GAMESERVER_WORLD_NAME}",
@@ -169,8 +209,8 @@ resource "docker_container" "gameserver_container" {
   ]
 
   ports {
-    internal = 3001
-    external = 3001
+    internal = 4222
+    external = 4222
   }
 
   networks_advanced {
@@ -183,7 +223,7 @@ resource "docker_container" "gameserver_container" {
       "echo 'docker run -d \\",
       "--name gameserver \\",
       "-e GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
-      "-e GAMESERVER_PORT=3001 \\",
+      "-e GAMESERVER_PORT=4222 \\",
       "-e IMAGESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
       "-e IMAGESERVER_PORT=3002 \\",
       "-e GAMESERVER_WORLD_NAME=${var.GAMESERVER_WORLD_NAME} \\",
@@ -198,7 +238,7 @@ resource "docker_container" "gameserver_container" {
       "-e GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID} \\",
       "-e GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION} \\",
       "-e GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE} \\",
-      "-p 3001:3001 \\",
+      "-p 4222:4222 \\",
       "${var.CONTAINER_REGISTRY_REPOSITORY}/gameserver' >> ./start_gameserver.sh",
       "chmod +x ./start_gameserver.sh"
     ]
@@ -326,7 +366,7 @@ resource "docker_container" "aibroker_container" {
     "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
     "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
     "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "GAMESERVER_PORT=3001"
+    "GAMESERVER_PORT=4222"
   ]
 
   networks_advanced {
@@ -350,7 +390,7 @@ resource "docker_container" "aibroker_container" {
       "-e GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION} \\",
       "-e GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE} \\",
       "-e GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
-      "-e GAMESERVER_PORT=3001 \\",
+      "-e GAMESERVER_PORT=4222 \\",
       "${var.CONTAINER_REGISTRY_REPOSITORY}/aibroker' >> ./start_aibroker.sh",
       "chmod +x ./start_aibroker.sh"
     ]
@@ -369,3 +409,125 @@ resource "docker_container" "aibroker_container" {
     command = "echo Play the game at: https://${data.terraform_remote_state.droplet.outputs.droplet_ip}:3000"
   }
 }
+
+
+resource "docker_container" "playermanager_container" {
+  image = "${var.CONTAINER_REGISTRY_REPOSITORY}/playermanager"
+  name  = "playermanager"
+
+  env = [
+    "AI_COUNT=1",
+    "MODEL_NAME=${var.MODEL_NAME}",
+    "MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE}",
+    "OPENAI_API_KEY=${var.OPENAI_API_KEY}",
+    "STABILITY_KEY=${var.STABILITY_KEY}",
+    "ANTHROPIC_API_KEY=${var.ANTHROPIC_API_KEY}",
+    "GROQ_API_KEY=${var.GROQ_API_KEY}",
+    "GOOGLE_GEMINI_KEY=${var.GOOGLE_GEMINI_KEY}",
+    "GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID}",
+    "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
+    "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
+    "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "GAMESERVER_PORT=4222"
+  ]
+
+  networks_advanced {
+    name = docker_network.jaysgame_network.name
+  }
+
+  # Write a remote startup script to the container
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'docker run -d \\",
+      "--name playermanager \\",
+      "-e AI_COUNT=1 \\",
+      "-e MODEL_NAME=${var.MODEL_NAME} \\",
+      "-e MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE} \\",
+      "-e OPENAI_API_KEY=${var.OPENAI_API_KEY} \\",
+      "-e STABILITY_KEY=${var.STABILITY_KEY} \\",
+      "-e ANTHROPIC_API_KEY=${var.ANTHROPIC_API_KEY} \\",
+      "-e GROQ_API_KEY=${var.GROQ_API_KEY} \\",
+      "-e GOOGLE_GEMINI_KEY=${var.GOOGLE_GEMINI_KEY} \\",
+      "-e GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID} \\",
+      "-e GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION} \\",
+      "-e GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE} \\",
+      "-e GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
+      "-e GAMESERVER_PORT=4222 \\",
+      "${var.CONTAINER_REGISTRY_REPOSITORY}/playermanager' >> ./start_playermanager.sh",
+      "chmod +x ./start_playermanager.sh"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "root"                                                 # Use the appropriate user for your remote server
+      host        = data.terraform_remote_state.droplet.outputs.droplet_ip # IP of the remote machine
+      private_key = file(var.pvt_key)                                      # Path to your SSH private key
+      timeout     = "5m"
+    }
+  }
+
+  #Emit IP address of the container
+  provisioner "local-exec" {
+    command = "echo Play the game at: https://${data.terraform_remote_state.droplet.outputs.droplet_ip}:3000"
+  }
+}
+
+
+
+resource "docker_container" "airequester_container" {
+  image = "${var.CONTAINER_REGISTRY_REPOSITORY}/airequester"
+  name  = "airequester"
+
+  env = [
+    "MODEL_NAME=${var.MODEL_NAME}",
+    "MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE}",
+    "OPENAI_API_KEY=${var.OPENAI_API_KEY}",
+    "ANTHROPIC_API_KEY=${var.ANTHROPIC_API_KEY}",
+    "GROQ_API_KEY=${var.GROQ_API_KEY}",
+    "GOOGLE_GEMINI_KEY=${var.GOOGLE_GEMINI_KEY}",
+    "GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID}",
+    "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
+    "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
+    "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "GAMESERVER_PORT=4222"
+  ]
+
+  networks_advanced {
+    name = docker_network.jaysgame_network.name
+  }
+
+  # Write a remote startup script to the container
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'docker run -d \\",
+      "--name airequester \\",
+      "-e MODEL_NAME=${var.MODEL_NAME} \\",
+      "-e MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE} \\",
+      "-e OPENAI_API_KEY=${var.OPENAI_API_KEY} \\",
+      "-e ANTHROPIC_API_KEY=${var.ANTHROPIC_API_KEY} \\",
+      "-e GROQ_API_KEY=${var.GROQ_API_KEY} \\",
+      "-e GOOGLE_GEMINI_KEY=${var.GOOGLE_GEMINI_KEY} \\",
+      "-e GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID} \\",
+      "-e GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION} \\",
+      "-e GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE} \\",
+      "-e GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
+      "-e GAMESERVER_PORT=4222 \\",
+      "${var.CONTAINER_REGISTRY_REPOSITORY}/airequester' >> ./start_airequester.sh",
+      "chmod +x ./start_airequester.sh"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "root"                                                 # Use the appropriate user for your remote server
+      host        = data.terraform_remote_state.droplet.outputs.droplet_ip # IP of the remote machine
+      private_key = file(var.pvt_key)                                      # Path to your SSH private key
+      timeout     = "5m"
+    }
+  }
+
+  #Emit IP address of the container
+  provisioner "local-exec" {
+    command = "echo Play the game at: https://${data.terraform_remote_state.droplet.outputs.droplet_ip}:3000"
+  }
+}
+

@@ -4,4 +4,4 @@ google-cloud-aiplatform
 anthropic
 groq
 stability_sdk
-pika
+nats-py

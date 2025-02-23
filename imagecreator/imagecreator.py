@@ -199,6 +199,7 @@ async def main() -> None:
 
     mbh = MessageBrokerHelper(
         os.environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        os.environ.get("GAMESERVER_PORT", 4222),
         {
             "image_creation_response": {"mode": "publish"},
             "image_creation_request": {

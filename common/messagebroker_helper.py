@@ -10,8 +10,10 @@ logger = set_up_logger("Message Broker Helper")
 class MessageBrokerHelper:
     """Simplify exchanging messages with other back-end services."""
 
-    def __init__(self, host: str, queue_map: dict):
+    def __init__(self, host: str, port: int, queue_map: dict):
+        """Initialise the MessageBrokerHelper."""
         self.host = host or "localhost"
+        self.port = port or 4222
         self.queue_map = queue_map
         self.callback_functions = {}
 
@@ -36,7 +38,7 @@ class MessageBrokerHelper:
 
     async def set_up_nats(self):
         try:
-            await self.nc.connect(servers=[f"nats://{self.host}:4222"])
+            await self.nc.connect(servers=[f"nats://{self.host}:self.port"])
             logger.info(f"Connected to NATS server at {self.host}")
 
             # Publish startup messages

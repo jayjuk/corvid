@@ -6,6 +6,7 @@ if __name__ == "__main__":
 
     mbh = MessageBrokerHelper(
         environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        environ.get("GAMESERVER_PORT", 4222),
         {
             "shutdown": {"mode": "publish"},
         },

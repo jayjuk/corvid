@@ -1,5 +1,2 @@
-python-socketio
-socketio-client
-eventlet
 azure-data-tables
 azure-storage-blob
