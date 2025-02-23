@@ -27,12 +27,12 @@ class MessageBrokerHelper:
                     self.startup_messages.append(
                         (queue_name, queue_properties.get("startup_message", ""))
                     )
-            elif queue_properties.get("mode", "") in ("subscribe", "both"):
+            if queue_properties.get("mode", "") in ("subscribe", "both"):
                 self.am_consumer = True
+                # Set up callback functions, do not actually subscribe yet
                 self.callback_functions[queue_name] = queue_properties.get(
                     "callback", None
                 )
-                logger.info(f"Subscribing to queue {queue_name}")
 
     async def set_up_nats(self):
         try:
@@ -76,40 +76,40 @@ class MessageBrokerHelper:
 
     async def global_callback(self, msg):
         """Handles received messages."""
-        logger.info(f"Received message: {msg.subject}")
-        queue_name = msg.subject
-        callback = self.callback_functions.get(queue_name, None)
-        # Check callback is a function
-        if not callable(callback):
-            exit(logger, f"Callback function for queue {queue_name} is not callable")
-
         body = msg.data.decode()
-        if not body:
-            logger.warning(f"Received empty message from queue {queue_name}")
-        print("Body: ", body)
-        logger.info(f"Received message: {body}")
+        logger.info(f"Global callback invoked for message with subject: {msg.subject}")
+        logger.info(f"Message body: <{body}>")
+        callback = self.callback_functions.get(msg.subject, None)
+        # Check callback is a function
+        if not callback:
+            exit(logger, f"No callback function for queue {msg.subject}")
+        elif not callable(callback):
+            exit(logger, f"Callback function for queue {msg.subject} is not callable")
 
-        if callback:
-            # Convert to dictionary if possible
-            try:
-                body_dict = json.loads(body)
-                if isinstance(body_dict, dict):
-                    await callback(body_dict)
-                else:
-                    logger.warning(
-                        f"Message not a dictionary: {body}, passing to callback function as string"
-                    )
-                    await callback(body)
-            except json.JSONDecodeError:
-                logger.info(
-                    f"JSONDecodeError, passing '{body}' to callback function as string"
+        # Display callback function name
+        logger.info(f"Invoking callback function: {callback.__name__}...")
+
+        # Convert body to dictionary if possible
+        try:
+            body_dict = json.loads(body)
+            if isinstance(body_dict, dict):
+                await callback(body_dict)
+            else:
+                logger.warning(
+                    f"Message not a dictionary: {body}, passing to callback function as string"
                 )
                 await callback(body)
-        else:
-            logger.warning(f"No callback function for queue {queue_name}")
+        except json.JSONDecodeError:
+            if ("{" in body and "}" in body) or ("[" in body and "]" in body):
+                logger.warning(f"JSONDecodeError: {body}")
+            # If message is not JSON, this is normal (simple message), pass it to the callback function as a string
+            await callback(body)
 
     async def publish(self, queue: str, message: any, player_id: str = None):
         """Publish a message to a queue."""
+        if not message:
+            exit(logger, "Message is empty")
+
         if queue not in self.publisher_queues:
             logger.error(f"Queue {queue} not registered as a publisher")
             return

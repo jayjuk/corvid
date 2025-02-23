@@ -67,12 +67,11 @@ class AIManager:
         # Flag to prevent image generation
         self.do_not_generate_images: bool = environ.get("DO_NOT_GENERATE_IMAGES", False)
 
-        # Set up openAI connection
-        # We are going to use the chat interface to get AI To play our text adventure game
-        self.model_api_connect()
-
         # Set system message
-        self.system_message: str = system_message
+        self.system_message: str = system_message or ""
+
+        # Set up LLM API connection
+        self.model_api_connect()
 
         # Model-specific static
         self.content_word: str = "content"
@@ -155,11 +154,14 @@ class AIManager:
             self.model_client = anthropic_client.get_model_client()
 
         elif self.get_model_api() == "Gemini":
-            self.model_client = gemini_client.get_model_client()
+            self.model_client = gemini_client.get_model_client(
+                model_name=self.model_name,
+                system_instruction=self.system_message,
+            )
 
         elif self.get_model_api() == "StabilityAI":
             self.model_client = stability_client.get_model_client(
-                model_name=self.model_name
+                model_name=self.model_name,
             )
         elif self.get_model_api() == "Groq":
             self.model_client = groq_client.get_model_client()

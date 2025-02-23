@@ -132,7 +132,7 @@ async def main() -> None:
             data["room_name"], data["image_filename"], data["success"]
         )
 
-    def summon_player_response(data: Dict) -> None:
+    async def summon_player_response(data: Dict) -> None:
         logger.info(f"Received summon player response: {data}")
         game_manager.process_summon_player_response(data["request_id"])
 

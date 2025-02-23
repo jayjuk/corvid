@@ -1,6 +1,6 @@
 import asyncio
 from typing import Dict, Optional, Tuple
-from os import environ
+import os
 from utils import get_critical_env_variable, set_up_logger, exit
 
 # Set up logger before importing other modules
@@ -121,9 +121,9 @@ class ImageCreator:
         logger.info(
             f"Creating image for room {room_name} with description {description}"
         )
-        image_filename: str = None
-        image_data: bytes = None
-        if environ.get("TEST_MODE"):
+        image_filename: Optional[str] = None
+        image_data: Optional[bytes] = None
+        if os.environ.get("TEST_MODE", "False").upper() == "TRUE":
             logger.info("TEST_MODE is enabled, generating a random image locally")
             try:
 
@@ -138,6 +138,7 @@ class ImageCreator:
                         random.randint(0, 255),
                     ),
                 )
+                # Save the image to a file temporarily
                 image_filename = f"{room_name}_test_image.png"
                 image_path = f"{image_filename}"
                 image.save(image_path)
@@ -145,6 +146,8 @@ class ImageCreator:
 
                 with open(image_path, "rb") as image_file:
                     image_data = image_file.read()
+                # Remove file
+                os.remove(image_path)
 
             except Exception as e:
                 logger.error(f"Error generating random test image ({e})")
@@ -195,7 +198,7 @@ async def main() -> None:
         await image_creator.process_image_request(data)
 
     mbh = MessageBrokerHelper(
-        environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        os.environ.get("GAMESERVER_HOSTNAME", "localhost"),
         {
             "image_creation_response": {"mode": "publish"},
             "image_creation_request": {
@@ -210,8 +213,8 @@ async def main() -> None:
         mbh=mbh,
         image_model_name=get_critical_env_variable("IMAGE_MODEL_NAME"),
         text_model_name=get_critical_env_variable("MODEL_NAME"),
-        system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
-        landscape=environ.get("LANDSCAPE_DESCRIPTION"),
+        system_message=os.environ.get("MODEL_SYSTEM_MESSAGE"),
+        landscape=os.environ.get("LANDSCAPE_DESCRIPTION"),
     )
 
     # Start consuming messages

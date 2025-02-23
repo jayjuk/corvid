@@ -1,4 +1,3 @@
-import eventlet
 from typing import Dict
 import os
 from utils import (
@@ -58,11 +57,11 @@ class PlayerManager:
             "MODEL_NAME": player_dict.get(
                 "model_name", get_critical_env_variable("MODEL_NAME")
             ),
-            "AI_NAME": player_dict.get("player_name", ""),
+            "AI_NAME": "",  # Let the AI broker assign a name
             "AI_MODE": "player",
             "AI_COUNT": "1",
-            "MODEL_SYSTEM_MESSAGE": player_dict.get("team_briefing", "")
-            + " "
+            "MODEL_SYSTEM_MESSAGE": os.environ.get("MODEL_SYSTEM_MESSAGE", "")
+            + "\n STAY IN CHARACTER. Player Character: "
             + player_dict.get("player_briefing", ""),
         }
 
@@ -90,7 +89,7 @@ class PlayerManager:
         # Run the player process in a background thread
 
         # TODO #100 Improve solution for managing AI processes
-        eventlet.spawn(run_player_process, env_vars)
+        asyncio.create_task(asyncio.to_thread(run_player_process, env_vars))
         logger.info(f"Player created: {env_vars}")
 
 
@@ -106,9 +105,10 @@ async def main() -> None:
                     f"Assuming request is just a player briefing: {data['request_data']}"
                 )
                 data["request_data"] = {"player_briefing": data["request_data"]}
-            player_manager.create_player(data["request_data"])
+            new_player_name: str = player_manager.create_player(data["request_data"])
             await mbh.publish(
-                "summon_player_response", {"request_id": data["request_id"]}
+                "summon_player_response",
+                {"request_id": data["request_id"], "player_name": new_player_name},
             )
         else:
             exit(logger, f"Invalid request data: {data}")

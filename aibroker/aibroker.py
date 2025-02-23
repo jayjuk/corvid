@@ -27,7 +27,7 @@ class AIBroker:
         self.time_to_die: bool = False
         self.game_instructions: str = ""
         self.event_log: List[str] = []
-        self.max_history: int = 50
+        self.max_history: int = int(environ.get("AIBROKER_MAX_HISTORY", 100))
         self.max_wait: int = 5  # secs
         self.last_time: float = time.time()
         self.active: bool = True
@@ -86,7 +86,7 @@ class AIBroker:
             logger.info(f"Received game update event: {data}")
             self.log_event(data)
         else:
-            exit(logger, "Received empty game update event")
+            self.exit(logger, "Received empty game update event")
 
     # Instructions event handler
     async def instructions(self, data: Dict) -> None:
@@ -97,12 +97,12 @@ class AIBroker:
     async def shutdown(self, data: Dict) -> None:
         logger.info(f"Shutdown event received: {data}. Exiting immediately.")
         self.time_to_die = True
-        exit(logger, "AI Broker shutting down.")
+        self.exit(logger, "AI Broker shutting down.")
 
     # This might happen if the AI quits!
     async def logout(self, data: Dict) -> None:
         logger.info(f"Logout event received: {data} did AI quit?")
-        exit(logger, "AI Broker logout received.")
+        self.exit(logger, "AI Broker logout received.")
 
     # Room update event handler
     async def room_update(self, data: Dict) -> None:
@@ -136,6 +136,8 @@ class AIBroker:
         while True:
             # Exit own thread when time comes
             if self.time_to_die:
+                # Publish logout message
+                await self.mbh.publish("logout", {"player_id": self.player_id})
                 return
 
             # Check if we need to wait before polling the event log
@@ -181,32 +183,42 @@ class AIBroker:
         return ai_instructions
 
     # Get AI name from the LLM using the AI manager
-    async def set_ai_name(self, feedback=None):
+    async def set_ai_name(self, feedback=None) -> None:
 
         # If AI_NAME is set in the environment, use that
-        if environ.get("AI_NAME"):
-            self.player_name = environ.get("AI_NAME")
-            return self.player_name
+        ai_name = environ.get("AI_NAME", "")
+        if " " in ai_name:
+            self.exit(logger, "AI_NAME must not contain spaces. Exiting.")
+        if ai_name:
+            logger.info(f"AI_NAME is set to {ai_name}.")
+        else:
+            logger.info("AI_NAME is not set, letting model choose a name.")
 
-        mode_name_hints = {
-            "builder": "You are a creator of worlds! You can add new locations in the game. "
-        }
-        request = (
-            mode_name_hints.get(self.mode, "")
-            + "What do you want your name to be in this game? Please respond with a single one-word name only, and try to be random."
-        )
-        # If any feedback from previous attempt, include it
-        if feedback:
-            request += f"\nNOTE: {feedback}"
+            mode_name_hints = {
+                "builder": "You are a creator of worlds! You can add new locations in the game. "
+            }
+            request = (
+                mode_name_hints.get(self.mode, "")
+                + "What do you want your name to be in this game? Please respond with a single one-word name only using only alphabetical characters (letters), and try to be random."
+            )
+            # If any feedback from previous attempt, include it
+            if feedback:
+                request += f"\nNOTE: {feedback}"
 
-        ai_name = None
-        while not ai_name or " " in ai_name:
-            # Keep trying til they get the name right
-            ai_name = self.ai_manager.submit_request(request, history=False).strip(".")
-            if ai_name:
-                logger.info(f"AI chose the name {ai_name}.")
-            else:
-                await asyncio.sleep(3)
+            ai_name = None
+            while not ai_name or not ai_name.isalpha():
+                # Keep trying til they get the name right
+                ai_name = (
+                    self.ai_manager.submit_request(request, history=False)
+                    .strip()
+                    .strip(".")
+                    .strip("!")
+                    .strip("?")
+                )
+                if ai_name:
+                    logger.info(f"AI chose the name {ai_name}.")
+                else:
+                    await asyncio.sleep(3)
 
         # Unsubscribe from the previous name
         if self.player_name:
@@ -231,8 +243,6 @@ class AIBroker:
                 "player_id": self.player_id,
             },
         )
-
-        return
 
     # Log the game events for the AI to process
     def log_event(self, event_text: str) -> None:
@@ -291,9 +301,15 @@ class AIBroker:
                 )
                 # If response was to exit, exit here (after sending the exit message to the game server)
                 if response == "exit":
-                    exit(logger, "AI has exited the game.")
+                    self.exit(logger, "AI has exited the game.")
             else:
-                exit(logger, "AI returned empty response")
+                self.exit(logger, "AI returned empty response")
+
+    # Log out and exit
+    def exit(self, logger, error_message: str) -> None:
+        logger.critical(error_message)
+        # This will cause the main loop to exit cleanly
+        self.time_to_die = True
 
     # Log an error message
     def log_error(self, error_message: str) -> None:
@@ -303,7 +319,7 @@ class AIBroker:
             self.error_count[error_message] = 1
         logger.error(f"Error: {error_message}")
         if self.error_count[error_message] > self.max_error_count:
-            exit(logger, f"Repeated error: {error_message}")
+            self.exit(logger, f"Repeated error: {error_message}")
 
 
 # Main function to start the AI Broker
@@ -318,7 +334,7 @@ async def main() -> None:
     # Check AI_MODE is set to a valid value
     valid_ai_modes = ["player", "builder"]
     if ai_mode not in valid_ai_modes:
-        exit(
+        self.exit(
             logger,
             f"ERROR: AI_MODE is set to {ai_mode} but must be one of: {valid_ai_modes}. Exiting.",
         )
@@ -331,7 +347,7 @@ async def main() -> None:
     else:
         # AI_COUNT is set, so start up the AI
         if ai_count != "1":
-            exit(
+            self.exit(
                 logger,
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting.",
             )

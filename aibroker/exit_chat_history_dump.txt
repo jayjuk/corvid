@@ -1,0 +1,167 @@
+role: user
+parts: You start in the alien landing zone.  Available exits: south: Entrance To The Alien Planet. Available directions in which you can build: north, east, west. There is an Ancient Artifact here. There is an Ancient Map here. Caesar the player is here.
+Nova has joined the game, starting in the Alien Landing Zone; there are now 3 players.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: Look
+role: user
+parts: You look again at the alien landing zone:  Available exits: south: Entrance To The Alien Planet. Available directions in which you can build: north, east, west. There is an Ancient Artifact here. There is an Ancient Map here.
+ Available exits: south: Entrance To The Alien Planet.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: south
+role: user
+parts: You head south to the entrance to the alien planet.  Available exits: south: Space Station; east: Jungle; north: Alien Landing Zone. Available directions in which you can build: west. There is an Ancient Scrolls here. There is an Ancient Tablet here. There is a Forgotten Artifacts here. There is a Hidden Chamber Entrance here. There is an Inscription here. There is a Shimmering Crystal here.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look
+role: user
+parts: You look again at the entrance to the alien planet:  Available exits: south: Space Station; east: Jungle; north: Alien Landing Zone. Available directions in which you can build: west. There is an Ancient Scrolls here. There is an Ancient Tablet here. There is a Forgotten Artifacts here. There is a Hidden Chamber Entrance here. There is an Inscription here. There is a Shimmering Crystal here.
+ Available exits: south: Space Station; east: Jungle; north: Alien Landing Zone.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look inscription
+role: user
+parts: You look at the Inscription: A message etched into the stone wall, speaking of forgotten knowledge: 'Seek the light within the darkness, for it shall guide you to the truths of our existence.'
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look ancient tablet
+
+
+role: user
+parts: You look at the Ancient Tablet: The Ancient Tablet now radiates even more energy, its carvings revealing additional hidden pathways and significant artifacts within the newly discovered library. Its presence feels more powerful, as if it has awakened to the secrets around it.
+Nova has built to the north and made a new location, Forest Clearing.
+Room image for Forest Clearing has been created.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: south
+role: user
+parts: You head south to the space station.  Available exits: north: Entrance To The Alien Planet. Available directions in which you can build: south, east, west. There is an Ancient Knowledge here. There is an Emerald Tunnel here. There is an Exotic Flowers here. There is a Glowing Orb here. There is a Strange Artifact here. There is a The Thing here. There is an Underground Chamber here. There is a Visions Of The Past here.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look ancient knowledge
+
+
+role: user
+parts: You look at the Ancient Knowledge: A shimmering essence that Brutus now possesses, representing the wisdom and secrets of the ancient civilization. It feels like a part of him, guiding his thoughts and actions with the weight of their history.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look emerald tunnel
+
+
+
+
+role: user
+parts: You look at the Emerald Tunnel: The dense foliage above creates a mesmerizing tunnel that glows faintly, reflecting the light of the luminescent plants from the entrance.
+Nova has built to the east and made a new location, A Small Pond With Crystal Clear Water, Surrounded By Reeds And Buzzing With Insects..
+Room image for A Small Pond With Crystal Clear Water, Surrounded By Reeds And Buzzing With Insects. has been created.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look the thing
+role: user
+parts: You look at the The Thing: The Thing glows more intensely, its colors shifting in sync with Brutus and Sparky's excitement. It seems to be guiding them, resonating with the energy of the ancient structures ahead.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: south
+role: user
+parts: You can't go south. Available exits: north: Entrance To The Alien Planet.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: n
+role: user
+parts: You head north to the entrance to the alien planet.  Available exits: south: Space Station; east: Jungle; north: Alien Landing Zone. Available directions in which you can build: west. There is an Ancient Scrolls here. There is an Ancient Tablet here. There is a Forgotten Artifacts here. There is a Hidden Chamber Entrance here. There is an Inscription here. There is a Shimmering Crystal here.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look inscription
+
+
+role: user
+parts: You look at the Inscription: A message etched into the stone wall, speaking of forgotten knowledge: 'Seek the light within the darkness, for it shall guide you to the truths of our existence.'
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look hidden chamber entrance
+
+
+role: user
+parts: You look at the Hidden Chamber Entrance: A dark, inviting opening in the ground that leads to an underground chamber. The air that flows from it carries a coolness, contrasting the heat above, and hints at the treasures and knowledge that lie within.
+Nova has built to the west and made a new location, Dense Forest - Path Blocked By Thorny Bushes.
+Room image for Dense Forest - Path Blocked By Thorny Bushes has been created.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look the thing
+
+
+role: user
+parts: There is no 'the thing' here. You can look around (just say look) or look at a specific item.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look scroll
+
+
+role: user
+parts: You look at the Ancient Scrolls: These delicate scrolls, inscribed with the knowledge of the ancients, lay scattered throughout the library. Each scroll contains stories of past events, rituals, and wisdom that could illuminate your journey ahead.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: read a scroll
+
+
+
+
+role: user
+parts: I'm trying to guess what you meant by that...
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look in the library
+
+
+role: user
+parts: There is no 'in the library' here. You can look around (just say look) or look at a specific item.
+As you carefully unroll the ancient scroll, intricate symbols and beautiful illustrations come to life before your eyes. The scroll reveals a tale of a great hero who once navigated the trials of the alien civilization, and it hints at the existence of a powerful artifact that could aid you on your journey. You feel a surge of knowledge and insight as the scroll's wisdom seeps into your mind. You mutter to yourself, 'This scroll holds secrets of the past!'.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look at the inscription on the wall
+
+
+
+
+role: user
+parts: There is no 'inscription on the wall' here. You can look around (just say look) or look at a specific item.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: read the inscription on the back of the scroll
+
+
+
+
+role: user
+parts: I'm trying to guess what you meant by that...
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look at the scroll again
+
+
+
+
+
+
+role: user
+parts: You carefully examine the back of the scroll, where ancient inscriptions reveal further wisdom of the ancients. The words seem to shimmer as you read them, illuminating your mind with newfound understanding.
+There is no 'scroll again' here. You can look around (just say look) or look at a specific item.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: look at the hidden chamber entrance
+
+
+
+
+
+
+role: user
+parts: You look at the Hidden Chamber Entrance: A dark, inviting opening in the ground that leads to an underground chamber. The air that flows from it carries a coolness, contrasting the heat above, and hints at the treasures and knowledge that lie within.
+Please enter a single valid command phrase, one line only:
+role: model
+parts: enter the chamber
+
+
+
+

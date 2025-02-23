@@ -5,6 +5,6 @@ for /F "tokens=1* delims==" %%a in (..\common\.env) do ( set "%%a=%%b" )
 set MODEL_NAME=gpt-4o
 @REM set IMAGE_MODEL_NAME=gpt-4o
 set IMAGE_MODEL_NAME=stable-diffusion-xl-1024-v1-0
-set TEST_MODE=True
+set TEST_MODE=False
 echo Running Image creator with landscape %LANDSCAPE_DESCRIPTION%, text model model %MODEL_NAME% and image model %IMAGE_MODEL_NAME%...
 python imagecreator.py

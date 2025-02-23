@@ -85,7 +85,7 @@ class GameManager:
         item_name: str = self.get_item_name_from_response(rest_of_response)
         if "button" in item_name:
             # Check red button in inventory
-            item: Optional[GameItem]
+            item: Optional[GameItem] = None
             for inv_item in player.get_inventory():
                 if item_name.lower() in inv_item.get_name().lower():
                     item = inv_item
@@ -1176,8 +1176,9 @@ class GameManager:
         self, player: Player, message: str, type: str = "game_update"
     ) -> None:
         message = message.strip()
-        await self.mbh.publish(type, message, player.player_id)
-        player.add_input_history(f"Game: {message}")
+        if message:
+            await self.mbh.publish(type, message, player.player_id)
+            player.add_input_history(f"Game: {message}")
 
     # Get other entities
     def get_other_entities(
@@ -1267,8 +1268,11 @@ class GameManager:
             )
 
     # Process summon player response from player manager
-    def process_summon_player_response(self, request_id: str) -> None:
+    async def process_summon_player_response(self, request_id: str) -> None:
         if request_id in self.summon_requests:
+            await self.tell_everyone(
+                f"Player {self.summon_requests[request_id]['player_name']} has been summoned!"
+            )
             logger.info(f"Removing summon request {request_id}")
             del self.summon_requests[request_id]
 
