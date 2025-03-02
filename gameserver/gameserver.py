@@ -1,5 +1,5 @@
 # Set up logger first
-from utils import set_up_logger, exit, get_logs_folder
+from utils import set_up_logger, exit, get_logs_folder, get_critical_env_variable
 from typing import Dict, Optional, Any, Callable, Tuple
 from os import environ
 from sys import argv
@@ -166,8 +166,8 @@ async def main() -> None:
     # Set up the message broker
     logger.info("Setting up message broker")
     mbh = MessageBrokerHelper(
-        environ.get("GAMESERVER_HOSTNAME", "localhost"),
-        environ.get("GAMESERVER_PORT", 4222),
+        get_critical_env_variable("GAMESERVER_HOSTNAME"),
+        get_critical_env_variable("GAMESERVER_PORT"),
         {
             # Client messages
             "instructions": {"mode": "publish"},

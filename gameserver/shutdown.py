@@ -1,12 +1,13 @@
 from os import environ
 import asyncio
+from utils import get_critical_env_variable
 from messagebroker_helper import MessageBrokerHelper
 
 if __name__ == "__main__":
 
     mbh = MessageBrokerHelper(
-        environ.get("GAMESERVER_HOSTNAME", "localhost"),
-        environ.get("GAMESERVER_PORT", 4222),
+        get_critical_env_variable("GAMESERVER_HOSTNAME"),
+        get_critical_env_variable("GAMESERVER_PORT"),
         {
             "shutdown": {"mode": "publish"},
         },
@@ -15,7 +16,6 @@ if __name__ == "__main__":
     # Now shut down
     asyncio.run(mbh.set_up_nats())
     asyncio.run(mbh.publish("shutdown", "shutdown"))
-    print("Shutting down")
-    exit(0)
+    print("Published shutdown message.")
 
 # This is a simple script that sends a shutdown message to the message broker. It is used to shut down the game server.

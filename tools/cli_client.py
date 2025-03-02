@@ -2,9 +2,8 @@ import asyncio
 import signal
 from utils import set_up_logger, exit
 from typing import List, Dict
+from utils import get_critical_env_variable
 from messagebroker_helper import MessageBrokerHelper
-import time
-from os import environ
 
 # Set up logger
 logger = set_up_logger("cliclient")
@@ -83,8 +82,8 @@ async def main() -> None:
         await mbh.publish("set_player_name", {"name": player_name, "role": "player"})
 
     mbh = MessageBrokerHelper(
-        environ.get("GAMESERVER_HOSTNAME", "localhost"),
-        environ.get("GAMESERVER_PORT", 4222),
+        get_critical_env_variable("GAMESERVER_HOSTNAME"),
+        get_critical_env_variable("GAMESERVER_PORT"),
         {
             "set_player_name": {"mode": "publish"},
             "player_action": {"mode": "publish"},

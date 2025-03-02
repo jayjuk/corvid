@@ -38,7 +38,7 @@ class MessageBrokerHelper:
 
     async def set_up_nats(self):
         try:
-            await self.nc.connect(servers=[f"nats://{self.host}:self.port"])
+            await self.nc.connect(servers=[f"nats://{self.host}:{self.port}"])
             logger.info(f"Connected to NATS server at {self.host}")
 
             # Publish startup messages

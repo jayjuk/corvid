@@ -55,8 +55,8 @@ class AIBroker:
     async def set_up_player(self) -> None:
         # Set up the message broker helper
         self.mbh = MessageBrokerHelper(
-            environ.get("GAMESERVER_HOSTNAME", "localhost"),
-            environ.get("GAMESERVER_PORT", 4222),
+            get_critical_env_variable("GAMESERVER_HOSTNAME"),
+            get_critical_env_variable("GAMESERVER_PORT"),
             {
                 "set_player_name": {"mode": "publish"},
                 "summon_player_response": {"mode": "publish"},
@@ -87,7 +87,7 @@ class AIBroker:
             logger.info(f"Received game update event: {data}")
             self.log_event(data)
         else:
-            self.exit(logger, "Received empty game update event")
+            exit(logger, "Received empty game update event")
 
     # Instructions event handler
     async def instructions(self, data: Dict) -> None:
@@ -98,12 +98,12 @@ class AIBroker:
     async def shutdown(self, data: Dict) -> None:
         logger.info(f"Shutdown event received: {data}. Exiting immediately.")
         self.time_to_die = True
-        self.exit(logger, "AI Broker shutting down.")
+        exit(logger, "AI Broker shutting down.")
 
     # This might happen if the AI quits!
     async def logout(self, data: Dict) -> None:
         logger.info(f"Logout event received: {data} did AI quit?")
-        self.exit(logger, "AI Broker logout received.")
+        exit(logger, "AI Broker logout received.")
 
     # Room update event handler
     async def room_update(self, data: Dict) -> None:
@@ -189,7 +189,7 @@ class AIBroker:
         # If AI_NAME is set in the environment, use that
         ai_name = environ.get("AI_NAME", "")
         if " " in ai_name:
-            self.exit(logger, "AI_NAME must not contain spaces. Exiting.")
+            exit(logger, "AI_NAME must not contain spaces. Exiting.")
         if ai_name:
             logger.info(f"AI_NAME is set to {ai_name}.")
         else:
@@ -302,9 +302,9 @@ class AIBroker:
                 )
                 # If response was to exit, exit here (after sending the exit message to the game server)
                 if response == "exit":
-                    self.exit(logger, "AI has exited the game.")
+                    exit(logger, "AI has exited the game.")
             else:
-                self.exit(logger, "AI returned empty response")
+                exit(logger, "AI returned empty response")
 
     # Log out and exit
     def exit(self, logger, error_message: str) -> None:
@@ -320,11 +320,13 @@ class AIBroker:
             self.error_count[error_message] = 1
         logger.error(f"Error: {error_message}")
         if self.error_count[error_message] > self.max_error_count:
-            self.exit(logger, f"Repeated error: {error_message}")
+            exit(logger, f"Repeated error: {error_message}")
 
 
 # Main function to start the AI Broker
 async def main() -> None:
+    # Will be redefined inside main
+    global logger
 
     # Set up AIs according to config
     # Keep string in case not set properly
@@ -335,7 +337,7 @@ async def main() -> None:
     # Check AI_MODE is set to a valid value
     valid_ai_modes = ["player", "builder"]
     if ai_mode not in valid_ai_modes:
-        self.exit(
+        exit(
             logger,
             f"ERROR: AI_MODE is set to {ai_mode} but must be one of: {valid_ai_modes}. Exiting.",
         )
@@ -348,7 +350,7 @@ async def main() -> None:
     else:
         # AI_COUNT is set, so start up the AI
         if ai_count != "1":
-            self.exit(
+            exit(
                 logger,
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting.",
             )

@@ -3,16 +3,14 @@ import traceback
 from os import path, makedirs, environ, sep
 import json
 import time
-import asyncio
+import gemini_client
+import groq_client
+import stability_client
+import anthropic_client
+import openai_client
 from utils import set_up_logger, exit, get_logs_folder
 
-
-# TODO #90 Consider redesigning such that the AI Manager only imports the necessary LLM client libraries according to runtime model choices
-import openai_client
-import gemini_client
-import anthropic_client
-import stability_client
-import groq_client
+# NOTE: Model-specific clients are imported dynamically in the StabilityAI section
 
 # Set up logger
 logger = set_up_logger()

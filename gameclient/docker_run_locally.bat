@@ -14,4 +14,4 @@ if exist "..\common\.env" (
 echo Running Image Server...
 set "GAMESERVER_HOSTNAME=gameserver_local"
 docker rm gameclient_local
-docker run --name gameclient_local -p 3000:3000 gameclient:latest
+docker run --name gameclient_local -p 3000:3000 jayjuk/gameclient

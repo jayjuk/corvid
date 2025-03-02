@@ -52,6 +52,8 @@ export default function HomePage() {
     strippedHost,
     "9222"
   );
+  // Log hostname
+  console.log(`Game server host name: ${gameServerHostName}`);
   const gameLogRef = useRef<HTMLDivElement>(null);
   const [previousCommands, setPreviousCommands] = useState<string[]>([]);
   const [commandIndex, setCommandIndex] = useState<number>(0);
@@ -147,9 +149,7 @@ useEffect(() => {
     // Subscribe to player-specific name invalid
     const nameInvalidSub = nc.subscribe(`name_invalid.${playerID}`);
     (async () => {
-      console.log(`name invalid event name_invalid.${playerID}`);
       for await (const msg of nameInvalidSub) {
-        console.log('name invalid event - inside for loop');
         alert(sc.decode(msg.data));
         setNameSet(false);
         // Unsubscribe from all subscriptions
@@ -159,6 +159,9 @@ useEffect(() => {
         nameInvalidSub.unsubscribe();
       }
     })();
+
+    // Log a console message with the player ID
+    console.log(`Player ID: ${playerID}`);
 
   }
 

@@ -171,13 +171,6 @@ resource "docker_container" "nats_container" {
     external = 9222
   }
 
-  volumes {
-    host_path      = "${local.module_path}/nats-server.conf"
-    container_path = "/etc/nats/nats-server.conf"
-  }
-
-  command = ["-c", "/etc/nats/nats-server.conf"]
-
   restart = "always"
 
   networks_advanced {
@@ -222,6 +215,7 @@ resource "docker_container" "gameserver_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name gameserver \\",
+      "--network ${docker_network.jaysgame_network.name} \\",
       "-e GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
       "-e GAMESERVER_PORT=4222 \\",
       "-e IMAGESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
@@ -238,7 +232,6 @@ resource "docker_container" "gameserver_container" {
       "-e GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID} \\",
       "-e GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION} \\",
       "-e GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE} \\",
-      "-p 4222:4222 \\",
       "${var.CONTAINER_REGISTRY_REPOSITORY}/gameserver' >> ./start_gameserver.sh",
       "chmod +x ./start_gameserver.sh"
     ]
@@ -278,6 +271,7 @@ resource "docker_container" "imageserver_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name imageserver \\",
+      "--network ${docker_network.jaysgame_network.name} \\",
       "-e IMAGESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
       "-e IMAGESERVER_PORT=3002 \\",
       "-e AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME} \\",
@@ -324,6 +318,7 @@ resource "docker_container" "imagecreator_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name imagecreator \\",
+      "--network ${docker_network.jaysgame_network.name} \\",
       "-e GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
       "-e GAMESERVER_PORT=${var.GAMESERVER_PORT} \\",
       "-e AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME} \\",
@@ -378,6 +373,7 @@ resource "docker_container" "aibroker_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name aibroker \\",
+      "--network ${docker_network.jaysgame_network.name} \\",
       "-e AI_COUNT=${var.AI_COUNT} \\",
       "-e MODEL_NAME=${var.MODEL_NAME} \\",
       "-e MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE} \\",
@@ -440,6 +436,7 @@ resource "docker_container" "playermanager_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name playermanager \\",
+      "--network ${docker_network.jaysgame_network.name} \\",
       "-e AI_COUNT=1 \\",
       "-e MODEL_NAME=${var.MODEL_NAME} \\",
       "-e MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE} \\",
@@ -501,6 +498,7 @@ resource "docker_container" "airequester_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name airequester \\",
+      "--network ${docker_network.jaysgame_network.name} \\",
       "-e MODEL_NAME=${var.MODEL_NAME} \\",
       "-e MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE} \\",
       "-e OPENAI_API_KEY=${var.OPENAI_API_KEY} \\",

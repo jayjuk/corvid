@@ -3,5 +3,5 @@ openai
 google-cloud-aiplatform
 anthropic
 groq
-stability_sdk
 nats-py
+stability_sdk

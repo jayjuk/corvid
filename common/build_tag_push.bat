@@ -19,7 +19,13 @@ if /i "%current_dir%"=="%service_name%" (
     cd ..
 )
 
-docker build -t %service_name% . -f %service_name%\Dockerfile
+if exist "%service_name%\Dockerfile" (
+    echo Building using Dockerfile specific to %service_name%
+    docker build -t %service_name% . -f %service_name%\Dockerfile
+) else (
+    echo Building using common Dockerfile
+    docker build -t %service_name% . -f common\Dockerfile  --build-arg SERVICE_NAME=%service_name%
+)
 docker tag %service_name% %repo_name%/%service_name%
 docker push %repo_name%/%service_name%
 
