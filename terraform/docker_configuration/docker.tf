@@ -176,6 +176,17 @@ resource "docker_container" "nats_container" {
   networks_advanced {
     name = docker_network.jaysgame_network.name
   }
+
+  # ✅ Mount configuration file inside the container
+  volumes {
+    host_path      = "/c/Users/me/coding/jaysgame/terraform/nats-server.conf"
+    container_path = "/nats-server.conf"
+  }
+
+  # ✅ Use the config file to enable WebSockets
+  command = [
+    "-c", "/nats-server.conf"
+  ]
 }
 
 resource "docker_container" "gameserver_container" {
@@ -200,11 +211,6 @@ resource "docker_container" "gameserver_container" {
     "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
     "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}"
   ]
-
-  ports {
-    internal = 4222
-    external = 4222
-  }
 
   networks_advanced {
     name = docker_network.jaysgame_network.name
