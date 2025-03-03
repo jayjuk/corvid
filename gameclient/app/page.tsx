@@ -108,7 +108,7 @@ useEffect(() => {
   handleGameUpdate(natsConnection.current.subscribe("game_update"));
 
     // Subscribe to player-specific game updates
-  let instructionSub, roomSub, logoutSub, nameInvalidSub;
+  let instructionSub: any, roomSub: any, logoutSub: any, nameInvalidSub: any;
   if (playerName) {
     handleGameUpdate(natsConnection.current.subscribe(`game_update.${playerID}`));
 
@@ -227,8 +227,11 @@ useEffect(() => {
   return (
     <div>
       <h1 style={{ textAlign: "center", margin: "20px 0" }}>
-        A Simple Multiplayer Game
+        The Red Button
       </h1>
+      <h2 style={{ textAlign: "center", margin: "20px 0" }}>
+        A work in progress by Jay Joseph
+      </h2>
       {nameSet && (
         <h2 style={{ textAlign: "center", margin: "10px 0" }}>
           Player: {playerName}
