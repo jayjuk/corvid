@@ -111,6 +111,51 @@ resource "docker_network" "jaysgame_network" {
   name = "jaysgame_network"
 }
 
+# # Run NATS container on the remote machine
+# resource "null_resource" "remote_provisioner" {
+#   provisioner "remote-exec" {
+#     inline = [
+
+
+#   # Write a remote startup script for NATS
+#   provisioner "remote-exec" {
+#     inline = [
+
+#       # Ensure NATS config directory exists
+#       "sudo mkdir -p /etc/nats",
+
+#       # Create NATS config file directly on the remote machine
+#       "echo 'port: 4222' | sudo tee /etc/nats/nats-server.conf",
+#       "echo '' | sudo tee -a /etc/nats/nats-server.conf",
+#       "echo 'websocket {' | sudo tee -a /etc/nats/nats-server.conf",
+#       "echo '  port: 9222' | sudo tee -a /etc/nats/nats-server.conf",
+#       "echo '  no_tls: true' | sudo tee -a /etc/nats/nats-server.conf",
+#       "echo '}' | sudo tee -a /etc/nats/nats-server.conf",
+#       "echo '' | sudo tee -a /etc/nats/nats-server.conf",
+#       "echo 'http_port: 8222' | sudo tee -a /etc/nats/nats-server.conf",
+
+#       # Pull the latest NATS image
+#       "sudo docker pull nats:latest",
+
+#       # Run NATS with the config file
+#       "sudo docker network create jaysgame_network",
+#       "sudo docker run -d --name nats --restart=always --network jaysgame_network \\",
+#       "  -v /etc/nats/nats-server.conf:/etc/nats/nats-server.conf \\",
+#       "  nats:latest -c /etc/nats/nats-server.conf"
+
+#     ]
+#     ]
+
+#     connection {
+#       type        = "ssh"
+#       user        = "root"
+#       host        = data.terraform_remote_state.droplet.outputs.droplet_ip
+#       private_key = file(var.pvt_key)
+#       timeout     = "5m"
+#     }
+#   }
+# }
+
 # Pull and run game containers
 resource "docker_container" "gameclient_container" {
   image = "${var.CONTAINER_REGISTRY_REPOSITORY}/gameclient"
@@ -149,6 +194,9 @@ locals {
   module_path_tmp = "/${replace(abspath(path.root), ":", "")}"
   module_path     = replace(local.module_path_tmp, "////", "/")
 }
+output "module_path_debug" {
+  value = "Module path is: ${local.module_path}"
+}
 resource "docker_container" "nats_container" {
   image = "nats:latest"
   name  = "nats"
@@ -177,16 +225,41 @@ resource "docker_container" "nats_container" {
     name = docker_network.jaysgame_network.name
   }
 
-  # ✅ Mount configuration file inside the container
-  volumes {
-    host_path      = "/c/Users/me/coding/jaysgame/terraform/nats-server.conf"
-    container_path = "/nats-server.conf"
+
+  # Write a remote startup script for NATS
+  provisioner "remote-exec" {
+    inline = [
+
+      # Ensure NATS config directory exists
+      "sudo mkdir -p /etc/nats",
+
+      # Create NATS config file directly on the remote machine
+      "echo 'port: 4222' | sudo tee /etc/nats/nats-server.conf",
+      "echo '' | sudo tee -a /etc/nats/nats-server.conf",
+      "echo 'websocket {' | sudo tee -a /etc/nats/nats-server.conf",
+      "echo '  port: 9222' | sudo tee -a /etc/nats/nats-server.conf",
+      "echo '  no_tls: true' | sudo tee -a /etc/nats/nats-server.conf",
+      "echo '}' | sudo tee -a /etc/nats/nats-server.conf",
+      "echo '' | sudo tee -a /etc/nats/nats-server.conf",
+      "echo 'http_port: 8222' | sudo tee -a /etc/nats/nats-server.conf",
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = data.terraform_remote_state.droplet.outputs.droplet_ip
+      private_key = file(var.pvt_key)
+      timeout     = "5m"
+    }
   }
 
-  # ✅ Use the config file to enable WebSockets
-  command = [
-    "-c", "/nats-server.conf"
-  ]
+  volumes {
+    host_path      = "/etc/nats/nats-server.conf"
+    container_path = "/etc/nats/nats-server.conf"
+  }
+
+  # Use the config file to enable WebSockets
+  command = ["-c", "/etc/nats/nats-server.conf"]
 }
 
 resource "docker_container" "gameserver_container" {
@@ -271,6 +344,7 @@ resource "docker_container" "imageserver_container" {
   networks_advanced {
     name = docker_network.jaysgame_network.name
   }
+
 
   # Write a remote startup script to the container
   provisioner "remote-exec" {
