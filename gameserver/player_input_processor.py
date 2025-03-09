@@ -241,7 +241,8 @@ class PlayerInputProcessor:
         self, player: Player, player_input: str
     ) -> Optional[Tuple[str, str, str]]:
         # Try to translate the user input into a valid command using AI :-)
-        output: str = "I'm trying to guess what you meant by that..."
+        # If output set, it shows the user something while the AI is working.
+        output: str = ""  # Was: I'm trying to guess what you meant by that...
         prompt: str = (
             "Help me to translate my player's input into either a valid adventure game command, or a custom action.\n"
             + self.get_commands_description()
@@ -273,6 +274,8 @@ class PlayerInputProcessor:
     async def handle_translation_response(
         self, ai_response: str, request_data: str = ""
     ) -> Optional[Tuple[str, str, str]]:
+        # Strip any leading/trailing whitespace or carriage returns
+        ai_response = ai_response.strip()
         player = request_data["player"]
         output: str = ""
         logger.info("AI translation: %s", ai_response)

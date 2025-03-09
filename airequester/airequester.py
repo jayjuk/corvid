@@ -76,8 +76,12 @@ async def main() -> None:
             exit(logger, "Received invalid event")
 
     # Create AI Worker
+    airequester_model_name: str = environ.get(
+        "AIREQUESTER_MODEL_NAME", get_critical_env_variable("MODEL_NAME")
+    )
     ai_requester = AIRequester(
-        model_name=get_critical_env_variable("MODEL_NAME"),
+        # Get specific model name from environment variable or use default
+        model_name=airequester_model_name,
         system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
     )
 

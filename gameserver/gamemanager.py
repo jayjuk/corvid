@@ -416,9 +416,9 @@ class GameManager:
         # Strip trailing non alphabet characters from item name
         item_name = item_name.rstrip(".,!?")
 
-        # Check the item name is valid - alphabet characters only
-        if not item_name.isalpha():
-            return "Invalid input: item name must contain only letters."
+        # Check the item name is valid - alphabet characters and spaces only
+        if not all(c.isalpha() or c.isspace() for c in item_name):
+            return "Invalid input: item name must contain only letters and spaces."
 
         # Check the item name is valid
         if item_name == "":
@@ -576,7 +576,7 @@ class GameManager:
 
         return f"You do not have enough money to buy {item.get_name(article='the')}."
 
-    def transact_buy_get(
+    async def transact_buy_get(
         self, action: str, item_name: str, player: Player, merchant: Merchant
     ) -> str:
         found_count: int = 0
@@ -591,12 +591,15 @@ class GameManager:
                     # As we can't assume they were willing to buy it
                     return f"The item '{item.get_name()}' is in the possession of a merchant. Perhaps you can purchase it?"
                 elif action == "buy":
-                    return self.make_purchase(item, player, merchant)
+                    outcome: str = await self.make_purchase(item, player, merchant)
+                    return outcome
         if found_count == 0:
             return f"There is no {item_name} to be found here."
 
     # Check if an item is in a merchant's possession
-    def transact_item(self, item_name: str, player: Player, action: str = "get") -> str:
+    async def transact_item(
+        self, item_name: str, player: Player, action: str = "get"
+    ) -> str:
         merchants = self.get_entities("merchant", player.get_current_location())
         if action in ("buy", "sell") and not merchants:
             return "There is no merchant here to trade with."
@@ -609,7 +612,10 @@ class GameManager:
                 # Don't go any further if pockets are full!
                 if not player.can_add_item():
                     return "You can't carry any more."
-                return self.transact_buy_get(action, item_name, player, merchant)
+                outcome: str = await self.transact_buy_get(
+                    action, item_name, player, merchant
+                )
+                return outcome
         # If we get here, the item is not in any merchant's possession
         return f"You are unable to {action} '{item_name}' here."
 
@@ -654,7 +660,9 @@ class GameManager:
                 return f"I would advise against picking up {item_name}, they will not react well!"
             # Check if the item is in the possession of a merchant
             elif item_name != "all" and not found:
-                outcome: Optional[str] = self.transact_item(item_name, player, "get")
+                outcome: Optional[str] = await self.transact_item(
+                    item_name, player, "get"
+                )
                 if outcome:
                     return outcome
                 return f"There is no {item_name} to be found here."
@@ -709,7 +717,7 @@ class GameManager:
             else:
                 return f"You are not carrying '{item_name}'."
 
-    def do_buy(self, player: Player, rest_of_response: str) -> str:
+    async def do_buy(self, player: Player, rest_of_response: str) -> str:
         # Get item name by calling a function to parse the response
         item_name: str = self.get_item_name_from_response(rest_of_response)
 
@@ -728,7 +736,8 @@ class GameManager:
         elif self.get_entity_by_name(item_name):
             return f"That {item_name} is not for sale!"
         # Otherwise proceed to try to buy it
-        return self.transact_item(item_name, player, "buy")
+        outcome: str = await self.transact_item(item_name, player, "buy")
+        return outcome
 
     async def do_sell(self, player: Player, rest_of_response: str) -> str:
         # Get item name by calling a function to parse the response
@@ -755,9 +764,8 @@ class GameManager:
                 if not item.get_price():
                     return f"You can't sell {item.get_name(article='the')} - it is valueless (or priceless!)."
                 # Try to sell it to a merchant
-                await self.tell_player(
-                    player, self.transact_item(item.get_name(), player, "sell")
-                )
+                outcome: str = await self.transact_item(item.get_name(), player, "sell")
+                await self.tell_player(player, outcome)
         if item_name != "all" and found_count == 0:
             return f"You are not carrying '{item_name}'."
 

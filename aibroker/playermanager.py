@@ -26,7 +26,11 @@ class PlayerManager:
         # Constructor
 
         # Read the player data from the file
-        self.player_data: Dict = self.read_player_data(init_filename)
+        if init_filename:
+            self.player_data: Dict = self.read_player_data(init_filename)
+        else:
+            # Allow empty player data - they can be summnoned later
+            self.player_data = {"players": []}
 
         player_count = 0
 
@@ -126,9 +130,8 @@ async def main() -> None:
     )
 
     # Create AI Worker
-    player_manager = PlayerManager(
-        init_filename=get_critical_env_variable("AI_PLAYER_FILE_NAME"),
-    )
+    init_filename = os.environ.get("AI_PLAYER_FILE_NAME")
+    player_manager = PlayerManager(init_filename=init_filename)
 
     # Start consuming messages
     await mbh.set_up_nats()

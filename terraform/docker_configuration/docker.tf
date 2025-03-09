@@ -64,6 +64,11 @@ variable "MODEL_NAME" {
   type = string
 }
 
+# Specific model for AI Requester
+variable "AIREQUESTER_MODEL_NAME" {
+  type = string
+}
+
 variable "OPENAI_API_KEY" {
   type      = string
   sensitive = true
@@ -103,9 +108,8 @@ variable "GOOGLE_GEMINI_SAFETY_OVERRIDE" {
 
 provider "docker" {
   host     = "ssh://root@${data.terraform_remote_state.droplet.outputs.droplet_ip}:22"
-  ssh_opts = ["-i", var.pvt_key]
+  ssh_opts = ["-i", var.pvt_key, "-o", "StrictHostKeyChecking=no"]
 }
-
 # Create a network
 resource "docker_network" "jaysgame_network" {
   name = "jaysgame_network"
@@ -125,14 +129,14 @@ resource "docker_network" "jaysgame_network" {
 #       "sudo mkdir -p /etc/nats",
 
 #       # Create NATS config file directly on the remote machine
-#       "echo 'port: 4222' | sudo tee /etc/nats/nats-server.conf",
-#       "echo '' | sudo tee -a /etc/nats/nats-server.conf",
-#       "echo 'websocket {' | sudo tee -a /etc/nats/nats-server.conf",
-#       "echo '  port: 9222' | sudo tee -a /etc/nats/nats-server.conf",
-#       "echo '  no_tls: true' | sudo tee -a /etc/nats/nats-server.conf",
-#       "echo '}' | sudo tee -a /etc/nats/nats-server.conf",
-#       "echo '' | sudo tee -a /etc/nats/nats-server.conf",
-#       "echo 'http_port: 8222' | sudo tee -a /etc/nats/nats-server.conf",
+#       "echo 'port: 4222' >> /etc/nats/nats-server.conf",
+#       "echo '' >> /etc/nats/nats-server.conf",
+#       "echo 'websocket {' >> /etc/nats/nats-server.conf",
+#       "echo '  port: 9222' >> /etc/nats/nats-server.conf",
+#       "echo '  no_tls: true' >> /etc/nats/nats-server.conf",
+#       "echo '}' >> /etc/nats/nats-server.conf",
+#       "echo '' >> /etc/nats/nats-server.conf",
+#       "echo 'http_port: 8222' >> /etc/nats/nats-server.conf",
 
 #       # Pull the latest NATS image
 #       "sudo docker pull nats:latest",
@@ -234,14 +238,17 @@ resource "docker_container" "nats_container" {
       "sudo mkdir -p /etc/nats",
 
       # Create NATS config file directly on the remote machine
-      "echo 'port: 4222' | sudo tee /etc/nats/nats-server.conf",
-      "echo '' | sudo tee -a /etc/nats/nats-server.conf",
-      "echo 'websocket {' | sudo tee -a /etc/nats/nats-server.conf",
-      "echo '  port: 9222' | sudo tee -a /etc/nats/nats-server.conf",
-      "echo '  no_tls: true' | sudo tee -a /etc/nats/nats-server.conf",
-      "echo '}' | sudo tee -a /etc/nats/nats-server.conf",
-      "echo '' | sudo tee -a /etc/nats/nats-server.conf",
-      "echo 'http_port: 8222' | sudo tee -a /etc/nats/nats-server.conf",
+      "rm -rf /etc/nats/nats-server.conf",
+      "echo 'port: 4222' > /etc/nats/nats-server.conf",
+      "echo '' >> /etc/nats/nats-server.conf",
+      "echo 'websocket {' >> /etc/nats/nats-server.conf",
+      "echo '  port: 9222' >> /etc/nats/nats-server.conf",
+      "echo '  no_tls: true' >> /etc/nats/nats-server.conf",
+      "echo '}' >> /etc/nats/nats-server.conf",
+      "echo '' >> /etc/nats/nats-server.conf",
+      "echo 'http_port: 8222' >> /etc/nats/nats-server.conf",
+      "echo 'Nat-server config file created:' > /tmp/nats.log",
+      "ls -l /etc/nats >> /tmp/nats.log",
     ]
 
     connection {
@@ -254,8 +261,8 @@ resource "docker_container" "nats_container" {
   }
 
   volumes {
-    host_path      = "/etc/nats/nats-server.conf"
-    container_path = "/etc/nats/nats-server.conf"
+    host_path      = "/etc/nats"
+    container_path = "/etc/nats"
   }
 
   # Use the config file to enable WebSockets
@@ -556,7 +563,7 @@ resource "docker_container" "airequester_container" {
   name  = "airequester"
 
   env = [
-    "MODEL_NAME=${var.MODEL_NAME}",
+    "MODEL_NAME=${var.AIREQUESTER_MODEL_NAME}",
     "MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE}",
     "OPENAI_API_KEY=${var.OPENAI_API_KEY}",
     "ANTHROPIC_API_KEY=${var.ANTHROPIC_API_KEY}",
