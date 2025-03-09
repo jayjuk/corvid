@@ -807,7 +807,7 @@ class GameManager:
             + "\n* The updated description of the current location in string property 'updated_location'."
             + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
             + "\n* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values."
-            + "\n* The descriptions of any destroyed/deleted items as string array 'deleted_items'."
+            + "\n* The descriptions of any destroyed/deleted items as string array 'deleted_items'. Don't forget that if you turn an item into one or more new items, you should delete the original item."
             + " (If an item has changed so much that its name no longer applies, then delete it and replace it with one or more new items. Note that an item cannot be both updated and deleted.)"
             + "\n* The updated descriptions of any modified entities (only those listed earlier) as nested object property 'updated_entities', with entity names as keys and new descriptions as values."
             + "\nOnly include the updated elements if they have changed in a way that another player who did not witness the cause of the change would notice."

@@ -303,6 +303,7 @@ class AIManager:
                     or "list index out of range" in str(e)
                     or "rate_limit_error" in str(e)
                     or "rate_limit_exceeded" in str(e)
+                    or "Please try again later." in str(e)
                 ) and try_count < max_tries:
                     # Check for a substring like Please try again in 940.714285ms, if so, extract that wait time
                     if "Please try again in" in str(e):

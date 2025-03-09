@@ -304,7 +304,7 @@ class AIBroker:
                 if response == "exit":
                     exit(logger, "AI has exited the game.")
             else:
-                exit(logger, "AI returned empty response")
+                logger.error("AI returned empty response!")
 
     # Log out and exit
     def exit(self, logger, error_message: str) -> None:
