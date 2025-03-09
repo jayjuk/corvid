@@ -24,7 +24,6 @@ class GameManager:
     # Constructor
     def __init__(
         self,
-        sio: Any,
         mbh: object,
         storage_manager: StorageManager,
         world_name: str = "jaysgame",
@@ -41,7 +40,6 @@ class GameManager:
 
         # Set up game state
         self.mbh: object = mbh
-        self.sio: Any = sio
         # Register of players currently in the game
         self.players: Dict[str, Player] = {}
         # Register of summon requests
@@ -54,7 +52,7 @@ class GameManager:
 
         # General AI manager - disabled in unit tests
         # AI manager is used for the AI to interact with the game
-        # Share sio with AI manager in this instance only
+        # Share message broker helper with AI manager in this instance only
         self.ai_manager: Optional[AIManager]
         if model_name:
             self.ai_manager: AIManager = AIManager(

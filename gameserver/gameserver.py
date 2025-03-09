@@ -16,9 +16,6 @@ from player import Player
 from player_input_processor import PlayerInputProcessor
 from messagebroker_helper import MessageBrokerHelper
 
-# Register the client with the server
-sio = None  # socketio.Client()
-
 # Transcript management
 
 
@@ -208,7 +205,6 @@ async def main() -> None:
     logger.info(f"Starting up game manager - world '{world_name}'")
     storage_manager: AzureStorageManager = AzureStorageManager()
     game_manager: GameManager = GameManager(
-        sio,
         mbh,
         storage_manager,
         world_name=world_name,

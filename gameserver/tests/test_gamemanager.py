@@ -3,6 +3,7 @@ from gamemanager import GameManager
 from player import Player
 from storagemanager import StorageManager
 from player_input_processor import PlayerInputProcessor
+import asyncio
 
 
 class TestGameManager(unittest.TestCase):
@@ -43,12 +44,12 @@ class TestGameManager(unittest.TestCase):
         # Check min length of description
         self.assertGreater(len(description), 28, "Description too short")
 
-    def test_do_say(self):
+    async def test_do_say(self):
         player = Player(self.game_manager.world, 0, "TestPlayer")
-        description = self.game_manager.do_say(player, "Hello")
+        description = await self.game_manager.do_say(player, "Hello")
         self.assertEqual(
             description,
-            "There is no one else here to hear you!",
+            "You mutter to yourself, 'Hello'.",
             "Say command not working as expected",
         )
 

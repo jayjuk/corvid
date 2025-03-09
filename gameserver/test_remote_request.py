@@ -2,39 +2,45 @@ from gamemanager import GameManager
 from storagemanager import StorageManager
 from player import Player
 from player_input_processor import PlayerInputProcessor
-import eventlet
-import time
 import asyncio
 from os import environ
-
-# import socket
-import socketio
-
-sio = socketio.Server(cors_allowed_origins="*")
-app = socketio.WSGIApp(sio)
+from messagebroker_helper import MessageBrokerHelper
 
 
-print("*** Setting up ***")
-storage_manager = StorageManager()
-game_manager = GameManager(
-    sio=sio,
-    storage_manager=storage_manager,
-    world_name="remotetest",
-)
-player = Player(game_manager.world, 0, "TestPlayer")
+async def run():
 
-port: int = int(environ.get("GAMESERVER_PORT", "3001"))
+    def process_ai_response(data):
+        print(f"Received AI response: {data}")
 
-eventlet.wsgi.server(eventlet.listen(("0.0.0.0", port)), app)
+    mbh = MessageBrokerHelper(
+        environ.get("GAMESERVER_HOSTNAME", "localhost"),
+        environ.get("GAMESERVER_PORT", 4222),
+        {
+            "ai_request": {"mode": "publish"},
+            "image_creation_request": {
+                "mode": "subscribe",
+                "callback": process_ai_response,
+            },
+        },
+    )
 
-time.sleep(10)
+    storage_manager = StorageManager()
+    game_manager = GameManager(
+        mbh=mbh,
+        storage_manager=storage_manager,
+        world_name="remotetest",
+    )
+    player = Player(game_manager.world, 0, "TestPlayer")
 
-print("Submitting remote request")
-await game_manager.ai_manager.submit_remote_request(
-    player, "ai_request", "test prompt", "you are testing a remote request"
-)
+    print("Submitting remote request")
+    await game_manager.ai_manager.submit_remote_request(
+        player, "ai_request", "test prompt", "you are testing a remote request"
+    )
+
+    # Keep the connection alive
+    while True:
+        await asyncio.sleep(1)
 
 
-# sleep forever
-while True:
-    time.sleep(1)
+if __name__ == "__main__":
+    asyncio.run(run())
