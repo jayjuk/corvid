@@ -4,7 +4,7 @@
 
 ### Game Server
 
-The "main" runtime modules. Comprises SocketIO setup, creation and launch of Game Manager
+The "main" runtime modules. Sets up and runs Game Manager
 
 ### Player Input Processor
 

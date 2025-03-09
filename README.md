@@ -7,8 +7,8 @@ I built this for fun and to learn a whole load of new technologies.
 ## High-Level Technical Overview
 
 The game is designed to run in the cloud. It is composed of a set of services, each of which runs in its own Linux container.
-It is deployed via Azure Container Instances, with game data stored in Azure Storage in real time, so that if a service or the server is restarted, no state is lost and the game picks up from where it left off.
-Humans play the game via a single web page, served by a Game Client and Image Server. The Game Client interacts with the Game Server via SocketIO (web sockets).
+It is deployed on Digital Ocean droplets via Terraform, with game data stored in Azure Storage in real time, so that if a service or the server is restarted, no state is lost and the game picks up from where it left off.
+Humans play the game via a single web page, served by a Game Client and Image Server. The Game Client interacts with the Game Server via NATS (which uses web sockets under the covers to talk to the web UI).
 AIs (LLMs) play the game via an AI Broker, which submits game updates to them over their Python APIs, and channels their commands to the Game Server in the same fashion as the Game Client.
 
 ### Services
@@ -17,7 +17,7 @@ Below is an overview of each component of the game architecture. In future, more
 
 ### 1. Game Server
 
-This service is where all the game's "business logic" resides. It loads the game world into memory from its database (rooms i.e. locations and their exits, items, entities etc), then keeps track of the state of each player and the contents of the world as the game commences. It receives player commands over SocketIO, parses and processes them, and sends feedback to the game client and AI broker(s), also via SocketIO.
+This service is where all the game's "business logic" resides. It loads the game world into memory from its database (rooms i.e. locations and their exits, items, entities etc), then keeps track of the state of each player and the contents of the world as the game commences. It receives player commands over NATS, parses and processes them, and sends feedback to the game client and AI broker(s), also via NATS.
 
 Note that the game server also uses an LLM itself for various purposes including generation of interesting descriptions and images when a new location is created by a player with 'builder' permissions, or when a player provides a command it does not understand (which can sometimes be 'translated' into supported syntax given the context). This operates independently of the AI broker at runtime.
 
@@ -25,15 +25,28 @@ The Game Server hands all the game's data storage (in Azure). It is written enti
 
 ### 2. Game Client
 
-This simple service runs the web-based UI. It listens to and broadcasts updates from/to the Game Server via SocketIO. It is (for now) written in Typescript using Next.js (a React framework based on Node.js). It is pretty much a minimal go-between to allow humans to play via a web browser. It also interfaces with the Image Server, over REST, although this is handled natively by HTML when URLs pointing to the Image Server are published over SocketIO each time the player changes location.
+This simple service runs the web-based UI. It listens to and broadcasts updates from/to the Game Server via NATS. It is (for now) written in Typescript using Next.js (a React framework based on Node.js). It is pretty much a minimal go-between to allow humans to play via a web browser. It also interfaces with the Image Server, over REST, although this is handled natively by HTML when URLs pointing to the Image Server are published over NATS each time the player changes location.
 
-### 3. Image Server (Optional)
+### 3. AI Requester
 
-This component serves up images of locations in the game to the human players' browser. It has a simple Flask web server to receive requests, a file-based local cache, and direct connectivity to Azure Blob Storage via the Python API (which uses REST under the covers). It shares common Storage Management and Logging source code modules (in Python) with the Game Server.
+This service handles AI requests from the game server, keeping the latter focused on handling simple commands and maintaining the game state. These are
+typically player input that is not recognised by the game manager as a built-in command (e.g. navigation, buy, sell), and needs to be interpreted.
 
-### 4. AI Broker (Optional)
+### 3. Image Server
 
-This service allows LLMs to play the game too. Each run-time instance of this service creates one AI player. It collects updates from the game server, presents them to a designated LLM (currently OpenAI's GPT-3.5 / GPT-4, Google's Gemini Pro, and Claude 3 Haiku), with relevant context, and relays the LLM's decisions (i.e. game commands) back to the game server via SocketIO. The game server does not know or care who is a human player and who is an AI. It is written in Python too, and shares Logging and AI Management modules with the Game Server.
+This service serves up images of locations in the game to the human players' browser. It has a simple Flask web server to receive requests, a file-based local cache, and direct connectivity to Azure Blob Storage via the Python API (which uses REST under the covers). It shares common Storage Management and Logging source code modules (in Python) with the Game Server.
+
+### 4. Image Creator
+
+This service handles requests to create an image for a new location in the game. It is the only service that runs an image generation model. It also uses an LLM to enhance the player's description (which may be blank) into a suitable prompt.
+
+### 5. Player Manager
+
+This service responds to "summon" requests by spawning AI Broker instances. If it is not running, the 'summon' command will have no effect.
+
+### 6. AI Broker (Optional)
+
+This service allows LLMs to play the game too. Each run-time instance of this service creates one AI player. It collects updates from the game server, presents them to a designated LLM (currently OpenAI's GPT-3.5 / GPT-4, Google's Gemini Pro, and Claude 3 Haiku), with relevant context, and relays the LLM's decisions (i.e. game commands) back to the game server via NATS. The game server does not know or care who is a human player and who is an AI. It is written in Python too, and shares Logging and AI Management modules with the Game Server.
 
 ## Local Execution
 
@@ -69,11 +82,12 @@ AZURE_STORAGE_ACCOUNT_KEY - Obtained from the Azure Storage console after you cr
 
 Other environment variables to update in .env (for local operation), GitHub Actions Secrets (for Continuous Integration) and Azure Container Instances secrets (for production deployment) as required:
 
-MODEL*NAME - e.g. gpt-3.5-turbo, gemini-pro (see caveat above), or claude-3-haiku-20240307. Used both by AI Broker and Game Server (which share the AI Manager) but they can be configured differently due to the services running in separate containers.
+MODEL_NAME - e.g. gpt-3.5-turbo, gemini-pro (see caveat above), or claude-3-haiku-20240307. Used both by AI Broker and Game Server (which share the AI Manager) but they can be configured differently due to the services running in separate containers.
+AIREQUESTER_MODEL_NAME - Specific model name for AI Requester, which handles more complex requests.
 AZURE_STORAGE_ACCOUNT_NAME - Also from the Azure console, this will look something like csa123456fff1a111a1a
 GAMESERVER_HOSTNAME - localhost when running locally, otherwise something like jaysgame.westeurope.azurecontainer.io, with the first world modified to your own environment
 GAMESERVER_PORT - e.g. 3001 (3000 is used by Next.js for the UI)
-GAMESERVER_WORLD_NAME - the name of the 'world' e.g. jaysgame or mansion (currently the examples checked in). A new world currently requires setup of \_gameserver\world_data\world_name\*.json* files.
+GAMESERVER_WORLD_NAME - the name of the 'world' e.g. jaysgame or mansion (currently the examples checked in). A new world currently requires setup of \_gameserver\world_data\world_name\*.json\* files.
 IMAGESERVER_HOSTNAME - likely to be the same as GAMESERVER_HOSTNAME above
 IMAGESERVER_PORT - e.g. 3002
 
@@ -83,7 +97,7 @@ A limited number of unit tests have been written, with more to follow. These are
 
 ### Cloud Deployment
 
-To deploy to Azure, cd to jaysgame main directory and execute _az-deploy.bat_ or _az-deploy-ai.bat_ . This depends on you having installed the Azure (az) CLI tool, and having logged into your account, with a resource group called (for now) "jay". To stop and tear down, run _az-delete.bat_.
+To deploy to Digital Ocean, cd to jaysgame main directory, then the terraform subdirectory, then execute run_terraform.bat ! It is necessary to have SSH keys set up per Digital Ocean's instructions as part of account setup.
 
 Cloud deployment of the AI broker, as with the local execution, depends on the existence of _common\.env_ as described above. The above deployment scripts invoke a Python script which generates a temporary YAML file to be used with the Azure CLI, containing the environment variable values.
 
