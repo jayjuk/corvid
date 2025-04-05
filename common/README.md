@@ -4,11 +4,11 @@ This folder contains modules that are imported by more than one service.
 
 ## Storage Manager
 
-Manages storage and retrieval of game data
+Manages storage and retrieval of world data
 
 ## AI Manager
 
-Manages interaction with LLM for specific use cases of the game manager (e.g. generation of room descriptions and images)
+Manages interaction with LLM for specific use cases of the world manager (e.g. generation of room descriptions and images)
 
 ## Logger
 

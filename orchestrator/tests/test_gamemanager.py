@@ -1,29 +1,29 @@
 import unittest
-from gamemanager import GameManager
+from worldmanager import worldmanager
 from player import Player
 from storagemanager import StorageManager
 from player_input_processor import PlayerInputProcessor
 import asyncio
 
 
-class TestGameManager(unittest.TestCase):
+class Testworldmanager(unittest.TestCase):
     def setUp(self):
         print("*** Setting up ***")
         self.storage_manager = StorageManager()
-        self.game_manager = GameManager(
+        self.world_manager = worldmanager(
             mbh=None,
             storage_manager=self.storage_manager,
             world_name="unittest",
         )
-        self.player_input_processor = PlayerInputProcessor(self.game_manager)
-        self.player = Player(self.game_manager.world, 0, "TestPlayer")
+        self.player_input_processor = PlayerInputProcessor(self.world_manager)
+        self.player = Player(self.world_manager.world, 0, "TestPlayer")
 
     def tearDown(self):
-        self.game_manager.remove_player(self.player.player_id, "Cleanup after testing")
+        self.world_manager.remove_player(self.player.player_id, "Cleanup after testing")
 
     def test_get_player_count(self):
         expected_count = 0
-        actual_count = self.game_manager.get_player_count()
+        actual_count = self.world_manager.get_player_count()
         self.assertEqual(
             actual_count, expected_count, "Player count should be 0 at start"
         )
@@ -36,7 +36,7 @@ class TestGameManager(unittest.TestCase):
             )
 
     def test_do_look(self):
-        description = self.game_manager.do_look(self.player, None)
+        description = self.world_manager.do_look(self.player, None)
         # Check begins with "You are in"
         self.assertTrue(
             description.startswith("You look again at the"), "Look command not working"
@@ -45,8 +45,8 @@ class TestGameManager(unittest.TestCase):
         self.assertGreater(len(description), 28, "Description too short")
 
     async def test_do_say(self):
-        player = Player(self.game_manager.world, 0, "TestPlayer")
-        description = await self.game_manager.do_say(player, "Hello")
+        player = Player(self.world_manager.world, 0, "TestPlayer")
+        description = await self.world_manager.do_say(player, "Hello")
         self.assertEqual(
             description,
             "You mutter to yourself, 'Hello'.",

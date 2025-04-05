@@ -37,7 +37,7 @@ function replaceAfterLastColon(
 }
 
 export default function HomePage() {
-  const [gameLog, setGameLog] = useState<string[]>([]);
+  const [worldLog, setWorldLog] = useState<string[]>([]);
   const [userInput, setUserInput] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [nameSet, setNameSet] = useState(false);
@@ -55,7 +55,7 @@ export default function HomePage() {
   );
   // Log hostname
   console.log(`Orchestrator host name: ${orchestratorHostName}`);
-  const gameLogRef = useRef<HTMLDivElement>(null);
+  const worldLogRef = useRef<HTMLDivElement>(null);
   const [previousCommands, setPreviousCommands] = useState<string[]>([]);
   const [commandIndex, setCommandIndex] = useState<number>(0);
 
@@ -92,32 +92,32 @@ export default function HomePage() {
     const nc = natsConnection.current;
     const sc = StringCodec();
 
-    // Function to handle game updates
-    const handleGameUpdate = async (sub: any) => {
+    // Function to handle world updates
+    const handleWorldUpdate = async (sub: any) => {
       for await (const msg of sub) {
         let message = sc.decode(msg.data).replace(/[{|}]/g, "");
-        setGameLog((prevLog) => {
+        setWorldLog((prevLog) => {
           const newLog = [...prevLog, message];
           return newLog.slice(-10);
         });
       }
     };
 
-    // Subscribe to game updates
-    handleGameUpdate(natsConnection.current.subscribe("game_update"));
+    // Subscribe to world updates
+    handleWorldUpdate(natsConnection.current.subscribe("world_update"));
 
-    // Subscribe to player-specific game updates
+    // Subscribe to player-specific world updates
     let instructionSub: any, roomSub: any, logoutSub: any, nameInvalidSub: any;
     if (playerName) {
-      handleGameUpdate(
-        natsConnection.current.subscribe(`game_update.${playerID}`)
+      handleWorldUpdate(
+        natsConnection.current.subscribe(`world_update.${playerID}`)
       );
 
       // Subscribe to player-specific instructions
       instructionSub = nc.subscribe(`instructions.${playerID}`);
       (async () => {
         for await (const msg of instructionSub) {
-          setGameLog((prev) => [...prev, sc.decode(msg.data)]);
+          setWorldLog((prev) => [...prev, sc.decode(msg.data)]);
         }
       })();
 
@@ -174,10 +174,10 @@ export default function HomePage() {
   }, [nameSet]); // Only runs when playerName is set/changes
 
   useEffect(() => {
-    if (gameLogRef.current) {
-      gameLogRef.current.scrollTop = gameLogRef.current.scrollHeight;
+    if (worldLogRef.current) {
+      worldLogRef.current.scrollTop = worldLogRef.current.scrollHeight;
     }
-  }, [gameLog]);
+  }, [worldLog]);
 
   const handleNameSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -277,7 +277,7 @@ export default function HomePage() {
       {nameSet && (
         <>
           <div
-            ref={gameLogRef}
+            ref={worldLogRef}
             style={{
               overflowY: "auto",
               minHeight: "300px",
@@ -285,7 +285,7 @@ export default function HomePage() {
               border: "1px solid gray",
             }}
           >
-            {gameLog.map((entry, index) => (
+            {worldLog.map((entry, index) => (
               <div key={index}>{entry}</div>
             ))}
           </div>

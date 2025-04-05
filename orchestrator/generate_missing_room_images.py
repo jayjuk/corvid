@@ -8,7 +8,7 @@ from os import path, makedirs
 logger = set_up_logger("orchestrator")
 
 from azurestoragemanager import AzureStorageManager
-from gamemanager import GameManager
+from worldmanager import worldmanager
 
 
 if __name__ == "__main__":
@@ -20,9 +20,9 @@ if __name__ == "__main__":
     else:
         world_name = environ.get("orchestrator_WORLD_NAME", "corvid")
 
-    logger.info(f"Starting up game manager - world '{world_name}'")
+    logger.info(f"Starting up world manager - world '{world_name}'")
     storage_manager: AzureStorageManager = AzureStorageManager()
-    game_manager: GameManager = GameManager(
+    world_manager: worldmanager = worldmanager(
         None,
         storage_manager,
         world_name=world_name,
@@ -31,14 +31,14 @@ if __name__ == "__main__":
     )
 
     # Go through all rooms and check if they have an image
-    for room_name, room in game_manager.world.rooms.items():
+    for room_name, room in world_manager.world.rooms.items():
         # print(room_name, room.image)
         if not hasattr(room, "image") or not room.image:
             logger.info(f"Generating image for room {room_name}")
 
             # Create image for new room
-            room.image = game_manager.world.create_room_image(
+            room.image = world_manager.world.create_room_image(
                 room_name, room.description
             )
-            storage_manager.store_game_object(game_manager.world.name, room)
+            storage_manager.store_world_object(world_manager.world.name, room)
             logger.info(f"Generated image for room {room_name} called {room.image}")

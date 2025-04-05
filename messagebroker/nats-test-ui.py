@@ -10,8 +10,8 @@ async def publish_messages():
     # Publish a message to the "instructions" subject
     await nc.publish("instructions", b"This is an instruction message")
 
-    # Publish a game update message to the "game_update" subject
-    await nc.publish("game_update", b'{"data": "This is a game update"}')
+    # Publish a world update message to the "world_update" subject
+    await nc.publish("world_update", b'{"data": "This is a world update"}')
 
     # Publish a room update message to the "room_update" subject
     await nc.publish(

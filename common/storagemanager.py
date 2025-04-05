@@ -94,38 +94,38 @@ class StorageManager:
                 else:  # destringify
                     entity[variable] = json.loads(entity[variable])
 
-    def store_game_objects(
+    def store_world_objects(
         self, world_name: str, objects: List[Dict[str, Any]]
     ) -> None:
         logger.info("Storing all Python objects")
         for object in objects:
-            self.store_game_object(world_name, object)
+            self.store_world_object(world_name, object)
 
-    def get_game_object(
-        self, game_name: str, object_type: str, rowkey_value: str
+    def get_world_object(
+        self, world_name: str, object_type: str, rowkey_value: str
     ) -> Dict[str, Any]:
-        for object in self.get_game_objects(game_name, object_type, rowkey_value):
+        for object in self.get_world_objects(world_name, object_type, rowkey_value):
             return object
 
-    def store_game_object(self, world_name: str, object: object) -> None:
+    def store_world_object(self, world_name: str, object: object) -> None:
         # Unit testing will use this superclass method hence not abstract
         logger.info(
-            f"NOT storing python object in game {world_name}: {object.__dict__}"
+            f"NOT storing python object in world {world_name}: {object.__dict__}"
         )
         return True
 
-    def delete_game_object(
+    def delete_world_object(
         self, world_name: str, object_type: str, name: str, location: str
     ) -> bool:
         # Unit testing will use this superclass method hence not abstract
         logger.info(
-            f"NOT deleting python object in game {world_name}: {object.__dict__}"
+            f"NOT deleting python object in world {world_name}: {object.__dict__}"
         )
         return False
 
-    def get_game_objects(
+    def get_world_objects(
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         # Unit testing will use this superclass method hence not abstract
-        logger.info(f"NOT getting python objects in game {world_name}: {object_type}")
+        logger.info(f"NOT getting python objects in world {world_name}: {object_type}")
         return []

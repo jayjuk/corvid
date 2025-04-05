@@ -1,4 +1,4 @@
-from gamemanager import GameManager
+from worldmanager import worldmanager
 from storagemanager import StorageManager
 from player import Player
 from player_input_processor import PlayerInputProcessor
@@ -25,15 +25,15 @@ async def run():
     )
 
     storage_manager = StorageManager()
-    game_manager = GameManager(
+    world_manager = worldmanager(
         mbh=mbh,
         storage_manager=storage_manager,
         world_name="remotetest",
     )
-    player = Player(game_manager.world, 0, "TestPlayer")
+    player = Player(world_manager.world, 0, "TestPlayer")
 
     print("Submitting remote request")
-    await game_manager.ai_manager.submit_remote_request(
+    await world_manager.ai_manager.submit_remote_request(
         player, "ai_request", "test prompt", "you are testing a remote request"
     )
 

@@ -4,7 +4,7 @@ import sys
 storage_manager = StorageManager()
 from room import Room
 
-for room in storage_manager.get_game_objects("mansion", "Room"):
+for room in storage_manager.get_world_objects("mansion", "Room"):
 
     # print(room["image"])
     # b = storage_manager.get_image_blob(room["image"])

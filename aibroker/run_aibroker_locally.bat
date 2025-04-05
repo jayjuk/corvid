@@ -9,5 +9,5 @@ if not "%1"=="" (
     set MODEL_NAME=%1
 )
 echo Running AI Broker with model %MODEL_NAME%...
-set MODEL_SYSTEM_MESSAGE=You are a character playing a computer game.
+set MODEL_SYSTEM_MESSAGE=You are a character in a simulated world.
 python aibroker.py

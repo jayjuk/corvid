@@ -12,7 +12,7 @@ logger = set_up_logger()
 
 def generate_name_and_description(ai_manager, room, room_exit, data):
     prompt = (
-        'Generate a name and description of about 20 words for a new location (AKA "room") in a text adventure game. '
+        'Generate a name and description of about 20 words for a new location (AKA "room") in a simulated world. '
         + f"Do not use any of these names as they are already in use: {','.join(list(world.rooms.keys()))}. "
         + f"For context, the room to the {world.get_opposite_direction(room_exit)} of the new room is '{room}: {data['description']}'. Return only the name and description separated by a colon."
     )

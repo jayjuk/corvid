@@ -4,7 +4,7 @@ import os
 import time
 from entity import Entity
 from typing import List, Optional
-from gameitem import GameItem
+from worlditem import worlditem
 
 # Set up logger
 logger = set_up_logger()
@@ -117,19 +117,19 @@ class Player(Entity):
         else:
             self.money -= amount
             # Store change
-            self.world.storage_manager.store_game_object(self.world.name, self)
+            self.world.storage_manager.store_world_object(self.world.name, self)
             return True
 
     def add_money(self, amount: int) -> None:
         self.money += amount
         # Store change
-        self.world.storage_manager.store_game_object(self.world.name, self)
+        self.world.storage_manager.store_world_object(self.world.name, self)
 
     def can_add_item(self) -> bool:
         return len(self.inventory) < self.max_inventory
 
     # Override for player picking up an item - has a limit
-    def add_item(self, item: GameItem) -> Optional[str]:
+    def add_item(self, item: worlditem) -> Optional[str]:
         if not self.can_add_item():
             return "You can't carry any more items."
         self.inventory.append(item)

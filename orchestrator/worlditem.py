@@ -6,7 +6,7 @@ logger = set_up_logger()
 
 
 # Player class
-class GameItem:
+class worlditem:
     def __init__(
         self,
         world: "World",
@@ -68,11 +68,11 @@ class GameItem:
 
     def set_location(self, location: str) -> None:
         self.location = location
-        self.world.storage_manager.store_game_object(self.world.name, self)
+        self.world.storage_manager.store_world_object(self.world.name, self)
 
     def set_starting_location(self, location: str) -> None:
         self.starting_location = location
-        self.world.storage_manager.store_game_object(self.world.name, self)
+        self.world.storage_manager.store_world_object(self.world.name, self)
 
     # Setter (i.e. player drops it)
     def set_room(self, room_name: str) -> None:

@@ -97,7 +97,7 @@ class ImageCreator:
             )
             world_theme = world_name
         instruction = (
-            f"Convert the following game location description into a more suitable concise prompt for an AI image generation model. The style is '{art_style}',"
+            f"Convert the following world location description into a more suitable concise prompt for an AI image generation model. The style is '{art_style}',"
             + f" and the overarching world is '{world_theme}'."
             + f" Description:\n{description}"
         )

@@ -1,7 +1,7 @@
 from typing import List, Optional
 from utils import set_up_logger
 from entity import Entity
-from gameitem import GameItem
+from worlditem import worlditem
 
 # Set up logger
 logger = set_up_logger()
@@ -14,7 +14,7 @@ class Merchant(Entity):
         world: "World",
         name: str,
         location: str,
-        inventory: Optional[List[GameItem]] = None,
+        inventory: Optional[List[worlditem]] = None,
         description: str = "",
     ):
         # First check

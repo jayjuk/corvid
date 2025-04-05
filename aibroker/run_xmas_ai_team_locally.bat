@@ -6,9 +6,9 @@ set AI_COUNT=1
 echo Loading env variables from common .env file in local execution...
 for /F "tokens=1* delims==" %%a in (..\common\.env) do ( set "%%a=%%b" )
 
-set WORLD_BRIEFING=You are part of a team of players who are building a new game world. You can build locations, create items and spawn creatures.^
+set WORLD_BRIEFING=You are part of a team of players who are building a new world. You can build locations, create items and spawn creatures.^
  The theme is CHRISTMAS. The setting is %LANDSCAPE_DESCRIPTION%. Be sure to create a vibrant and fun world.^
- Use your imagination and draw from all fictional sources (whether book or film) you like. Try to be consistent and logical, for example from one location to the next, ensure game layout makes sense.
+ Use your imagination and draw from all fictional sources (whether book or film) you like. Try to be consistent and logical, for example from one location to the next, ensure the layout of the world makes sense.
 
 @rem Create leader by calling run_aibroker_locally.bat with the model name and system message
 rem set MODEL_NAME=gpt-4o

@@ -6,14 +6,14 @@ logger = set_up_logger()
 from typing import Dict, Callable, Tuple, Optional, Union, List
 from player import Player
 from world import World
-from gamemanager import GameManager
+from worldmanager import worldmanager
 import re
 
 
 class PlayerInputProcessor:
 
-    def __init__(self, game_manager: GameManager):
-        self.game_manager = game_manager
+    def __init__(self, world_manager: worldmanager):
+        self.world_manager = world_manager
         self.setup_commands()
 
     def setup_commands(self) -> None:
@@ -46,61 +46,61 @@ class PlayerInputProcessor:
         self.command_functions: Dict[str, Dict[str, Callable]] = {
             # TODO #66 Limit certain actions to players with the right permissions rather than just hiding from help
             "look": {
-                "function": self.game_manager.do_look,
+                "function": self.world_manager.do_look,
                 "description": "Get a description of your current location",
             },
             "say": {
-                "function": self.game_manager.do_say,
+                "function": self.world_manager.do_say,
                 "description": "Say something to all other players in your *current* location, e.g. say which way shall we go?",
             },
             "shout": {
-                "function": self.game_manager.do_shout,
-                "description": "Shout something to everyone in the game, e.g. shout Where is everyone?",
+                "function": self.world_manager.do_shout,
+                "description": "Shout something to everyone in the world, e.g. shout Where is everyone?",
             },
             "greet": {
-                "function": self.game_manager.do_greet,
+                "function": self.world_manager.do_greet,
                 "description": "Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!",
             },
             "wait": {
-                "function": self.game_manager.do_wait,
+                "function": self.world_manager.do_wait,
                 "description": "Do nothing for now",
             },
             "jump": {
-                "function": self.game_manager.do_jump,
+                "function": self.world_manager.do_jump,
                 "description": "Jump to location of another player named in rest_of_response",
             },
             "attack": {
-                "function": self.game_manager.do_attack,
+                "function": self.world_manager.do_attack,
                 "description": "",  # Not supported
             },
             "quit": {
-                "function": self.game_manager.do_quit,
+                "function": self.world_manager.do_quit,
                 "description": "",  # Don't encourage the AI to quit! TODO: make this only appear in the help to human players
             },
             "get": {
-                "function": self.game_manager.do_get,
+                "function": self.world_manager.do_get,
                 "description": "Pick up an item in your current location",
             },
             "drop": {
-                "function": self.game_manager.do_drop,
+                "function": self.world_manager.do_drop,
                 "description": "Drop an item in your current location",
             },
             "go": {
-                "function": self.game_manager.do_go,
+                "function": self.world_manager.do_go,
                 "description": "Head in a direction e.g. go north (you can also use n, e, s, w))",
             },
             "build": {
-                "function": self.game_manager.do_build,  # Called with special inputs - see process_player_input below
+                "function": self.world_manager.do_build,  # Called with special inputs - see process_player_input below
                 "description": "Build a new location. Specify the direction, name and description (avoid confusion by not describing specific items, those are created separately) using single quotes "
                 + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'",
             },
             "create": {
-                "function": self.game_manager.do_create,
+                "function": self.world_manager.do_create,
                 "description": "Create a new item. Specify the name and description using single quotes "
                 + "e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'",
             },
             "spawn": {
-                "function": self.game_manager.do_spawn,
+                "function": self.world_manager.do_spawn,
                 "description": (
                     "Create a new animal. Specify the name, description and a list of actions the animal performs, using single quotes for each"
                     + "e.g: create 'smiling fox' "
@@ -109,42 +109,42 @@ class PlayerInputProcessor:
                 ),
             },
             "summon": {
-                "function": self.game_manager.do_summon,
+                "function": self.world_manager.do_summon,
                 "description": (
                     ""  # Hidden from AI for now
-                    # "Summon a new player into the game. Specify the instructions for the new player using single quotes "
+                    # "Summon a new player into the world. Specify the instructions for the new player using single quotes "
                     # + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
                 ),
             },
             "buy": {
-                "function": self.game_manager.do_buy,
+                "function": self.world_manager.do_buy,
                 "description": "Buy an item from an entity (e.g. a Merchant) in your current location.",
             },
             "sell": {
-                "function": self.game_manager.do_sell,
+                "function": self.world_manager.do_sell,
                 "description": "Sell an item to an entity (e.g. a Merchant) in your current location.",
             },
             "trade": {
-                "function": self.game_manager.do_trade,
+                "function": self.world_manager.do_trade,
                 "description": "Enter into trading negotiations with a Merchant in your current location.",
             },
             "push": {
-                "function": self.game_manager.do_push,
+                "function": self.world_manager.do_push,
                 "description": "Push something in your possession, a button for example...",
             },
             "inventory": {
-                "function": self.game_manager.do_inventory,
+                "function": self.world_manager.do_inventory,
                 "description": "List the items you are carrying",
             },
             "xox": {
-                "function": self.game_manager.do_shutdown,
+                "function": self.world_manager.do_shutdown,
                 # Keep this one hidden - it shuts down the Orchestrator and AI broker!
                 "description": "",
             },
-            # Help is special, as it doesn't need a function to be defined in the game manager, it can be handled here
+            # Help is special, as it doesn't need a function to be defined in the world manager, it can be handled here
             "help": {
                 "function": self.get_help_text,
-                "description": "Get game instructions",
+                "description": "Get world instructions",
             },
         }
 
@@ -170,11 +170,11 @@ class PlayerInputProcessor:
     def get_help_text(
         self, player: Optional[Player] = None, rest_of_response: Optional[str] = None
     ) -> str:
-        objective = self.game_manager.world.get_objective(player)
+        objective = self.world_manager.world.get_objective(player)
         return (
             objective
             + " "
-            + self.game_manager.get_players_text()
+            + self.world_manager.get_players_text()
             + f"\nAvailable commands:\n{self.get_commands_description()}"
         )
 
@@ -244,15 +244,15 @@ class PlayerInputProcessor:
         # If output set, it shows the user something while the AI is working.
         output: str = ""  # Was: I'm trying to guess what you meant by that...
         prompt: str = (
-            "Help me to translate my player's input into either a valid adventure game command, or a custom action.\n"
+            "Help me to translate my player's input into either a valid command, or a custom action.\n"
             + self.get_commands_description()
             + player.get_input_history(
                 10, "Some history of what the user has seen for context:"
             )
             + "\nThe player's current location description: "
-            + self.game_manager.world.rooms[player.get_current_location()].description
+            + self.world_manager.world.rooms[player.get_current_location()].description
             + "\nThe items in this location: "
-            + self.game_manager.world.get_room_items_description(
+            + self.world_manager.world.get_room_items_description(
                 player.get_current_location()
             )
             + f"\nPlayer's inventory: {player.get_inventory_description()}"
@@ -261,12 +261,12 @@ class PlayerInputProcessor:
             + "\nRespond with only a valid command phrase or the word 'custom', nothing else.\n"
         )
 
-        await self.game_manager.ai_manager.submit_remote_request(
+        await self.world_manager.ai_manager.submit_remote_request(
             self.handle_translation_response,
             player,
             request_type="translation_request",
             prompt=prompt,
-            system_message="You are a game command interpreter",
+            system_message="You are a simulated world command interpreter",
             player_context=player_input,
         )
         return None, None, output
@@ -451,7 +451,7 @@ class PlayerInputProcessor:
         # Different return if the command is a direction
         elif command in self.directions:
             return (
-                self.game_manager.move_entity,
+                self.world_manager.move_entity,
                 (player, command, rest_of_response),
                 None,
             )
@@ -459,7 +459,7 @@ class PlayerInputProcessor:
             if not rest_of_response:
                 exit(logger, "Custom action requested but no context provided!")
             return (
-                self.game_manager.do_custom_action,
+                self.world_manager.do_custom_action,
                 (player, rest_of_response),
                 None,
             )

@@ -16,7 +16,7 @@ jobs:
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
       - run: cd common; python -m unittest tests.test_aimanager
-      - run: cd orchestrator; python -m unittest tests.test_gamemanager
+      - run: cd orchestrator; python -m unittest tests.test_worldmanager
       - run: cd imageserver; python -m unittest tests.test_imageserver
       - run: cd aibroker; python -m unittest tests.test_aibroker
   build_orchestrator:

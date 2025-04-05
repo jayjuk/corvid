@@ -1,7 +1,7 @@
 [
   {
     "name": "Test Location",
-    "description": "This is a test location. If you are seeing this in the game, something has gone a bit wrong!",
+    "description": "This is a test location. If you are seeing this, something has gone a bit wrong!",
     "image": "black.png",
     "exits": {}
   }

@@ -11,6 +11,7 @@ logger = set_up_logger("AI Broker")
 
 from aimanager import AIManager
 from messagebroker_helper import MessageBrokerHelper
+import random
 
 
 # Class to manage the AI's interaction with the Orchestrator
@@ -25,7 +26,7 @@ class AIBroker:
         # Constructor
         self.mode: Optional[str] = mode
         self.time_to_die: bool = False
-        self.game_instructions: str = ""
+        self.world_instructions: str = ""
         self.event_log: List[str] = []
         self.max_history: int = int(environ.get("AIBROKER_MAX_HISTORY", 100))
         self.max_wait: int = 5  # secs
@@ -61,14 +62,14 @@ class AIBroker:
                 "set_player_name": {"mode": "publish"},
                 "summon_player_response": {"mode": "publish"},
                 "player_action": {"mode": "publish"},
-                "game_update": {"mode": "subscribe", "callback": self.game_update},
+                "world_update": {"mode": "subscribe", "callback": self.world_update},
                 "instructions": {"mode": "subscribe", "callback": self.instructions},
                 "shutdown": {"mode": "subscribe", "callback": self.shutdown},
                 "logout": {"mode": "both", "callback": self.logout},
                 "room_update": {"mode": "subscribe", "callback": self.room_update},
-                "game_data_update": {
+                "world_data_update": {
                     "mode": "subscribe",
-                    "callback": self.game_data_update,
+                    "callback": self.world_data_update,
                 },
                 "name_invalid": {"mode": "subscribe", "callback": self.name_invalid},
             },
@@ -81,13 +82,13 @@ class AIBroker:
         # TODO #89 Enable many AI players to be managed by the same broker
         await self.set_ai_name()
 
-    # Game update event handler
-    async def game_update(self, data: Dict) -> None:
+    # World update event handler
+    async def world_update(self, data: Dict) -> None:
         if data:
-            logger.info(f"Received game update event: {data}")
+            logger.info(f"Received world update event: {data}")
             self.log_event(data)
         else:
-            exit(logger, "Received empty game update event")
+            exit(logger, "Received empty world update event")
 
     # Instructions event handler
     async def instructions(self, data: Dict) -> None:
@@ -111,7 +112,7 @@ class AIBroker:
         pass
 
     # Player update event handler
-    async def game_data_update(self, data: Dict) -> None:
+    async def world_data_update(self, data: Dict) -> None:
         if "player_count" in data:
             if data["player_count"] == 1 and self.mode != "builder":
                 logger.info("No players apart from me, so I won't do anything.")
@@ -151,36 +152,38 @@ class AIBroker:
             self.last_time = time.time()
 
     # AI manager will record instructions from the Orchestrator
-    # Which are given to each player at the start of the game
+    # Which are given to each player at the start of the world
     def record_instructions(self, data: str) -> None:
-        self.game_instructions += data + "\n"
-        self.ai_manager.set_system_message(self.game_instructions + self.system_message)
+        self.world_instructions += data + "\n"
+        self.ai_manager.set_system_message(
+            self.world_instructions + self.system_message
+        )
 
     # AI manager will get instructions from the Orchestrator
     def get_ai_instructions(self) -> str:
         ai_instructions: str = (
-            "You have been brought to life in a text adventure game! "
-            + "Do not apologise to the game! "
+            "You have been brought to life in a simulated world! "
+            + "Do not apologise to the world! "
             + "Do not try to talk to merchants, they cannot talk. "
             + "Respond only with one valid command phrase each time you are contacted. "
-            + f"\nPlayer Instructions:\n{self.game_instructions}"
+            + f"\nPlayer Instructions:\n{self.world_instructions}"
         )
         # Set up role-specific instructions for the AI
         if self.mode == "builder":
             ai_instructions += (
-                "You are a creator of worlds! You can and should create new locations in the game with the 'build' command "
+                "You are a creator of worlds! You can and should create new locations in the world with the 'build' command "
                 + "followed by the direction, location name (quotes for spaces) and the description (in quotes). "
                 + """e.g. build north "Neighbour's House" "A quaint, two-story dwelling, with weathered bricks, ivy-clad walls, a red door, and a chimney puffing gentle smoke."" \n"""
-                + "Help to make the game more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions.\n"
+                + "Help to make the world more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions.\n"
             )
-        # else:
-        #     # Experiment to see whether cheaper AIs can do this
-        #     ai_instructions += (
-        #         "Prioritise exploring, picking up items ('get all'), selling them to merchants,"
-        #         + " and then buying the red button (which costs 999p) from Gambino, so you win the game!"
-        #         + " Use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
-        #     )
-        # "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
+        else:
+            # Experiment to see whether cheaper AIs can do this
+            ai_instructions += (
+                # "Prioritise exploring, picking up items ('get all'), selling them to merchants,"
+                # + " and then buying the red button (which costs 999p) from Gambino, which you can press!"
+                +" Use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
+                "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
+            )
         return ai_instructions
 
     # Get AI name from the LLM using the AI manager
@@ -196,11 +199,17 @@ class AIBroker:
             logger.info("AI_NAME is not set, letting model choose a name.")
 
             mode_name_hints = {
-                "builder": "You are a creator of worlds! You can add new locations in the game. "
+                "builder": "You are a creator of worlds! You can add new locations. "
             }
+            vowels = "aeiou"
+            consonants = "bcdfghjklmnpqrstvwxyz"
+            random_vowel = random.choice(vowels)
+            random_consonant = random.choice(consonants)
+
             request = (
                 mode_name_hints.get(self.mode, "")
-                + "What do you want your name to be in this game? Please respond with a single one-word name only using only alphabetical characters (letters), and try to be random."
+                + f"What do you want your name to be? Please respond with a single one-word name only using only alphabetical characters (letters). "
+                + f"Your name should include the letters '{random_consonant}' and '{random_vowel}'."
             )
             # If any feedback from previous attempt, include it
             if feedback:
@@ -223,7 +232,7 @@ class AIBroker:
 
         # Unsubscribe from the previous name
         if self.player_name:
-            await self.mbh.unsubscribe(f"game_update.{self.player_id}")
+            await self.mbh.unsubscribe(f"world_update.{self.player_id}")
             await self.mbh.unsubscribe(f"logout.{self.player_id}")
             await self.mbh.unsubscribe(f"instructions.{self.player_id}")
             await self.mbh.unsubscribe(f"room_update.{self.player_id}")
@@ -231,7 +240,7 @@ class AIBroker:
         self.player_id = self.player_name.lower()
 
         # Subscribe to name-specific events
-        await self.mbh.subscribe(f"game_update.{self.player_id}", self.game_update)
+        await self.mbh.subscribe(f"world_update.{self.player_id}", self.world_update)
         await self.mbh.subscribe(f"logout.{self.player_id}", self.logout)
         await self.mbh.subscribe(f"instructions.{self.player_id}", self.instructions)
         await self.mbh.subscribe(f"room_update.{self.player_id}", self.room_update)
@@ -245,7 +254,7 @@ class AIBroker:
             },
         )
 
-    # Log the game events for the AI to process
+    # Log the world events for the AI to process
     def log_event(self, event_text: str) -> None:
         # If the input is just echoing back what you said, do nothing
         if (
@@ -266,7 +275,7 @@ class AIBroker:
     def clear_event_log(self) -> None:
         self.event_log = []
 
-    # Submit the game's updates as input to the AI manager
+    # Submit the world's updates as input to the AI manager
     def submit_input(self) -> str:
         # TODO #60 Improve transactionality of event log management when submitting to AI
         # Grab and clear the log quickly to minimise threading issue risk
@@ -274,7 +283,7 @@ class AIBroker:
         self.clear_event_log()
         logger.info(f"Found {len(tmp_log)} events to submit to model.")
 
-        # Catch up with the input / game context
+        # Catch up with the input / world context
         message_text = ""
         for event_text in tmp_log:
             message_text += event_text + "\n"
@@ -302,7 +311,7 @@ class AIBroker:
                 )
                 # If response was to exit, exit here (after sending the exit message to the Orchestrator)
                 if response == "exit":
-                    exit(logger, "AI has exited the game.")
+                    exit(logger, "AI has left this world.")
             else:
                 logger.error("AI returned empty response!")
 

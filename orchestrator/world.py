@@ -8,10 +8,10 @@ from aimanager import AIManager
 from merchant import Merchant
 from room import Room
 from animal import Animal
-from gameitem import GameItem
+from worlditem import worlditem
 from player import Player
 from entity import Entity
-from gameitem import GameItem
+from worlditem import worlditem
 from typing import List, Dict, Union, Optional
 
 
@@ -61,19 +61,22 @@ class World:
             self.load_entities()
             self.load_room_items()
 
-    # Get the objective of the game
+    # Return the name of the world for introductions etc
+    def get_name(self) -> str:
+        return self.name.capitalize()
+
+    # Get the objective of this world
     def get_objective(self, player: Optional[Player] = None) -> str:
         world_theme: str = self.landscape or self.name
         if player and player.role == "builder":
             return (
-                "You are a builder and your objective is to create a wonderful game world. The theme: "
+                "You are a builder and your objective is to create a wonderful world. The theme: "
                 + world_theme
             )
         # return (
-        #     "The aim of this game is to earn enough money to buy The Button. "
+        #     "Your goal is to earn enough money to buy The Button. "
         #     + "You don't know what will happen when you press The Button, but you know it will be good. "
-        #     + "The first player to press the button (in their possession) wins the game! "
-        #     + "Hint: earn money buy exploring the game world, finding items and selling them to a merchant."
+        #     + "Hint: earn money buy exploring the world, finding items and selling them to a merchant."
         # )
         return f"Welcome to this world: {world_theme}\nYour objective for now is simply to explore and have fun!"
 
@@ -82,7 +85,7 @@ class World:
         logger.info("Loading rooms...")
 
         # Get rooms from storage
-        rooms_list: List[Dict[str, Any]] = self.storage_manager.get_game_objects(
+        rooms_list: List[Dict[str, Any]] = self.storage_manager.get_world_objects(
             self.name, "Room"
         )
         store_default_rooms = False
@@ -115,7 +118,7 @@ class World:
         )
         if store_default_rooms:
             logger.info(f"Storing default rooms in database for new world {self.name}")
-            self.storage_manager.store_game_objects(
+            self.storage_manager.store_world_objects(
                 self.name, list(rooms_dict.values())
             )
         return rooms_dict
@@ -399,7 +402,7 @@ class World:
         world_theme: str = self.landscape or self.name
 
         prompt: str = (
-            f"Generate an appropriate 30-50 word description for a new location in my adventure game world '{world_theme}'."
+            f"Generate an appropriate 30-50 word description for a new location in my simulated world '{world_theme}'."
         )
         if len(existing_room_descriptions) > 1:
             prompt += " Pre-existing descriptions for inspiration:\n" + "\n,\n".join(
@@ -409,7 +412,7 @@ class World:
             prompt += (
                 " Here is an example of a room description:\n"
                 + "A rickety wooden shed stands precariously, its peeling paint hinting at long-forgotten secrets. Its interior is a labyrinth of shadows, filled with the musty scent of damp earth and forgotten tools.\n"
-                + "(This just gives you an idea of format and length, feel free to vary the style and theme, perhaps drawing inspiration from classic text adventure games of old...)."
+                + "(This just gives you an idea of format and length, feel free to vary the style and theme, perhaps drawing inspiration from classic simulated worlds of old...)."
             )
         prompt += f"\nThis room is called '{room_name}', the description should be appropriate to that.\n"
 
@@ -440,25 +443,25 @@ class World:
             image=None,
             creator=player.name or "system",
         )
-        self.storage_manager.store_game_object(self.name, new_room)
+        self.storage_manager.store_world_object(self.name, new_room)
         self.rooms[room_name] = new_room
 
         # Add the new room to the exits of the current room
         if current_location in self.rooms:
             self.rooms[current_location].exits[direction] = room_name
             #  TODO #86 Effect transactionality around storage of new room
-            self.storage_manager.store_game_object(
+            self.storage_manager.store_world_object(
                 self.name, self.rooms[current_location]
             )
         return f"New location created: {room_description}"
 
     def update_room_image(self, room_name: str, image_name: str) -> None:
         self.rooms[room_name].image = image_name
-        self.storage_manager.store_game_object(self.name, self.rooms[room_name])
+        self.storage_manager.store_world_object(self.name, self.rooms[room_name])
 
     def update_room_description(self, room_name: str, description: str) -> None:
         self.rooms[room_name].description = description
-        self.storage_manager.store_game_object(self.name, self.rooms[room_name])
+        self.storage_manager.store_world_object(self.name, self.rooms[room_name])
 
     def delete_room(self, room_name: str) -> str:
         logger.info(f"Deleting room {room_name}")
@@ -472,7 +475,7 @@ class World:
             for direction in list(self.rooms[room].exits.keys()):
                 if self.rooms[room].exits[direction] == room_name:
                     del self.rooms[room].exits[direction]
-                    self.storage_manager.store_game_object(self.name, self.rooms[room])
+                    self.storage_manager.store_world_object(self.name, self.rooms[room])
         # Delete the room
         del self.grid_references[self.rooms[room_name].grid_reference]
         del self.rooms[room_name]
@@ -480,7 +483,7 @@ class World:
         if self.default_location == room_name:
             self.default_location = list(self.rooms.keys())[0]
 
-        self.storage_manager.delete_game_object(
+        self.storage_manager.delete_world_object(
             self.name, "Room", room_name, location=""
         )
         logger.info(f"Room {room_name} has been deleted.")
@@ -489,7 +492,7 @@ class World:
     # Search room for item by name and return reference to it if found
     def search_item(
         self, item_name: str, location: str, exact_match: bool = False
-    ) -> Optional[GameItem]:
+    ) -> Optional[worlditem]:
         for item in self.room_items.get(location, []):
             # Return the first item that includes the given item name
             # So "get clock" will find "dusty clock" and "grandfather clock"
@@ -502,25 +505,25 @@ class World:
         return None
 
     # Room items getter
-    def get_room_items(self, location: str) -> List[GameItem]:
+    def get_room_items(self, location: str) -> List[worlditem]:
         return self.room_items.get(location, [])
 
     # Room items setter
-    def add_item_to_room(self, item: GameItem, room_name: str) -> None:
+    def add_item_to_room(self, item: worlditem, room_name: str) -> None:
         if room_name in self.room_items:
             self.room_items[room_name].append(item)
         else:
             self.room_items[room_name] = [item]
 
     # Room items setter
-    def remove_item_from_room(self, game_item: GameItem, room_name: str) -> None:
+    def remove_item_from_room(self, world_item: worlditem, room_name: str) -> None:
         if room_name in self.room_items:
             for i, o in enumerate(self.room_items[room_name]):
-                if o.name == game_item.name:
+                if o.name == world_item.name:
                     self.room_items[room_name].pop(i)
                     return
             # If item not found in room, log error
-            logger.error(f"Item {game_item.name} not found in room {room_name}")
+            logger.error(f"Item {world_item.name} not found in room {room_name}")
         else:
             logger.error(f"Room {room_name} not found in room items map")
 
@@ -528,9 +531,9 @@ class World:
     def load_room_items(self) -> None:
         logger.info("Loading room items...")
         item_load_count: int = 0
-        for this_item in self.storage_manager.get_game_objects(self.name, "GameItem"):
+        for this_item in self.storage_manager.get_world_objects(self.name, "worlditem"):
             # Populate the room_item_map with item versions of the items
-            o: GameItem = GameItem(world=self, init_dict=this_item)
+            o: worlditem = worlditem(world=self, init_dict=this_item)
             self.register_item(o)
             item_load_count += 1
         if not item_load_count:
@@ -541,9 +544,9 @@ class World:
         item_datas = self.storage_manager.get_default_world_data(self.name, "items")
         for item_data in item_datas:
             logger.info(f"Loading and storing item {item_data['name']}")
-            o: GameItem = GameItem(world=self, init_dict=item_data)
+            o: worlditem = worlditem(world=self, init_dict=item_data)
             self.register_item(o)
-            self.storage_manager.store_game_object(self.name, o)
+            self.storage_manager.store_world_object(self.name, o)
 
     def create_item(
         self, name: str, description: str, price: int, location: str
@@ -558,7 +561,7 @@ class World:
         logger.info(f"Creating item {name} in {location}")
 
         # Create and store item
-        o: GameItem = GameItem(
+        o: worlditem = worlditem(
             world=self,
             name=name,
             description=description,
@@ -566,7 +569,7 @@ class World:
             location=location,
         )
         self.register_item(o)
-        self.storage_manager.store_game_object(self.name, o)
+        self.storage_manager.store_world_object(self.name, o)
 
     # Currently, must specify player to delete item, which is either in their possession or in their location
     def delete_item(self, item_name: str, player: Player) -> None:
@@ -576,18 +579,18 @@ class World:
         else:
             location = player.get_current_location()
 
-        item_to_delete: Optional[GameItem] = self.search_item(item_name, location)
+        item_to_delete: Optional[worlditem] = self.search_item(item_name, location)
         if item_to_delete:
             # Check if item is in room or an entity's possession
             if item_to_delete.location in self.entities:
                 self.entities[location].inventory.remove(item_to_delete)
             else:
                 self.remove_item_from_room(item_to_delete, location)
-            self.storage_manager.delete_game_object(
-                self.name, "GameItem", item_to_delete.name, location
+            self.storage_manager.delete_world_object(
+                self.name, "worlditem", item_to_delete.name, location
             )
 
-    def register_item(self, item: GameItem) -> None:
+    def register_item(self, item: worlditem) -> None:
         # Is it a room or an entity?
         if item.location in self.entities:
             self.entities[item.location].inventory.append(item)
@@ -604,16 +607,16 @@ class World:
                 self.add_item_to_room(item, item.location)
 
     # Update item description and store in database
-    def update_item_description(self, item: GameItem, description: str) -> None:
+    def update_item_description(self, item: worlditem, description: str) -> None:
         item.description = description
-        self.storage_manager.store_game_object(self.name, item)
+        self.storage_manager.store_world_object(self.name, item)
 
     def load_entities(self) -> None:
         if self.entities:
             exit(logger, "Load_entities called when entities are already registered!")
         logger.info("Loading entities...")
         for entity_role in ("Animal", "Merchant"):
-            for this_item in self.storage_manager.get_game_objects(
+            for this_item in self.storage_manager.get_world_objects(
                 self.name, entity_role
             ):
                 logger.debug(f"Loading entity {this_item['name']}")
@@ -675,7 +678,7 @@ class World:
             )
         else:
             exit(logger, f"Invalid or unsupported entity type {entity['type']}")
-        self.storage_manager.store_game_object(self.name, entity_object)
+        self.storage_manager.store_world_object(self.name, entity_object)
         self.register_entity(entity_object)
 
     def register_entity(self, entity: Union[Merchant, Animal]) -> None:
@@ -692,7 +695,7 @@ class World:
     # Update entity description and store in database
     def update_entity_description(self, entity: Entity, description: str) -> None:
         entity.description = description
-        self.storage_manager.store_game_object(self.name, entity)
+        self.storage_manager.store_world_object(self.name, entity)
 
     def get_currency(
         self, amount: Optional[int] = None, short: bool = False, plural: bool = False
@@ -711,7 +714,7 @@ class World:
 
     def create_player(self, player_id: str, name: str, role: str) -> Union[str, Player]:
         # Access player's initial state if they have played before.
-        stored_player_data = self.storage_manager.get_game_object(
+        stored_player_data = self.storage_manager.get_world_object(
             self.name, object_type="Player", rowkey_value=name
         )
         if stored_player_data:
@@ -726,7 +729,7 @@ class World:
             self, player_id, name, role, stored_player_data=stored_player_data
         )
         # Store player's data again (updates last login timestamp if nothing else)
-        self.storage_manager.store_game_object(self.name, p)
+        self.storage_manager.store_world_object(self.name, p)
 
         # TODO #82 Improve error handling around player creation
         return "", p

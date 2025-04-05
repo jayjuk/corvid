@@ -25,11 +25,9 @@ async def main() -> None:
         player_name = None
         while not player_name or " " in player_name:
             # Keep trying til they get the name right
-            player_name = input("What do you want your name to be in this game?").strip(
-                "."
-            )
+            player_name = input("What do you want your name to be?").strip(".")
         # Subscribe to name-specific events
-        await mbh.subscribe(f"game_update.{player_name}", game_update)
+        await mbh.subscribe(f"world_update.{player_name}", world_update)
         await mbh.subscribe(f"logout.{player_name}", logout)
         await mbh.subscribe(f"instructions.{player_name}", instructions)
         await mbh.subscribe(f"room_update.{player_name}", room_update)
@@ -39,13 +37,13 @@ async def main() -> None:
 
     # MBH event handlers
 
-    # Game update event handler
-    async def game_update(data: Dict) -> None:
+    # World update event handler
+    async def world_update(data: Dict) -> None:
         if data:
-            logger.info(f"Received game update event: {data}")
+            logger.info(f"Received world update event: {data}")
             print(data)
         else:
-            exit(logger, "Received empty game update event")
+            exit(logger, "Received empty world update event")
 
     # Instructions event handler
     async def instructions(data: Dict) -> None:
@@ -67,13 +65,13 @@ async def main() -> None:
         print("ROOM UPDATE:", data)
 
     # Player update event handler
-    async def game_data_update(data: Dict) -> None:
+    async def world_data_update(data: Dict) -> None:
         pass  # print("GAME UPDATE:", data)
 
     # Invalid name, try again
     async def name_invalid(data: Dict) -> None:
         logger.info(f"Invalid name event received: {data}")
-        await mbh.unsubscribe(f"game_update.{player_name}")
+        await mbh.unsubscribe(f"world_update.{player_name}")
         await mbh.unsubscribe(f"logout.{player_name}")
         await mbh.unsubscribe(f"instructions.{player_name}")
         await mbh.unsubscribe(f"room_update.{player_name}")
@@ -87,12 +85,12 @@ async def main() -> None:
         {
             "set_player_name": {"mode": "publish"},
             "player_action": {"mode": "publish"},
-            "game_update": {"mode": "subscribe", "callback": game_update},
+            "world_update": {"mode": "subscribe", "callback": world_update},
             "instructions": {"mode": "subscribe", "callback": instructions},
             "shutdown": {"mode": "subscribe", "callback": shutdown},
             "logout": {"mode": "both", "callback": logout},
             "room_update": {"mode": "subscribe", "callback": room_update},
-            "game_data_update": {"mode": "subscribe", "callback": game_data_update},
+            "world_data_update": {"mode": "subscribe", "callback": world_data_update},
             "name_invalid": {"mode": "subscribe", "callback": name_invalid},
         },
     )

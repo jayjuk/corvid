@@ -8,5 +8,5 @@ if "%~1"=="" (
     set AI_PLAYER_FILE_NAME=%~1
 )
 set AIBROKER_MAX_HISTORY=100
-set MODEL_SYSTEM_MESSAGE=You are a character playing a computer game.
+set MODEL_SYSTEM_MESSAGE=You are a character in a simulated world.
 python agentmanager.py

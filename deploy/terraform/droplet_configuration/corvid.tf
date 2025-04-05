@@ -82,7 +82,7 @@ resource "digitalocean_droplet" "corvid" {
 resource "digitalocean_record" "a_record" {
   domain = "moncorvosolutions.com"
   type   = "A"
-  name   = "game" # This is for the root domain, use "www" for a subdomain
+  name   = "corvid" # This is for the root domain, use "www" for a subdomain
   value  = digitalocean_droplet.corvid.ipv4_address
   ttl    = 3600
 }

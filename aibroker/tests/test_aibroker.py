@@ -33,7 +33,7 @@ class TestAIBroker(unittest.TestCase):
         # Check that the player instructions were set correctly
         test_instructions = "Test instructions"
         self.ai_broker.record_instructions(test_instructions)
-        self.assertIn(test_instructions, self.ai_broker.game_instructions)
+        self.assertIn(test_instructions, self.ai_broker.world_instructions)
         # Check that the AIManager was called with the expected system_message
         self.mock_ai_manager.set_system_message.assert_called_once()
 

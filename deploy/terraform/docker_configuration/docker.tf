@@ -208,7 +208,7 @@ resource "docker_container" "imageserver_container" {
   }
 }
 
-# Pull and run game containers
+# Pull and run containers
 resource "docker_container" "frontend_container" {
   image = "${var.CONTAINER_REGISTRY_REPOSITORY}/frontend"
   name  = "frontend"
@@ -243,7 +243,7 @@ resource "docker_container" "frontend_container" {
 
   #Emit IP address of the container
   provisioner "local-exec" {
-    command = "echo Play the game at: https://${data.terraform_remote_state.droplet.outputs.droplet_ip}:3000"
+    command = "echo Launch Corvid at: https://${data.terraform_remote_state.droplet.outputs.droplet_ip}:3000"
   }
 
 }

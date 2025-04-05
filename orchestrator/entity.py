@@ -1,6 +1,6 @@
 from typing import List, Optional
 from utils import set_up_logger
-from gameitem import GameItem
+from worlditem import worlditem
 
 # Set up logger
 logger = set_up_logger()
@@ -26,7 +26,7 @@ class Entity:
         self.location: str = location or world.get_location()
 
         # Inventory
-        self.inventory: List[GameItem] = []
+        self.inventory: List[worlditem] = []
 
         # Register this entity in the world it belongs in
         world.register_entity(self)
@@ -39,7 +39,7 @@ class Entity:
         # Set new room
         self.location = next_room
         # Store change of location
-        self.world.storage_manager.store_game_object(self.world.name, self)
+        self.world.storage_manager.store_world_object(self.world.name, self)
 
     # Getter for player's current location
     def get_current_location(self) -> str:
@@ -50,13 +50,13 @@ class Entity:
         return False
 
     # Setter for player picking up an item
-    def add_item(self, item: GameItem) -> None:
+    def add_item(self, item: worlditem) -> None:
         self.inventory.append(item)
 
     # Setter for player dropping item by reference
     def drop_item(
-        self, item: GameItem, dropped_items: Optional[List[GameItem]] = None
-    ) -> List[GameItem]:
+        self, item: worlditem, dropped_items: Optional[List[worlditem]] = None
+    ) -> List[worlditem]:
         if dropped_items is None:
             dropped_items = []
         self.inventory.remove(item)
@@ -65,7 +65,7 @@ class Entity:
         return dropped_items
 
     # Setter for player dropping item by name
-    def drop_items(self, item_name: str) -> List[GameItem]:
+    def drop_items(self, item_name: str) -> List[worlditem]:
         # Check if item is a string
         dropped_items = []
         if isinstance(item_name, str):
@@ -78,7 +78,7 @@ class Entity:
                     self.drop_item(item, dropped_items)
         return dropped_items
 
-    def get_inventory(self) -> List[GameItem]:
+    def get_inventory(self) -> List[worlditem]:
         return self.inventory
 
     def get_inventory_description(self) -> str:

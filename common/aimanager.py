@@ -35,7 +35,7 @@ class AIManager:
         # Chat history / context
         self.reset()
 
-        # Event log = feedback from game manager, to be included in next request
+        # Event log = feedback from world manager, to be included in next request
         self.event_log: List[str] = []
 
         # Flag to keep track of whether we have sent a system message for Gemini
@@ -75,7 +75,7 @@ class AIManager:
         self.content_word: str = "content"
         self.model_word: str = "assistant"
         self.history_abbreviation_content: str = (
-            "(some game transcript history removed for brevity)"
+            "(some world transcript history removed for brevity)"
         )
         if self.get_model_api() == "Gemini":
             self.model_word: str = "model"

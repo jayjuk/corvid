@@ -11,7 +11,7 @@ import asyncio
 logger = set_up_logger("Orchestrator")
 
 from azurestoragemanager import AzureStorageManager
-from gamemanager import GameManager
+from worldmanager import worldmanager
 from player import Player
 from player_input_processor import PlayerInputProcessor
 from messagebroker_helper import MessageBrokerHelper
@@ -22,7 +22,7 @@ from messagebroker_helper import MessageBrokerHelper
 # Create a log file for model responses
 def get_player_transcript_file_name(player_name: str) -> str:
     makedirs(get_logs_folder(), exist_ok=True)
-    return path.join(get_logs_folder(), f"{player_name}_game_transcript.txt")
+    return path.join(get_logs_folder(), f"{player_name}_world_transcript.txt")
 
 
 def create_player_transcript(player_name: str) -> None:
@@ -37,7 +37,7 @@ def log_to_player_transcript(
     with open(get_player_transcript_file_name(player_name), "a") as f:
         timestamp: str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         f.write(f"{timestamp} {player_name}: {request}\n")
-        f.write(f"{timestamp} Game: {response}\n\n")
+        f.write(f"{timestamp} World: {response}\n\n")
 
 
 async def main() -> None:
@@ -50,7 +50,7 @@ async def main() -> None:
         logger.info(
             f"Client requesting player setup: {player_id}, {player_info.get('name')}, {player_info.get('role')}"
         )
-        outcome: Optional[str] = await game_manager.process_player_setup(
+        outcome: Optional[str] = await world_manager.process_player_setup(
             player_id, player_info, player_input_processor.get_help_text()
         )
         # Blank outcome = success
@@ -69,12 +69,12 @@ async def main() -> None:
         player_id: str = data["player_id"]
         player_input: str = data["player_input"]
 
-        if player_id in game_manager.players:
-            player: Player = game_manager.players[player_id]
+        if player_id in world_manager.players:
+            player: Player = world_manager.players[player_id]
             logger.info(
                 f"Received user action: {player_input} from {player_id} ({player.name})"
             )
-            await mbh.publish("game_update", f"You: {player_input}", player_id)
+            await mbh.publish("world_update", f"You: {player_input}", player_id)
             command_function: Callable
             command_args: Tuple
             response_to_player: Optional[str]
@@ -101,8 +101,8 @@ async def main() -> None:
 
             # Respond to player
             if response_to_player:
-                player.add_input_history(f"Game: {response_to_player}")
-                await mbh.publish("game_update", response_to_player, player_id)
+                player.add_input_history(f"World: {response_to_player}")
+                await mbh.publish("world_update", response_to_player, player_id)
 
             # Log player input and response
             log_to_player_transcript(player.name, player_input, response_to_player)
@@ -119,35 +119,35 @@ async def main() -> None:
         player_id: str = data["player_id"]
         logger.info(f"Client disconnected: {player_id}")
         # TODO #72 Allow players to reconnect (for now disconnect is same as quit)
-        game_manager.remove_player(
+        world_manager.remove_player(
             player_id, "You have been logged out as your client disconnected."
         )
 
     async def image_creation_response(data: Dict) -> None:
         logger.info(f"Received image creation response: {data}")
-        await game_manager.process_image_creation_response(
+        await world_manager.process_image_creation_response(
             data["room_name"], data["image_filename"], data["success"]
         )
 
     async def summon_player_response(data: Dict) -> None:
         logger.info(f"Received summon player response: {data}")
-        game_manager.process_summon_player_response(data["request_id"])
+        world_manager.process_summon_player_response(data["request_id"])
 
     async def ai_response(data: Dict) -> None:
         logger.info(f"Received AI response: {data}")
         if (
             "request_id" in data
-            and data["request_id"] in game_manager.ai_manager.remote_requests
+            and data["request_id"] in world_manager.ai_manager.remote_requests
         ):
             # TODO #98 should Orchestrator be allowed to access ai manager directly?
             player: Player
             response_to_player: str
             (player, response_to_player) = (
-                await game_manager.ai_manager.process_ai_response(data)
+                await world_manager.ai_manager.process_ai_response(data)
             )
             if response_to_player:
-                player.add_input_history(f"Game: {response_to_player}")
-                await mbh.publish("game_update", response_to_player, player.player_id)
+                player.add_input_history(f"World: {response_to_player}")
+                await mbh.publish("world_update", response_to_player, player.player_id)
                 logger.info(
                     f"Emitting this response from the handler of this response: {response_to_player}"
                 )
@@ -170,8 +170,8 @@ async def main() -> None:
             "instructions": {"mode": "publish"},
             "name_invalid": {"mode": "publish"},
             "room_update": {"mode": "publish"},
-            "game_update": {"mode": "publish"},
-            "game_data_update": {"mode": "publish"},
+            "world_update": {"mode": "publish"},
+            "world_data_update": {"mode": "publish"},
             "logout": {"mode": "publish"},
             # Image creation
             "image_creation_request": {"mode": "publish"},
@@ -202,9 +202,9 @@ async def main() -> None:
     else:
         world_name = environ.get("orchestrator_WORLD_NAME", "corvid")
 
-    logger.info(f"Starting up game manager - world '{world_name}'")
+    logger.info(f"Starting up world manager - world '{world_name}'")
     storage_manager: AzureStorageManager = AzureStorageManager()
-    game_manager: GameManager = GameManager(
+    world_manager: worldmanager = worldmanager(
         mbh,
         storage_manager,
         world_name=world_name,
@@ -212,7 +212,7 @@ async def main() -> None:
         landscape=environ.get("LANDSCAPE_DESCRIPTION"),
         animals_active=environ.get("ANIMALS_ACTIVE", "True").lower() == "true",
     )
-    player_input_processor: PlayerInputProcessor = PlayerInputProcessor(game_manager)
+    player_input_processor: PlayerInputProcessor = PlayerInputProcessor(world_manager)
 
     # Start consuming messages
     await mbh.set_up_nats()

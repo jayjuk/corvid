@@ -138,8 +138,8 @@ class AzureStorageManager(StorageManager):
         return None
 
     # Store all Python objects, received as actual objects
-    def store_game_object(self, game_name: str, object: object) -> bool:
-        logger.debug(f"Storing python object in game {game_name}: {object.__dict__}")
+    def store_world_object(self, world_name: str, object: object) -> bool:
+        logger.debug(f"Storing python object in world {world_name}: {object.__dict__}")
 
         objects_client = self.table_service_client.create_table_if_not_exists(
             "PythonObjects"
@@ -148,7 +148,7 @@ class AzureStorageManager(StorageManager):
         # Store object in Azure
         # Convert to dict
         entity: dict = object.__dict__.copy()
-        entity["PartitionKey"] = game_name + "__" + type(object).__name__
+        entity["PartitionKey"] = world_name + "__" + type(object).__name__
 
         # Don't store objects named "system" - they are transient
         if entity["name"] == "system":
@@ -161,8 +161,8 @@ class AzureStorageManager(StorageManager):
         # TODO #85 Don't hard-code attributes to remove on storage
         # Override fields that contain object values lists etc
 
-        # 1. World - use the game/world name just for supportability
-        entity["world"] = game_name
+        # 1. World - use the world name just for supportability
+        entity["world"] = world_name
         # 2. Inventory - reconstituted from location
         if "inventory" in entity:
             del entity["inventory"]
@@ -182,8 +182,8 @@ class AzureStorageManager(StorageManager):
         # Return true if successful
         return True
 
-    # Delete a game object
-    def delete_game_object(
+    # Delete a world object
+    def delete_world_object(
         self, world_name: str, object_type: str, name: str, location: str = ""
     ) -> bool:
         objects_client = self.table_service_client.get_table_client("PythonObjects")
@@ -219,7 +219,7 @@ class AzureStorageManager(StorageManager):
                 )
 
     # Returns all instances of a type of object, as a dict
-    def get_game_objects(
+    def get_world_objects(
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         objects_client = self.table_service_client.get_table_client("PythonObjects")
