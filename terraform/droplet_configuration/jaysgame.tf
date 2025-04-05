@@ -28,9 +28,9 @@ data "digitalocean_ssh_key" "terraform" {
 }
 
 
-resource "digitalocean_droplet" "jaysgame" {
+resource "digitalocean_droplet" "corvid" {
   image  = "ubuntu-24-04-x64"
-  name   = "jaysgame"
+  name   = "corvid"
   region = "lon1"
   size   = "s-1vcpu-2gb"
 
@@ -82,10 +82,10 @@ resource "digitalocean_record" "a_record" {
   domain = "moncorvosolutions.com"
   type   = "A"
   name   = "game" # This is for the root domain, use "www" for a subdomain
-  value  = digitalocean_droplet.jaysgame.ipv4_address
+  value  = digitalocean_droplet.corvid.ipv4_address
   ttl    = 3600
 }
 
 output "droplet_ip" {
-  value = digitalocean_droplet.jaysgame.ipv4_address
+  value = digitalocean_droplet.corvid.ipv4_address
 }

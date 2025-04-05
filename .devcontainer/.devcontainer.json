@@ -1,5 +1,5 @@
 {
-    "name": "JaysGame_CodeSpace",
+    "name": "corvid_CodeSpace",
     "postCreateCommand": "./.devcontainer/codespace_setup.sh",
     // Other settings...
 }

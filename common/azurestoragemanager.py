@@ -34,7 +34,7 @@ class AzureStorageManager(StorageManager):
             self.blob_service_client: Optional[BlobServiceClient] = (
                 self.get_azure_blob_service_client()
             )
-            self.image_container_name: str = "jaysgameimages"
+            self.image_container_name: str = "corvidimages"
         else:
             exit(logger, "Could not get Azure credential.")
 

@@ -1,6 +1,6 @@
 apiVersion: 2019-12-01
 location: westeurope
-name: jaysgame
+name: corvid
 properties:
   imageRegistryCredentials:
     - server: "${CONTAINER_REGISTRY_SERVER}"
@@ -20,11 +20,11 @@ properties:
       properties:
         environmentVariables:
           - name: "GAMESERVER_HOSTNAME"
-            value: "jaysgame.westeurope.azurecontainer.io"
+            value: "corvid.westeurope.azurecontainer.io"
           - name: "GAMESERVER_PORT"
             value: 3001
           - name: "IMAGESERVER_HOSTNAME"
-            value: "jaysgame.westeurope.azurecontainer.io"
+            value: "corvid.westeurope.azurecontainer.io"
           - name: "IMAGESERVER_PORT"
             value: 3002
           - name: "GAMESERVER_WORLD_NAME"
@@ -62,7 +62,7 @@ properties:
       properties:
         environmentVariables:
           - name: "IMAGESERVER_HOSTNAME"
-            value: "jaysgame.westeurope.azurecontainer.io"
+            value: "corvid.westeurope.azurecontainer.io"
           - name: "IMAGESERVER_PORT"
             value: 3002
           - name: "AZURE_STORAGE_ACCOUNT_NAME"
@@ -126,7 +126,7 @@ properties:
           - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
             value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
           - name: "GAMESERVER_HOSTNAME"
-            value: "jaysgame.westeurope.azurecontainer.io"
+            value: "corvid.westeurope.azurecontainer.io"
           - name: "GAMESERVER_PORT"
             value: "3001"
         image: "${CONTAINER_REGISTRY_REPOSITORY}/aibroker"
@@ -137,7 +137,7 @@ properties:
   osType: Linux
   ipAddress:
     type: Public
-    dnsNameLabel: jaysgame
+    dnsNameLabel: corvid
     ports:
       - port: 3000
       - port: 3001

@@ -35,6 +35,6 @@ docker run --network gameserver-network --name aibroker_local ^
            -e GOOGLE_GEMINI_PROJECT_ID=%GOOGLE_GEMINI_PROJECT_ID% ^
            -e GOOGLE_GEMINI_LOCATION=%GOOGLE_GEMINI_LOCATION% ^
            -e GOOGLE_GEMINI_SAFETY_OVERRIDE=%GOOGLE_GEMINI_SAFETY_OVERRIDE% ^
-           -e GAMESERVER_HOSTNAME=jaysgame.westeurope.azurecontainer.io ^
+           -e GAMESERVER_HOSTNAME=corvid.westeurope.azurecontainer.io ^
            -e GAMESERVER_PORT=3001 ^
            -p 3001:3001 aibroker:latest

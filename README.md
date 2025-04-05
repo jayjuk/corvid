@@ -1,4 +1,4 @@
-# Jaysgame
+# corvid
 
 A simple, web-based, cloud-native, real-time, multi-user, text-based (with pictures) adventure game.
 With one difference: AIs can play too :-)
@@ -54,8 +54,8 @@ Currently, each service can also be run locally (still connecting to Azure Stora
 
 To run the game locally (below is for Windows, launch scripts could be adapted for Linux or MacOS):
 
-1. Set up environment variable PYTHONPATH to include the jaysgame\common subdirectory (this is where _.env_, _logging_ and _storage_manager_ modules reside).
-2. Clone the whole jaysgame repo
+1. Set up environment variable PYTHONPATH to include the corvid\common subdirectory (this is where _.env_, _logging_ and _storage_manager_ modules reside).
+2. Clone the whole corvid repo
 3. Copy _common\.env.example.txt_ to _.env_, environment variable file, and modify values per next section below - I do not provide cloud or AI provider accounts or API keys!
 4. Run the game server: Open a new DOS window, enter into a Python environment with the modules in gameserver\requirements.txt installed via pip (see below\*), cd into gameserver, and run _run_gameserver_locally.bat_
 5. Open a new DOS window, cd into gameclient, and run _run_gameclient.bat_ (or launch this from Windows)
@@ -63,7 +63,7 @@ To run the game locally (below is for Windows, launch scripts could be adapted f
 7. Play the game in your browser via https://localhost:3000.
 8. Optionally, to add some AIs into the game, for each one you want to run: Open a new DOS window, enter into a Python environment with the modules in aibroker\requirements.txt installed via pip, cd into aibroker, and run _run_aibroker.bat_.
 
-(\*My chosen method was to install Anaconda including Navigator, and create an environment called jaysgame shared by both the AI broker and the game server)
+(\*My chosen method was to install Anaconda including Navigator, and create an environment called corvid shared by both the AI broker and the game server)
 
 ### Environment Variables and API Keys
 
@@ -85,9 +85,9 @@ Other environment variables to update in .env (for local operation), GitHub Acti
 MODEL_NAME - e.g. gpt-3.5-turbo, gemini-pro (see caveat above), or claude-3-haiku-20240307. Used both by AI Broker and Game Server (which share the AI Manager) but they can be configured differently due to the services running in separate containers.
 AIREQUESTER_MODEL_NAME - Specific model name for AI Requester, which handles more complex requests.
 AZURE_STORAGE_ACCOUNT_NAME - Also from the Azure console, this will look something like csa123456fff1a111a1a
-GAMESERVER_HOSTNAME - localhost when running locally, otherwise something like jaysgame.westeurope.azurecontainer.io, with the first world modified to your own environment
+GAMESERVER_HOSTNAME - localhost when running locally, otherwise something like corvid.westeurope.azurecontainer.io, with the first world modified to your own environment
 GAMESERVER_PORT - e.g. 3001 (3000 is used by Next.js for the UI)
-GAMESERVER_WORLD_NAME - the name of the 'world' e.g. jaysgame or mansion (currently the examples checked in). A new world currently requires setup of \_gameserver\world_data\world_name\*.json\* files.
+GAMESERVER_WORLD_NAME - the name of the 'world' e.g. corvid or mansion (currently the examples checked in). A new world currently requires setup of \_gameserver\world_data\world_name\*.json\* files.
 IMAGESERVER_HOSTNAME - likely to be the same as GAMESERVER_HOSTNAME above
 IMAGESERVER_PORT - e.g. 3002
 
@@ -97,10 +97,10 @@ A limited number of unit tests have been written, with more to follow. These are
 
 ### Cloud Deployment
 
-To deploy to Digital Ocean, cd to jaysgame main directory, then the terraform subdirectory, then execute run_terraform.bat ! It is necessary to have SSH keys set up per Digital Ocean's instructions as part of account setup.
+To deploy to Digital Ocean, cd to corvid main directory, then the terraform subdirectory, then execute run_terraform.bat ! It is necessary to have SSH keys set up per Digital Ocean's instructions as part of account setup.
 
 Cloud deployment of the AI broker, as with the local execution, depends on the existence of _common\.env_ as described above. The above deployment scripts invoke a Python script which generates a temporary YAML file to be used with the Azure CLI, containing the environment variable values.
 
 ### Known Issues & Improvements
 
-These are logged at https://github.com/jayjuk/jaysgame/issues
+These are logged at https://github.com/jayjuk/corvid/issues

@@ -76,7 +76,7 @@ def explore_room(ai_manager, room, data, done_rooms):
 if __name__ == "__main__":
     ai_manager = aimanager.AIManager()
     storage_manager = azurestoragemanager.AzureStorageManager()
-    world = world.World("jaysgame", storage_manager, "builder")
+    world = world.World("corvid", storage_manager, "builder")
     max_iterations = 1
     dummy_player = Player(world, 0, "system")
 

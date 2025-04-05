@@ -98,9 +98,9 @@ jobs:
   #     - name: "Deploy to Azure Container Instances"
   #       uses: "azure/aci-deploy@v1"
   #       with:
-  #         name: jaysgame
+  #         name: corvid
   #         resource-group: jay
-  #         dns-name-label: jaysgame
+  #         dns-name-label: corvid
   #         image: jayjuk/gameserver #:${{ github.sha }}
   #         cpu: 1 #Optional
   #         memory: 0.1 #Optional

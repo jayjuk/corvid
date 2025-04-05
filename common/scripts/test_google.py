@@ -23,7 +23,7 @@ if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = gcloud_credentials_file
 
 
-vertexai.init(project="jaysgame", location="us-central1")
+vertexai.init(project="corvid", location="us-central1")
 model = GenerativeModel("gemini-pro")
 chat = model.start_chat(history=[])
 

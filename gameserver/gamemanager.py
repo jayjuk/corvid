@@ -26,7 +26,7 @@ class GameManager:
         self,
         mbh: object,
         storage_manager: StorageManager,
-        world_name: str = "jaysgame",
+        world_name: str = "corvid",
         model_name: Optional[str] = None,
         landscape: Optional[str] = None,
         animals_active: bool = True,

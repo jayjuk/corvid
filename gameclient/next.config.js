@@ -9,6 +9,6 @@ module.exports = {
   // ... rest of the configuration.
   output: "standalone",
   images: {
-    domains: ['http://jaysgame.westeurope.azurecontainer.io/','https://jaysgame.westeurope.azurecontainer.io/'],
+    domains: ['http://corvid.westeurope.azurecontainer.io/','https://corvid.westeurope.azurecontainer.io/'],
   },
 };

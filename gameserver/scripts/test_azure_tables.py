@@ -36,7 +36,7 @@ for entity in entities:
 storage_manager = StorageManager()
 rooms = storage_manager.get_rooms()
 for room in rooms.values():
-    room["PartitionKey"] = "jaysgame"
+    room["PartitionKey"] = "corvid"
     room["RowKey"] = room["name"]
 
 

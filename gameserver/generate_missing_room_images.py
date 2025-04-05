@@ -18,7 +18,7 @@ if __name__ == "__main__":
     if len(argv) > 1:
         world_name = argv[1]
     else:
-        world_name = environ.get("GAMESERVER_WORLD_NAME", "jaysgame")
+        world_name = environ.get("GAMESERVER_WORLD_NAME", "corvid")
 
     logger.info(f"Starting up game manager - world '{world_name}'")
     storage_manager: AzureStorageManager = AzureStorageManager()

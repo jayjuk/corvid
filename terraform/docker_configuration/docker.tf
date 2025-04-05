@@ -111,8 +111,8 @@ provider "docker" {
   ssh_opts = ["-i", var.pvt_key, "-o", "StrictHostKeyChecking=no"]
 }
 # Create a network
-resource "docker_network" "jaysgame_network" {
-  name = "jaysgame_network"
+resource "docker_network" "corvid_network" {
+  name = "corvid_network"
 }
 
 # # Run NATS container on the remote machine
@@ -142,8 +142,8 @@ resource "docker_network" "jaysgame_network" {
 #       "sudo docker pull nats:latest",
 
 #       # Run NATS with the config file
-#       "sudo docker network create jaysgame_network",
-#       "sudo docker run -d --name nats --restart=always --network jaysgame_network \\",
+#       "sudo docker network create corvid_network",
+#       "sudo docker run -d --name nats --restart=always --network corvid_network \\",
 #       "  -v /etc/nats/nats-server.conf:/etc/nats/nats-server.conf \\",
 #       "  nats:latest -c /etc/nats/nats-server.conf"
 
@@ -171,7 +171,7 @@ resource "docker_container" "gameclient_container" {
   }
 
   networks_advanced {
-    name = docker_network.jaysgame_network.name
+    name = docker_network.corvid_network.name
   }
 
   # Write a remote startup script to the container
@@ -226,7 +226,7 @@ resource "docker_container" "nats_container" {
   restart = "always"
 
   networks_advanced {
-    name = docker_network.jaysgame_network.name
+    name = docker_network.corvid_network.name
   }
 
 
@@ -293,7 +293,7 @@ resource "docker_container" "gameserver_container" {
   ]
 
   networks_advanced {
-    name = docker_network.jaysgame_network.name
+    name = docker_network.corvid_network.name
   }
 
   # Write a remote startup script to the container
@@ -301,7 +301,7 @@ resource "docker_container" "gameserver_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name gameserver \\",
-      "--network ${docker_network.jaysgame_network.name} \\",
+      "--network ${docker_network.corvid_network.name} \\",
       "-e GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
       "-e GAMESERVER_PORT=4222 \\",
       "-e IMAGESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
@@ -349,7 +349,7 @@ resource "docker_container" "imageserver_container" {
   }
 
   networks_advanced {
-    name = docker_network.jaysgame_network.name
+    name = docker_network.corvid_network.name
   }
 
 
@@ -358,7 +358,7 @@ resource "docker_container" "imageserver_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name imageserver \\",
-      "--network ${docker_network.jaysgame_network.name} \\",
+      "--network ${docker_network.corvid_network.name} \\",
       "-e IMAGESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
       "-e IMAGESERVER_PORT=3002 \\",
       "-e AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME} \\",
@@ -398,7 +398,7 @@ resource "docker_container" "imagecreator_container" {
   ]
 
   networks_advanced {
-    name = docker_network.jaysgame_network.name
+    name = docker_network.corvid_network.name
   }
 
   # Write a remote startup script to the container
@@ -406,7 +406,7 @@ resource "docker_container" "imagecreator_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name imagecreator \\",
-      "--network ${docker_network.jaysgame_network.name} \\",
+      "--network ${docker_network.corvid_network.name} \\",
       "-e GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip} \\",
       "-e GAMESERVER_PORT=${var.GAMESERVER_PORT} \\",
       "-e AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME} \\",
@@ -454,7 +454,7 @@ resource "docker_container" "aibroker_container" {
   ]
 
   networks_advanced {
-    name = docker_network.jaysgame_network.name
+    name = docker_network.corvid_network.name
   }
 
   # Write a remote startup script to the container
@@ -462,7 +462,7 @@ resource "docker_container" "aibroker_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name aibroker \\",
-      "--network ${docker_network.jaysgame_network.name} \\",
+      "--network ${docker_network.corvid_network.name} \\",
       "-e AI_COUNT=${var.AI_COUNT} \\",
       "-e MODEL_NAME=${var.MODEL_NAME} \\",
       "-e MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE} \\",
@@ -517,7 +517,7 @@ resource "docker_container" "playermanager_container" {
   ]
 
   networks_advanced {
-    name = docker_network.jaysgame_network.name
+    name = docker_network.corvid_network.name
   }
 
   # Write a remote startup script to the container
@@ -525,7 +525,7 @@ resource "docker_container" "playermanager_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name playermanager \\",
-      "--network ${docker_network.jaysgame_network.name} \\",
+      "--network ${docker_network.corvid_network.name} \\",
       "-e AI_COUNT=1 \\",
       "-e MODEL_NAME=${var.MODEL_NAME} \\",
       "-e MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE} \\",
@@ -579,7 +579,7 @@ resource "docker_container" "airequester_container" {
   ]
 
   networks_advanced {
-    name = docker_network.jaysgame_network.name
+    name = docker_network.corvid_network.name
   }
 
   # Write a remote startup script to the container
@@ -587,7 +587,7 @@ resource "docker_container" "airequester_container" {
     inline = [
       "echo 'docker run -d \\",
       "--name airequester \\",
-      "--network ${docker_network.jaysgame_network.name} \\",
+      "--network ${docker_network.corvid_network.name} \\",
       "-e MODEL_NAME=${var.MODEL_NAME} \\",
       "-e MODEL_SYSTEM_MESSAGE=${var.MODEL_SYSTEM_MESSAGE} \\",
       "-e OPENAI_API_KEY=${var.OPENAI_API_KEY} \\",

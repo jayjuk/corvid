@@ -3,8 +3,8 @@
 # Stop on error
 set -e
 
-echo 'export PYTHONPATH=\"/usr/local/python/current:/workspaces/jaysgame/common"' >> ~/.bashrc
-export PYTHONPATH=\"/usr/local/python/current:/workspaces/jaysgame/common
+echo 'export PYTHONPATH=\"/usr/local/python/current:/workspaces/corvid/common"' >> ~/.bashrc
+export PYTHONPATH=\"/usr/local/python/current:/workspaces/corvid/common
 
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
