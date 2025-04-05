@@ -70,6 +70,7 @@ resource "digitalocean_droplet" "corvid" {
       "echo Done installing Docker >> docker_install_log.txt",
       "docker --version >> docker_install_log.txt",
       "sudo systemctl status docker >> docker_install_log.txt",
+      # Cleanup script
       "echo '#!/bin/bash' > cleanup_docker.sh", # was in /usr/local/bin/
       "echo 'docker stop $(docker ps -a -q)' >> cleanup_docker.sh",
       "echo 'docker rm $(docker ps -a -q)' >> cleanup_docker.sh",
