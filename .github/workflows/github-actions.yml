@@ -85,7 +85,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/aibroker:latest
           build-args:
-            SERVICE_NAME: aibroker
+          SERVICE_NAME: aibroker
   # deploy:
   #   needs: build
   #   runs-on: ubuntu-latest
