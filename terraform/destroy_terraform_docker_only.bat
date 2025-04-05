@@ -1,1 +1,0 @@
-destroy_terraform.bat docker

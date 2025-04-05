@@ -1,0 +1,146 @@
+apiVersion: 2019-12-01
+location: westeurope
+name: corvid
+properties:
+  imageRegistryCredentials:
+    - server: "${CONTAINER_REGISTRY_SERVER}"
+      username: "${CONTAINER_REGISTRY_USERNAME}"
+      password: "${CONTAINER_REGISTRY_PASSWORD}"
+  containers:
+    - name: gameclient
+      properties:
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/gameclient"
+        resources:
+          requests:
+            cpu: 0.2
+            memoryInGb: 0.5
+        ports:
+          - port: 3000
+    - name: gameserver
+      properties:
+        environmentVariables:
+          - name: "GAMESERVER_HOSTNAME"
+            value: "corvid.westeurope.azurecontainer.io"
+          - name: "GAMESERVER_PORT"
+            value: 3001
+          - name: "IMAGESERVER_HOSTNAME"
+            value: "corvid.westeurope.azurecontainer.io"
+          - name: "IMAGESERVER_PORT"
+            value: 3002
+          - name: "GAMESERVER_WORLD_NAME"
+            value: "${GAMESERVER_WORLD_NAME}"
+          - name: "AZURE_STORAGE_ACCOUNT_NAME"
+            value: "${AZURE_STORAGE_ACCOUNT_NAME}"
+          - name: "AZURE_STORAGE_ACCOUNT_KEY"
+            value: "${AZURE_STORAGE_ACCOUNT_KEY}"
+          - name: "MODEL_NAME"
+            value: "${MODEL_NAME}"
+          - name: "OPENAI_API_KEY"
+            value: "${OPENAI_API_KEY}"
+          - name: "STABILITY_KEY"
+            value: "${STABILITY_KEY}"
+          - name: "ANTHROPIC_API_KEY"
+            value: "${ANTHROPIC_API_KEY}"
+          - name: "GROQ_API_KEY"
+            value: "${GROQ_API_KEY}"
+          - name: "GOOGLE_GEMINI_KEY"
+            value: "${GOOGLE_GEMINI_KEY}"
+          - name: "GOOGLE_GEMINI_PROJECT_ID"
+            value: "${GOOGLE_GEMINI_PROJECT_ID}"
+          - name: "GOOGLE_GEMINI_LOCATION"
+            value: "${GOOGLE_GEMINI_LOCATION}"
+          - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
+            value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/gameserver"
+        resources:
+          requests:
+            cpu: 0.2
+            memoryInGb: 0.5
+        ports:
+          - port: 3001
+    - name: imageserver
+      properties:
+        environmentVariables:
+          - name: "IMAGESERVER_HOSTNAME"
+            value: "corvid.westeurope.azurecontainer.io"
+          - name: "IMAGESERVER_PORT"
+            value: 3002
+          - name: "AZURE_STORAGE_ACCOUNT_NAME"
+            value: "${AZURE_STORAGE_ACCOUNT_NAME}"
+          - name: "AZURE_STORAGE_ACCOUNT_KEY"
+            value: "${AZURE_STORAGE_ACCOUNT_KEY}"
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/imageserver"
+        resources:
+          requests:
+            cpu: 0.2
+            memoryInGb: 0.3
+        ports:
+          - port: 3002
+    - name: imagecreator
+      properties:
+        environmentVariables:
+          - name: "GAMESERVER_HOSTNAME"
+            value: "${GAMESERVER_HOSTNAME}"
+          - name: "GAMESERVER_PORT"
+            value: "${GAMESERVER_PORT}"
+          - name: "AZURE_STORAGE_ACCOUNT_NAME"
+            value: "${AZURE_STORAGE_ACCOUNT_NAME}"
+          - name: "AZURE_STORAGE_ACCOUNT_KEY"
+            value: "${AZURE_STORAGE_ACCOUNT_KEY}"
+          - name: "IMAGE_MODEL_NAME"
+            value: "${IMAGE_MODEL_NAME}"
+          - name: "OPENAI_API_KEY"
+            value: "${OPENAI_API_KEY}"
+          - name: "STABILITY_KEY"
+            value: "${STABILITY_KEY}"
+          - name: "GOOGLE_GEMINI_KEY"
+            value: "${GOOGLE_GEMINI_KEY}"
+          - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
+            value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
+          - name: "GOOGLE_GEMINI_PROJECT_ID"
+            value: "${GOOGLE_GEMINI_PROJECT_ID}"
+          - name: "GOOGLE_GEMINI_LOCATION"
+            value: "${GOOGLE_GEMINI_LOCATION}"
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/imagecreator"
+        resources:
+          requests:
+            cpu: 0.2
+            memoryInGb: 0.7
+    - name: aibroker
+      properties:
+        environmentVariables:
+          - name: "AI_COUNT"
+            value: "${AI_COUNT}"
+          - name: "MODEL_SYSTEM_MESSAGE"
+            value: "${MODEL_SYSTEM_MESSAGE}"
+          - name: "OPENAI_API_KEY"
+            value: "${OPENAI_API_KEY}"
+          - name: "STABILITY_KEY"
+            value: "${STABILITY_KEY}"
+          - name: "ANTHROPIC_API_KEY"
+            value: "${ANTHROPIC_API_KEY}"
+          - name: "GROQ_API_KEY"
+            value: "${GROQ_API_KEY}"
+          - name: "GOOGLE_GEMINI_KEY"
+            value: "${GOOGLE_GEMINI_KEY}"
+          - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
+            value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
+          - name: "GAMESERVER_HOSTNAME"
+            value: "corvid.westeurope.azurecontainer.io"
+          - name: "GAMESERVER_PORT"
+            value: "3001"
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/aibroker"
+        resources:
+          requests:
+            cpu: 0.2
+            memoryInGb: 0.7
+  osType: Linux
+  ipAddress:
+    type: Public
+    dnsNameLabel: corvid
+    ports:
+      - port: 3000
+      - port: 3001
+      - port: 3002
+tags: { exampleName: exampleValue }
+type: Microsoft.ContainerInstance/containerGroups
