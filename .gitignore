@@ -20,25 +20,18 @@ frontend/perspective-package.zip
 .DS_Store
 orchestrator/logs
 *_transcript.txt
+common/Transfer - Shortcut.lnk
 
 # Ignore Terraform state files and backups
-terraform/terraform.tfstate
-terraform/terraform.tfstate.backup
-terraform/**/terraform.tfstate
-terraform/**/terraform.tfstate.backup
+deploy/terraform.tfstate.backup
+deploy/**/terraform.tfstate.backup
 
 # Ignore lock files
-terraform/.terraform.tfstate.lock.info
-terraform/.terraform.lock.hcl
-terraform/**/.terraform.tfstate.lock.info
-terraform/**/.terraform.lock.hcl
+deploy/.terraform.tfstate.lock.info
+deploy/**/.terraform.lock.hcl
 
 # Ignore Terraform provider binaries and caches
-terraform/.terraform/
-terraform/**/.terraform/
-
-# Optional: Ignore any hidden files or directories, which may contain sensitive information
-terraform/.env
-common/Transfer - Shortcut.lnk
-deploy/terraform/docker_configuration/terraform.tfstate.backup
-deploy/terraform/docker_configuration/terraform.tfstate.backup
+deploy/.terraform/
+# Ignore any hidden files or directories, which may contain sensitive information
+deploy/.*
+deploy/docker_configuration/terraform.tfstate.backup
