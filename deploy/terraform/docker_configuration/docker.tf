@@ -209,9 +209,9 @@ resource "docker_container" "imageserver_container" {
 }
 
 # Pull and run game containers
-resource "docker_container" "gameclient_container" {
-  image = "${var.CONTAINER_REGISTRY_REPOSITORY}/gameclient"
-  name  = "gameclient"
+resource "docker_container" "frontend_container" {
+  image = "${var.CONTAINER_REGISTRY_REPOSITORY}/frontend"
+  name  = "frontend"
 
   ports {
     internal = 3000
@@ -228,8 +228,8 @@ resource "docker_container" "gameclient_container" {
       "echo 'docker run -d \\",
       "--name client \\",
       "-p 3000:3000 \\",
-      "${var.CONTAINER_REGISTRY_REPOSITORY}/gameclient' >> ./start_gameclient.sh",
-      "chmod +x ./start_gameclient.sh"
+      "${var.CONTAINER_REGISTRY_REPOSITORY}/frontend' >> ./start_frontend.sh",
+      "chmod +x ./start_frontend.sh"
     ]
 
     connection {

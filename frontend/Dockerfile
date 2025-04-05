@@ -7,10 +7,10 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY gameclient/package.json .
-COPY gameclient/yarn.lock* .
-COPY gameclient/package-lock.json* .
-COPY gameclient/pnpm-lock.yaml* .
+COPY frontend/package.json .
+COPY frontend/yarn.lock* .
+COPY frontend/package-lock.json* .
+COPY frontend/pnpm-lock.yaml* .
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
@@ -23,7 +23,7 @@ RUN \
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY gameclient .
+COPY frontend .
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry

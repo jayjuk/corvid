@@ -10,12 +10,13 @@
 *.sqlite3
 *.tmp
 *_dump*.json
+*.backup
 temp_*
 temp-*
 __pycache__
 backup_the_oldfashioned_way.py
 quick_backup_and_old
-gameclient/perspective-package.zip
+frontend/perspective-package.zip
 .DS_Store
 gameserver/logs
 *_transcript.txt
@@ -39,3 +40,5 @@ terraform/**/.terraform/
 # Optional: Ignore any hidden files or directories, which may contain sensitive information
 terraform/.env
 common/Transfer - Shortcut.lnk
+deploy/terraform/docker_configuration/terraform.tfstate.backup
+deploy/terraform/docker_configuration/terraform.tfstate.backup

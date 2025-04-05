@@ -7,9 +7,9 @@ properties:
       username: "${CONTAINER_REGISTRY_USERNAME}"
       password: "${CONTAINER_REGISTRY_PASSWORD}"
   containers:
-    - name: gameclient
+    - name: frontend
       properties:
-        image: "${CONTAINER_REGISTRY_REPOSITORY}/gameclient"
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/frontend"
         resources:
           requests:
             cpu: 0.2
