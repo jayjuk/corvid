@@ -2,3 +2,4 @@
 *.tmp
 *.log
 *_transcript.txt
+exit_chat_history_dump.txt
