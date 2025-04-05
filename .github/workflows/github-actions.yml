@@ -40,7 +40,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/orchestrator:latest
           build-args:
-            SERVICE_NAME: orchestrator
+          SERVICE_NAME: orchestrator
 
   build_imageserver:
     needs: unit_tests
@@ -63,7 +63,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/imageserver:latest
           build-args:
-            SERVICE_NAME: imageserver
+          SERVICE_NAME: imageserver
   build_aibroker:
     needs: unit_tests
     runs-on: ubuntu-latest
