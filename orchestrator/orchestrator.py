@@ -129,7 +129,7 @@ async def main() -> None:
 
     async def summon_agent_response(data: Dict) -> None:
         logger.info(f"Received summon person response: {data}")
-        world_manager.process_summon_agent_response(data["request_id"])
+        await world_manager.process_summon_agent_response(data["request_id"])
 
     async def ai_response(data: Dict) -> None:
         logger.info(f"Received AI response: {data}")

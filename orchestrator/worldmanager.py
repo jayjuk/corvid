@@ -1239,9 +1239,7 @@ class worldmanager:
     # Process summon agent response from agent manager
     async def process_summon_agent_response(self, request_id: str) -> None:
         if request_id in self.summon_requests:
-            await self.tell_everyone(
-                f"Person {self.summon_requests[request_id]['user_name']} has been summoned!"
-            )
+            await self.tell_everyone("Someone has been summoned!")
             logger.info(f"Removing summon request {request_id}")
             del self.summon_requests[request_id]
 
