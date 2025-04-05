@@ -17,20 +17,20 @@ class TestAIBroker(unittest.TestCase):
         self.test_valid_name = "Validius"
 
         # Create an AI broker that uses the mock AIManager
-        self.ai_broker = AIBroker(mode="player")
+        self.ai_broker = AIBroker(mode="agent")
 
         # Check that the AIManager was called with the expected system_message
         mock_ai_manager.assert_called_once_with(
             system_message=self.ai_broker.get_ai_instructions(), model_name=None
         )
 
-    def test_get_player_name(self):
-        # Check that the player_name was set correctly
-        # TODO #107 Add better unit testing for player name setting
-        self.assertEqual(self.ai_broker.player_name, "")
+    def test_get_user_name(self):
+        # Check that the user_name was set correctly
+        # TODO #107 Add better unit testing for agent name setting
+        self.assertEqual(self.ai_broker.user_name, "")
 
     def test_record_instructions(self):
-        # Check that the player instructions were set correctly
+        # Check that the instructions were set correctly
         test_instructions = "Test instructions"
         self.ai_broker.record_instructions(test_instructions)
         self.assertIn(test_instructions, self.ai_broker.world_instructions)
@@ -38,12 +38,12 @@ class TestAIBroker(unittest.TestCase):
         self.mock_ai_manager.set_system_message.assert_called_once()
 
     def test_get_ai_instructions(self):
-        # Check that the player_name was set correctly
+        # Check that the user_name was set correctly
         self.assertIn("instructions", self.ai_broker.get_ai_instructions().lower())
 
     async def test_set_ai_name(self):
         # Set up side_effect to return a name with a space, then a valid name
-        self.mock_ai_manager.submit_request.player_ide_effect = [
+        self.mock_ai_manager.submit_request.user_ide_effect = [
             self.test_invalid_name,
             self.test_valid_name,
         ]

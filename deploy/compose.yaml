@@ -12,6 +12,6 @@ services:
     image: aibroker
     environment:
       #This is for local integrated testing
-      - orchestrator_HOSTNAME=orchestrator
+      - ORCHESTRATOR_HOSTNAME=orchestrator
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - AI_COUNT=${AI_COUNT}

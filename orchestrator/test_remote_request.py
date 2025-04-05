@@ -1,7 +1,7 @@
 from worldmanager import worldmanager
 from storagemanager import StorageManager
-from player import Player
-from player_input_processor import PlayerInputProcessor
+from person import Person
+from user_input_processor import UserInputProcessor
 import asyncio
 from os import environ
 from messagebroker_helper import MessageBrokerHelper
@@ -13,8 +13,8 @@ async def run():
         print(f"Received AI response: {data}")
 
     mbh = MessageBrokerHelper(
-        environ.get("orchestrator_HOSTNAME", "localhost"),
-        environ.get("orchestrator_PORT", 4222),
+        environ.get("ORCHESTRATOR_HOSTNAME", "localhost"),
+        environ.get("ORCHESTRATOR_PORT", 4222),
         {
             "ai_request": {"mode": "publish"},
             "image_creation_request": {
@@ -30,11 +30,11 @@ async def run():
         storage_manager=storage_manager,
         world_name="remotetest",
     )
-    player = Player(world_manager.world, 0, "TestPlayer")
+    person = Person(world_manager.world, 0, "TestPerson")
 
     print("Submitting remote request")
     await world_manager.ai_manager.submit_remote_request(
-        player, "ai_request", "test prompt", "you are testing a remote request"
+        person, "ai_request", "test prompt", "you are testing a remote request"
     )
 
     # Keep the connection alive

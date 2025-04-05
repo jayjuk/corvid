@@ -5,7 +5,7 @@ from utils import set_up_logger, exit
 logger = set_up_logger()
 
 
-# Player class
+# Person class
 class Room:
 
     def __init__(

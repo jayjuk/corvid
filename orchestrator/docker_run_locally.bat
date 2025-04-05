@@ -22,14 +22,14 @@ echo Running Orchestrator
 
 REM Create a Docker network if it doesn't exist
 docker network inspect orchestrator-network >nul 2>&1 || docker network create orchestrator-network
-set "orchestrator_HOSTNAME=orchestrator_local"
+set "ORCHESTRATOR_HOSTNAME=orchestrator_local"
 docker rm orchestrator_local
-docker run --network orchestrator-network --name %orchestrator_HOSTNAME% ^
-           -e orchestrator_HOSTNAME=%orchestrator_HOSTNAME% ^
-           -e orchestrator_PORT=%orchestrator_PORT% ^
+docker run --network orchestrator-network --name %ORCHESTRATOR_HOSTNAME% ^
+           -e ORCHESTRATOR_HOSTNAME=%ORCHESTRATOR_HOSTNAME% ^
+           -e ORCHESTRATOR_PORT=%ORCHESTRATOR_PORT% ^
            -e IMAGESERVER_HOSTNAME=%IMAGESERVER_HOSTNAME% ^
            -e IMAGESERVER_PORT=%IMAGESERVER_PORT% ^
-           -e orchestrator_WORLD_NAME=%orchestrator_WORLD_NAME% ^
+           -e ORCHESTRATOR_WORLD_NAME=%ORCHESTRATOR_WORLD_NAME% ^
            -e AZURE_STORAGE_ACCOUNT_NAME=%AZURE_STORAGE_ACCOUNT_NAME% ^
            -e AZURE_STORAGE_ACCOUNT_KEY=%AZURE_STORAGE_ACCOUNT_KEY% ^
            -e MODEL_NAME=%MODEL_NAME% ^

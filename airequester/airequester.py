@@ -86,8 +86,8 @@ async def main() -> None:
     )
 
     mbh = MessageBrokerHelper(
-        get_critical_env_variable("orchestrator_HOSTNAME"),
-        get_critical_env_variable("orchestrator_PORT"),
+        get_critical_env_variable("ORCHESTRATOR_HOSTNAME"),
+        get_critical_env_variable("ORCHESTRATOR_PORT"),
         {
             "ai_request": {"mode": "subscribe", "callback": catch_all},
             "ai_response": {"mode": "publish"},

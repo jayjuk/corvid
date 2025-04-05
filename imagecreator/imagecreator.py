@@ -198,8 +198,8 @@ async def main() -> None:
         await image_creator.process_image_request(data)
 
     mbh = MessageBrokerHelper(
-        os.environ.get("orchestrator_HOSTNAME", "localhost"),
-        os.environ.get("orchestrator_PORT", 4222),
+        os.environ.get("ORCHESTRATOR_HOSTNAME", "localhost"),
+        os.environ.get("ORCHESTRATOR_PORT", 4222),
         {
             "image_creation_response": {"mode": "publish"},
             "image_creation_request": {

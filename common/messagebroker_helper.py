@@ -107,7 +107,7 @@ class MessageBrokerHelper:
             # If message is not JSON, this is normal (simple message), pass it to the callback function as a string
             await callback(body)
 
-    async def publish(self, queue: str, message: any, player_id: str = None):
+    async def publish(self, queue: str, message: any, user_id: str = None):
         """Publish a message to a queue."""
         if not message:
             exit(logger, "Message is empty")
@@ -124,9 +124,9 @@ class MessageBrokerHelper:
                 f"Message must be a dictionary or a string. Message {message} is of type: {type(message)}",
             )
 
-        if player_id:
-            # Add player ID to queue
-            queue = f"{queue}.{player_id.lower()}"
+        if user_id:
+            # Add user ID to queue
+            queue = f"{queue}.{user_id.lower()}"
 
         await self.nc.publish(queue, message.encode())
         await self.nc.flush()

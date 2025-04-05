@@ -141,6 +141,6 @@ def do_image_request(prompt: str) -> Union[bytes, None]:
         number_of_images=1,
         aspect_ratio="1:1",
         # safety_filter_level="block_some",
-        # person_generation="allow_all",
+        # user_generation="allow_all",
     )
     return get_image_binary(image_list)

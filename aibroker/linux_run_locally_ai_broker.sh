@@ -1,5 +1,5 @@
 export AI_COUNT=1
-export AI_MODE="player"
+export AI_MODE="agent"
 echo Loading env variables from common .env file in local execution...
 source ../common/load_dotenv.sh
 export MODEL_NAME="llama3-70b-8192"

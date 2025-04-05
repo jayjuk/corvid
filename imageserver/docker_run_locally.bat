@@ -19,7 +19,7 @@ for /F "tokens=1* delims==" %%a in (%env_file_path%) do (
 
 REM Run the docker container
 echo Running Image Server
-set "orchestrator_HOSTNAME=orchestrator_local"
+set "ORCHESTRATOR_HOSTNAME=orchestrator_local"
 docker rm imageserver_local
 docker run --network orchestrator-network --name imageserver_local ^
            -e IMAGESERVER_HOSTNAME=%IMAGESERVER_HOSTNAME% ^

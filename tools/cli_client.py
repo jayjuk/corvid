@@ -8,8 +8,8 @@ from messagebroker_helper import MessageBrokerHelper
 # Set up logger
 logger = set_up_logger("cliclient")
 
-# Global player name
-player_name = None
+# Global person name
+user_name = None
 
 
 async def main() -> None:
@@ -20,20 +20,20 @@ async def main() -> None:
     # Register the SIGINT handler
     signal.signal(signal.SIGINT, handle_sigint)
 
-    # Get name from the player
-    async def set_player_name() -> str:
-        player_name = None
-        while not player_name or " " in player_name:
+    # Get name from the person
+    async def set_user_name() -> str:
+        user_name = None
+        while not user_name or " " in user_name:
             # Keep trying til they get the name right
-            player_name = input("What do you want your name to be?").strip(".")
+            user_name = input("What do you want your name to be?").strip(".")
         # Subscribe to name-specific events
-        await mbh.subscribe(f"world_update.{player_name}", world_update)
-        await mbh.subscribe(f"logout.{player_name}", logout)
-        await mbh.subscribe(f"instructions.{player_name}", instructions)
-        await mbh.subscribe(f"room_update.{player_name}", room_update)
+        await mbh.subscribe(f"world_update.{user_name}", world_update)
+        await mbh.subscribe(f"logout.{user_name}", logout)
+        await mbh.subscribe(f"instructions.{user_name}", instructions)
+        await mbh.subscribe(f"room_update.{user_name}", room_update)
         # Publish name
-        await mbh.publish("set_player_name", {"name": player_name, "role": "player"})
-        return player_name
+        await mbh.publish("set_user_name", {"name": user_name, "role": "person"})
+        return user_name
 
     # MBH event handlers
 
@@ -64,27 +64,27 @@ async def main() -> None:
     async def room_update(data: Dict) -> None:
         print("ROOM UPDATE:", data)
 
-    # Player update event handler
+    # Person update event handler
     async def world_data_update(data: Dict) -> None:
-        pass  # print("GAME UPDATE:", data)
+        pass  # print("WORLD UPDATE:", data)
 
     # Invalid name, try again
     async def name_invalid(data: Dict) -> None:
         logger.info(f"Invalid name event received: {data}")
-        await mbh.unsubscribe(f"world_update.{player_name}")
-        await mbh.unsubscribe(f"logout.{player_name}")
-        await mbh.unsubscribe(f"instructions.{player_name}")
-        await mbh.unsubscribe(f"room_update.{player_name}")
+        await mbh.unsubscribe(f"world_update.{user_name}")
+        await mbh.unsubscribe(f"logout.{user_name}")
+        await mbh.unsubscribe(f"instructions.{user_name}")
+        await mbh.unsubscribe(f"room_update.{user_name}")
 
-        player_name = set_player_name()
-        await mbh.publish("set_player_name", {"name": player_name, "role": "player"})
+        user_name = set_user_name()
+        await mbh.publish("set_user_name", {"name": user_name, "role": "person"})
 
     mbh = MessageBrokerHelper(
-        get_critical_env_variable("orchestrator_HOSTNAME"),
-        get_critical_env_variable("orchestrator_PORT"),
+        get_critical_env_variable("ORCHESTRATOR_HOSTNAME"),
+        get_critical_env_variable("ORCHESTRATOR_PORT"),
         {
-            "set_player_name": {"mode": "publish"},
-            "player_action": {"mode": "publish"},
+            "set_user_name": {"mode": "publish"},
+            "user_action": {"mode": "publish"},
             "world_update": {"mode": "subscribe", "callback": world_update},
             "instructions": {"mode": "subscribe", "callback": instructions},
             "shutdown": {"mode": "subscribe", "callback": shutdown},
@@ -98,14 +98,14 @@ async def main() -> None:
     # Start consuming messages
     await mbh.set_up_nats()
 
-    player_name = await set_player_name()
+    user_name = await set_user_name()
 
     # Main loop
     while True:
         action = input("What do you want to do? ").strip()
         if action:
             await mbh.publish(
-                "player_action", {"player_id": player_name, "player_input": action}
+                "user_action", {"user_id": user_name, "user_input": action}
             )
         else:
             print("You must enter an action.")

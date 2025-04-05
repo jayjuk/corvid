@@ -26,7 +26,7 @@ async def publish_messages():
     await nc.publish("logout", b"You have been logged out!")
 
     # Publish a name invalid message to the "name_invalid" subject
-    await nc.publish("name_invalid", b"The player name is invalid!")
+    await nc.publish("name_invalid", b"The person name is invalid!")
 
     await nc.drain()
 

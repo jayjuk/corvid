@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Corvid",
-  description: "A Simple Multiplayer World",
+  description: "A platform for creating open-world, persistent, multi-user simulated environments in the cloud.",
 };
 
 export default function RootLayout({

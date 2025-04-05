@@ -4,13 +4,13 @@ from utils import set_up_logger, exit
 logger = set_up_logger()
 
 from typing import Dict, Callable, Tuple, Optional, Union, List
-from player import Player
+from person import Person
 from world import World
 from worldmanager import worldmanager
 import re
 
 
-class PlayerInputProcessor:
+class UserInputProcessor:
 
     def __init__(self, world_manager: worldmanager):
         self.world_manager = world_manager
@@ -44,14 +44,14 @@ class PlayerInputProcessor:
         }
 
         self.command_functions: Dict[str, Dict[str, Callable]] = {
-            # TODO #66 Limit certain actions to players with the right permissions rather than just hiding from help
+            # TODO #66 Limit certain actions to people with the right permissions rather than just hiding from help
             "look": {
                 "function": self.world_manager.do_look,
                 "description": "Get a description of your current location",
             },
             "say": {
                 "function": self.world_manager.do_say,
-                "description": "Say something to all other players in your *current* location, e.g. say which way shall we go?",
+                "description": "Say something to all other people in your *current* location, e.g. say which way shall we go?",
             },
             "shout": {
                 "function": self.world_manager.do_shout,
@@ -67,7 +67,7 @@ class PlayerInputProcessor:
             },
             "jump": {
                 "function": self.world_manager.do_jump,
-                "description": "Jump to location of another player named in rest_of_response",
+                "description": "Jump to location of another person named in rest_of_response",
             },
             "attack": {
                 "function": self.world_manager.do_attack,
@@ -75,7 +75,7 @@ class PlayerInputProcessor:
             },
             "quit": {
                 "function": self.world_manager.do_quit,
-                "description": "",  # Don't encourage the AI to quit! TODO: make this only appear in the help to human players
+                "description": "",  # Don't encourage the AI to quit! TODO: make this only appear in the help to human people
             },
             "get": {
                 "function": self.world_manager.do_get,
@@ -90,7 +90,7 @@ class PlayerInputProcessor:
                 "description": "Head in a direction e.g. go north (you can also use n, e, s, w))",
             },
             "build": {
-                "function": self.world_manager.do_build,  # Called with special inputs - see process_player_input below
+                "function": self.world_manager.do_build,  # Called with special inputs - see process_user_input below
                 "description": "Build a new location. Specify the direction, name and description (avoid confusion by not describing specific items, those are created separately) using single quotes "
                 + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'",
             },
@@ -112,7 +112,7 @@ class PlayerInputProcessor:
                 "function": self.world_manager.do_summon,
                 "description": (
                     ""  # Hidden from AI for now
-                    # "Summon a new player into the world. Specify the instructions for the new player using single quotes "
+                    # "Summon a new person into the world. Specify the instructions for the new person using single quotes "
                     # + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
                 ),
             },
@@ -127,10 +127,6 @@ class PlayerInputProcessor:
             "trade": {
                 "function": self.world_manager.do_trade,
                 "description": "Enter into trading negotiations with a Merchant in your current location.",
-            },
-            "push": {
-                "function": self.world_manager.do_push,
-                "description": "Push something in your possession, a button for example...",
             },
             "inventory": {
                 "function": self.world_manager.do_inventory,
@@ -168,13 +164,13 @@ class PlayerInputProcessor:
         self.commands_description = self.commands_description[:-2]
 
     def get_help_text(
-        self, player: Optional[Player] = None, rest_of_response: Optional[str] = None
+        self, person: Optional[Person] = None, rest_of_response: Optional[str] = None
     ) -> str:
-        objective = self.world_manager.world.get_objective(player)
+        objective = self.world_manager.world.get_objective(person)
         return (
             objective
             + " "
-            + self.world_manager.get_players_text()
+            + self.world_manager.get_people_text()
             + f"\nAvailable commands:\n{self.get_commands_description()}"
         )
 
@@ -223,51 +219,51 @@ class PlayerInputProcessor:
         )
         return room_name.capitalize(), rest_of_response, ""
 
-    # Parse player input
-    def parse_player_input(self, player_input: str) -> Tuple[str, str]:
-        player_input = player_input.strip(".")
+    # Parse person input
+    def parse_user_input(self, user_input: str) -> Tuple[str, str]:
+        user_input = user_input.strip(".")
         # Special handling of leading apostrophe (means say):
-        if player_input.startswith("'"):
-            player_input = player_input.strip("'")
-            player_input = "say " + player_input
+        if user_input.startswith("'"):
+            user_input = user_input.strip("'")
+            user_input = "say " + user_input
         # Separate first word (command) from rest
-        words = str(player_input).split()
+        words = str(user_input).split()
         verb = words[0].lower()
         rest = " ".join(words[1:])
         return verb, rest
 
-    # Translate player input and try to process it again
+    # Translate person input and try to process it again
     async def translate_and_process(
-        self, player: Player, player_input: str
+        self, person: Person, user_input: str
     ) -> Optional[Tuple[str, str, str]]:
         # Try to translate the user input into a valid command using AI :-)
         # If output set, it shows the user something while the AI is working.
         output: str = ""  # Was: I'm trying to guess what you meant by that...
         prompt: str = (
-            "Help me to translate my player's input into either a valid command, or a custom action.\n"
+            "Help me to translate my person's input into either a valid command, or a custom action.\n"
             + self.get_commands_description()
-            + player.get_input_history(
+            + person.get_input_history(
                 10, "Some history of what the user has seen for context:"
             )
-            + "\nThe player's current location description: "
-            + self.world_manager.world.rooms[player.get_current_location()].description
+            + "\nThe person's current location description: "
+            + self.world_manager.world.rooms[person.get_current_location()].description
             + "\nThe items in this location: "
             + self.world_manager.world.get_room_items_description(
-                player.get_current_location()
+                person.get_current_location()
             )
-            + f"\nPlayer's inventory: {player.get_inventory_description()}"
-            + f"\nPlayer's input: {player_input}"
-            + "\nIf the player did not mean one of the above commands or the player references an item that is not listed, please respond with the special command 'custom' only."
+            + f"\nPerson's inventory: {person.get_inventory_description()}"
+            + f"\nPerson's input: {user_input}"
+            + "\nIf the person did not mean one of the above commands or the person references an item that is not listed, please respond with the special command 'custom' only."
             + "\nRespond with only a valid command phrase or the word 'custom', nothing else.\n"
         )
 
         await self.world_manager.ai_manager.submit_remote_request(
             self.handle_translation_response,
-            player,
+            person,
             request_type="translation_request",
             prompt=prompt,
             system_message="You are a simulated world command interpreter",
-            player_context=player_input,
+            user_context=user_input,
         )
         return None, None, output
 
@@ -276,28 +272,28 @@ class PlayerInputProcessor:
     ) -> Optional[Tuple[str, str, str]]:
         # Strip any leading/trailing whitespace or carriage returns
         ai_response = ai_response.strip()
-        player = request_data["player"]
+        person = request_data["person"]
         output: str = ""
         logger.info("AI translation: %s", ai_response)
-        # If the AI translation is 'custom', prompt the player for a custom action
+        # If the AI translation is 'custom', prompt the person for a custom action
         if ai_response == "custom":
-            if not request_data["player_context"]:
+            if not request_data["user_context"]:
                 exit(logger, "Custom action requested but no context provided!")
-            ai_response += " " + request_data["player_context"]
+            ai_response += " " + request_data["user_context"]
         if ai_response:
             # Try to process the AI translation as a command, but only try this once
             output = (
                 f"\nI think you meant '{ai_response}', and will proceed accordingly.\n"
             )
-            command_function, command_args, response_to_player = (
-                await self.process_player_input(player, ai_response, translated=True)
+            command_function, command_args, response_to_person = (
+                await self.process_user_input(person, ai_response, translated=True)
             )
             if command_function:
                 # Run it
                 outcome = await command_function(*command_args)
                 return outcome
-            elif response_to_player:
-                return None, None, response_to_player
+            elif response_to_person:
+                return None, None, response_to_person
             else:
                 return None, None, output
         else:
@@ -325,25 +321,25 @@ class PlayerInputProcessor:
                 phrases.append(match[2].strip())
         return phrases
 
-    # Process player input. Returns a function pointer, a tuple of arguments, and an error message if any.
-    async def process_player_input(
-        self, player: Player, player_input: str, translated: bool = False
+    # Process person input. Returns a function pointer, a tuple of arguments, and an error message if any.
+    async def process_user_input(
+        self, person: Person, user_input: str, translated: bool = False
     ) -> Optional[
         Tuple[
-            Callable, Union[Tuple[Player, str], Tuple[Player, str, str], Optional[str]]
+            Callable, Union[Tuple[Person, str], Tuple[Person, str, str], Optional[str]]
         ]
     ]:
-        player.update_last_action_time()
-        if not player_input:
+        person.update_last_action_time()
+        if not user_input:
             # Empty command
             return None, None, "You need to enter a command."
 
-        player.add_input_history(f"You: {player_input}")
+        person.add_input_history(f"You: {user_input}")
 
         # get the rest of the response apart from the first word
         command: str
         rest_of_response: str
-        command, rest_of_response = self.parse_player_input(player_input)
+        command, rest_of_response = self.parse_user_input(user_input)
 
         # Check for synonyms
         command = self.synonyms.get(command, command)
@@ -354,7 +350,7 @@ class PlayerInputProcessor:
             # Special handling for build command: validate the room name and pass it as an extra parameter, before calling do_build
             if command == "build":
 
-                # First parse the response to get the direction, room name and description. handle the player
+                # First parse the response to get the direction, room name and description. handle the person
                 # Using quotes in order to have room names and descriptions with spaces in
 
                 # First take the direction which is one word and must be one of the directions
@@ -407,7 +403,7 @@ class PlayerInputProcessor:
                         room_description = self.strip_outer_quotes(room_description)
                 return (
                     self.command_functions[command]["function"],
-                    (player, direction, room_name, room_description),
+                    (person, direction, room_name, room_description),
                     None,
                 )
             elif command == "create":
@@ -436,14 +432,14 @@ class PlayerInputProcessor:
 
                 return (
                     self.command_functions[command]["function"],
-                    (player, item_name, description, price),
+                    (person, item_name, description, price),
                     None,
                 )
             # Normal command
             return (
                 self.command_functions[command]["function"],
                 (
-                    player,
+                    person,
                     self.strip_outer_quotes(rest_of_response),
                 ),
                 None,
@@ -452,7 +448,7 @@ class PlayerInputProcessor:
         elif command in self.directions:
             return (
                 self.world_manager.move_entity,
-                (player, command, rest_of_response),
+                (person, command, rest_of_response),
                 None,
             )
         elif command == "custom":
@@ -460,13 +456,13 @@ class PlayerInputProcessor:
                 exit(logger, "Custom action requested but no context provided!")
             return (
                 self.world_manager.do_custom_action,
-                (player, rest_of_response),
+                (person, rest_of_response),
                 None,
             )
         else:
             # If the command is not recognised, try to translate it using AI (unless this is already a translation)
             if not translated:
-                outcome = await self.translate_and_process(player, player_input)
+                outcome = await self.translate_and_process(person, user_input)
                 return outcome
             # Invalid command
             return (

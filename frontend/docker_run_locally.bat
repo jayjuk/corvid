@@ -12,6 +12,6 @@ if exist "..\common\.env" (
     )
 )
 echo Running Image Server...
-set "orchestrator_HOSTNAME=orchestrator_local"
+set "ORCHESTRATOR_HOSTNAME=orchestrator_local"
 docker rm frontend_local
 docker run --name frontend_local -p 3000:3000 jayjuk/frontend

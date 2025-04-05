@@ -4,76 +4,76 @@ import os
 import time
 from entity import Entity
 from typing import List, Optional
-from worlditem import worlditem
+from worlditem import WorldItem
 
 # Set up logger
 logger = set_up_logger()
 
 
-# Player class
-class Player(Entity):
+# Person class
+class Person(Entity):
     def __init__(
         self,
         world: Any,
-        player_id: str,
-        player_name: str,
-        player_role: str = "player",
-        stored_player_data: Optional[Dict[str, Any]] = None,
+        user_id: str,
+        user_name: str,
+        user_role: str = "person",
+        stored_user_data: Optional[Dict[str, Any]] = None,
     ) -> None:
-        # First check if player name is valid
+        # First check if person name is valid
         if not (
-            player_name
-            and len(player_name) <= 20
-            and player_name.isprintable()
-            and player_name.isalpha()
-            and os.path.normpath(player_name).replace(os.sep, "_") == player_name
+            user_name
+            and len(user_name) <= 20
+            and user_name.isprintable()
+            and user_name.isalpha()
+            and os.path.normpath(user_name).replace(os.sep, "_") == user_name
         ):
-            # Issue with player name setting
+            # Issue with person name setting
             raise ValueError(
-                f"Sorry, name {player_name} is not valid, it should be up to 20 alphabetical characters only. Please try again."
+                f"Sorry, name {user_name} is not valid, it should be up to 20 alphabetical characters only. Please try again."
             )
 
-        # Set up player
+        # Set up person
         # TODO #74 Remove this, it's for simulating AI builders
-        if player_name in ("Doug", "Alice", "Bob"):
-            player_role = "builder"
+        if user_name in ("Doug", "Alice", "Bob"):
+            user_role = "builder"
 
         # Call superclass constructor
-        Entity.__init__(self, world, player_name, player_role)
+        Entity.__init__(self, world, user_name, user_role)
 
-        if stored_player_data:
-            logger.info(f"Retrieved player {player_name} data from database")
-            self.__dict__.update(stored_player_data)
-            # But use latest player_id and make world object
-            self.player_id = player_id
+        if stored_user_data:
+            logger.info(f"Retrieved person {user_name} data from database")
+            self.__dict__.update(stored_user_data)
+            # But use latest user_id and make world object
+            self.user_id = user_id
             self.world = world
         else:
-            logger.info(f"Creating player {player_name}, player_id {player_id}")
+            logger.info(f"Creating person {user_name}, user_id {user_id}")
 
-            # Set flag to indicate this is a player
-            self.is_player = True
+            # Set flag to indicate this is a person
+            self.is_person = True
 
             # Set default score
             # TODO #75 Change starting money to 0 once other ways to earn money are implemented
             self.money = 100
 
-            # Register of rooms this player has visited before (so they don't get long descriptions again)
+            # Register of rooms this person has visited before (so they don't get long descriptions again)
             self.seen_rooms: Dict[str, bool] = {}
             self.seen_rooms[self.location] = True
 
-            # player_id is the unique identifier for this player used in messaging etc
-            self.player_id = player_id
+            # user_id is the unique identifier for this person used in messaging etc
+            self.user_id = user_id
 
-        # Define history - this resets each time the player logs in
+        # Define history - this resets each time the person logs in
         self.max_input_history_length = 1000
         self.input_history: List[str] = []
 
-        # Define inventory limit for players
+        # Define inventory limit for people
         self.max_inventory = 5
 
         self.last_login = time.time()
 
-        # Last action time is used to check for idle players, always refresh this
+        # Last action time is used to check for idle people, always refresh this
         self.last_action_time = time.time()
 
     def get_input_history(self, number_of_entries: int = 1, prefix: str = "") -> str:
@@ -92,8 +92,8 @@ class Player(Entity):
         if len(self.input_history) > self.max_input_history_length:
             self.input_history.pop(0)
 
-    # Setter for updating player's last action time
-    # Used to check for idle players
+    # Setter for updating person's last action time
+    # Used to check for idle people
     def update_last_action_time(self) -> None:
         self.last_action_time = time.time()
 
@@ -128,13 +128,13 @@ class Player(Entity):
     def can_add_item(self) -> bool:
         return len(self.inventory) < self.max_inventory
 
-    # Override for player picking up an item - has a limit
-    def add_item(self, item: worlditem) -> Optional[str]:
+    # Override for person picking up an item - has a limit
+    def add_item(self, item: WorldItem) -> Optional[str]:
         if not self.can_add_item():
             return "You can't carry any more items."
         self.inventory.append(item)
 
-    # Override for player's location change
+    # Override for person's location change
     def set_location(self, next_room: str) -> None:
         # Superclass behaviour
         super().set_location(next_room)

@@ -1,8 +1,8 @@
 import unittest
 from worldmanager import worldmanager
-from player import Player
+from person import Person
 from storagemanager import StorageManager
-from player_input_processor import PlayerInputProcessor
+from user_input_processor import UserInputProcessor
 import asyncio
 
 
@@ -15,28 +15,28 @@ class Testworldmanager(unittest.TestCase):
             storage_manager=self.storage_manager,
             world_name="unittest",
         )
-        self.player_input_processor = PlayerInputProcessor(self.world_manager)
-        self.player = Player(self.world_manager.world, 0, "TestPlayer")
+        self.user_input_processor = UserInputProcessor(self.world_manager)
+        self.person = Person(self.world_manager.world, 0, "TestPerson")
 
     def tearDown(self):
-        self.world_manager.remove_player(self.player.player_id, "Cleanup after testing")
+        self.world_manager.remove_person(self.person.user_id, "Cleanup after testing")
 
-    def test_get_player_count(self):
+    def test_get_user_count(self):
         expected_count = 0
-        actual_count = self.world_manager.get_player_count()
+        actual_count = self.world_manager.get_user_count()
         self.assertEqual(
-            actual_count, expected_count, "Player count should be 0 at start"
+            actual_count, expected_count, "Person count should be 0 at start"
         )
 
     def test_get_commands_description(self):
-        description = self.player_input_processor.get_commands_description().lower()
+        description = self.user_input_processor.get_commands_description().lower()
         for command in ("north", "south", "east", "west", "look", "say"):
             self.assertIn(
                 command, description, f"Command {command} missing from description"
             )
 
     def test_do_look(self):
-        description = self.world_manager.do_look(self.player, None)
+        description = self.world_manager.do_look(self.person, None)
         # Check begins with "You are in"
         self.assertTrue(
             description.startswith("You look again at the"), "Look command not working"
@@ -45,8 +45,8 @@ class Testworldmanager(unittest.TestCase):
         self.assertGreater(len(description), 28, "Description too short")
 
     async def test_do_say(self):
-        player = Player(self.world_manager.world, 0, "TestPlayer")
-        description = await self.world_manager.do_say(player, "Hello")
+        person = Person(self.world_manager.world, 0, "TestPerson")
+        description = await self.world_manager.do_say(person, "Hello")
         self.assertEqual(
             description,
             "You mutter to yourself, 'Hello'.",

@@ -27,7 +27,7 @@ variable "CONTAINER_REGISTRY_REPOSITORY" {
 }
 
 # Add any additional environment variables as Terraform variables
-variable "orchestrator_PORT" {
+variable "ORCHESTRATOR_PORT" {
   type = string
 }
 
@@ -46,7 +46,7 @@ variable "MODEL_SYSTEM_MESSAGE" {
   type = string
 }
 
-variable "orchestrator_WORLD_NAME" {
+variable "ORCHESTRATOR_WORLD_NAME" {
   type = string
 }
 
@@ -253,11 +253,11 @@ resource "docker_container" "orchestrator_container" {
   name  = "orchestrator"
 
   env = [
-    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "orchestrator_PORT=4222",
+    "ORCHESTRATOR_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "ORCHESTRATOR_PORT=4222",
     "IMAGESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
     "IMAGESERVER_PORT=3002",
-    "orchestrator_WORLD_NAME=${var.orchestrator_WORLD_NAME}",
+    "ORCHESTRATOR_WORLD_NAME=${var.ORCHESTRATOR_WORLD_NAME}",
     "AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME}",
     "AZURE_STORAGE_ACCOUNT_KEY=${var.AZURE_STORAGE_ACCOUNT_KEY}",
     "MODEL_NAME=${var.MODEL_NAME}",
@@ -281,8 +281,8 @@ resource "docker_container" "imagecreator_container" {
   name  = "imagecreator"
 
   env = [
-    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "orchestrator_PORT=${var.orchestrator_PORT}",
+    "ORCHESTRATOR_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "ORCHESTRATOR_PORT=${var.ORCHESTRATOR_PORT}",
     "AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME}",
     "AZURE_STORAGE_ACCOUNT_KEY=${var.AZURE_STORAGE_ACCOUNT_KEY}",
     "MODEL_NAME=${var.MODEL_NAME}",
@@ -316,8 +316,8 @@ resource "docker_container" "aibroker_container" {
     "GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID}",
     "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
     "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
-    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "orchestrator_PORT=4222"
+    "ORCHESTRATOR_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "ORCHESTRATOR_PORT=4222"
   ]
 
   networks_advanced {
@@ -341,8 +341,8 @@ resource "docker_container" "agentmanager_container" {
     "GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID}",
     "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
     "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
-    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "orchestrator_PORT=4222"
+    "ORCHESTRATOR_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "ORCHESTRATOR_PORT=4222"
   ]
 
   networks_advanced {
@@ -364,8 +364,8 @@ resource "docker_container" "airequester_container" {
     "GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID}",
     "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
     "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
-    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "orchestrator_PORT=4222"
+    "ORCHESTRATOR_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "ORCHESTRATOR_PORT=4222"
   ]
 
   networks_advanced {

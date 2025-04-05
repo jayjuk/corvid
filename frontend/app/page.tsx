@@ -39,7 +39,7 @@ function replaceAfterLastColon(
 export default function HomePage() {
   const [worldLog, setWorldLog] = useState<string[]>([]);
   const [userInput, setUserInput] = useState("");
-  const [playerName, setPlayerName] = useState("");
+  const [userName, setUserName] = useState("");
   const [nameSet, setNameSet] = useState(false);
   const [roomImageURL, setRoomImageURL] = useState(null);
   const [roomTitle, setRoomTitle] = useState(null);
@@ -84,10 +84,10 @@ export default function HomePage() {
   }, [orchestratorHostName]); // Only runs once when orchestratorHostName is set
 
   useEffect(() => {
-    if (!playerName || !natsConnection.current) return; // Wait until playerName is set
+    if (!userName || !natsConnection.current) return; // Wait until userName is set
 
-    // Set variable player ID which is lower case version of playerName
-    const playerID = playerName.toLowerCase();
+    // Set variable person ID which is lower case version of userName
+    const personID = userName.toLowerCase();
 
     const nc = natsConnection.current;
     const sc = StringCodec();
@@ -106,23 +106,23 @@ export default function HomePage() {
     // Subscribe to world updates
     handleWorldUpdate(natsConnection.current.subscribe("world_update"));
 
-    // Subscribe to player-specific world updates
+    // Subscribe to person-specific world updates
     let instructionSub: any, roomSub: any, logoutSub: any, nameInvalidSub: any;
-    if (playerName) {
+    if (userName) {
       handleWorldUpdate(
-        natsConnection.current.subscribe(`world_update.${playerID}`)
+        natsConnection.current.subscribe(`world_update.${personID}`)
       );
 
-      // Subscribe to player-specific instructions
-      instructionSub = nc.subscribe(`instructions.${playerID}`);
+      // Subscribe to person-specific instructions
+      instructionSub = nc.subscribe(`instructions.${personID}`);
       (async () => {
         for await (const msg of instructionSub) {
           setWorldLog((prev) => [...prev, sc.decode(msg.data)]);
         }
       })();
 
-      // Subscribe to player-specific room updates
-      roomSub = nc.subscribe(`room_update.${playerID}`);
+      // Subscribe to person-specific room updates
+      roomSub = nc.subscribe(`room_update.${personID}`);
       (async () => {
         for await (const msg of roomSub) {
           const message = JSON.parse(sc.decode(msg.data));
@@ -133,8 +133,8 @@ export default function HomePage() {
         }
       })();
 
-      // Subscribe to player-specific logout
-      logoutSub = nc.subscribe(`logout.${playerID}`);
+      // Subscribe to person-specific logout
+      logoutSub = nc.subscribe(`logout.${personID}`);
       (async () => {
         for await (const msg of logoutSub) {
           console.log("logout event");
@@ -147,8 +147,8 @@ export default function HomePage() {
         }
       })();
 
-      // Subscribe to player-specific name invalid
-      const nameInvalidSub = nc.subscribe(`name_invalid.${playerID}`);
+      // Subscribe to person-specific name invalid
+      const nameInvalidSub = nc.subscribe(`name_invalid.${personID}`);
       (async () => {
         for await (const msg of nameInvalidSub) {
           alert(sc.decode(msg.data));
@@ -161,8 +161,8 @@ export default function HomePage() {
         }
       })();
 
-      // Log a console message with the player ID
-      console.log(`Player ID: ${playerID}`);
+      // Log a console message with the person ID
+      console.log(`Person ID: ${personID}`);
     }
 
     return () => {
@@ -171,7 +171,7 @@ export default function HomePage() {
       logoutSub?.unsubscribe();
       nameInvalidSub?.unsubscribe();
     };
-  }, [nameSet]); // Only runs when playerName is set/changes
+  }, [nameSet]); // Only runs when userName is set/changes
 
   useEffect(() => {
     if (worldLogRef.current) {
@@ -181,14 +181,14 @@ export default function HomePage() {
 
   const handleNameSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (natsConnection.current && playerName.trim() !== "") {
+    if (natsConnection.current && userName.trim() !== "") {
       const sc = StringCodec();
       natsConnection.current.publish(
-        "set_player_name",
+        "set_user_name",
         sc.encode(
           JSON.stringify({
-            name: playerName,
-            player_id: playerName.toLowerCase(),
+            name: userName,
+            user_id: userName.toLowerCase(),
           })
         )
       );
@@ -201,11 +201,11 @@ export default function HomePage() {
     if (natsConnection.current && userInput.trim() !== "") {
       const sc = StringCodec();
       const message = {
-        player_id: playerName.toLowerCase(), // Use playerName as the player ID
-        player_input: userInput,
+        user_id: userName.toLowerCase(), // Use userName as the person ID
+        user_input: userInput,
       };
       natsConnection.current.publish(
-        "player_action",
+        "user_action",
         sc.encode(JSON.stringify(message))
       );
       setUserInput("");
@@ -236,13 +236,13 @@ export default function HomePage() {
 
   return (
     <div>
-      <h1 style={{ textAlign: "center", margin: "20px 0" }}>The Red Button</h1>
+      <h1 style={{ textAlign: "center", margin: "20px 0" }}>Corvid</h1>
       <h2 style={{ textAlign: "center", margin: "20px 0" }}>
-        A work in progress by Jay Joseph
+        Corvid is a platform for creating open-world, persistent, multi-user simulated environments in the cloud.
       </h2>
       {nameSet && (
         <h2 style={{ textAlign: "center", margin: "10px 0" }}>
-          Player: {playerName}
+          Person: {userName}
         </h2>
       )}
       {!nameSet && (
@@ -250,8 +250,8 @@ export default function HomePage() {
           <input
             className={styles.inputField}
             type="text"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
             placeholder="Enter your name..."
             autoFocus
           />

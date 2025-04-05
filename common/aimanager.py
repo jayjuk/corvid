@@ -379,13 +379,13 @@ class AIManager:
     async def submit_remote_request(
         self,
         handler,
-        player: object,
+        person: object,
         request_type: str,
         prompt: str,
         system_message: str = "",
-        player_context: Any = "",
+        user_context: Any = "",
     ) -> None:
-        request_id = str(player.player_id) + str(time.time())  # Unique request ID
+        request_id = str(person.user_id) + str(time.time())  # Unique request ID
         self.remote_requests[request_id] = {
             "request_id": request_id,
             "request_type": request_type,
@@ -396,8 +396,8 @@ class AIManager:
         emission_dict = self.remote_requests[request_id].copy()
         # Add handler afterwards so it doesn't get sent to the AI, plus other stuff to be used in the handler
         self.remote_requests[request_id]["response_handler"] = handler
-        self.remote_requests[request_id]["player"] = player
-        self.remote_requests[request_id]["player_context"] = player_context
+        self.remote_requests[request_id]["person"] = person
+        self.remote_requests[request_id]["user_context"] = user_context
 
         from pprint import pprint
 
@@ -429,7 +429,7 @@ class AIManager:
         )
         logger.info(f"Handler : {self.remote_requests[request_id]['response_handler']}")
 
-        # Get the response from the AI and pass it to the designated response handler along with the player object and AI response
+        # Get the response from the AI and pass it to the designated response handler along with the person object and AI response
         if "ai_response" not in data:
             exit(logger, f"AI response not found in data: {data}")
         if data["ai_response"]:
@@ -439,10 +439,10 @@ class AIManager:
         else:
             logger.error(f"AI response is empty for request ID {request_id}")
             return_text = ""
-        player = self.remote_requests[request_id]["player"]
+        person = self.remote_requests[request_id]["person"]
         logger.info(f"Deleting request ID {request_id} from remote requests")
         del self.remote_requests[request_id]
-        return player, return_text
+        return person, return_text
 
     # Image creator
     def create_image(self, image_name: str, description: str) -> Tuple[str, bytes]:

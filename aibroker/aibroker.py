@@ -19,7 +19,7 @@ class AIBroker:
 
     def __init__(
         self,
-        mode: str = "player",
+        mode: str = "agent",
         model_name: str = None,
         system_message: Optional[str] = None,
     ) -> None:
@@ -32,12 +32,12 @@ class AIBroker:
         self.max_wait: int = 5  # secs
         self.last_time: float = time.time()
         self.active: bool = True
-        self.player_name: str = "TBD"
+        self.user_name: str = "TBD"
         self.input_token_count: int = 0
         self.output_token_count: int = 0
         self.error_count: Dict[str] = {}
         self.max_error_count: int = 10
-        self.player_name: str = ""
+        self.user_name: str = ""
 
         this_system_message: str = self.get_ai_instructions()
         if system_message and system_message.strip():
@@ -53,15 +53,15 @@ class AIBroker:
             system_message=this_system_message,
         )
 
-    async def set_up_player(self) -> None:
+    async def set_up_agent(self) -> None:
         # Set up the message broker helper
         self.mbh = MessageBrokerHelper(
-            get_critical_env_variable("orchestrator_HOSTNAME"),
-            get_critical_env_variable("orchestrator_PORT"),
+            get_critical_env_variable("ORCHESTRATOR_HOSTNAME"),
+            get_critical_env_variable("ORCHESTRATOR_PORT"),
             {
-                "set_player_name": {"mode": "publish"},
-                "summon_player_response": {"mode": "publish"},
-                "player_action": {"mode": "publish"},
+                "set_user_name": {"mode": "publish"},
+                "summon_agent_response": {"mode": "publish"},
+                "user_action": {"mode": "publish"},
                 "world_update": {"mode": "subscribe", "callback": self.world_update},
                 "instructions": {"mode": "subscribe", "callback": self.instructions},
                 "shutdown": {"mode": "subscribe", "callback": self.shutdown},
@@ -79,7 +79,7 @@ class AIBroker:
         await self.mbh.set_up_nats()
 
         # Get the AI's name
-        # TODO #89 Enable many AI players to be managed by the same broker
+        # TODO #89 Enable many AI agents to be managed by the same broker
         await self.set_ai_name()
 
     # World update event handler
@@ -111,11 +111,11 @@ class AIBroker:
         # For now nothing, do not even log - this consists of the room description, and the image URL, not relevant to AI
         pass
 
-    # Player update event handler
+    # Person update event handler
     async def world_data_update(self, data: Dict) -> None:
-        if "player_count" in data:
-            if data["player_count"] == 1 and self.mode != "builder":
-                logger.info("No players apart from me, so I won't do anything.")
+        if "user_count" in data:
+            if data["user_count"] == 1 and self.mode != "builder":
+                logger.info("No people apart from me, so I won't do anything.")
                 self.active = False
             else:
                 if not self.active:
@@ -139,7 +139,7 @@ class AIBroker:
             # Exit own thread when time comes
             if self.time_to_die:
                 # Publish logout message
-                await self.mbh.publish("logout", {"player_id": self.player_id})
+                await self.mbh.publish("logout", {"user_id": self.user_id})
                 return
 
             # Check if we need to wait before polling the event log
@@ -152,7 +152,7 @@ class AIBroker:
             self.last_time = time.time()
 
     # AI manager will record instructions from the Orchestrator
-    # Which are given to each player at the start of the world
+    # Which are given to each user at the start of the world
     def record_instructions(self, data: str) -> None:
         self.world_instructions += data + "\n"
         self.ai_manager.set_system_message(
@@ -166,7 +166,7 @@ class AIBroker:
             + "Do not apologise to the world! "
             + "Do not try to talk to merchants, they cannot talk. "
             + "Respond only with one valid command phrase each time you are contacted. "
-            + f"\nPlayer Instructions:\n{self.world_instructions}"
+            + f"\nPerson Instructions:\n{self.world_instructions}"
         )
         # Set up role-specific instructions for the AI
         if self.mode == "builder":
@@ -178,12 +178,7 @@ class AIBroker:
             )
         else:
             # Experiment to see whether cheaper AIs can do this
-            ai_instructions += (
-                # "Prioritise exploring, picking up items ('get all'), selling them to merchants,"
-                # + " and then buying the red button (which costs 999p) from Gambino, which you can press!"
-                +" Use the jump command when your inventory is full e.g. jump Gambino, and then type 'sell all'."
-                "Explore, make friends and have fun! If players ask to chat, then prioritise that over exploration. "
-            )
+            ai_instructions += "Explore, make friends and have fun! If people ask to chat, then prioritise that over exploration. "
         return ai_instructions
 
     # Get AI name from the LLM using the AI manager
@@ -231,26 +226,26 @@ class AIBroker:
                     await asyncio.sleep(3)
 
         # Unsubscribe from the previous name
-        if self.player_name:
-            await self.mbh.unsubscribe(f"world_update.{self.player_id}")
-            await self.mbh.unsubscribe(f"logout.{self.player_id}")
-            await self.mbh.unsubscribe(f"instructions.{self.player_id}")
-            await self.mbh.unsubscribe(f"room_update.{self.player_id}")
-        self.player_name = ai_name
-        self.player_id = self.player_name.lower()
+        if self.user_name:
+            await self.mbh.unsubscribe(f"world_update.{self.user_id}")
+            await self.mbh.unsubscribe(f"logout.{self.user_id}")
+            await self.mbh.unsubscribe(f"instructions.{self.user_id}")
+            await self.mbh.unsubscribe(f"room_update.{self.user_id}")
+        self.user_name = ai_name
+        self.user_id = self.user_name.lower()
 
         # Subscribe to name-specific events
-        await self.mbh.subscribe(f"world_update.{self.player_id}", self.world_update)
-        await self.mbh.subscribe(f"logout.{self.player_id}", self.logout)
-        await self.mbh.subscribe(f"instructions.{self.player_id}", self.instructions)
-        await self.mbh.subscribe(f"room_update.{self.player_id}", self.room_update)
+        await self.mbh.subscribe(f"world_update.{self.user_id}", self.world_update)
+        await self.mbh.subscribe(f"logout.{self.user_id}", self.logout)
+        await self.mbh.subscribe(f"instructions.{self.user_id}", self.instructions)
+        await self.mbh.subscribe(f"room_update.{self.user_id}", self.room_update)
 
         await self.mbh.publish(
-            "set_player_name",
+            "set_user_name",
             {
-                "name": self.player_name,
+                "name": self.user_name,
                 "role": self.mode,
-                "player_id": self.player_id,
+                "user_id": self.user_id,
             },
         )
 
@@ -264,7 +259,7 @@ class AIBroker:
         ):
             return
         # Otherwise, add this to the user input backlog
-        # Strip anything inside curly braces as this is detail human players will enjoy but it will just cost money for the AI
+        # Strip anything inside curly braces as this is detail human people will enjoy but it will just cost money for the AI
         # There could be stuff after the braces, include that
         event_text = re.sub(
             r"{[^}]*}", "", event_text, flags=re.DOTALL
@@ -306,8 +301,8 @@ class AIBroker:
             if response:
                 # Submit AI's response to the Orchestrator
                 await self.mbh.publish(
-                    "player_action",
-                    {"player_input": response, "player_id": self.player_id},
+                    "user_action",
+                    {"user_input": response, "user_id": self.user_id},
                 )
                 # If response was to exit, exit here (after sending the exit message to the Orchestrator)
                 if response == "exit":
@@ -341,10 +336,10 @@ async def main() -> None:
     # Keep string in case not set properly
     ai_count: str = environ.get("AI_COUNT")
 
-    # If AI_MODE is not set, default to "player"
-    ai_mode: str = environ.get("AI_MODE") or "player"
+    # If AI_MODE is not set, default to "agent"
+    ai_mode: str = environ.get("AI_MODE") or "agent"
     # Check AI_MODE is set to a valid value
-    valid_ai_modes = ["player", "builder"]
+    valid_ai_modes = ["agent", "builder"]
     if ai_mode not in valid_ai_modes:
         exit(
             logger,
@@ -369,10 +364,10 @@ async def main() -> None:
             model_name=get_critical_env_variable("MODEL_NAME"),
             system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
         )
-        logger = set_up_logger(f"ai_broker_{ai_broker.player_name}.log")
+        logger = set_up_logger(f"ai_broker_{ai_broker.user_name}.log")
 
-        # Set up the player
-        await ai_broker.set_up_player()
+        # Set up the agent
+        await ai_broker.set_up_agent()
 
         # This is where the main processing of inputs happens
         asyncio.create_task(ai_broker.ai_response_loop())

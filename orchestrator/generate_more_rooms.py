@@ -4,7 +4,7 @@ import world
 from utils import set_up_logger
 import random
 import azurestoragemanager
-from player import Player
+from person import Person
 
 # Set up logging
 logger = set_up_logger()
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     storage_manager = azurestoragemanager.AzureStorageManager()
     world = world.World("corvid", storage_manager, "builder")
     max_iterations = 1
-    dummy_player = Player(world, 0, "system")
+    dummy_person = Person(world, 0, "system")
 
     for i in range(1, max_iterations + 1):
         # Start in the first room

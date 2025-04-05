@@ -5,8 +5,8 @@ from utils import set_up_logger, exit
 logger = set_up_logger()
 
 
-# Player class
-class worlditem:
+# Person class
+class WorldItem:
     def __init__(
         self,
         world: "World",
@@ -33,8 +33,8 @@ class worlditem:
             and self.location not in world.rooms
             and self.location not in world.get_entity_names()
         ):
-            # This can be caused by the Orchestrator being killed while a player is holding an item.
-            # In this case, the item location will be a player's name, which is not a valid location if that player is not playing.
+            # This can be caused by the Orchestrator being killed while a person is holding an item.
+            # In this case, the item location will be a person's name, which is not a valid location if that person is not playing.
             logger.warning(
                 f"Invalid location {self.location} specified for item {self.name}"
             )
@@ -62,7 +62,7 @@ class worlditem:
                     f"Problems will arise if an item is created that contains '{reserved_word}'.",
                 )
 
-    # Getter for player's current location
+    # Getter for person's current location
     def get_location(self) -> Optional[str]:
         return self.location
 
@@ -74,7 +74,7 @@ class worlditem:
         self.starting_location = location
         self.world.storage_manager.store_world_object(self.world.name, self)
 
-    # Setter (i.e. player drops it)
+    # Setter (i.e. person drops it)
     def set_room(self, room_name: str) -> None:
         if room_name is None:
             exit(logger, f"{self.name} is being dropped in a non-existent room")
@@ -82,12 +82,12 @@ class worlditem:
         self.set_location(room_name)
         self.world.add_item_to_room(self, room_name)
 
-    # Setter for player picking up
+    # Setter for person picking up
     def set_possession(self, entity: "Entity") -> str:
         # Remove from room in which receiving entity is
         self.world.remove_item_from_room(self, entity.location)
         self.set_location(entity.name)
-        # Try to add the item to the player's inventory, if it fails, return an error string, no error means success
+        # Try to add the item to the person's inventory, if it fails, return an error string, no error means success
         add_item_error: str = entity.add_item(self)
         if add_item_error:
             return add_item_error
@@ -95,7 +95,7 @@ class worlditem:
         # Return empty string means it's been picked up without issue
         return ""
 
-    # Remove from old player and add to new player
+    # Remove from old person and add to new person
     def transfer(self, old_entity: "Entity", new_entity: "Entity") -> str:
         if new_entity.can_add_item():
             if old_entity.drop_item(self):

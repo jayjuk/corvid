@@ -6,8 +6,8 @@ from messagebroker_helper import MessageBrokerHelper
 if __name__ == "__main__":
 
     mbh = MessageBrokerHelper(
-        get_critical_env_variable("orchestrator_HOSTNAME"),
-        get_critical_env_variable("orchestrator_PORT"),
+        get_critical_env_variable("ORCHESTRATOR_HOSTNAME"),
+        get_critical_env_variable("ORCHESTRATOR_PORT"),
         {
             "shutdown": {"mode": "publish"},
         },

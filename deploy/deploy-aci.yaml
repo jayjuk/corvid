@@ -19,16 +19,16 @@ properties:
     - name: orchestrator
       properties:
         environmentVariables:
-          - name: "orchestrator_HOSTNAME"
+          - name: "ORCHESTRATOR_HOSTNAME"
             value: "corvid.westeurope.azurecontainer.io"
-          - name: "orchestrator_PORT"
+          - name: "ORCHESTRATOR_PORT"
             value: 3001
           - name: "IMAGESERVER_HOSTNAME"
             value: "corvid.westeurope.azurecontainer.io"
           - name: "IMAGESERVER_PORT"
             value: 3002
-          - name: "orchestrator_WORLD_NAME"
-            value: "${orchestrator_WORLD_NAME}"
+          - name: "ORCHESTRATOR_WORLD_NAME"
+            value: "${ORCHESTRATOR_WORLD_NAME}"
           - name: "AZURE_STORAGE_ACCOUNT_NAME"
             value: "${AZURE_STORAGE_ACCOUNT_NAME}"
           - name: "AZURE_STORAGE_ACCOUNT_KEY"
@@ -79,10 +79,10 @@ properties:
     - name: imagecreator
       properties:
         environmentVariables:
-          - name: "orchestrator_HOSTNAME"
-            value: "${orchestrator_HOSTNAME}"
-          - name: "orchestrator_PORT"
-            value: "${orchestrator_PORT}"
+          - name: "ORCHESTRATOR_HOSTNAME"
+            value: "${ORCHESTRATOR_HOSTNAME}"
+          - name: "ORCHESTRATOR_PORT"
+            value: "${ORCHESTRATOR_PORT}"
           - name: "AZURE_STORAGE_ACCOUNT_NAME"
             value: "${AZURE_STORAGE_ACCOUNT_NAME}"
           - name: "AZURE_STORAGE_ACCOUNT_KEY"
@@ -125,9 +125,9 @@ properties:
             value: "${GOOGLE_GEMINI_KEY}"
           - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
             value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
-          - name: "orchestrator_HOSTNAME"
+          - name: "ORCHESTRATOR_HOSTNAME"
             value: "corvid.westeurope.azurecontainer.io"
-          - name: "orchestrator_PORT"
+          - name: "ORCHESTRATOR_PORT"
             value: "3001"
         image: "${CONTAINER_REGISTRY_REPOSITORY}/aibroker"
         resources:

@@ -22,7 +22,7 @@ REM Create a Docker network if it doesn't exist
 docker network inspect orchestrator-network >nul 2>&1 || docker network create orchestrator-network
 
 echo Running AI Broker
-set "orchestrator_HOSTNAME=orchestrator_local"
+set "ORCHESTRATOR_HOSTNAME=orchestrator_local"
 docker rm aibroker_local
 docker run --network orchestrator-network --name aibroker_local ^
            -e AI_COUNT=1 ^
@@ -35,6 +35,6 @@ docker run --network orchestrator-network --name aibroker_local ^
            -e GOOGLE_GEMINI_PROJECT_ID=%GOOGLE_GEMINI_PROJECT_ID% ^
            -e GOOGLE_GEMINI_LOCATION=%GOOGLE_GEMINI_LOCATION% ^
            -e GOOGLE_GEMINI_SAFETY_OVERRIDE=%GOOGLE_GEMINI_SAFETY_OVERRIDE% ^
-           -e orchestrator_HOSTNAME=corvid.westeurope.azurecontainer.io ^
-           -e orchestrator_PORT=3001 ^
+           -e ORCHESTRATOR_HOSTNAME=corvid.westeurope.azurecontainer.io ^
+           -e ORCHESTRATOR_PORT=3001 ^
            -p 3001:3001 aibroker:latest

@@ -1,4 +1,4 @@
-echo Running team of AI players
+echo Running team of AI agents
 
 @echo off
 set AI_COUNT=1
@@ -6,7 +6,7 @@ set AI_COUNT=1
 echo Loading env variables from common .env file in local execution...
 for /F "tokens=1* delims==" %%a in (..\common\.env) do ( set "%%a=%%b" )
 
-set WORLD_BRIEFING=You are part of a team of players who are building a new world. You can build locations, create items and spawn creatures.^
+set WORLD_BRIEFING=You are part of a team of people who are building a new world. You can build locations, create items and spawn creatures.^
  The theme is CHRISTMAS. The setting is %LANDSCAPE_DESCRIPTION%. Be sure to create a vibrant and fun world.^
  Use your imagination and draw from all fictional sources (whether book or film) you like. Try to be consistent and logical, for example from one location to the next, ensure the layout of the world makes sense.
 
@@ -14,7 +14,7 @@ set WORLD_BRIEFING=You are part of a team of players who are building a new worl
 rem set MODEL_NAME=gpt-4o
 @REM set AI_LEADER_NAME=Caesar
 @REM set AI_NAME=%AI_LEADER_NAME%
-@REM set AI_MODE=player
+@REM set AI_MODE=agent
 
 @REM set MODEL_SYSTEM_MESSAGE=%WORLD_BRIEFING% You are the leader. It is your responsibility to oversee the construction of a really interesting and entertaining new world, with the help of your team.^
 @REM  Use leadership and management skills above all. Supervise closely and above all, communicate.
@@ -52,5 +52,5 @@ start "%AI_NAME%" cmd /k "python aibroker.py"
 @REM set AI_NAME=%1%
 @REM start "%AI_NAME%" cmd /k "python aibroker.py"
 
-echo All done - launched AI players
+echo All done - launched AI agents
 
