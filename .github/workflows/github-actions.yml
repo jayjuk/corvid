@@ -36,9 +36,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: "{{defaultContext}}"
-          file: "orchestrator/Dockerfile"
+          file: "common/Dockerfile"
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/orchestrator:latest
+          build-args:
+            SERVICE_NAME: orchestrator
+
   build_imageserver:
     needs: unit_tests
     runs-on: ubuntu-latest
@@ -56,9 +59,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: "{{defaultContext}}"
-          file: "imageserver/Dockerfile"
+          file: "common/Dockerfile"
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/imageserver:latest
+          build-args:
+            SERVICE_NAME: imageserver
   build_aibroker:
     needs: unit_tests
     runs-on: ubuntu-latest
@@ -76,9 +81,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: "{{defaultContext}}"
-          file: "aibroker/Dockerfile"
+          file: "common/Dockerfile"
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/aibroker:latest
+          build-args:
+            SERVICE_NAME: aibroker
   # deploy:
   #   needs: build
   #   runs-on: ubuntu-latest
