@@ -16,19 +16,19 @@ properties:
             memoryInGb: 0.5
         ports:
           - port: 3000
-    - name: gameserver
+    - name: orchestrator
       properties:
         environmentVariables:
-          - name: "GAMESERVER_HOSTNAME"
+          - name: "orchestrator_HOSTNAME"
             value: "corvid.westeurope.azurecontainer.io"
-          - name: "GAMESERVER_PORT"
+          - name: "orchestrator_PORT"
             value: 3001
           - name: "IMAGESERVER_HOSTNAME"
             value: "corvid.westeurope.azurecontainer.io"
           - name: "IMAGESERVER_PORT"
             value: 3002
-          - name: "GAMESERVER_WORLD_NAME"
-            value: "${GAMESERVER_WORLD_NAME}"
+          - name: "orchestrator_WORLD_NAME"
+            value: "${orchestrator_WORLD_NAME}"
           - name: "AZURE_STORAGE_ACCOUNT_NAME"
             value: "${AZURE_STORAGE_ACCOUNT_NAME}"
           - name: "AZURE_STORAGE_ACCOUNT_KEY"
@@ -51,7 +51,7 @@ properties:
             value: "${GOOGLE_GEMINI_LOCATION}"
           - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
             value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
-        image: "${CONTAINER_REGISTRY_REPOSITORY}/gameserver"
+        image: "${CONTAINER_REGISTRY_REPOSITORY}/orchestrator"
         resources:
           requests:
             cpu: 0.2
@@ -79,10 +79,10 @@ properties:
     - name: imagecreator
       properties:
         environmentVariables:
-          - name: "GAMESERVER_HOSTNAME"
-            value: "${GAMESERVER_HOSTNAME}"
-          - name: "GAMESERVER_PORT"
-            value: "${GAMESERVER_PORT}"
+          - name: "orchestrator_HOSTNAME"
+            value: "${orchestrator_HOSTNAME}"
+          - name: "orchestrator_PORT"
+            value: "${orchestrator_PORT}"
           - name: "AZURE_STORAGE_ACCOUNT_NAME"
             value: "${AZURE_STORAGE_ACCOUNT_NAME}"
           - name: "AZURE_STORAGE_ACCOUNT_KEY"
@@ -125,9 +125,9 @@ properties:
             value: "${GOOGLE_GEMINI_KEY}"
           - name: "GOOGLE_GEMINI_SAFETY_OVERRIDE"
             value: "${GOOGLE_GEMINI_SAFETY_OVERRIDE}"
-          - name: "GAMESERVER_HOSTNAME"
+          - name: "orchestrator_HOSTNAME"
             value: "corvid.westeurope.azurecontainer.io"
-          - name: "GAMESERVER_PORT"
+          - name: "orchestrator_PORT"
             value: "3001"
         image: "${CONTAINER_REGISTRY_REPOSITORY}/aibroker"
         resources:

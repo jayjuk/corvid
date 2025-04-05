@@ -187,7 +187,7 @@ class AIManager:
         this_system_message: str = (
             system_message
             or self.system_message
-            or "You are a helpful AI assistant for a game server."
+            or "You are a helpful AI assistant for an Orchestrator."
         )
 
         logger.info(

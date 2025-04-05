@@ -982,7 +982,7 @@ class GameManager:
         if outcome:
             return outcome
 
-        # Register this player with the game server
+        # Register this player with the Orchestrator
         self.register_player(player_id, player_info, player_name)
 
         # Tell other players about this new player

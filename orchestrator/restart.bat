@@ -1,5 +1,5 @@
 call C:\Users\me\anaconda3\Scripts\activate.bat corvid
-echo Shutting down Game Server...
+echo Restarting Orchestrator...
+echo DELETE ME > restart.tmp
 python shutdown.py 
-timeout 3
 

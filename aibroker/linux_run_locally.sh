@@ -4,4 +4,4 @@ if [ -z "$1" ]; then
 else
     AI_PLAYER_FILE_NAME="$1"
 fi
-python playermanager.py
+python agentmanager.py

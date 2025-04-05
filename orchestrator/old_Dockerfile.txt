@@ -2,16 +2,16 @@ FROM python:3.11-slim-bookworm
 
 # Copy only the requirements files first to leverage Docker cache
 COPY common/requirements.txt ./common_requirements.txt
-COPY gameserver/requirements.txt ./specific_requirements.txt
+COPY orchestrator/requirements.txt ./specific_requirements.txt
 
 # Install the dependencies
 RUN pip install --no-cache-dir -r common_requirements.txt && \
     pip install --no-cache-dir -r specific_requirements.txt
 
 # Copy the rest of the application code
-COPY gameserver/*.py ./
+COPY orchestrator/*.py ./
 COPY common/*.py ./
-COPY gameserver/world_data ./world_data
+COPY orchestrator/world_data ./world_data
 
 # Set the default command
-CMD ["python", "./gameserver.py"]
+CMD ["python", "./orchestrator.py"]

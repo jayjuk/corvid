@@ -27,7 +27,7 @@ variable "CONTAINER_REGISTRY_REPOSITORY" {
 }
 
 # Add any additional environment variables as Terraform variables
-variable "GAMESERVER_PORT" {
+variable "orchestrator_PORT" {
   type = string
 }
 
@@ -46,7 +46,7 @@ variable "MODEL_SYSTEM_MESSAGE" {
   type = string
 }
 
-variable "GAMESERVER_WORLD_NAME" {
+variable "orchestrator_WORLD_NAME" {
   type = string
 }
 
@@ -248,16 +248,16 @@ resource "docker_container" "frontend_container" {
 
 }
 
-resource "docker_container" "gameserver_container" {
-  image = "${var.CONTAINER_REGISTRY_REPOSITORY}/gameserver"
-  name  = "gameserver"
+resource "docker_container" "orchestrator_container" {
+  image = "${var.CONTAINER_REGISTRY_REPOSITORY}/orchestrator"
+  name  = "orchestrator"
 
   env = [
-    "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "GAMESERVER_PORT=4222",
+    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "orchestrator_PORT=4222",
     "IMAGESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
     "IMAGESERVER_PORT=3002",
-    "GAMESERVER_WORLD_NAME=${var.GAMESERVER_WORLD_NAME}",
+    "orchestrator_WORLD_NAME=${var.orchestrator_WORLD_NAME}",
     "AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME}",
     "AZURE_STORAGE_ACCOUNT_KEY=${var.AZURE_STORAGE_ACCOUNT_KEY}",
     "MODEL_NAME=${var.MODEL_NAME}",
@@ -281,8 +281,8 @@ resource "docker_container" "imagecreator_container" {
   name  = "imagecreator"
 
   env = [
-    "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "GAMESERVER_PORT=${var.GAMESERVER_PORT}",
+    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "orchestrator_PORT=${var.orchestrator_PORT}",
     "AZURE_STORAGE_ACCOUNT_NAME=${var.AZURE_STORAGE_ACCOUNT_NAME}",
     "AZURE_STORAGE_ACCOUNT_KEY=${var.AZURE_STORAGE_ACCOUNT_KEY}",
     "MODEL_NAME=${var.MODEL_NAME}",
@@ -316,8 +316,8 @@ resource "docker_container" "aibroker_container" {
     "GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID}",
     "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
     "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
-    "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "GAMESERVER_PORT=4222"
+    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "orchestrator_PORT=4222"
   ]
 
   networks_advanced {
@@ -325,9 +325,9 @@ resource "docker_container" "aibroker_container" {
   }
 }
 
-resource "docker_container" "playermanager_container" {
-  image = "${var.CONTAINER_REGISTRY_REPOSITORY}/playermanager"
-  name  = "playermanager"
+resource "docker_container" "agentmanager_container" {
+  image = "${var.CONTAINER_REGISTRY_REPOSITORY}/agentmanager"
+  name  = "agentmanager"
 
   env = [
     "AI_COUNT=1",
@@ -341,8 +341,8 @@ resource "docker_container" "playermanager_container" {
     "GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID}",
     "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
     "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
-    "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "GAMESERVER_PORT=4222"
+    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "orchestrator_PORT=4222"
   ]
 
   networks_advanced {
@@ -364,8 +364,8 @@ resource "docker_container" "airequester_container" {
     "GOOGLE_GEMINI_PROJECT_ID=${var.GOOGLE_GEMINI_PROJECT_ID}",
     "GOOGLE_GEMINI_LOCATION=${var.GOOGLE_GEMINI_LOCATION}",
     "GOOGLE_GEMINI_SAFETY_OVERRIDE=${var.GOOGLE_GEMINI_SAFETY_OVERRIDE}",
-    "GAMESERVER_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
-    "GAMESERVER_PORT=4222"
+    "orchestrator_HOSTNAME=${data.terraform_remote_state.droplet.outputs.droplet_ip}",
+    "orchestrator_PORT=4222"
   ]
 
   networks_advanced {

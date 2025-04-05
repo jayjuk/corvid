@@ -1,0 +1,3 @@
+@echo off
+echo Building, tagging, and pushing the Orchestrator image...
+..\common\build_tag_push.bat jayjuk orchestrator

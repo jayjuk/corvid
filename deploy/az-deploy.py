@@ -30,7 +30,7 @@ def do_deploy(deploy_file: str) -> None:
         )
 
     # Replace the placeholders with the environment variables by going through each line,
-    # Changing ${GAMESERVER_WORLD_NAME} to the value of the environment variable GAMESERVER_WORLD_NAME etc
+    # Changing ${orchestrator_WORLD_NAME} to the value of the environment variable orchestrator_WORLD_NAME etc
     new_content = ""
     for line in content.split("\n"):
         # Assume only one placeholder per line

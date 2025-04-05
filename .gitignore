@@ -18,7 +18,7 @@ backup_the_oldfashioned_way.py
 quick_backup_and_old
 frontend/perspective-package.zip
 .DS_Store
-gameserver/logs
+orchestrator/logs
 *_transcript.txt
 
 # Ignore Terraform state files and backups

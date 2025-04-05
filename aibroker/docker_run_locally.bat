@@ -19,12 +19,12 @@ for /F "tokens=1* delims==" %%a in (%env_file_path%) do (
 REM Run the docker container
 
 REM Create a Docker network if it doesn't exist
-docker network inspect gameserver-network >nul 2>&1 || docker network create gameserver-network
+docker network inspect orchestrator-network >nul 2>&1 || docker network create orchestrator-network
 
 echo Running AI Broker
-set "GAMESERVER_HOSTNAME=gameserver_local"
+set "orchestrator_HOSTNAME=orchestrator_local"
 docker rm aibroker_local
-docker run --network gameserver-network --name aibroker_local ^
+docker run --network orchestrator-network --name aibroker_local ^
            -e AI_COUNT=1 ^
            -e MODEL_NAME=%MODEL_NAME% ^
            -e OPENAI_API_KEY=%OPENAI_API_KEY% ^
@@ -35,6 +35,6 @@ docker run --network gameserver-network --name aibroker_local ^
            -e GOOGLE_GEMINI_PROJECT_ID=%GOOGLE_GEMINI_PROJECT_ID% ^
            -e GOOGLE_GEMINI_LOCATION=%GOOGLE_GEMINI_LOCATION% ^
            -e GOOGLE_GEMINI_SAFETY_OVERRIDE=%GOOGLE_GEMINI_SAFETY_OVERRIDE% ^
-           -e GAMESERVER_HOSTNAME=corvid.westeurope.azurecontainer.io ^
-           -e GAMESERVER_PORT=3001 ^
+           -e orchestrator_HOSTNAME=corvid.westeurope.azurecontainer.io ^
+           -e orchestrator_PORT=3001 ^
            -p 3001:3001 aibroker:latest

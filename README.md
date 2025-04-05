@@ -1,69 +1,61 @@
-# corvid
+# Corvid
 
-A simple, web-based, cloud-native, real-time, multi-user, text-based (with pictures) adventure game.
-With one difference: AIs can play too :-)
-I built this for fun and to learn a whole load of new technologies.
+Corvid is a platform for creating open-world, persistent, multi-user simulated environments in the cloud. Designed for collaborative teams of humans and AI agents, it uses LLMs to interpret natural language instructions, expand on user ideas, and generate vivid descriptions with supporting imagery.
 
 ## High-Level Technical Overview
 
-The game is designed to run in the cloud. It is composed of a set of services, each of which runs in its own Linux container.
-It is deployed on Digital Ocean droplets via Terraform, with game data stored in Azure Storage in real time, so that if a service or the server is restarted, no state is lost and the game picks up from where it left off.
-Humans play the game via a single web page, served by a Game Client and Image Server. The Game Client interacts with the Game Server via NATS (which uses web sockets under the covers to talk to the web UI).
-AIs (LLMs) play the game via an AI Broker, which submits game updates to them over their Python APIs, and channels their commands to the Game Server in the same fashion as the Game Client.
+Corvid is composed of modular, containerised services, each running in its own Docker environment. It is deployed using Terraform on DigitalOcean droplets. Real-time state persistence for each simulated environment is managed through Azure Table Storage, allowing continuous and accurate state recovery upon service restarts.
+Human users interact with Corvid environments via a web-based user interface, managed by the Client and Image Server. Communication between the Client and Orchestrator occurs via NATS, utilizing WebSockets for seamless real-time interaction.
+AI agents powered by LLMs interact with the environment through an AI Broker, which exchanges updates with the Orchestrator over Python-based APIs and NATS, in parallel to the human-client communication.
 
 ### Services
 
-Below is an overview of each component of the game architecture. In future, more detail on each will be available in a README.md under the relevant subdirectory.
+The following is a summary of each core component within the Corvid architecture. More detailed documentation will be provided within individual subdirectories.
 
-### 1. Game Server
+### 1. Orchestrator
 
-This service is where all the game's "business logic" resides. It loads the game world into memory from its database (rooms i.e. locations and their exits, items, entities etc), then keeps track of the state of each player and the contents of the world as the game commences. It receives player commands over NATS, parses and processes them, and sends feedback to the game client and AI broker(s), also via NATS.
+This service contains the primary business logic for managing simulated environments. It initialises world data, manages user and entity states, processes commands via NATS, and provides feedback to users and AI agents. The Orchestrator also uses NATS to farm out LLM-dependent workloads to other services. Data persistence and management utilise Azure Storage. The server is implemented entirely in Python.
 
-Note that the game server also uses an LLM itself for various purposes including generation of interesting descriptions and images when a new location is created by a player with 'builder' permissions, or when a player provides a command it does not understand (which can sometimes be 'translated' into supported syntax given the context). This operates independently of the AI broker at runtime.
+### 2. Front End
 
-The Game Server hands all the game's data storage (in Azure). It is written entirely in Python.
-
-### 2. Game Client
-
-This simple service runs the web-based UI. It listens to and broadcasts updates from/to the Game Server via NATS. It is (for now) written in Typescript using Next.js (a React framework based on Node.js). It is pretty much a minimal go-between to allow humans to play via a web browser. It also interfaces with the Image Server, over REST, although this is handled natively by HTML when URLs pointing to the Image Server are published over NATS each time the player changes location.
+The Front End provides a web-based user interface, facilitating user interaction through real-time updates exchanged with the Orchestrator via NATS. Built with Next.js (React framework) in TypeScript, it interfaces with the Image Server through REST APIs to dynamically present visual content.
 
 ### 3. AI Requester
 
-This service handles AI requests from the game server, keeping the latter focused on handling simple commands and maintaining the game state. These are
-typically player input that is not recognised by the game manager as a built-in command (e.g. navigation, buy, sell), and needs to be interpreted.
+The AI Requester handles complex natural language inputs and instructions that the Orchestrator cannot directly interpret, delegating these to specialised LLM-powered services for contextual processing.
 
 ### 3. Image Server
 
-This service serves up images of locations in the game to the human players' browser. It has a simple Flask web server to receive requests, a file-based local cache, and direct connectivity to Azure Blob Storage via the Python API (which uses REST under the covers). It shares common Storage Management and Logging source code modules (in Python) with the Game Server.
+Responsible for delivering visual assets to users, this service employs a Flask-based API server. It manages image requests, maintains a local cache, and directly interacts with Azure Blob Storage through Python APIs.
 
 ### 4. Image Creator
 
-This service handles requests to create an image for a new location in the game. It is the only service that runs an image generation model. It also uses an LLM to enhance the player's description (which may be blank) into a suitable prompt.
+This service produces visuals for new locations or entities within simulated environments. Utilising image-generation models, it enriches textual prompts with LLM support to ensure meaningful and contextually accurate imagery.
 
-### 5. Player Manager
+### 5. User Manager
 
-This service responds to "summon" requests by spawning AI Broker instances. If it is not running, the 'summon' command will have no effect.
+Responding to "summon" requests, this service dynamically initiates AI Broker instances, enabling the introduction of new AI-controlled entities into active environments.
 
 ### 6. AI Broker (Optional)
 
-This service allows LLMs to play the game too. Each run-time instance of this service creates one AI player. It collects updates from the game server, presents them to a designated LLM (currently OpenAI's GPT-3.5 / GPT-4, Google's Gemini Pro, and Claude 3 Haiku), with relevant context, and relays the LLM's decisions (i.e. game commands) back to the game server via NATS. The game server does not know or care who is a human player and who is an AI. It is written in Python too, and shares Logging and AI Management modules with the Game Server.
+This service allows LLMs to play the game too. Each run-time instance of this service creates one AI player. It collects updates from the Orchestrator, presents them to a designated LLM (currently OpenAI's GPT-3.5 / GPT-4, Google's Gemini Pro, and Claude 3 Haiku), with relevant context, and relays the LLM's decisions (i.e. game commands) back to the Orchestrator via NATS. The Orchestrator does not know or care who is a human player and who is an AI. It is written in Python too, and shares Logging and AI Management modules with the Orchestrator.
 
 ## Local Execution
 
-Currently, each service can also be run locally (still connecting to Azure Storage) within its own subdirectory via the appropriate run_xxxxxxx.bat startup script. For the game server and AI broker, a number of Python modules must be installed; these are listed in the requirements.txt file in each subdirectory.
+Currently, each service can also be run locally (still connecting to Azure Storage) within its own subdirectory via the appropriate run_xxxxxxx.bat startup script. For the Orchestrator and AI broker, a number of Python modules must be installed; these are listed in the requirements.txt file in each subdirectory.
 
 To run the game locally (below is for Windows, launch scripts could be adapted for Linux or MacOS):
 
 1. Set up environment variable PYTHONPATH to include the corvid\common subdirectory (this is where _.env_, _logging_ and _storage_manager_ modules reside).
 2. Clone the whole corvid repo
 3. Copy _common\.env.example.txt_ to _.env_, environment variable file, and modify values per next section below - I do not provide cloud or AI provider accounts or API keys!
-4. Run the game server: Open a new DOS window, enter into a Python environment with the modules in gameserver\requirements.txt installed via pip (see below\*), cd into gameserver, and run _run_gameserver_locally.bat_
-5. Open a new DOS window, cd into gameclient, and run _run_gameclient.bat_ (or launch this from Windows)
+4. Run the Orchestrator: Open a new DOS window, enter into a Python environment with the modules in orchestrator\requirements.txt installed via pip (see below\*), cd into orchestrator, and run _run_orchestrator_locally.bat_
+5. Open a new DOS window, cd into frontend, and run _run_frontend.bat_ (or launch this from Windows)
 6. Run the image server: Open a new DOS window, enter into a Python environment with the modules in imageserver\requirements.txt installed via pip (see below\*), cd into imageserver, and run _run_imageserver_locally.bat_. You can play the game without this, but it's nicer to see the picture of each location.
 7. Play the game in your browser via https://localhost:3000.
 8. Optionally, to add some AIs into the game, for each one you want to run: Open a new DOS window, enter into a Python environment with the modules in aibroker\requirements.txt installed via pip, cd into aibroker, and run _run_aibroker.bat_.
 
-(\*My chosen method was to install Anaconda including Navigator, and create an environment called corvid shared by both the AI broker and the game server)
+(\*My chosen method was to install Anaconda including Navigator, and create an environment called corvid shared by both the AI broker and the Orchestrator)
 
 ### Environment Variables and API Keys
 
@@ -82,13 +74,13 @@ AZURE_STORAGE_ACCOUNT_KEY - Obtained from the Azure Storage console after you cr
 
 Other environment variables to update in .env (for local operation), GitHub Actions Secrets (for Continuous Integration) and Azure Container Instances secrets (for production deployment) as required:
 
-MODEL_NAME - e.g. gpt-3.5-turbo, gemini-pro (see caveat above), or claude-3-haiku-20240307. Used both by AI Broker and Game Server (which share the AI Manager) but they can be configured differently due to the services running in separate containers.
+MODEL_NAME - e.g. gpt-3.5-turbo, gemini-pro (see caveat above), or claude-3-haiku-20240307. Used both by AI Broker and Orchestrator (which share the AI Manager) but they can be configured differently due to the services running in separate containers.
 AIREQUESTER_MODEL_NAME - Specific model name for AI Requester, which handles more complex requests.
 AZURE_STORAGE_ACCOUNT_NAME - Also from the Azure console, this will look something like csa123456fff1a111a1a
-GAMESERVER_HOSTNAME - localhost when running locally, otherwise something like corvid.westeurope.azurecontainer.io, with the first world modified to your own environment
-GAMESERVER_PORT - e.g. 3001 (3000 is used by Next.js for the UI)
-GAMESERVER_WORLD_NAME - the name of the 'world' e.g. corvid or mansion (currently the examples checked in). A new world currently requires setup of \_gameserver\world_data\world_name\*.json\* files.
-IMAGESERVER_HOSTNAME - likely to be the same as GAMESERVER_HOSTNAME above
+orchestrator_HOSTNAME - localhost when running locally, otherwise something like corvid.westeurope.azurecontainer.io, with the first world modified to your own environment
+orchestrator_PORT - e.g. 3001 (3000 is used by Next.js for the UI)
+orchestrator_WORLD_NAME - the name of the 'world' e.g. corvid or mansion (currently the examples checked in). A new world currently requires setup of \_orchestrator\world_data\world_name\*.json\* files.
+IMAGESERVER_HOSTNAME - likely to be the same as orchestrator_HOSTNAME above
 IMAGESERVER_PORT - e.g. 3002
 
 ### Unit Testing

@@ -1,8 +1,8 @@
-# Game Server
+# Orchestrator
 
 ## Private Modules
 
-### Game Server
+### Orchestrator
 
 The "main" runtime modules. Sets up and runs Game Manager
 

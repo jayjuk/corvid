@@ -9,4 +9,4 @@ if "%~1"=="" (
 )
 set AIBROKER_MAX_HISTORY=100
 set MODEL_SYSTEM_MESSAGE=You are a character playing a computer game.
-python playermanager.py
+python agentmanager.py

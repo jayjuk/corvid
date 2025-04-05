@@ -21,12 +21,12 @@ REM Run the docker container
 echo Running Image Creator
 
 REM Create a Docker network if it doesn't exist
-docker network inspect gameserver-network >nul 2>&1 || docker network create gameserver-network
-set "GAMESERVER_HOSTNAME=gameserver_local"
+docker network inspect orchestrator-network >nul 2>&1 || docker network create orchestrator-network
+set "orchestrator_HOSTNAME=orchestrator_local"
 docker rm imagecreator_local
-docker run --network gameserver-network --name imagecreator_local ^
-           -e GAMESERVER_HOSTNAME=%GAMESERVER_HOSTNAME% ^
-           -e GAMESERVER_PORT=%GAMESERVER_PORT% ^
+docker run --network orchestrator-network --name imagecreator_local ^
+           -e orchestrator_HOSTNAME=%orchestrator_HOSTNAME% ^
+           -e orchestrator_PORT=%orchestrator_PORT% ^
            -e AZURE_STORAGE_ACCOUNT_NAME=%AZURE_STORAGE_ACCOUNT_NAME% ^
            -e AZURE_STORAGE_ACCOUNT_KEY=%AZURE_STORAGE_ACCOUNT_KEY% ^
            -e IMAGE_MODEL_NAME=%IMAGE_MODEL_NAME% ^

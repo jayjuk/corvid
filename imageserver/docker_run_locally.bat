@@ -19,9 +19,9 @@ for /F "tokens=1* delims==" %%a in (%env_file_path%) do (
 
 REM Run the docker container
 echo Running Image Server
-set "GAMESERVER_HOSTNAME=gameserver_local"
+set "orchestrator_HOSTNAME=orchestrator_local"
 docker rm imageserver_local
-docker run --network gameserver-network --name imageserver_local ^
+docker run --network orchestrator-network --name imageserver_local ^
            -e IMAGESERVER_HOSTNAME=%IMAGESERVER_HOSTNAME% ^
            -e IMAGESERVER_PORT=%IMAGESERVER_PORT% ^
            -e AZURE_STORAGE_ACCOUNT_NAME=%AZURE_STORAGE_ACCOUNT_NAME% ^

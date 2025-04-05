@@ -10,16 +10,16 @@ jobs:
         with:
           python-version: "3.11.5"
       - run: pip install -r common/requirements.txt
-      - run: pip install -r gameserver/requirements.txt
+      - run: pip install -r orchestrator/requirements.txt
       - run: pip install -r imageserver/requirements.txt
       - run: pip install -r aibroker/requirements.txt
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/common" >> $GITHUB_ENV
       - run: cd common; python -m unittest tests.test_aimanager
-      - run: cd gameserver; python -m unittest tests.test_gamemanager
+      - run: cd orchestrator; python -m unittest tests.test_gamemanager
       - run: cd imageserver; python -m unittest tests.test_imageserver
       - run: cd aibroker; python -m unittest tests.test_aibroker
-  build_gameserver:
+  build_orchestrator:
     needs: unit_tests
     runs-on: ubuntu-latest
     steps:
@@ -36,9 +36,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: "{{defaultContext}}"
-          file: "gameserver/Dockerfile"
+          file: "orchestrator/Dockerfile"
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/gameserver:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/orchestrator:latest
   build_imageserver:
     needs: unit_tests
     runs-on: ubuntu-latest
@@ -101,7 +101,7 @@ jobs:
   #         name: corvid
   #         resource-group: jay
   #         dns-name-label: corvid
-  #         image: jayjuk/gameserver #:${{ github.sha }}
+  #         image: jayjuk/orchestrator #:${{ github.sha }}
   #         cpu: 1 #Optional
   #         memory: 0.1 #Optional
   #         #registry-username: ${{ secrets.REGISTRY_USERNAME }}

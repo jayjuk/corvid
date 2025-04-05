@@ -11,7 +11,7 @@ from aimanager import AIManager
 from messagebroker_helper import MessageBrokerHelper
 
 
-# Class to manage the AI's interaction with the game server
+# Class to manage the AI's interaction with the Orchestrator
 class AIRequester:
 
     def __init__(
@@ -56,7 +56,7 @@ async def main() -> None:
                 prompt=data["prompt"],
                 system_message=data.get(
                     "system_message",
-                    "You are a helpful AI assistant for a game server.",
+                    "You are a helpful AI assistant for an Orchestrator.",
                 ),
             )
             if ai_response:
@@ -86,8 +86,8 @@ async def main() -> None:
     )
 
     mbh = MessageBrokerHelper(
-        get_critical_env_variable("GAMESERVER_HOSTNAME"),
-        get_critical_env_variable("GAMESERVER_PORT"),
+        get_critical_env_variable("orchestrator_HOSTNAME"),
+        get_critical_env_variable("orchestrator_PORT"),
         {
             "ai_request": {"mode": "subscribe", "callback": catch_all},
             "ai_response": {"mode": "publish"},

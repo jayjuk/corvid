@@ -5,7 +5,7 @@ from os import environ
 from sys import argv
 from os import path, makedirs
 
-logger = set_up_logger("gameserver")
+logger = set_up_logger("orchestrator")
 
 from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     if len(argv) > 1:
         world_name = argv[1]
     else:
-        world_name = environ.get("GAMESERVER_WORLD_NAME", "corvid")
+        world_name = environ.get("orchestrator_WORLD_NAME", "corvid")
 
     logger.info(f"Starting up game manager - world '{world_name}'")
     storage_manager: AzureStorageManager = AzureStorageManager()

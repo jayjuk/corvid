@@ -6,8 +6,8 @@ from messagebroker_helper import MessageBrokerHelper
 if __name__ == "__main__":
 
     mbh = MessageBrokerHelper(
-        get_critical_env_variable("GAMESERVER_HOSTNAME"),
-        get_critical_env_variable("GAMESERVER_PORT"),
+        get_critical_env_variable("orchestrator_HOSTNAME"),
+        get_critical_env_variable("orchestrator_PORT"),
         {
             "shutdown": {"mode": "publish"},
         },
@@ -18,4 +18,4 @@ if __name__ == "__main__":
     asyncio.run(mbh.publish("shutdown", "shutdown"))
     print("Published shutdown message.")
 
-# This is a simple script that sends a shutdown message to the message broker. It is used to shut down the game server.
+# This is a simple script that sends a shutdown message to the message broker. It is used to shut down the Orchestrator.

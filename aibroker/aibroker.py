@@ -13,7 +13,7 @@ from aimanager import AIManager
 from messagebroker_helper import MessageBrokerHelper
 
 
-# Class to manage the AI's interaction with the game server
+# Class to manage the AI's interaction with the Orchestrator
 class AIBroker:
 
     def __init__(
@@ -55,8 +55,8 @@ class AIBroker:
     async def set_up_player(self) -> None:
         # Set up the message broker helper
         self.mbh = MessageBrokerHelper(
-            get_critical_env_variable("GAMESERVER_HOSTNAME"),
-            get_critical_env_variable("GAMESERVER_PORT"),
+            get_critical_env_variable("orchestrator_HOSTNAME"),
+            get_critical_env_variable("orchestrator_PORT"),
             {
                 "set_player_name": {"mode": "publish"},
                 "summon_player_response": {"mode": "publish"},
@@ -150,13 +150,13 @@ class AIBroker:
             # Record time
             self.last_time = time.time()
 
-    # AI manager will record instructions from the game server
+    # AI manager will record instructions from the Orchestrator
     # Which are given to each player at the start of the game
     def record_instructions(self, data: str) -> None:
         self.game_instructions += data + "\n"
         self.ai_manager.set_system_message(self.game_instructions + self.system_message)
 
-    # AI manager will get instructions from the game server
+    # AI manager will get instructions from the Orchestrator
     def get_ai_instructions(self) -> str:
         ai_instructions: str = (
             "You have been brought to life in a text adventure game! "
@@ -295,12 +295,12 @@ class AIBroker:
             if self.time_to_die:
                 return
             if response:
-                # Submit AI's response to the game server
+                # Submit AI's response to the Orchestrator
                 await self.mbh.publish(
                     "player_action",
                     {"player_input": response, "player_id": self.player_id},
                 )
-                # If response was to exit, exit here (after sending the exit message to the game server)
+                # If response was to exit, exit here (after sending the exit message to the Orchestrator)
                 if response == "exit":
                     exit(logger, "AI has exited the game.")
             else:

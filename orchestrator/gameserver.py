@@ -8,7 +8,7 @@ from os import path, makedirs
 import asyncio
 
 # Set up logger before importing other own modules
-logger = set_up_logger("Game Server")
+logger = set_up_logger("Orchestrator")
 
 from azurestoragemanager import AzureStorageManager
 from gamemanager import GameManager
@@ -139,7 +139,7 @@ async def main() -> None:
             "request_id" in data
             and data["request_id"] in game_manager.ai_manager.remote_requests
         ):
-            # TODO #98 should game server be allowed to access ai manager directly?
+            # TODO #98 should Orchestrator be allowed to access ai manager directly?
             player: Player
             response_to_player: str
             (player, response_to_player) = (
@@ -163,8 +163,8 @@ async def main() -> None:
     # Set up the message broker
     logger.info("Setting up message broker")
     mbh = MessageBrokerHelper(
-        get_critical_env_variable("GAMESERVER_HOSTNAME"),
-        get_critical_env_variable("GAMESERVER_PORT"),
+        get_critical_env_variable("orchestrator_HOSTNAME"),
+        get_critical_env_variable("orchestrator_PORT"),
         {
             # Client messages
             "instructions": {"mode": "publish"},
@@ -200,7 +200,7 @@ async def main() -> None:
     if len(argv) > 1:
         world_name = argv[1]
     else:
-        world_name = environ.get("GAMESERVER_WORLD_NAME", "corvid")
+        world_name = environ.get("orchestrator_WORLD_NAME", "corvid")
 
     logger.info(f"Starting up game manager - world '{world_name}'")
     storage_manager: AzureStorageManager = AzureStorageManager()

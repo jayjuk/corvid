@@ -82,8 +82,8 @@ async def main() -> None:
         await mbh.publish("set_player_name", {"name": player_name, "role": "player"})
 
     mbh = MessageBrokerHelper(
-        get_critical_env_variable("GAMESERVER_HOSTNAME"),
-        get_critical_env_variable("GAMESERVER_PORT"),
+        get_critical_env_variable("orchestrator_HOSTNAME"),
+        get_critical_env_variable("orchestrator_PORT"),
         {
             "set_player_name": {"mode": "publish"},
             "player_action": {"mode": "publish"},

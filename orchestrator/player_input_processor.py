@@ -138,7 +138,7 @@ class PlayerInputProcessor:
             },
             "xox": {
                 "function": self.game_manager.do_shutdown,
-                # Keep this one hidden - it shuts down the game server and AI broker!
+                # Keep this one hidden - it shuts down the Orchestrator and AI broker!
                 "description": "",
             },
             # Help is special, as it doesn't need a function to be defined in the game manager, it can be handled here

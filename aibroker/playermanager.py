@@ -16,8 +16,8 @@ from messagebroker_helper import MessageBrokerHelper
 logger = set_up_logger("Player Manager")
 
 
-# Class to manage the AI's interaction with the game server
-class PlayerManager:
+# Class to manage the AI's interaction with the Orchestrator
+class agentmanager:
 
     def __init__(
         self,
@@ -118,8 +118,8 @@ async def main() -> None:
             exit(logger, f"Invalid request data: {data}")
 
     mbh = MessageBrokerHelper(
-        os.environ.get("GAMESERVER_HOSTNAME", "localhost"),
-        os.environ.get("GAMESERVER_PORT", 4222),
+        os.environ.get("orchestrator_HOSTNAME", "localhost"),
+        os.environ.get("orchestrator_PORT", 4222),
         {
             "summon_player_response": {"mode": "publish"},
             "summon_player_request": {
@@ -131,7 +131,7 @@ async def main() -> None:
 
     # Create AI Worker
     init_filename = os.environ.get("AI_PLAYER_FILE_NAME")
-    player_manager = PlayerManager(init_filename=init_filename)
+    player_manager = agentmanager(init_filename=init_filename)
 
     # Start consuming messages
     await mbh.set_up_nats()

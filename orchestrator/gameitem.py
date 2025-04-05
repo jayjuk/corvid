@@ -33,7 +33,7 @@ class GameItem:
             and self.location not in world.rooms
             and self.location not in world.get_entity_names()
         ):
-            # This can be caused by the game server being killed while a player is holding an item.
+            # This can be caused by the Orchestrator being killed while a player is holding an item.
             # In this case, the item location will be a player's name, which is not a valid location if that player is not playing.
             logger.warning(
                 f"Invalid location {self.location} specified for item {self.name}"

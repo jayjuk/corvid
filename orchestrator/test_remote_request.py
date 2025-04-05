@@ -13,8 +13,8 @@ async def run():
         print(f"Received AI response: {data}")
 
     mbh = MessageBrokerHelper(
-        environ.get("GAMESERVER_HOSTNAME", "localhost"),
-        environ.get("GAMESERVER_PORT", 4222),
+        environ.get("orchestrator_HOSTNAME", "localhost"),
+        environ.get("orchestrator_PORT", 4222),
         {
             "ai_request": {"mode": "publish"},
             "image_creation_request": {
