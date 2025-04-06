@@ -6,13 +6,13 @@ logger = set_up_logger()
 from typing import Dict, Callable, Tuple, Optional, Union, List
 from person import Person
 from world import World
-from worldmanager import worldmanager
+from worldmanager import WorldManager
 import re
 
 
 class UserInputProcessor:
 
-    def __init__(self, world_manager: worldmanager):
+    def __init__(self, world_manager: WorldManager):
         self.world_manager = world_manager
         self.setup_commands()
 

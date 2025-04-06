@@ -8,7 +8,7 @@ from os import path, makedirs
 logger = set_up_logger("orchestrator")
 
 from azurestoragemanager import AzureStorageManager
-from worldmanager import worldmanager
+from worldmanager import WorldManager
 
 
 if __name__ == "__main__":
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     logger.info(f"Starting up world manager - world '{world_name}'")
     storage_manager: AzureStorageManager = AzureStorageManager()
-    world_manager: worldmanager = worldmanager(
+    world_manager: WorldManager = WorldManager(
         None,
         storage_manager,
         world_name=world_name,

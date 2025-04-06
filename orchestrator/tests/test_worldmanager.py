@@ -1,5 +1,5 @@
 import unittest
-from worldmanager import worldmanager
+from worldmanager import WorldManager
 from person import Person
 from storagemanager import StorageManager
 from user_input_processor import UserInputProcessor
@@ -10,7 +10,7 @@ class Testworldmanager(unittest.TestCase):
     def setUp(self):
         print("*** Setting up ***")
         self.storage_manager = StorageManager()
-        self.world_manager = worldmanager(
+        self.world_manager = WorldManager(
             mbh=None,
             storage_manager=self.storage_manager,
             world_name="unittest",

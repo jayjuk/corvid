@@ -1,4 +1,4 @@
-from worldmanager import worldmanager
+from worldmanager import WorldManager
 from storagemanager import StorageManager
 from person import Person
 from user_input_processor import UserInputProcessor
@@ -25,7 +25,7 @@ async def run():
     )
 
     storage_manager = StorageManager()
-    world_manager = worldmanager(
+    world_manager = WorldManager(
         mbh=mbh,
         storage_manager=storage_manager,
         world_name="remotetest",

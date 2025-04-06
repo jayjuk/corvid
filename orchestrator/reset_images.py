@@ -2,7 +2,7 @@
 
 import sys
 from azurestoragemanager import AzureStorageManager
-from worldmanager import worldmanager
+from worldmanager import WorldManager
 from utils import set_up_logger
 from os import environ
 
@@ -13,7 +13,7 @@ logger = set_up_logger("reset_images")
 def reset_images(world_name: str) -> None:
     # Initialize storage manager and world manager
     storage_manager = AzureStorageManager()
-    world_manager = worldmanager(
+    world_manager = WorldManager(
         None,
         storage_manager,
         world_name=world_name,

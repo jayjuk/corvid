@@ -16,9 +16,10 @@ from worlditem import WorldItem
 from room import Room
 from aimanager import AIManager
 from storagemanager import StorageManager
+from shutdownexception import ShutdownException
 
 
-class worldmanager:
+class WorldManager:
     """Manage the world state and process person input & responses."""
 
     # Constructor
@@ -215,7 +216,9 @@ class worldmanager:
         # TODO #69 Make shutdown command restart process not shut down
         await self.mbh.publish("shutdown", message)
         await asyncio.sleep(1)
-        exit(logger, "Shutdown command invoked by {person.name}")
+        message: str = f"Shutdown command invoked by {person.name}"
+        logger.critical(message)
+        raise ShutdownException(message)
 
     async def do_quit(self, person: Person, rest_of_response: str) -> None:
         await self.remove_person(person.user_id, "You have left the world.")
