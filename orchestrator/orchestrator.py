@@ -28,7 +28,9 @@ class Orchestrator:
         if user_name not in self.user_transcripts:
             # Create a new log file for the user and return a handle to it
             makedirs(get_logs_folder(), exist_ok=True)
-            f = open(path.join(get_logs_folder(), f"{user_name}_world_transcript.txt"))
+            f = open(
+                path.join(get_logs_folder(), f"{user_name}_world_transcript.txt"), "w"
+            )
             f.write(f"# Person input and response log for {user_name}\n\n")
             self.user_transcripts[user_name] = f
         return self.user_transcripts[user_name]
@@ -63,7 +65,7 @@ class Orchestrator:
                 user_id,
             )
         else:
-            self.create_user_transcript(user_info.get("name"))
+            logger.info(f"User {user_info.get('name')} setup complete")
 
     # User action
     async def user_action(self, data: Dict[str, str]):

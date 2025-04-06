@@ -35,3 +35,4 @@ deploy/.terraform/
 # Ignore any hidden files or directories, which may contain sensitive information
 deploy/.*
 deploy/docker_configuration/terraform.tfstate.backup
+common/scripts/gemini_key_encoded.txt
