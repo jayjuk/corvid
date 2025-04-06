@@ -35,7 +35,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: "./orchestrator"
+          context: .
           file: "common/Dockerfile"
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/orchestrator:latest
@@ -57,7 +57,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: "./imageserver"
+          context: .
           file: "common/Dockerfile"
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/imageserver:latest
@@ -78,7 +78,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: "./aibroker"
+          context: .
           file: "common/Dockerfile"
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/aibroker:latest
