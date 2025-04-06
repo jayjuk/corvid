@@ -8,7 +8,7 @@ Corvid is a platform for creating open-world, persistent, multi-user simulated e
 
 - Benchmarking LLMs, with a focus on role-playing behaviours and character modelling.
 
-- Rapid creation of interactive experiences and customised simulations tailored for organisations, interest groups, or training in prompt engineering.
+- Rapid creation of interactive experiences and customised simulations tailored for organisations, interest groups, or training in prompt engineering, managing teams, trading and more.
 
 - Educational tool for teaching principles of distributed systems, real-time communication, and cloud infrastructure.
 
@@ -68,6 +68,17 @@ Corvid includes automated unit testing integrated with GitHub Actions for contin
 
 Deployment to DigitalOcean is facilitated via Terraform. Detailed setup instructions, including SSH key configuration, are available in the deploy directory. Deployment scripts dynamically generate environment configurations, securely integrating essential keys and parameters.
 
-### Known Issues & Improvements
+## Roadmap
 
-For tracking issues and planned improvements, see the [Corvid Issues Page](https://github.com/jayjuk/corvid/issues).
+## New Features
+
+The platform is still very much in its infancy. For tracking issues and planned improvements, see the [Corvid Issues Page](https://github.com/jayjuk/corvid/issues). Major future capabilities include:
+
+- Support load-balancing across many LLM APIs. Currently the platform supports a number of vendors and interfaces, and the AI Broker can be configured to use many, but all summoned agents are instantiated against a single API, leading to rate-limiting if too many agents are introduced to a world. [#108]([https://github.com/jayjuk/corvid/issues/108])
+- Enrich the simulation with AI-supported physics including time. For example, currently a user can start a fire, but it will never go out. [#109]([https://github.com/jayjuk/corvid/issues/109])
+- Add concept of background/foreground. This will improve the consistency of descriptions of locations and of interaction with nearby real-world things that are too large to be handled like 'items'. [#110]([https://github.com/jayjuk/corvid/issues/110])
+- Prices should fluctuate [#7](https://github.com/jayjuk/corvid/issues/7)
+
+## Getting Involved
+
+- If you would like to contribute to this platform, please get in touch via [my profile page](https://github.com/jayjuk).
