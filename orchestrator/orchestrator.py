@@ -34,7 +34,7 @@ class Orchestrator:
         return self.user_transcripts[user_name]
 
     # Log model response to file
-    # TODO #111 Improve on basic user transcript logging
+    # TODO #111 Improve transcript logging to capture everything the user sees
     def log_to_user_transcript(
         self, user_name: str, request: str = "", response: str = ""
     ) -> None:
