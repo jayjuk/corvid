@@ -117,6 +117,7 @@ async def main() -> None:
         else:
             exit(logger, f"Invalid request data: {data}")
 
+    # Set up the message broker
     mbh = MessageBrokerHelper(
         os.environ.get("ORCHESTRATOR_HOSTNAME", "localhost"),
         os.environ.get("ORCHESTRATOR_PORT", 4222),
@@ -136,7 +137,8 @@ async def main() -> None:
     # Start consuming messages
     await mbh.set_up_nats()
 
-    await asyncio.Event().wait()  # Keeps the event loop running
+    # Keep the event loop running
+    await asyncio.Event().wait()
 
 
 # Main function to start the program

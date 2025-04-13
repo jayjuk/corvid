@@ -25,6 +25,7 @@ class ImageCreator:
     ) -> None:
         # Constructor
         self.landscape = landscape
+        # Message broker object
         self.mbh = mbh
 
         # Set up the AI managers
@@ -197,6 +198,7 @@ async def main() -> None:
         logger.info(f"Received image creation request: {data}")
         await image_creator.process_image_request(data)
 
+    # Set up the message broker
     mbh = MessageBrokerHelper(
         os.environ.get("ORCHESTRATOR_HOSTNAME", "localhost"),
         os.environ.get("ORCHESTRATOR_PORT", 4222),
@@ -221,7 +223,8 @@ async def main() -> None:
     # Start consuming messages
     await mbh.set_up_nats()
 
-    await asyncio.Event().wait()  # Keeps the event loop running
+    # Keep the event loop running
+    await asyncio.Event().wait()
 
 
 # Main function to start the program

@@ -25,7 +25,7 @@ class AIBroker:
     ) -> None:
         # Constructor
         self.mode: Optional[str] = mode
-        self.time_to_die: bool = False
+        self.time_to_exit: bool = False
         self.world_instructions: str = ""
         self.event_log: List[str] = []
         self.max_history: int = int(environ.get("AIBROKER_MAX_HISTORY", 100))
@@ -54,7 +54,7 @@ class AIBroker:
         )
 
     async def set_up_agent(self) -> None:
-        # Set up the message broker helper
+        # Set up the message broker
         self.mbh = MessageBrokerHelper(
             get_critical_env_variable("ORCHESTRATOR_HOSTNAME"),
             get_critical_env_variable("ORCHESTRATOR_PORT"),
@@ -98,7 +98,7 @@ class AIBroker:
     # Shutdown event handler
     async def shutdown(self, data: Dict) -> None:
         logger.info(f"Shutdown event received: {data}. Exiting immediately.")
-        self.time_to_die = True
+        self.time_to_exit = True
         exit(logger, "AI Broker shutting down.")
 
     # This might happen if the AI quits!
@@ -137,7 +137,7 @@ class AIBroker:
     async def ai_response_loop(self) -> None:
         while True:
             # Exit own thread when time comes
-            if self.time_to_die:
+            if self.time_to_exit:
                 # Publish logout message
                 await self.mbh.publish("logout", {"user_id": self.user_id})
                 return
@@ -296,7 +296,7 @@ class AIBroker:
             response = self.submit_input()
             # TODO #64 improve AI event log polling
             # Check again we are still running (due to wait on model)
-            if self.time_to_die:
+            if self.time_to_exit:
                 return
             if response:
                 # Submit AI's response to the Orchestrator
@@ -314,7 +314,7 @@ class AIBroker:
     def exit(self, logger, error_message: str) -> None:
         logger.critical(error_message)
         # This will cause the main loop to exit cleanly
-        self.time_to_die = True
+        self.time_to_exit = True
 
     # Log an error message
     def log_error(self, error_message: str) -> None:
@@ -359,6 +359,7 @@ async def main() -> None:
                 f"ERROR: AI_COUNT is set to {ai_count} but currently only 1 AI supported. Exiting.",
             )
 
+        # Create AI Broker
         ai_broker = AIBroker(
             mode=ai_mode,
             model_name=get_critical_env_variable("MODEL_NAME"),
@@ -372,7 +373,8 @@ async def main() -> None:
         # This is where the main processing of inputs happens
         asyncio.create_task(ai_broker.ai_response_loop())
 
-        await asyncio.Event().wait()  # Keeps the event loop running
+        # Keep the event loop running
+        await asyncio.Event().wait()
 
 
 if __name__ == "__main__":

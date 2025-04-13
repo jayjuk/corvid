@@ -171,7 +171,6 @@ class Orchestrator:
     def __init__(self, world_name: str) -> None:
 
         # Set up the message broker
-        logger.info("Setting up message broker")
         self.mbh = MessageBrokerHelper(
             get_critical_env_variable("ORCHESTRATOR_HOSTNAME"),
             get_critical_env_variable("ORCHESTRATOR_PORT"),
@@ -252,7 +251,8 @@ async def main() -> None:
     orchestrator: Orchestrator = Orchestrator(world_name)
     try:
         await orchestrator.start_orchestrating()
-        await asyncio.Event().wait()  # Keeps the event loop running
+        # Keep the event loop running
+        await asyncio.Event().wait()
     except ShutdownException as e:
         logger.critical(f"Shutdown initiated: {e}")
         orchestrator.clean_up()
