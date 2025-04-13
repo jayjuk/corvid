@@ -106,6 +106,8 @@ class AIManager:
         if system_message:
             logger.info(f"Updating system message to: {system_message}")
             self.system_message = system_message
+        else:
+            logger.info("System message is empty, not updating")
 
     # Create a log file for model responses
     def create_model_log_file(self) -> None:
@@ -406,11 +408,6 @@ class AIManager:
         self.remote_requests[request_id]["response_handler"] = handler
         self.remote_requests[request_id]["person"] = person
         self.remote_requests[request_id]["user_context"] = user_context
-
-        from pprint import pprint
-
-        print("********* Remote request *********")
-        pprint(self.remote_requests[request_id])
 
         # Check if we have message helper set up
         if not self.mbh:

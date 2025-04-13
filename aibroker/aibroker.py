@@ -21,7 +21,7 @@ class AIBroker:
         self,
         mode: str = "agent",
         model_name: str = None,
-        system_message: Optional[str] = None,
+        system_message_in: Optional[str] = "",
     ) -> None:
         # Constructor
         self.mode: Optional[str] = mode
@@ -41,13 +41,13 @@ class AIBroker:
         self.max_error_count: int = 10
 
         system_message: str = self.get_ai_instructions()
-        if system_message and system_message.strip():
+        if system_message_in.strip():
             system_message += (
                 "\nYOUR Special Instructions (these are very important and take precedence): "
-                + system_message.strip()
+                + system_message_in.strip()
                 + "\n"
             )
-        self.system_message = system_message
+        self.system_message = system_message_in
         # Set up the AI manager
         self.ai_manager = AIManager(
             model_name=model_name,
@@ -157,6 +157,7 @@ class AIBroker:
     # AI manager will record instructions from the Orchestrator
     # Which are given to each user at the start of the world
     def record_instructions(self, data: str) -> None:
+        logger.info(f"Received instructions: {data}")
         self.ai_manager.set_system_message(self.system_message + "\n" + data)
 
     # AI manager will get instructions from the Orchestrator
@@ -358,7 +359,7 @@ async def main() -> None:
         ai_broker = AIBroker(
             mode=ai_mode,
             model_name=get_critical_env_variable("MODEL_NAME"),
-            system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
+            system_message_in=environ.get("MODEL_SYSTEM_MESSAGE"),
         )
 
         # Set up the agent
