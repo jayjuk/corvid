@@ -3,7 +3,7 @@ import asyncio
 import time
 from os import environ
 import re
-from utils import get_critical_env_variable, set_up_logger, exit
+from utils import get_critical_env_variable, set_up_logger, update_logger_filename, exit
 
 # Set up logger before importing other modules that use it
 logger = set_up_logger("AI Broker")
@@ -26,31 +26,33 @@ class AIBroker:
         # Constructor
         self.mode: Optional[str] = mode
         self.time_to_exit: bool = False
-        self.world_instructions: str = ""
         self.event_log: List[str] = []
+        # AI Broker specific max history - this is the number of events to keep in the event log
+        # The more events, the more context the AI has, but also the more expensive it is to process
         self.max_history: int = int(environ.get("AIBROKER_MAX_HISTORY", 100))
-        self.max_wait: int = 5  # secs
+        # Maximum wait time in seconds between polling the event log for new events
+        self.max_wait: int = int(environ.get("AIBROKER_MAX_WAIT_TIME", 5))
         self.last_time: float = time.time()
         self.active: bool = True
-        self.user_name: str = "TBD"
-        self.input_token_count: int = 0
-        self.output_token_count: int = 0
-        self.error_count: Dict[str] = {}
+        self.user_name: str = None
+        self.error_count: Dict[str, int] = {}
+        self.event_log_lock = asyncio.Lock()
+        # Tolerance for repeated errors before exiting. Hardcoded for now.
         self.max_error_count: int = 10
-        self.user_name: str = ""
 
-        this_system_message: str = self.get_ai_instructions()
+        system_message: str = self.get_ai_instructions()
         if system_message and system_message.strip():
-            this_system_message += (
+            system_message += (
                 "\nYOUR Special Instructions (these are very important and take precedence): "
                 + system_message.strip()
                 + "\n"
             )
-        self.system_message = this_system_message
+        self.system_message = system_message
         # Set up the AI manager
         self.ai_manager = AIManager(
             model_name=model_name,
-            system_message=this_system_message,
+            system_message=system_message,
+            max_history=self.max_history,
         )
 
     async def set_up_agent(self) -> None:
@@ -88,7 +90,9 @@ class AIBroker:
             logger.info(f"Received world update event: {data}")
             self.log_event(data)
         else:
-            exit(logger, "Received empty world update event")
+            # Take a hard line on this - it is a sign of a defect elsewhere
+            logger.critical("Received empty world update event")
+            self.time_to_exit = True
 
     # Instructions event handler
     async def instructions(self, data: Dict) -> None:
@@ -97,14 +101,13 @@ class AIBroker:
 
     # Shutdown event handler
     async def shutdown(self, data: Dict) -> None:
-        logger.info(f"Shutdown event received: {data}. Exiting immediately.")
+        logger.critical(f"Shutdown event received: {data}. Exiting immediately.")
         self.time_to_exit = True
-        exit(logger, "AI Broker shutting down.")
 
     # This might happen if the AI quits!
     async def logout(self, data: Dict) -> None:
-        logger.info(f"Logout event received: {data} did AI quit?")
-        exit(logger, "AI Broker logout received.")
+        logger.critical(f"Logout event received: {data} did AI quit?")
+        self.time_to_exit = True
 
     # Room update event handler
     async def room_update(self, data: Dict) -> None:
@@ -138,7 +141,7 @@ class AIBroker:
         while True:
             # Exit own thread when time comes
             if self.time_to_exit:
-                # Publish logout message
+                # Publish logout message to the Orchestrator to exit cleanly
                 await self.mbh.publish("logout", {"user_id": self.user_id})
                 return
 
@@ -154,10 +157,7 @@ class AIBroker:
     # AI manager will record instructions from the Orchestrator
     # Which are given to each user at the start of the world
     def record_instructions(self, data: str) -> None:
-        self.world_instructions += data + "\n"
-        self.ai_manager.set_system_message(
-            self.world_instructions + self.system_message
-        )
+        self.ai_manager.set_system_message(self.system_message + "\n" + data)
 
     # AI manager will get instructions from the Orchestrator
     def get_ai_instructions(self) -> str:
@@ -165,8 +165,7 @@ class AIBroker:
             "You have been brought to life in a simulated world! "
             + "Do not apologise to the world! "
             + "Do not try to talk to merchants, they cannot talk. "
-            + "Respond only with one valid command phrase each time you are contacted. "
-            + f"\nPerson Instructions:\n{self.world_instructions}"
+            + "Respond only with one valid command phrase each time you are contacted.\n"
         )
         # Set up role-specific instructions for the AI
         if self.mode == "builder":
@@ -177,7 +176,7 @@ class AIBroker:
                 + "Help to make the world more interesting but please keep descriptions to 20-40 words and only build in the cardinal directions.\n"
             )
         else:
-            # Experiment to see whether cheaper AIs can do this
+            # General instructions for all other modes
             ai_instructions += "Explore, make friends and have fun! If people ask to chat, then prioritise that over exploration. "
         return ai_instructions
 
@@ -225,14 +224,19 @@ class AIBroker:
                 else:
                     await asyncio.sleep(3)
 
-        # Unsubscribe from the previous name
+        # Unsubscribe from the previous name if already set
         if self.user_name:
             await self.mbh.unsubscribe(f"world_update.{self.user_id}")
             await self.mbh.unsubscribe(f"logout.{self.user_id}")
             await self.mbh.unsubscribe(f"instructions.{self.user_id}")
             await self.mbh.unsubscribe(f"room_update.{self.user_id}")
+
+        # Set the AI's name and ID
         self.user_name = ai_name
         self.user_id = self.user_name.lower()
+
+        # Update logger filename
+        update_logger_filename(logger, f"ai_broker_{self.user_name}.log")
 
         # Subscribe to name-specific events
         await self.mbh.subscribe(f"world_update.{self.user_id}", self.world_update)
@@ -266,16 +270,13 @@ class AIBroker:
         )  # dotall flag is to handle newline
         self.event_log.append(event_text)
 
-    # Clear event log
-    def clear_event_log(self) -> None:
-        self.event_log = []
-
     # Submit the world's updates as input to the AI manager
-    def submit_input(self) -> str:
-        # TODO #60 Improve transactionality of event log management when submitting to AI
-        # Grab and clear the log quickly to minimise threading issue risk
-        tmp_log = self.event_log.copy()
-        self.clear_event_log()
+    async def submit_input(self) -> str:
+        # Use asyncio.Lock to protect access to self.event_log
+        async with asyncio.Lock():
+            # Grab and clear the log quickly to minimise threading issue risk
+            tmp_log = self.event_log.copy()
+            self.event_log = []
         logger.info(f"Found {len(tmp_log)} events to submit to model.")
 
         # Catch up with the input / world context
@@ -293,7 +294,7 @@ class AIBroker:
     async def poll_event_log(self) -> None:
         if self.event_log and self.active:
             # OK, time to process the events that have built up
-            response = self.submit_input()
+            response = await self.submit_input()
             # TODO #64 improve AI event log polling
             # Check again we are still running (due to wait on model)
             if self.time_to_exit:
@@ -309,12 +310,6 @@ class AIBroker:
                     exit(logger, "AI has left this world.")
             else:
                 logger.error("AI returned empty response!")
-
-    # Log out and exit
-    def exit(self, logger, error_message: str) -> None:
-        logger.critical(error_message)
-        # This will cause the main loop to exit cleanly
-        self.time_to_exit = True
 
     # Log an error message
     def log_error(self, error_message: str) -> None:
@@ -365,7 +360,6 @@ async def main() -> None:
             model_name=get_critical_env_variable("MODEL_NAME"),
             system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
         )
-        logger = set_up_logger(f"ai_broker_{ai_broker.user_name}.log")
 
         # Set up the agent
         await ai_broker.set_up_agent()

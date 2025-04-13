@@ -56,34 +56,60 @@ def register_signal_handler(logger):
 
 # Function invoked by most modules for shared and common logging
 def set_up_logger(
-    module_name: str = "Unit Testing", logging_level_override: str = ""
+    file_name: str = "unit_testing.log", logging_level_override: str = ""
 ) -> logging.Logger:
     # If logger already set up, return it
     if logging.getLogger().hasHandlers():
         return logging.getLogger()
 
-    # Otherwise....
+    # Ensure proper file name and directory setup
+    file_name = prepare_log_file(file_name)
 
-    file_name = module_name.lower().replace(" ", "") + ".log"
+    # Set up logging to file and console
+    configure_logging(file_name, logging_level_override)
+    register_signal_handler(logging.getLogger())
 
-    # Append .log to file name if not already there
+    return logging.getLogger()
+
+
+# Update file name
+def update_logger_filename(
+    logger: logging.Logger, file_name: str, logging_level_override: int = None
+) -> None:
+    # Ensure proper file name and directory setup
+    file_name = prepare_log_file(file_name)
+
+    # Reconfigure logging with the new file name
+    logging = configure_logging(file_name, logging_level_override)
+
+
+# Helper function to prepare log file name and directory
+def prepare_log_file(file_name: str) -> str:
     if not file_name.endswith(".log"):
         file_name = file_name + ".log"
 
-    # Create logs directory if it doesn't exist
     if not os.path.exists(get_logs_folder()):
         os.makedirs(get_logs_folder())
 
-    # Set logging level based on waterfall of settings
-    logging_level: int = logging.INFO
-    if is_debug_mode():
-        logging_level = logging.DEBUG
-    elif logging_level_override:
-        logging_level = logging.getLevelName(logging_level_override)
-    elif os.environ.get("LOGGER_LOG_LEVEL"):
-        logging_level = logging.getLevelName(os.environ.get("LOGGER_LOG_LEVEL"))
+    return file_name
 
-    # Set up logging to file and console
+
+# Helper function to determine logging level
+def determine_logging_level(logging_level_override: int = None) -> int:
+    if is_debug_mode():
+        return logging.DEBUG
+    elif logging_level_override:
+        return logging.getLevelName(logging_level_override)
+    elif os.environ.get("LOGGER_LOG_LEVEL"):
+        return logging.getLevelName(os.environ.get("LOGGER_LOG_LEVEL"))
+    return logging.INFO
+
+
+# Helper function to configure logging
+def configure_logging(file_name: str, logging_level: int = None) -> logging.Logger:
+    # Set logging level based on waterfall of settings
+    logging_level: int = determine_logging_level(logging_level)
+
     logging.basicConfig(
         level=logging_level,
         format="%(asctime)s %(levelname)s %(message)s",
@@ -92,10 +118,6 @@ def set_up_logger(
             logging.StreamHandler(),
         ],
     )
-    register_signal_handler(logging.getLogger())
-
-    logging.getLogger().info(f"Started {module_name}, logging to {file_name}")
-
     return logging.getLogger()
 
 

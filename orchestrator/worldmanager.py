@@ -196,6 +196,9 @@ class WorldManager:
     async def do_jump(self, person: Person, rest_of_response: str) -> str:
         # Jump to location of another person named in rest_of_response
         other_entity_name: str = rest_of_response
+        if not other_entity_name:
+            return "To whom to you want to jump?"
+
         # find location of other person
         other_entity_location: Optional[str] = self.get_user_location_by_name(
             person.user_id, other_entity_name
