@@ -236,12 +236,12 @@ export default function HomePage() {
 
   return (
     <div>
-      <h1 style={{ textAlign: "center", margin: "20px 0" }}>Corvid</h1>
-      <h2 style={{ textAlign: "center", margin: "20px 0" }}>
+      <h1 className="text-smaller" style={{ textAlign: "center", margin: "20px 0" }}>Corvid</h1>
+      <h2 className="text-smaller" style={{ textAlign: "center", margin: "20px 0" }}>
         Corvid is a platform for creating open-world, persistent, multi-user simulated environments in the cloud.
       </h2>
       {nameSet && (
-        <h2 style={{ textAlign: "center", margin: "10px 0" }}>
+        <h2 className="text-smaller" style={{ textAlign: "center", margin: "10px 0" }}>
           Person: {userName}
         </h2>
       )}
@@ -259,7 +259,7 @@ export default function HomePage() {
         </form>
       )}
       {nameSet && roomImageURL && (
-        <div style={{ display: "flex", flexDirection: "row" }}>
+        <div className="text-smaller" style={{ display: "flex", flexDirection: "row" }}>
           <img src={roomImageURL ?? ""} alt={roomTitle ?? ""} width="512" />
           <div
             style={{
@@ -268,7 +268,7 @@ export default function HomePage() {
               marginLeft: "10px",
             }}
           >
-            <p style={{ margin: 0, maxWidth: 1000 }}>
+            <p  className="text-smaller" style={{ margin: 0, maxWidth: 1000 }}>
               <b>{roomTitle}</b>: {roomDescription} {roomExits}
             </p>
           </div>
@@ -277,6 +277,7 @@ export default function HomePage() {
       {nameSet && (
         <>
           <div
+            className="text-smaller"
             ref={worldLogRef}
             style={{
               overflowY: "auto",
@@ -300,7 +301,7 @@ export default function HomePage() {
               placeholder="Type your action..."
               autoFocus
             />
-            <button type="submit">Submit</button>
+            <button className="text-smaller" type="submit">Submit</button>
           </form>
         </>
       )}
