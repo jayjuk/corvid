@@ -85,6 +85,7 @@ async def main() -> None:
         system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
     )
 
+    # Set up the message broker
     mbh = MessageBrokerHelper(
         get_critical_env_variable("ORCHESTRATOR_HOSTNAME"),
         get_critical_env_variable("ORCHESTRATOR_PORT"),
@@ -97,7 +98,8 @@ async def main() -> None:
     # Start consuming messages
     await mbh.set_up_nats()
 
-    await asyncio.Event().wait()  # Keeps the event loop running
+    # Keep the event loop running
+    await asyncio.Event().wait()
 
 
 if __name__ == "__main__":

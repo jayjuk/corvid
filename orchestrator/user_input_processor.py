@@ -254,7 +254,7 @@ class UserInputProcessor:
             + f"\nPerson's inventory: {person.get_inventory_description()}"
             + f"\nPerson's input: {user_input}"
             + "\nIf the person did not mean one of the above commands or the person references an item that is not listed, please respond with the special command 'custom' only."
-            + "\nRespond with only a valid command phrase or the word 'custom', nothing else.\n"
+            + "\nRespond with only a valid user input or the word 'custom', nothing else.\n"
         )
 
         await self.world_manager.ai_manager.submit_remote_request(

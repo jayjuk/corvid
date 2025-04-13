@@ -16,7 +16,7 @@ nats-sub help -q workers -s nats://127.0.0.1:4222 -s nats://127.0.0.1:4223
     print(usage)
 
 
-def show_usage_and_die():
+def show_usage_and_exit():
     show_usage()
     sys.exit(1)
 
@@ -66,7 +66,7 @@ async def run(loop):
         await nc.connect(**options)
     except Exception as e:
         print(f"Exception during connection: {e}")
-        show_usage_and_die()
+        show_usage_and_exit()
 
     print(f"Connected to NATS at {nc.connected_url.netloc}...")
 

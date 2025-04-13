@@ -19,11 +19,19 @@ logger = set_up_logger()
 # Class to handle interaction with the AI
 class AIManager:
     def __init__(
-        self, model_name: str, system_message: str, mbh: object = None
+        self,
+        model_name: str,
+        system_message: str,
+        mbh: object = None,
+        max_history: int = None,
     ) -> None:
 
         # Static variables
-        self.max_history: int = 40
+
+        # General default for max_history is 100, but can be overridden by a specific user of this class
+        self.max_history: int = max_history or int(
+            environ.get("AIMANAGER_MAX_HISTORY", 100)
+        )
         self.max_wait: int = 7  # secs
         self.last_time: float = time.time()
         self.active: bool = True
