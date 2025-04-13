@@ -16,9 +16,11 @@ Corvid is a platform for creating open-world, persistent, multi-user simulated e
 
 ## High-Level Technical Overview
 
-Corvid is composed of modular, containerised services, each running in its own Docker environment. It is deployed using Terraform on DigitalOcean droplets. Real-time state persistence for each simulated environment is managed through Azure Table Storage, allowing continuous and accurate state recovery upon service restarts.
-Human users interact with Corvid environments via a web-based user interface, managed by the Client and Image Server. Communication between the Client and Orchestrator occurs via NATS, utilizing WebSockets for seamless real-time interaction.
-AI agents powered by LLMs interact with the environment through an AI Broker, which exchanges updates with the Orchestrator over Python-based APIs and NATS, in parallel to the human-client communication.
+- Corvid is composed of modular, containerised services, each running in its own Docker environment. It is deployed using Terraform on DigitalOcean droplets or Azure Container Instances.
+- Real-time state persistence for simulated environments is handled by Azure Table Storage, ensuring accurate state recovery after service restarts. This cost-effective, developer-friendly approach uses a no-touch proprietary ORM for storage and retrieval of world objects, making them easily inspectable and modifiable through Azure Storage Explorer.
+- Human users interact with Corvid environments via a simple web front end written in React, supported by an Image Server. Communication between the front end and Orchestrator occurs via [NATS](https://nats.io/), which uses WebSockets for seamless real-time interaction.
+- AI agents powered by LLMs interact with the environment through an AI Broker via their providers' REST APIs. The AI Broker communicates with the Orchestrator over NATS, in parallel to the human-client communication.
+- The Orchestrator directly governs the World state management module; it uses NATs to interact with other more workload-intensive or LLM-dependent services (such as the Agent Manager, AI Requester & Image Creator).
 
 ### Services
 
