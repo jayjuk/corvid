@@ -45,12 +45,12 @@ def is_debug_mode() -> bool:
 # Signal handler for SIGINT
 def signal_handler(logger, sig, frame):
     logger.info("Signal Interrupt Received - Shutting down...")
+    # TODO #112 Close NATS connection in signal handler
     exit(0)
 
 
 # Register signal handler for SIGINT
 def register_signal_handler(logger):
-    # signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(logger, sig, frame))
 
 

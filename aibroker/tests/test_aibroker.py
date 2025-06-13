@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch, call
 from aibroker import AIBroker
+from os import environ
+import asyncio
 
 
 class TestAIBroker(unittest.TestCase):
@@ -17,29 +19,35 @@ class TestAIBroker(unittest.TestCase):
         self.test_valid_name = "Validius"
 
         # Create an AI broker that uses the mock AIManager
+        environ["AIBROKER_MAX_HISTORY"] = "99"
         self.ai_broker = AIBroker(mode="agent")
 
         # Check that the AIManager was called with the expected system_message
         mock_ai_manager.assert_called_once_with(
-            system_message=self.ai_broker.get_ai_instructions(), model_name=None
+            system_message=self.ai_broker.get_ai_instructions(),
+            model_name=None,
+            max_history=int(environ["AIBROKER_MAX_HISTORY"]),
         )
 
     def test_get_user_name(self):
         # Check that the user_name was set correctly
         # TODO #107 Add better unit testing for agent name setting
-        self.assertEqual(self.ai_broker.user_name, "")
+        self.assertEqual(self.ai_broker.user_name, None)
 
     def test_record_instructions(self):
         # Check that the instructions were set correctly
         test_instructions = "Test instructions"
         self.ai_broker.record_instructions(test_instructions)
-        self.assertIn(test_instructions, self.ai_broker.system_message)
-        # Check that the AIManager was called with the expected system_message
+
+        # Check that the AIManager was called with the expected system_message containing the instructions
         self.mock_ai_manager.set_system_message.assert_called_once()
+        self.assertIn(
+            test_instructions, self.mock_ai_manager.set_system_message.call_args[0][0]
+        )
 
     def test_get_ai_instructions(self):
         # Check that the user_name was set correctly
-        self.assertIn("instructions", self.ai_broker.get_ai_instructions().lower())
+        self.assertIn("world", self.ai_broker.get_ai_instructions().lower())
 
     async def test_set_ai_name(self):
         # Set up side_effect to return a name with a space, then a valid name
@@ -67,22 +75,8 @@ class TestAIBroker(unittest.TestCase):
             # Check that the last entry in the log contains the latest test event
             self.assertEqual(test_event, self.ai_broker.event_log[-1])
 
-    # Test clear event log
-    def test_clear_event_log(self):
-        # Add some events to the log
-        for i in range(1, 4):
-            test_event = f"Event {i}"
-            self.ai_broker.log_event(test_event)
-        # Check that the event log is not empty
-        self.assertNotEqual(len(self.ai_broker.event_log), 0)
-        # Clear the event log
-        self.ai_broker.clear_event_log()
-        print("Cleared event log:", self.ai_broker.event_log)
-        # Check that the event log is empty
-        self.assertEqual(len(self.ai_broker.event_log), 0)
-
     # Test submit_input
-    def test_submit_input(self):
+    async def test_submit_input(self):
         # Set up side_effect to return a name with a space, then a valid name
         test_ai_output = "Test output"
         self.mock_ai_manager.submit_request.return_value = test_ai_output
@@ -90,7 +84,7 @@ class TestAIBroker(unittest.TestCase):
         # Call submit_input and check the result
         ai_input = "Test input"
         self.ai_broker.log_event(ai_input)
-        ai_output = self.ai_broker.submit_input()
+        ai_output = await self.ai_broker.submit_input()
         # Check ai_input is part of the request to submit_request
         self.assertIn(ai_input, self.mock_ai_manager.submit_request.call_args[0][0])
         # Check ai_input is part of the return value

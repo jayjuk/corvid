@@ -3,8 +3,7 @@ from os import environ
 import asyncio
 from utils import get_critical_env_variable, set_up_logger, exit
 
-# Set up logger here BEFORE importing AI manager
-# (registers signal handler too hence sio passed in)
+# Set up logger here before importing other modules
 logger = set_up_logger("AI Requester")
 
 from aimanager import AIManager
@@ -28,15 +27,13 @@ class AIRequester:
             system_message=system_message,
         )
 
-    async def submit_request(self, prompt: str, system_message: str = "") -> str:
-        this_system_message: str = (
-            system_message if system_message else self.system_message
-        )
+    async def submit_request(self, prompt: str, system_message: str = None) -> str:
+        this_system_message: str = system_message or self.system_message
         logger.info(
             f"Submitting request: {prompt} with system message: {this_system_message}"
         )
         response = self.ai_manager.submit_request(
-            request=prompt, system_message=this_system_message, history=False
+            request=prompt, system_message=system_message, history=False
         )
         return response
 
@@ -48,7 +45,7 @@ async def main() -> None:
 
     async def catch_all(data: Dict) -> None:
         logger.info(f"Received AI request: {data}")
-        if data:
+        if isinstance(data, Dict):
             if "prompt" not in data:
                 exit(logger, "Received invalid AI request")
             # Submit the request to the AI
@@ -56,7 +53,6 @@ async def main() -> None:
                 prompt=data["prompt"],
                 system_message=data.get(
                     "system_message",
-                    "You are a helpful AI assistant for an Orchestrator.",
                 ),
             )
             if ai_response:
@@ -82,7 +78,10 @@ async def main() -> None:
     ai_requester = AIRequester(
         # Get specific model name from environment variable or use default
         model_name=airequester_model_name,
-        system_message=environ.get("MODEL_SYSTEM_MESSAGE"),
+        system_message=environ.get(
+            "MODEL_SYSTEM_MESSAGE",
+            "You are a helpful AI assistant handling requests in a simulated world.",
+        ),
     )
 
     # Set up the message broker
