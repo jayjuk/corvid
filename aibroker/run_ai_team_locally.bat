@@ -7,8 +7,8 @@ echo Loading env variables from common .env file in local execution...
 for /F "tokens=1* delims==" %%a in (..\common\.env) do ( set "%%a=%%b" )
 
 @rem Create leader by calling run_aibroker_locally.bat with the model name and system message
-@rem gpt-4o
-set MODEL_NAME=gemini-2.0-flash
+@rem gpt-4o gemini-2.0-flash 
+@rem set MODEL_NAME=gemini-2.5-flash-preview-05-20
 set AIBROKER_MAX_HISTORY=100
 set MODEL_DEBUG_MODE=False
 set AI_LEADER_NAME=Caesar

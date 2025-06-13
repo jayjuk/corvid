@@ -80,12 +80,6 @@ class WorldManager:
     async def do_go(self, person: Person, rest_of_response: str) -> str:
         return await self.move_entity(person, rest_of_response, "")
 
-    def create_restart_file(self) -> None:
-        # Temporary flag file checked by the local 'run' script.
-        # TODO #15 On the cloud, this will be space junk as the restart is handled by the container service. See above.
-        with open("restart.tmp", "w") as f:
-            f.write("DELETE ME\n")
-
     def remove_at_the(self, rest_of_response: str) -> Tuple[str, str]:
         # Strip off at and the
         if rest_of_response and rest_of_response[0:3] == "at ":
@@ -114,7 +108,7 @@ class WorldManager:
                     return merchant_item
         return None
 
-    def do_look(self, person: Person, rest_of_response: str) -> str:
+    async def do_look(self, person: Person, rest_of_response: str) -> str:
         if not rest_of_response:
             # Looking at the room
             message: str = (
@@ -190,7 +184,7 @@ class WorldManager:
         outcome = await self.do_say(person, "Hi " + rest_of_response)
         return outcome
 
-    def do_wait(self, person: Person, rest_of_response: str) -> str:
+    async def do_wait(self, person: Person, rest_of_response: str) -> str:
         return "You decide to just wait a while."
 
     async def do_jump(self, person: Person, rest_of_response: str) -> str:
@@ -384,7 +378,7 @@ class WorldManager:
         )
 
     # Create item
-    def do_create(
+    async def do_create(
         self, person: Person, item_name: str, description: str, price: int = 0
     ) -> str:
 
@@ -451,7 +445,7 @@ class WorldManager:
         return combined_list
 
     # Spawn an animal
-    def do_spawn(self, person: Person, rest_of_response: str) -> str:
+    async def do_spawn(self, person: Person, rest_of_response: str) -> str:
         # Get the description and actions from the rest of the response
         animal_name: str
         description: str
