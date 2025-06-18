@@ -35,8 +35,8 @@ class Testworldmanager(unittest.TestCase):
                 command, description, f"Command {command} missing from description"
             )
 
-    def test_do_look(self):
-        description = self.world_manager.do_look(self.person, None)
+    async def test_do_look(self):
+        description = await self.world_manager.do_look(self.person, None)
         # Check begins with "You are in"
         self.assertTrue(
             description.startswith("You look again at the"), "Look command not working"
