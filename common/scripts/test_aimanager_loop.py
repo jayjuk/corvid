@@ -5,14 +5,16 @@ from utils import set_up_logger
 logger = set_up_logger()
 
 # Get model name from command line param
-model_name = sys.argv[1] if len(sys.argv) > 1 else "mixtral-8x7b-32768"
+model_name = (
+    sys.argv[1] if len(sys.argv) > 1 else "gemini-2.5-flash"  # "llama-3.1-8b-instant"
+)
 
 max_tokens = 300
 temperature = 0.7
 
 ai_manager = aimanager.AIManager(
-    "You are a helpful assistant. Keep responses to questions concise and brief.",
     model_name=model_name,
+    system_message="You are a helpful assistant. Keep responses to questions concise and brief.",
 )
 logger.setLevel("WARNING")
 

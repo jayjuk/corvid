@@ -1,10 +1,12 @@
 import aimanager
 
-model_name = "gemini-pro"  # "gpt-3.5-turbo"
+model_name = "gemini-2.5-flash"  # Other models: gemini-2.0-flash gpt-4o-mini
 max_tokens = 300
 temperature = 0.7
 
-ai_manager = aimanager.AIManager("You are a helpful assistant.")
+ai_manager = aimanager.AIManager(
+    model_name=model_name, system_message="You are a helpful assistant."
+)
 
 # ai_manager.create_image("test", "This is a test")
 

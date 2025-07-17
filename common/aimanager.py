@@ -58,7 +58,6 @@ class AIManager:
             "gpt-4o-mini": (0.00015, 0.0006),
             "gemini-pro": (0, 0),
             "claude-3-haiku-20240307": (0.00025, 0.00125),
-            "mixtral-8x7b-32768": (0, 0),  # Free on Groq for now
             "llama3-70b-8192": (0, 0),  # Free on Groq for now
         }
 
@@ -136,9 +135,7 @@ class AIManager:
             return "Anthropic"
         elif self.model_name.startswith("stable-diffusion"):
             return "StabilityAI"
-        elif self.model_name.startswith("mixtral") or self.model_name.startswith(
-            "llama"
-        ):
+        elif self.model_name.startswith("llama"):
             return "Groq"
 
     # Store model data to file (for investigating issues with model responses)

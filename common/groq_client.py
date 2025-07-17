@@ -22,7 +22,7 @@ def get_model_client() -> Groq:
 def do_model_request(
     model_client,
     messages: List[Dict[str, str]],
-    model_name: str = "mixtral-8x7b-32768",
+    model_name: str = "llama-3.1-8b-instant",
     max_tokens: int = 1000,
 ) -> str:
 

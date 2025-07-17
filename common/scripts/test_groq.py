@@ -14,7 +14,7 @@ while True:
                 "content": input("Input question: "),
             }
         ],
-        model="mixtral-8x7b-32768",
+        model="llama-3.1-8b-instant",
     )
 
     print(chat_completion.choices[0].message.content)
