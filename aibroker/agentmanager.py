@@ -109,7 +109,7 @@ async def main() -> None:
                     f"Assuming request is just a briefing: {data['request_data']}"
                 )
                 data["request_data"] = {"user_briefing": data["request_data"]}
-            new_user_name: str = user_manager.create_agent(data["request_data"])
+            new_user_name: str = agent_manager.create_agent(data["request_data"])
             await mbh.publish(
                 "summon_agent_response",
                 {"request_id": data["request_id"], "user_name": new_user_name},
@@ -132,7 +132,7 @@ async def main() -> None:
 
     # Create AI Worker
     init_filename = os.environ.get("AI_AGENT_FILE_NAME")
-    user_manager = agentmanager(init_filename=init_filename)
+    agent_manager = agentmanager(init_filename=init_filename)
 
     # Start consuming messages
     await mbh.set_up_nats()
