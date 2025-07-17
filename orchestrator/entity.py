@@ -23,7 +23,7 @@ class Entity:
         self.description: Optional[str] = description
 
         # Default starting location
-        self.location: str = location or world.get_location()
+        self.location: str = location or world.get_default_location()
 
         # Inventory
         self.inventory: List[WorldItem] = []

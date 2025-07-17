@@ -114,7 +114,11 @@ class World:
         # Add a grid reference for each room. This is used to validate that rooms don't overlap
         # Start with the first room found, grid references can go negative
         self.add_grid_references(
-            rooms_dict, self.get_location(), rooms_dict[self.get_location()], 0, 0
+            rooms_dict,
+            self.get_default_location(),
+            rooms_dict[self.get_default_location()],
+            0,
+            0,
         )
         if store_default_rooms:
             logger.info(f"Storing default rooms in database for new world {self.name}")
@@ -190,7 +194,7 @@ class World:
                 )
         return rooms_missing_images
 
-    def get_location(self) -> str:
+    def get_default_location(self) -> str:
         return self.default_location
 
     def get_directions(self) -> List[str]:

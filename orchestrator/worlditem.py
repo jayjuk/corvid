@@ -36,16 +36,18 @@ class WorldItem:
             # This can be caused by the Orchestrator being killed while a person is holding an item.
             # In this case, the item location will be a person's name, which is not a valid location if that person is not playing.
             logger.warning(
-                f"Invalid location {self.location} specified for item {self.name}"
+                f"Invalid location {self.location} specified for item {self.name}. Maybe it was in someone's possession when the orchestrator exited."
             )
             # First try to use starting location
             if hasattr(self, "starting_location"):
-                self.set_location(self.starting_location)
+                new_location: str = self.starting_location
             else:
                 # Set default location
-                self.set_location(world.get_default_location())
+                new_location: str = world.get_default_location()
+            logger.info(f"Moving it to {new_location}.")
+            self.set_location(new_location)
 
-        # Check item has starting location, if not, set to current location
+        # Check item has starting starting_location, n
         # This is used to track where the item was originally created
         if not (hasattr(self, "starting_location")):
             self.set_starting_location(self.location)
