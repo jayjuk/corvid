@@ -211,8 +211,10 @@ class AIBroker:
                 request += f"\nNOTE: {feedback}"
 
             ai_name = None
-            while not ai_name or not ai_name.isalpha():
-                # Keep trying til they get the name right
+            retries = 0
+            max_retries = 5
+            while (not ai_name or not ai_name.isalpha()) and retries < max_retries:
+                # Keep trying until a valid name is chosen or max retries reached
                 ai_name = (
                     self.ai_manager.submit_request(request, history=False)
                     .strip()
@@ -220,10 +222,20 @@ class AIBroker:
                     .strip("!")
                     .strip("?")
                 )
-                if ai_name:
+                if ai_name and ai_name.isalpha():
                     logger.info(f"AI chose the name {ai_name}.")
                 else:
+                    logger.warning(
+                        f"Invalid AI name '{ai_name}'. Retrying ({retries+1}/{max_retries})..."
+                    )
+                    ai_name = None
+                    retries += 1
                     await asyncio.sleep(3)
+            if not ai_name:
+                exit(
+                    logger,
+                    "Failed to obtain a valid AI name after multiple attempts. Exiting.",
+                )
 
         # Unsubscribe from the previous name if already set
         if self.user_name:

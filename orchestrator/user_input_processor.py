@@ -20,38 +20,19 @@ class UserInputProcessor:
 
         self.directions = ["north", "east", "south", "west"]
 
-        self.synonyms: Dict[str, str] = {
-            "n": "north",
-            "e": "east",
-            "s": "south",
-            "w": "west",
-            "pick": "get",
-            "take": "get",
-            "head": "go",
-            "walk": "go",
-            "run": "go",
-            "enter": "go",
-            "hi": "greet",
-            "talk": "say",
-            "inv": "inventory",
-            "haggle": "trade",
-            "purchase": "buy",
-            "examine": "look",
-            "inspect": "look",
-            "press": "push",
-            "kill": "attack",
-            "hit": "attack",
-        }
-
-        self.command_functions: Dict[str, Dict[str, Callable]] = {
+        self.command_functions: Dict[
+            str, Dict[str, Union[Callable, str, List[str]]]
+        ] = {
             # TODO #66 Limit certain actions to people with the right permissions rather than just hiding from help
             "look": {
                 "function": self.world_manager.do_look,
                 "description": "Get a description of your current location",
+                "synonyms": ["examine", "inspect"],
             },
             "say": {
                 "function": self.world_manager.do_say,
                 "description": "Say something to all other people in your *current* location, e.g. say which way shall we go?",
+                "synonyms": ["talk"],
             },
             "shout": {
                 "function": self.world_manager.do_shout,
@@ -60,6 +41,7 @@ class UserInputProcessor:
             "greet": {
                 "function": self.world_manager.do_greet,
                 "description": "Say hi to someone, e.g. 'greet Ben' is the same as 'say Hi Ben'. Hint: you can also just write 'hi Ben'!",
+                "synonyms": ["hi"],
             },
             "wait": {
                 "function": self.world_manager.do_wait,
@@ -72,14 +54,17 @@ class UserInputProcessor:
             "attack": {
                 "function": self.world_manager.do_attack,
                 "description": "",  # Not supported
+                "synonyms": ["kill", "hit"],
             },
             "quit": {
                 "function": self.world_manager.do_quit,
                 "description": "",  # Don't encourage the AI to quit! TODO: make this only appear in the help to human people
+                "synonyms": ["exit"],
             },
             "get": {
                 "function": self.world_manager.do_get,
                 "description": "Pick up an item in your current location",
+                "synonyms": ["pick", "take"],
             },
             "drop": {
                 "function": self.world_manager.do_drop,
@@ -88,6 +73,7 @@ class UserInputProcessor:
             "go": {
                 "function": self.world_manager.do_go,
                 "description": "Head in a direction e.g. go north (you can also use n, e, s, w))",
+                "synonyms": ["head", "walk", "run", "enter"],
             },
             "build": {
                 "function": self.world_manager.do_build,  # Called with special inputs - see process_user_input below
@@ -119,6 +105,7 @@ class UserInputProcessor:
             "buy": {
                 "function": self.world_manager.do_buy,
                 "description": "Buy an item from an entity (e.g. a Merchant) in your current location.",
+                "synonyms": ["purchase"],
             },
             "sell": {
                 "function": self.world_manager.do_sell,
@@ -127,10 +114,12 @@ class UserInputProcessor:
             "trade": {
                 "function": self.world_manager.do_trade,
                 "description": "Enter into trading negotiations with a Merchant in your current location.",
+                "synonyms": ["haggle"],
             },
             "inventory": {
                 "function": self.world_manager.do_inventory,
                 "description": "List the items you are carrying",
+                "synonyms": ["inv"],
             },
             "xox": {
                 "function": self.world_manager.do_shutdown,
@@ -143,6 +132,15 @@ class UserInputProcessor:
                 "description": "Get world instructions",
             },
         }
+
+        # Build dictionary of synonyms for fast parsing of user inputs
+        self.synonyms = {}
+        for command, data in self.command_functions.items():
+            for synonym in data.get("synonyms", []):
+                self.synonyms[synonym] = command
+        # Also add the first letter of each direction
+        for direction in self.directions:
+            self.synonyms[direction[0]] = direction
 
         # Build the commands description field from directions, synonyms and command functions
         self.commands_description: str = "Valid directions: " + ", ".join(

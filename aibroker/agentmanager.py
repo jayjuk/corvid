@@ -61,7 +61,9 @@ class agentmanager:
             "MODEL_NAME": user_dict.get(
                 "model_name", get_critical_env_variable("MODEL_NAME")
             ),
-            "AI_NAME": "",  # Let the AI broker assign a name
+            "AI_NAME": user_dict.get(
+                "user_name", ""
+            ),  # If blank, AI broker will assign a name
             "AI_MODE": "agent",
             "AI_COUNT": "1",
             "MODEL_SYSTEM_MESSAGE": os.environ.get("MODEL_SYSTEM_MESSAGE", "")
