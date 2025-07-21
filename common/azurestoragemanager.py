@@ -1,3 +1,4 @@
+import time
 from storagemanager import StorageManager
 from azure.core.credentials import AzureNamedKeyCredential
 from azure.storage.blob import BlobServiceClient, ContainerClient
@@ -138,7 +139,9 @@ class AzureStorageManager(StorageManager):
         return None
 
     # Store all Python objects, received as actual objects
-    def store_world_object(self, world_name: str, object: object) -> bool:
+    def store_world_object(
+        self, world_name: str, object: object, record_location_history: bool = False
+    ) -> bool:
         logger.debug(f"Storing python object in world {world_name}: {object.__dict__}")
 
         objects_client = self.table_service_client.create_table_if_not_exists(
@@ -176,8 +179,19 @@ class AzureStorageManager(StorageManager):
         self.stringify_object(entity)
 
         logger.info(f"Storing {entity['name']}")
-        print(entity)
         objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
+
+        # If flag says to, also write this record to an equivalent history table
+        if record_location_history:
+            logger.info("Recording history as requested")
+            entity["Entity_Key"] = entity["RowKey"]
+            timestamp = str(int(time.time())) + "_" + str(time.perf_counter_ns())
+            entity["RowKey"] = timestamp + "_" + entity["RowKey"]
+            print(entity)
+            objects_client = self.table_service_client.create_table_if_not_exists(
+                "HistoricalPythonObjects"
+            )
+            objects_client.create_entity(entity=entity)
 
         # Return true if successful
         return True
@@ -205,18 +219,21 @@ class AzureStorageManager(StorageManager):
 
     # Delete all objects in a world
     def delete_world_from_db(self, world_name: str) -> None:
-        objects_client = self.table_service_client.get_table_client("PythonObjects")
-        if objects_client:
-            logger.info(f"Deleting all objects in world {world_name}")
-            parameters: dict = {"world": world_name}
-            query_filter: str = "world eq @world"
-            for entity in objects_client.query_entities(
-                query_filter, parameters=parameters
-            ):
-                logger.info(f"Deleting {entity['PartitionKey']} - {entity['name']}")
-                objects_client.delete_entity(
-                    partition_key=entity["PartitionKey"], row_key=entity["RowKey"]
+        for table_name in ("PythonObjects", "HistoricalPythonObjects"):
+            objects_client = self.table_service_client.get_table_client(table_name)
+            if objects_client:
+                logger.info(
+                    f"Deleting all objects in table {table_name} for world {world_name}"
                 )
+                parameters: dict = {"world": world_name}
+                query_filter: str = "world eq @world"
+                for entity in objects_client.query_entities(
+                    query_filter, parameters=parameters
+                ):
+                    logger.info(f"Deleting {entity['PartitionKey']} - {entity['name']}")
+                    objects_client.delete_entity(
+                        partition_key=entity["PartitionKey"], row_key=entity["RowKey"]
+                    )
 
     # Returns all instances of a type of object, as a dict
     def get_world_objects(

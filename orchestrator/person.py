@@ -41,6 +41,17 @@ class Person(Entity):
         # Call superclass constructor
         Entity.__init__(self, world, user_name, user_role)
 
+        # Register any specification to record their history
+        if str(os.environ.get("RECORD_LOCATION_HISTORY", "")).upper() in {
+            "TRUE",
+            "Y",
+            "YES",
+        }:
+            # (This flag is defaulted to false in the superclass (Entity)
+            # because that is where it is accessed)
+            self.record_location_history = True
+            logger.info("Recording location history for this entity.")
+
         if stored_user_data:
             logger.info(f"Retrieved person {user_name} data from database")
             self.__dict__.update(stored_user_data)
@@ -136,7 +147,7 @@ class Person(Entity):
 
     # Override for person's location change
     def set_location(self, next_room: str) -> None:
-        # Superclass behaviour
+        # Superclass behaviour.
         super().set_location(next_room)
         # Also flag this room as seen
         self.seen_rooms[self.location] = True

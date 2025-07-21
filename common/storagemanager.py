@@ -107,10 +107,12 @@ class StorageManager:
         for object in self.get_world_objects(world_name, object_type, rowkey_value):
             return object
 
-    def store_world_object(self, world_name: str, object: object) -> None:
+    def store_world_object(
+        self, world_name: str, object: object, record_location_history: bool = False
+    ) -> bool:
         # Unit testing will use this superclass method hence not abstract
         logger.info(
-            f"NOT storing python object in world {world_name}: {object.__dict__}"
+            f"NOT storing python object in world {world_name}: {object.__dict__} ({record_location_history=})"
         )
         return True
 

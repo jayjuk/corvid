@@ -1,5 +1,6 @@
 from typing import Dict
 import os
+import sys
 from utils import (
     get_critical_env_variable,
     set_up_logger,
@@ -95,7 +96,7 @@ class agentmanager:
         # Run the agent process in a background thread
 
         # TODO #100 Improve solution for managing AI processes
-        asyncio.create_task(asyncio.to_thread(run_user_process, env_vars))
+        _ = asyncio.create_task(asyncio.to_thread(run_user_process, env_vars))
         logger.info(f"Person created: {env_vars}")
 
 
@@ -119,6 +120,11 @@ async def main() -> None:
         else:
             exit(logger, f"Invalid request data: {data}")
 
+    # Shutdown event handler
+    async def shutdown(data: str) -> None:
+        await logger.critical(data)
+        sys.exit(1)
+
     # Set up the message broker
     mbh = MessageBrokerHelper(
         os.environ.get("ORCHESTRATOR_HOSTNAME", "localhost"),
@@ -129,6 +135,7 @@ async def main() -> None:
                 "mode": "subscribe",
                 "callback": summon_agent_request,
             },
+            "shutdown": {"mode": "subscribe", "callback": shutdown},
         },
     )
 
@@ -145,4 +152,9 @@ async def main() -> None:
 
 # Main function to start the program
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except asyncio.CancelledError:
+        logger.info("Main event loop was canceled.")
+    finally:
+        logger.info("Closing event loop.")

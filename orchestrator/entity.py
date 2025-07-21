@@ -22,6 +22,8 @@ class Entity:
         self.user_id: Optional[str] = None  # Overridden for people
         self.description: Optional[str] = description
 
+        # By default don't record location history
+        self.record_location_history = False
         # Default starting location
         self.location: str = location or world.get_default_location()
 
@@ -39,7 +41,9 @@ class Entity:
         # Set new room
         self.location = next_room
         # Store change of location
-        self.world.storage_manager.store_world_object(self.world.name, self)
+        self.world.storage_manager.store_world_object(
+            self.world.name, self, self.record_location_history
+        )
 
     # Getter for person's current location
     def get_current_location(self) -> str:

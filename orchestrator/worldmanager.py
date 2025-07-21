@@ -213,9 +213,7 @@ class WorldManager:
         # TODO #69 Make shutdown command restart process not shut down
         await self.mbh.publish("shutdown", message)
         await asyncio.sleep(1)
-        message: str = f"Shutdown command invoked by {person.name}"
-        logger.critical(message)
-        raise ShutdownException(message)
+        raise ShutdownException(logger, f"Shutdown command invoked by {person.name}")
 
     async def do_quit(self, person: Person, rest_of_response: str) -> None:
         await self.remove_person(person.user_id, "You have left the world.")

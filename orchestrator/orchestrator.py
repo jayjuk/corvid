@@ -182,6 +182,7 @@ class Orchestrator:
                 "world_update": {"mode": "publish"},
                 "world_data_update": {"mode": "publish"},
                 "logout": {"mode": "publish"},
+                "shutdown": {"mode": "publish"},
                 # Image creation
                 "image_creation_request": {"mode": "publish"},
                 "image_creation_response": {
