@@ -229,8 +229,26 @@ class Orchestrator:
 
     # This is async so cannot be in the constructor
     async def start_orchestrating(self) -> None:
+
         # Ready to Start consuming messages
         await self.mbh.set_up_nats()
+
+        # Once NATS set up we can do checks that require messages
+        await self.do_world_startup_checks()
+
+    # Do startup checks on the world
+    async def do_world_startup_checks(self):
+        logger.info("Performing world startup checks.")
+        # Get rooms missing images
+        missing_image_count: int = 0
+        for (room_name, room_description) in self.world_manager.world.get_rooms_missing_images():
+            missing_image_count += 1
+            logger.info(f"Room {room_name} is missing its image - requesting a fresh one.")
+            await self.world_manager.request_room_image_creation(
+                room_name, room_description
+            )
+        if not missing_image_count:
+            logger.info("No missing images found.")
 
     # Perform cleanup here (e.g., closing file handles)
     def clean_up(self) -> None:
