@@ -12,9 +12,9 @@
   "dependencies": {
     "nats": "^2.29.2",
     "nats.ws": "^1.30.2",
-    "next": "^15.2.4",
-    "react": "latest",
-    "react-dom": "latest",
+    "next": "^15.4.5",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "webpack-node-externals": "^3.0.0"
   },
   "devDependencies": {
