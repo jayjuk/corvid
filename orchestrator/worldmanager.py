@@ -1231,7 +1231,7 @@ class WorldManager:
             await self.tell_everyone(f"Room image for {room_name} has been created.")
         else:
             await self.tell_everyone(
-                f"Room image creation for {room_name} failed: {image_filename}"
+                f"Room image creation for {room_name} failed :-("
             )
 
     # Process summon agent response from agent manager
