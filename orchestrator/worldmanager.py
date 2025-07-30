@@ -933,16 +933,15 @@ class WorldManager:
         if self.is_existing_user_name(user_name):
             # Issue with person name setting
             return f"The name {user_name} is already in use."
-        if user_name == "system":
+        if user_name.lower() in ("system","admin","sysadmin","god"):
             # Do not let any person be called system
-            return (
-                "The name '{user_name}' is a reserved word, it would be confusing to be called that.",
-            )
+            # TODO: #119 Use AI to check user name isn't offensive or prompt injection-y etc
+            return f"The name '{user_name}' is a reserved word, it would be confusing to be called that."
 
         # Create/load the person, who is part of the world like entities items etc
         outcome: Union[Tuple[str, str], None]
-        user_info: Union[Person, None]
-        outcome, user_info = self.world.create_person(
+        person: Union[Person, None]
+        outcome, person = self.world.create_person(
             user_id, user_name, user_info.get("role")
         )
         # Outcomes are adverse
@@ -950,12 +949,12 @@ class WorldManager:
             return outcome
 
         # Register this person with the Orchestrator
-        self.register_person(user_id, user_info, user_name)
+        self.register_person(user_id, person, user_name)
 
         # Tell other people about this new person
         await self.tell_others(
             user_id,
-            f"{user_name} has joined, starting in the {user_info.get_current_location()}; there are now {self.get_user_count()} people.",
+            f"{user_name} has joined, starting in the {person.get_current_location()}; there are now {self.get_user_count()} people.",
             shout=True,
         )
 
@@ -967,11 +966,11 @@ class WorldManager:
             + help_message
         )
 
-        await self.tell_person(user_info, instructions, type="instructions")
+        await self.tell_person(person, instructions, type="instructions")
 
         await self.tell_person(
-            user_info,
-            await self.move_entity(user_info, "join", user_info.get_current_location()),
+            person,
+            await self.move_entity(person, "join", person.get_current_location()),
         )
 
         await self.emit_world_data_update()

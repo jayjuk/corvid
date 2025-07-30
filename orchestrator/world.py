@@ -729,7 +729,11 @@ class World:
                 logger.info(
                     f"Person {name} has invalid location, resetting to {self.default_location}"
                 )
-        p: Person = Person(self, user_id, name, role, stored_user_data=stored_user_data)
+        try:
+            p: Person = Person(self, user_id, name, role, stored_user_data=stored_user_data)
+        except ValueError as e:
+            return str(e), None
+
         # Store person's data again (updates last login timestamp if nothing else)
         self.storage_manager.store_world_object(self.name, p)
 

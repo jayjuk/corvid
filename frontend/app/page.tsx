@@ -92,6 +92,14 @@ export default function HomePage() {
     const nc = natsConnection.current;
     const sc = StringCodec();
 
+    // Track subscriptions so we can clean them up
+    let worldUpdateSub: any = null;
+    let personWorldUpdateSub: any = null;
+    let instructionSub: any = null;
+    let roomSub: any = null;
+    let logoutSub: any = null;
+    let nameInvalidSub: any = null;
+
     // Function to handle world updates
     const handleWorldUpdate = async (sub: any) => {
       for await (const msg of sub) {
@@ -104,74 +112,65 @@ export default function HomePage() {
     };
 
     // Subscribe to world updates
-    handleWorldUpdate(natsConnection.current.subscribe("world_update"));
+    worldUpdateSub = nc.subscribe("world_update");
+    handleWorldUpdate(worldUpdateSub);
 
     // Subscribe to person-specific world updates
-    let instructionSub: any, roomSub: any, logoutSub: any, nameInvalidSub: any;
-    if (userName) {
-      handleWorldUpdate(
-        natsConnection.current.subscribe(`world_update.${personID}`)
-      );
+    personWorldUpdateSub = nc.subscribe(`world_update.${personID}`);
+    handleWorldUpdate(personWorldUpdateSub);
 
-      // Subscribe to person-specific instructions
-      instructionSub = nc.subscribe(`instructions.${personID}`);
-      (async () => {
-        for await (const msg of instructionSub) {
-          setWorldLog((prev) => [...prev, sc.decode(msg.data)]);
-        }
-      })();
+    // Subscribe to person-specific instructions
+    instructionSub = nc.subscribe(`instructions.${personID}`);
+    (async () => {
+      for await (const msg of instructionSub) {
+        setWorldLog((prev) => [...prev, sc.decode(msg.data)]);
+      }
+    })();
 
-      // Subscribe to person-specific room updates
-      roomSub = nc.subscribe(`room_update.${personID}`);
-      (async () => {
-        for await (const msg of roomSub) {
-          const message = JSON.parse(sc.decode(msg.data));
-          setRoomImageURL(message["image"]);
-          setRoomTitle(message["title"]);
-          setRoomDescription(message["description"].replace(/[{|}]/g, ""));
-          setRoomExits(message["exits"]);
-        }
-      })();
+    // Subscribe to person-specific room updates
+    roomSub = nc.subscribe(`room_update.${personID}`);
+    (async () => {
+      for await (const msg of roomSub) {
+        const message = JSON.parse(sc.decode(msg.data));
+        setRoomImageURL(message["image"]);
+        setRoomTitle(message["title"]);
+        setRoomDescription(message["description"].replace(/[{|}]/g, ""));
+        setRoomExits(message["exits"]);
+      }
+    })();
 
-      // Subscribe to person-specific logout
-      logoutSub = nc.subscribe(`logout.${personID}`);
-      (async () => {
-        for await (const msg of logoutSub) {
-          console.log("logout event");
-          alert(sc.decode(msg.data));
-          setNameSet(false);
-          // Unsubscribe from all subscriptions
-          instructionSub.unsubscribe();
-          roomSub.unsubscribe();
-          logoutSub.unsubscribe();
-        }
-      })();
+    // Subscribe to person-specific logout
+    logoutSub = nc.subscribe(`logout.${personID}`);
+    (async () => {
+      for await (const msg of logoutSub) {
+        console.log("logout event");
+        alert(sc.decode(msg.data));
+        setNameSet(false);
+      }
+    })();
 
-      // Subscribe to person-specific name invalid
-      const nameInvalidSub = nc.subscribe(`name_invalid.${personID}`);
-      (async () => {
-        for await (const msg of nameInvalidSub) {
-          alert(sc.decode(msg.data));
-          setNameSet(false);
-          // Unsubscribe from all subscriptions
-          instructionSub.unsubscribe();
-          roomSub.unsubscribe();
-          logoutSub.unsubscribe();
-          nameInvalidSub.unsubscribe();
-        }
-      })();
+    // Subscribe to person-specific name invalid
+    nameInvalidSub = nc.subscribe(`name_invalid.${personID}`);
+    (async () => {
+      for await (const msg of nameInvalidSub) {
+        alert(sc.decode(msg.data));
+        setNameSet(false);
+      }
+    })();
 
-      // Log a console message with the person ID
-      console.log(`Person ID: ${personID}`);
-    }
+    // Log a console message with the person ID
+    console.log(`Person ID: ${personID}`);
 
+    // Cleanup subscriptions on logout/login or unmount
     return () => {
+      worldUpdateSub?.unsubscribe();
+      personWorldUpdateSub?.unsubscribe();
       instructionSub?.unsubscribe();
       roomSub?.unsubscribe();
       logoutSub?.unsubscribe();
       nameInvalidSub?.unsubscribe();
     };
-  }, [nameSet]); // Only runs when userName is set/changes
+  }, [userName, natsConnection.current]); // Depend on userName and natsConnection.current
 
   useEffect(() => {
     if (worldLogRef.current) {
@@ -268,7 +267,7 @@ export default function HomePage() {
               marginLeft: "10px",
             }}
           >
-            <p  className="text-smaller" style={{ margin: 0, maxWidth: 1000 }}>
+            <p className="text-smaller" style={{ margin: 0, maxWidth: 1000 }}>
               <b>{roomTitle}</b>: {roomDescription} {roomExits}
             </p>
           </div>
