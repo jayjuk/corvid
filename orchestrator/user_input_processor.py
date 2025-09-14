@@ -77,8 +77,8 @@ class UserInputProcessor:
             },
             "build": {
                 "function": self.world_manager.do_build,  # Called with special inputs - see process_user_input below
-                "description": "Build a new location. Specify the direction, name and description (avoid confusion by not describing specific items, those are created separately) using single quotes "
-                + "e.g: build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest'",
+                "description": "Build a new location. Specify the direction, name and description (avoid confusion by not describing specific items, those are created separately). Be sure to use the right quote marks carefully e.g. "
+                + "build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest', but build east \"Wizard's House\" 'A mysterious and magical....(etc)...'",
             },
             "locations": {
                 "function": self.world_manager.do_list_locations,

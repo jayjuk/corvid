@@ -261,6 +261,11 @@ class WorldManager:
         
         room_name = room_name.strip()
 
+        # Check quote have not been messed up
+        # Check quotes haven't been messed up: description should not start with "'s"
+        if room_description.startswith("'s"):
+            return "Invalid input: room description appears to start with \"'s\" — perhaps your quotes are misplaced."
+
         # Remove 'The ' from the room name
         if room_name.startswith("The "):
             room_name = room_name[4:]
@@ -342,8 +347,13 @@ class WorldManager:
         direction: str,
         room_name: str,
         room_description: str,
-        new_grid_reference,
+        new_grid_reference: str,
     ) -> str:
+        
+        # If empty world, set new room to 0,0
+        if self.world.is_empty:
+            new_grid_reference = "0,0"
+
 
         # If there was no response, it means room was built directly - handle the room built
         self.world.add_room(

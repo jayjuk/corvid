@@ -145,7 +145,7 @@ class World:
         if grid_ref_str in self.grid_references:
             if room_name not in self.grid_references[grid_ref_str]:
                 logger.error(
-                    f"{room_name} has the same grid reference as {self.grid_references[grid_ref_str]}"
+                    f"{room_name} has the same grid reference ({grid_ref_str}) as {self.grid_references[grid_ref_str]}"
                 )
                 self.grid_references[grid_ref_str].append(room_name)
         else:
