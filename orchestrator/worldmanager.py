@@ -258,10 +258,18 @@ class WorldManager:
         # Create a new room
         if direction in self.world.get_exits(person.get_current_location()):
             return f"There is already a room to the {direction}."
+        
+        room_name = room_name.strip()
 
         # Remove 'The ' from the room name
         if room_name.startswith("The "):
             room_name = room_name[4:]
+
+        # Prevent naming a room the same as a player's name (current or historical)
+        check_name = room_name.strip()
+        for existing_name in self.user_id_to_name_map.values():
+            if existing_name and existing_name.lower() == check_name.lower():
+                return f"You cannot name a location the same as a player: '{existing_name}'."
 
         # Format the room name to be title case
         room_name = room_name.title().replace("'S", "'s")
