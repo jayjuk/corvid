@@ -1,6 +1,6 @@
 # Set up logger first
 from utils import set_up_logger, exit, get_logs_folder, get_critical_env_variable
-from typing import Dict, Optional, Any, Callable, Tuple
+from typing import Dict, Optional, Callable, Tuple, TextIO
 from os import environ
 from sys import argv
 import time
@@ -29,7 +29,7 @@ class Orchestrator:
             # Create a new log file for the user and return a handle to it
             makedirs(get_logs_folder(), exist_ok=True)
             f = open(
-                path.join(get_logs_folder(), f"{user_name}_world_transcript.txt"), "w"
+                path.join(get_logs_folder(), f"{user_name}_{self.world_manager.world.name}_transcript.txt"), "w"
             )
             f.write(f"# Person input and response log for {user_name}\n\n")
             self.user_transcripts[user_name] = f
@@ -44,6 +44,29 @@ class Orchestrator:
         f = self.get_user_transcript_file_handle(user_name)
         f.write(f"{timestamp} {user_name}: {request}\n")
         f.write(f"{timestamp} World: {response}\n\n")
+
+    # Create a log file for world-wide transcript
+    def get_session_log_file_handle(self, world_name) -> str:
+        # Create a new log file for the user and return a handle to it
+        makedirs(get_logs_folder(), exist_ok=True)
+        session_log_file_name: str = path.join(get_logs_folder(), f"{world_name}_session_log.txt")
+        f = open(
+            session_log_file_name, "w"
+        )
+        f.write(f"# Session log for {world_name}\n\n")
+        self.session_transcript_handle = f
+        logger.info(f"Session log for {world_name} is {session_log_file_name}")
+        return self.session_transcript_handle
+
+    # Log something to a world-wide transcript
+    def log_to_session_log(
+        self, text_to_log: str = ""
+    ) -> None:
+        timestamp: str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        f = self.session_transcript_handle
+        f.write(f"{timestamp}\t{text_to_log}\n")
+        f.flush()
+
 
     # Event handlers
 
@@ -77,6 +100,7 @@ class Orchestrator:
             logger.info(
                 f"Received user action: {user_input} from {user_id} ({person.name})"
             )
+            self.log_to_session_log(f"{person.name}: {user_input}")
             await self.mbh.publish("world_update", f"You: {user_input}", user_id)
             command_function: Callable
             command_args: Tuple
@@ -107,8 +131,9 @@ class Orchestrator:
                 person.add_input_history(f"World: {response_to_person}")
                 await self.mbh.publish("world_update", response_to_person, user_id)
 
-            # Log person input and response
-            self.log_to_user_transcript(person.name, user_input, response_to_person)
+                # Log person input and response
+                self.log_to_session_log(f"Response to {person.name}: {response_to_person}")
+                self.log_to_user_transcript(person.name, user_input, response_to_person)
         else:
             logger.info(f"Received user action from non-existent person {user_id}")
             await self.mbh.publish(
@@ -208,6 +233,12 @@ class Orchestrator:
         )
         logger.info("Message broker set up")
 
+        # Transcript management
+        self.user_transcripts: Dict[str, TextIO] = {}
+        self.session_transcript_handle: Optional[TextIO] = self.get_session_log_file_handle(world_name)
+
+
+        # Start up world manager
         logger.info(f"Starting up world manager - world '{world_name}'")
         storage_manager: AzureStorageManager = AzureStorageManager()
         self.world_manager: WorldManager = WorldManager(
@@ -217,10 +248,8 @@ class Orchestrator:
             model_name=environ.get("MODEL_NAME"),
             landscape=environ.get("LANDSCAPE_DESCRIPTION"),
             animals_active=environ.get("ANIMALS_ACTIVE", "True").lower() == "true",
+            session_logger = self.log_to_session_log
         )
-
-        # User transcript management
-        self.user_transcripts = {}
 
         # Set up user input processor
         self.user_input_processor: UserInputProcessor = UserInputProcessor(

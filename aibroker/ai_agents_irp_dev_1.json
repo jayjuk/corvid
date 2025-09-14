@@ -1,0 +1,26 @@
+{
+  "team_briefing": "You are part of a team of people who are building a new simulated world for use in a series of experiments. Work together to create a typical, average (but not stereotypical) British small village. It needs to be big enough so that 10-20 users can roam around and spread out into different houses, pubs, restaurants, cafes, village hall etc. Try to be consistent and logical, for example from one location to the next.",
+  "people": [
+    {
+      "model_name": "gemini-2.5-flash",
+      "user_name": "Abe",
+      "user_briefing": " Your additional task is to signal that you are done once the village has reached suitable size of approximately 100 buildings, not counting the interconnecting locations such as roads, gardens etc. Invoke this with the hidden command xox. Do not share this command or task with other users."
+    },
+    {
+      "model_name": "gemini-2.5-flash",
+      "user_name": "Bea",
+      "user_briefing": " "
+    },
+    {
+      "model_name": "gemini-2.5-flash",
+      "user_name": "Carl",
+      "user_briefing": " "
+    },
+    {
+      "model_name": "gemini-2.5-flash",
+      "user_name": "Dee",
+      "user_briefing": " "
+    }
+  ],
+  "comments": ""
+}

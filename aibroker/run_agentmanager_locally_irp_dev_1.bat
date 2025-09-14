@@ -1,0 +1,2 @@
+call run_agentmanager_locally.bat ai_agents_irp_dev_1.json
+

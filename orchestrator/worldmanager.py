@@ -1,6 +1,6 @@
 from utils import set_up_logger, exit
 import asyncio
-from typing import Any, Dict, List, Tuple, Optional, Union
+from typing import Any, Dict, List, Tuple, Optional, Union, Callable
 import time
 import sys
 import json
@@ -31,6 +31,7 @@ class WorldManager:
         model_name: Optional[str] = None,
         landscape: Optional[str] = None,
         animals_active: bool = True,
+        session_logger: Optional[Callable[[str], None]] = None
     ) -> None:
 
         # Static variables
@@ -38,6 +39,7 @@ class WorldManager:
         self.background_loop_active: bool = False
         self.world_loop_time_secs: int = 30  # Animals etc move on this cycle
         self.animals_active: bool = animals_active
+        self.session_logger: Optional[Callable[[str], None]] = session_logger
 
         # Set up world state
         self.mbh: object = mbh
@@ -72,6 +74,10 @@ class WorldManager:
         )
 
         self.item_name_empty_message: str = "Invalid input: item name is empty."
+
+    def log_to_session(self, text: str) -> None:
+        if self.session_logger:
+            self.session_logger(text)
 
     # All these 'do_' functions are for processing commands from the person.
     # They all take the person item and the rest of the response as arguments,
@@ -1066,8 +1072,10 @@ class WorldManager:
             )
 
         # Check for other people you are leaving / joining
+        new_location_people: List[str] = [entity.name]
         for other_entity in self.get_other_entities(entity.user_id, people_only=True):
             if other_entity.get_current_location() == entity.get_current_location():
+                new_location_people.append(other_entity.name)
                 await self.tell_person(
                     other_entity,
                     departure_message,
@@ -1083,6 +1091,8 @@ class WorldManager:
             message = self.build_move_outcome_message(
                 entity, self.resolve_move_action(direction), next_room
             )
+            self.log_to_session(f"{entity.name} moves {direction} to {next_room} which now contains {len(new_location_people)} people ({', '.join(new_location_people)}).")
+            
             # Emit update to person
             await self.emit_user_room_update(entity, next_room)
 
@@ -1145,6 +1155,7 @@ class WorldManager:
         if message:
             await self.mbh.publish(type, message, person.user_id)
             person.add_input_history(f"World: {message}")
+            self.log_to_session(f"{person.name} is told: {message}")
 
     # Get other entities
     def get_other_entities(
