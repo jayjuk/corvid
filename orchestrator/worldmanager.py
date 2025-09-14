@@ -238,6 +238,16 @@ class WorldManager:
         self.summon_requests[request_id] = user_briefing
         await self.emit_summon_request(request_id, user_briefing)
 
+    async def do_list_locations(self, person: Person, rest_of_response: str) -> str:
+        # Return a comma-separated list of known locations in the world.
+        # Filter out any empty or non-string keys defensively.
+        rooms = [name for name in self.world.rooms.keys() if name and isinstance(name, str)]
+        if not rooms:
+            return "There are no locations in this world yet."
+        rooms.sort()
+        locations_list = ", ".join(rooms) + "."
+        return locations_list
+
     async def do_build(
         self,
         person: Person,
