@@ -4,9 +4,9 @@ for /F "tokens=1* delims==" %%a in (..\common\.env) do ( set "%%a=%%b" )
 echo Running AI Person Manager with model %MODEL_NAME%...
 if "%~1"=="" (
     set AI_AGENT_FILE_NAME=ai_agents.json
+    set AIBROKER_MAX_HISTORY=1000
+    set MODEL_SYSTEM_MESSAGE=You are a character in a simulated world.
 ) else (
     set AI_AGENT_FILE_NAME=%~1
 )
-set AIBROKER_MAX_HISTORY=100
-set MODEL_SYSTEM_MESSAGE=You are a character in a simulated world.
 python agentmanager.py

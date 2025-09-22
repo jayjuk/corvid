@@ -85,9 +85,15 @@ def update_logger_filename(
 
 # Helper function to prepare log file name and directory
 def prepare_log_file(file_name: str) -> str:
+
+    # Replace spaces with underscore
+    file_name = file_name.replace(" ", "_").strip()
+
+    # Add file extension suffix
     if not file_name.endswith(".log"):
         file_name = file_name + ".log"
 
+    # Make directory if necessary
     if not os.path.exists(get_logs_folder()):
         os.makedirs(get_logs_folder())
 

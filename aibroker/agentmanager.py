@@ -14,7 +14,7 @@ import asyncio
 from messagebroker_helper import MessageBrokerHelper
 
 # Set up logger
-logger = set_up_logger("Person Manager")
+logger = set_up_logger("Agent Manager")
 
 
 # Class to manage the AI's interaction with the Orchestrator
@@ -68,8 +68,9 @@ class agentmanager:
             "AI_MODE": "agent",
             "AI_COUNT": "1",
             "MODEL_SYSTEM_MESSAGE": os.environ.get("MODEL_SYSTEM_MESSAGE", "")
-            + "\n STAY IN CHARACTER. Person Character: "
-            + user_dict.get("user_briefing", ""),
+            + "\n" + "STAY IN CHARACTER. Person Character: "
+            + "\n" + user_dict.get("team_briefing", "")
+            + "\n" + user_dict.get("user_briefing", ""),
         }
 
         def run_user_process(env_vars):
@@ -122,7 +123,7 @@ async def main() -> None:
 
     # Shutdown event handler
     async def shutdown(data: str) -> None:
-        await logger.critical(data)
+        logger.critical(data)
         sys.exit(1)
 
     # Set up the message broker

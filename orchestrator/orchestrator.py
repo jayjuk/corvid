@@ -24,11 +24,11 @@ class Orchestrator:
     # Transcript management
 
     # Create a log file for model responses
-    def get_user_transcript_file_handle(self, user_name: str) -> str:
+    def get_user_transcript_file_handle(self, user_name: str) -> TextIO:
         if user_name not in self.user_transcripts:
             # Create a new log file for the user and return a handle to it
             makedirs(get_logs_folder(), exist_ok=True)
-            f = open(
+            f: TextIO = open(
                 path.join(get_logs_folder(), f"{user_name}_{self.world_manager.world.name}_transcript.txt"), "w"
             )
             f.write(f"# Person input and response log for {user_name}\n\n")
@@ -41,16 +41,17 @@ class Orchestrator:
         self, user_name: str, request: str = "", response: str = ""
     ) -> None:
         timestamp: str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        f = self.get_user_transcript_file_handle(user_name)
+        f: TextIO = self.get_user_transcript_file_handle(user_name)
         f.write(f"{timestamp} {user_name}: {request}\n")
         f.write(f"{timestamp} World: {response}\n\n")
+        f.flush()
 
     # Create a log file for world-wide transcript
-    def get_session_log_file_handle(self, world_name) -> str:
+    def get_session_log_file_handle(self, world_name) -> TextIO:
         # Create a new log file for the user and return a handle to it
         makedirs(get_logs_folder(), exist_ok=True)
         session_log_file_name: str = path.join(get_logs_folder(), f"{world_name}_session_log.txt")
-        f = open(
+        f: TextIO = open(
             session_log_file_name, "w"
         )
         f.write(f"# Session log for {world_name}\n\n")
@@ -63,7 +64,7 @@ class Orchestrator:
         self, text_to_log: str = ""
     ) -> None:
         timestamp: str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        f = self.session_transcript_handle
+        f: TextIO = self.session_transcript_handle
         f.write(f"{timestamp}\t{text_to_log}\n")
         f.flush()
 
