@@ -30,6 +30,7 @@ class WorldItem:
         self.check_item_name(self.name)
         if (
             hasattr(self, "location")
+            and world
             and self.location not in world.rooms
             and self.location not in world.get_entity_names()
         ):
