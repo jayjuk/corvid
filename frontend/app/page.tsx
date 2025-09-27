@@ -103,7 +103,7 @@ export default function HomePage() {
     // Function to handle world updates
     const handleWorldUpdate = async (sub: any) => {
       for await (const msg of sub) {
-        let message = sc.decode(msg.data).replace(/[{|}]/g, "");
+        let message = sc.decode(msg.data).replace(/[<>]/g, "");
         setWorldLog((prevLog) => {
           const newLog = [...prevLog, message];
           return newLog.slice(-10);
@@ -134,7 +134,8 @@ export default function HomePage() {
         const message = JSON.parse(sc.decode(msg.data));
         setRoomImageURL(message["image"]);
         setRoomTitle(message["title"]);
-        setRoomDescription(message["description"].replace(/[{|}]/g, ""));
+        // Remove angle brackets
+        setRoomDescription(message["description"].replace(/[<>]/g, ""));
         setRoomExits(message["exits"]);
       }
     })();

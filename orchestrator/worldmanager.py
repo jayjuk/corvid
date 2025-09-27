@@ -238,6 +238,18 @@ class WorldManager:
         self.summon_requests[request_id] = user_briefing
         await self.emit_summon_request(request_id, user_briefing)
 
+    async def do_remember(self, person: Person, rest_of_response: str) -> str:
+        logger.info(f"Remember command received: {rest_of_response}")
+        return person.add_memory(rest_of_response)
+    
+    async def do_forget(self, person: Person, rest_of_response: str) -> str:
+        logger.info(f"Forget command received: {rest_of_response}")
+        return person.forget_memory(rest_of_response)
+    
+    async def do_memories(self, person: Person, rest_of_response: str) -> str:
+        logger.info(f"Memories command received: {rest_of_response}")
+        return person.get_memories(rest_of_response)
+    
     async def do_list_locations(self, person: Person, rest_of_response: str) -> str:
         # Return a comma-separated list of known locations in the world.
         # Filter out any empty or non-string keys defensively.
@@ -790,7 +802,8 @@ class WorldManager:
         if person.get_inventory():
             prompt += f" The person has the following items in their inventory: {person.get_inventory_description()}"
         # Check for any objects in this location
-        prompt += f" {self.world.get_room_items_description(person.get_current_location(), detail=True):}"
+        # Using angle brackets to hide from AI
+        prompt += f" <self.world.get_room_items_description(person.get_current_location(), detail=True):>"
         # Check for any entities in this location
         for other_entity in self.get_other_entities(person.user_id):
             if other_entity.get_current_location() == person.get_current_location():

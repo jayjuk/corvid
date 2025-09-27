@@ -104,8 +104,6 @@ class MessageBrokerHelper:
         except json.JSONDecodeError:
             if ("{" in body and "}" in body) or ("[" in body and "]" in body):
                 logger.warning(f"JSONDecodeError: {body}")
-            else:
-                logger.info(f"JSONDecodeError: {body}")
 
             # If message is not JSON, this is normal (simple message), pass it to the callback function as a string
             await callback(body)

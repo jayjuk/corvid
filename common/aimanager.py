@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, Tuple, Optional, Any
+from typing import List, Dict, Union, Tuple, Optional, Any, OrderedDict
 import traceback
 from os import path, makedirs, environ, sep
 import json
@@ -81,9 +81,6 @@ class AIManager:
         # Model-specific static
         self.content_word: str = "content"
         self.model_word: str = "assistant"
-        self.history_abbreviation_content: str = (
-            "(some world transcript history removed for brevity)"
-        )
         if self.get_model_api() == "Gemini":
             self.model_word: str = "model"
             self.content_word: str = "parts"
@@ -99,6 +96,26 @@ class AIManager:
     # Reset chat history
     def reset(self) -> None:
         self.chat_history: List[Dict[str, str]] = []
+
+    def abbreviate_history(self) -> None:
+        if not self.chat_history:
+            return
+
+        # Combine all history into a single string
+        combined_history = "\n".join(
+            f"{item['role']}: {item[self.content_word]}" for item in self.chat_history
+        )
+
+        # Use the AI to condense the history
+        condensed_history = self.submit_request(
+            request=f"In the context of a multi-user simulated world with the system message to this AI agent of [{self.system_message}], condense this agent's chat history into a single summary. Their history is:\n{combined_history}",
+            history=False,
+            cleanup_output=True
+        )
+
+        # Replace chat history with the condensed version
+        logger.info(f"Compressing history from {len(self.chat_history)} items down to the following: {condensed_history}")
+        self.chat_history = [{"role": self.model_word, self.content_word: condensed_history}]
 
     # Set system message
     def set_system_message(self, system_message: str) -> None:
@@ -186,7 +203,7 @@ class AIManager:
         temperature: float = 0.7,
         history: bool = True,
         system_message: Optional[str] = None,
-        cleanup_output: bool = True,
+        cleanup_output: bool = True
     ) -> str:
         try_count: int = 0
         max_tries: int = 10
@@ -229,7 +246,7 @@ class AIManager:
         if history:
             if len(self.chat_history) > self.max_history:
                 messages.append(
-                    build_message("user", self.history_abbreviation_content)
+                    build_message("user", self.abbreviate_history())
                 )
                 messages.append(build_message(self.model_word, "OK."))
             for history_item in self.chat_history[-1 * self.max_history :]:
@@ -243,6 +260,8 @@ class AIManager:
         logger.info(
             f"About to submit to model, with system message: {this_system_message}"
         )
+
+        print("DEBUG - MESSAGES:\n", messages)
 
         # Get model response, retrying if necessary
         model_response: Optional[str] = None

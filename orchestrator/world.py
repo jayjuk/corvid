@@ -299,7 +299,7 @@ class World:
         if not brief:
             # Contents of curly brackets removed from AI description,
             # Actual brackets removed in UI
-            description = "{" + self.rooms[room].description + "\n" + "}"
+            description = "<" + self.rooms[room].description + "\n" + ">"
 
         if show_exits:
             description += self.get_room_exits_description(room)

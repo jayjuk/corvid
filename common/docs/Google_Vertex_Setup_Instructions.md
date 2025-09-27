@@ -1,12 +1,13 @@
 1. https://console.cloud.google.com/
 2. Create Google account
-3. Add payment info etc to activate free trial and credits
+3. Add payment info to start free trial with credits. You do not have to Activate yet (to enable automatic billing)
 4. On dashboard, click on Enable Recommended APIs
 5. Click top left corner hamburger menu, select APIs & Services -> Credentials, Click on the srevice account
-6. Top KEYS -> ADD KEY -> Create new key, keep JSON checked, -> CREATE
+6. Create Credentials
+    old: 6. Top KEYS -> ADD KEY -> Create new key, keep JSON checked, -> CREATE
 7. Key will be saved to downloads. Move it to corvid\common\scripts\gemini.key
 8. In common\scripts run python python convert_gemini_key_to_encoded_env_variable.py
-9. Copy content of gemini_key_encoded.txt to GOOGLE_GEMINI_KEY in .env
+9. Copy content of gemini_key_encoded.txt to GOOGLE_GEMINI_KEY in .env, then delete both gemini.key and gemini_key_encoded.txt.
 10. In .env update GOOGLE_GEMINI_PROJECT_ID to new project ID (available in gemini.key or by clicking on My First Project at top of Vertex page)
 11. Don't forget to back up changes to .env!
 12. Go to https://console.cloud.google.com/apis/library, search for AI platform, select AI Platform Training & Prediction API, click enable.

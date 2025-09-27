@@ -12,8 +12,7 @@ class StorageManager:
 
     # Constructor
     def __init__(self, image_only: bool = False) -> None:
-        # Cache of data types to convert to/from JSON to strings when storing
-        self.complex_variable_cache: Dict[str, List[str]] = {}
+        pass
 
     def store_image(
         self, world_name: str, file_name: Optional[str], image_data: Any
@@ -68,31 +67,25 @@ class StorageManager:
         with open(full_path, "r") as f:
             default_data = json.load(f)
         return default_data
-
-    def check_complex_variable_cache(self, entity: Dict[str, Any]) -> None:
-        if entity["PartitionKey"] not in self.complex_variable_cache:
-            self.complex_variable_cache[entity["PartitionKey"]] = []
-            for key, value in entity.items():
-                if isinstance(value, (list, dict)) or (
-                    isinstance(value, str)
-                    and len(value) > 1
-                    and (
-                        (value[0] == "[" and value[-1] == "]")
-                        or (value[0] == "{" and value[-1] == "}")
-                    )
-                ):
-                    self.complex_variable_cache[entity["PartitionKey"]].append(key)
-
+    
     def stringify_object(
         self, entity: Dict[str, Any], action: str = "stringify"
     ) -> None:
-        self.check_complex_variable_cache(entity)
-        for variable in self.complex_variable_cache[entity["PartitionKey"]]:
-            if variable in entity:
+        for key, value in entity.items():
+            # Lists and dicts get converted
+            if isinstance(value, (list, dict)) or (
+                # So do strings that contain lists/dicts
+                isinstance(value, str)
+                and len(value) > 1
+                and (
+                    (value[0] == "[" and value[-1] == "]")
+                    or (value[0] == "{" and value[-1] == "}")
+                )
+            ):
                 if action == "stringify":
-                    entity[variable] = json.dumps(entity[variable])
+                    entity[key] = json.dumps(entity[key])
                 else:  # destringify
-                    entity[variable] = json.loads(entity[variable])
+                    entity[key] = json.loads(entity[key])
 
     def store_world_objects(
         self, world_name: str, objects: List[Dict[str, Any]]

@@ -105,6 +105,18 @@ class UserInputProcessor:
                     # + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
                 ),
             },
+            "remember": {
+                "function": self.world_manager.do_remember,
+                "description": "" #"Add a piece of information you deem important to your permanent memory.",
+            },
+            "forget": {
+                "function": self.world_manager.do_forget,
+                "description": "" #"Add a piece of information you deem important to your permanent memory.",
+            },
+            "memories": {
+                "function": self.world_manager.do_memories,
+                "description": "" #"List memories you have already made.",
+            },
             "buy": {
                 "function": self.world_manager.do_buy,
                 "description": "Buy an item from an entity (e.g. a Merchant) in your current location.",

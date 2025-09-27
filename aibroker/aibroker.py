@@ -276,10 +276,10 @@ class AIBroker:
         ):
             return
         # Otherwise, add this to the user input backlog
-        # Strip anything inside curly braces as this is detail human people will enjoy but it will just cost money for the AI
-        # There could be stuff after the braces, include that
+        # Strip anything inside angle brackets as this is detail human people will enjoy but it will just cost money for the AI
+        # There could be stuff after the brackets, include that
         event_text = re.sub(
-            r"{[^}]*}", "", event_text, flags=re.DOTALL
+            r"<[^>]*>", "", event_text, flags=re.DOTALL
         )  # dotall flag is to handle newline
         self.event_log.append(event_text)
 

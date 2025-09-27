@@ -1,5 +1,5 @@
 from typing import Optional, Dict, List, Any
-from utils import set_up_logger, exit
+from utils import set_up_logger
 import os
 import time
 from entity import Entity
@@ -52,12 +52,16 @@ class Person(Entity):
             self.record_location_history = True
             logger.info("Recording location history for this entity.")
 
+        # Initialise memories (old users may not have stored ones)
+        self.memories = []
+
         if stored_user_data:
             logger.info(f"Retrieved person {user_name} data from database")
             self.__dict__.update(stored_user_data)
             # But use latest user_id and make world object
             self.user_id = user_id
             self.world = world
+
         else:
             logger.info(f"Creating person {user_name}, user_id {user_id}")
 
@@ -102,6 +106,50 @@ class Person(Entity):
         self.input_history.append(input)
         if len(self.input_history) > self.max_input_history_length:
             self.input_history.pop(0)
+    
+    # Setters for permanent memory (use an OrderedDict to preserve insertion order)
+    def add_memory(self, new_memory: str) -> str:
+        # Remove the memory if it already exists (case insensitive)
+        self.memories = [memory for memory in self.memories if memory.lower() != new_memory.lower()]
+        
+        # Add the new memory to the end
+        self.memories.append(new_memory)
+
+        # Persist memory to the database
+        self.world.storage_manager.store_world_object(self.world.name, self)
+
+        logger.info(f"{len(self.memories)} memories stored.")
+        return f"You have remembered the following: {new_memory}"
+
+    def forget_memory(self, memory_search_text: str) -> str:
+        output = ""
+        # Filter out memories that match the search text
+        matching_memories = [memory for memory in self.memories if memory_search_text.lower() in memory.lower()]
+        self.memories = [memory for memory in self.memories if memory not in matching_memories]
+
+        if matching_memories:
+            for memory in matching_memories:
+                output += f"You have forgotten that {memory}. "
+                logger.info(f"Memory {memory} forgotten.")
+            # Persist the updated memories
+            self.world.storage_manager.store_world_object(self.world.name, self)
+        else:
+            output = f"No memories found that match '{memory_search_text}'"
+        
+        return output
+
+    def get_memories(self, search_text: str) -> str:
+        search_suffix: str = ""
+        if search_text:
+             search_suffix = f"matching '{search_text}'"
+        # Find all matching memories
+        matching_memories = [memory for memory in self.memories if search_text.lower() in memory.lower()]
+
+        if matching_memories:
+            # Join matching memories into a single string
+            return f"List of memories{search_suffix}: " + " ".join(f"{memory}. " for memory in matching_memories)
+        else:
+            return f"No memories matching '{search_text}'."
 
     # Setter for updating person's last action time
     # Used to check for idle people
