@@ -19,8 +19,8 @@ async def publish_messages():
         b'{"image": "http://example.com/image.png", "title": "Room Title", "description": "Room Description", "exits": "north, south"}',
     )
 
-    # Publish a shutdown message to the "shutdown" subject
-    await nc.publish("shutdown", b"The server is shutting down!")
+    # Publish a shutdown message to the "global_shutdown" subject
+    await nc.publish("global_shutdown", b"The server is shutting down!")
 
     # Publish a logout message to the "logout" subject
     await nc.publish("logout", b"You have been logged out!")

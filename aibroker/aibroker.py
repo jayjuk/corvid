@@ -66,7 +66,7 @@ class AIBroker:
                 "user_action": {"mode": "publish"},
                 "world_update": {"mode": "subscribe", "callback": self.world_update},
                 "instructions": {"mode": "subscribe", "callback": self.instructions},
-                "shutdown": {"mode": "subscribe", "callback": self.shutdown},
+                "global_shutdown": {"mode": "subscribe", "callback": self.shutdown},
                 "logout": {"mode": "both", "callback": self.logout},
                 "room_update": {"mode": "subscribe", "callback": self.room_update},
                 "world_data_update": {
@@ -347,7 +347,7 @@ async def main() -> None:
     # If AI_MODE is not set, default to "agent"
     ai_mode: str = environ.get("AI_MODE") or "agent"
     # Check AI_MODE is set to a valid value
-    valid_ai_modes = ["agent", "builder"]
+    valid_ai_modes = ["agent", "builder", "monitor"]
     if ai_mode not in valid_ai_modes:
         exit(
             logger,

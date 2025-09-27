@@ -18,6 +18,12 @@ class Entity:
     ):
         self.name: str = entity_name
         self.role: str = entity_role
+
+        # Some roles are invisible
+        self.is_visible: bool = True
+        if self.role == "monitor":
+            self.is_visible = False
+
         self.is_person: bool = False
         self.user_id: Optional[str] = None  # Overridden for people
         self.description: Optional[str] = description

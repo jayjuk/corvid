@@ -9,13 +9,13 @@ if __name__ == "__main__":
         get_critical_env_variable("ORCHESTRATOR_HOSTNAME"),
         get_critical_env_variable("ORCHESTRATOR_PORT"),
         {
-            "shutdown": {"mode": "publish"},
+            "global_shutdown": {"mode": "publish"},
         },
     )
     print("Message broker set up")
     # Now shut down
     asyncio.run(mbh.set_up_nats())
-    asyncio.run(mbh.publish("shutdown", "shutdown"))
+    asyncio.run(mbh.publish("global_shutdown", "global_shutdown"))
     print("Published shutdown message.")
 
 # This is a simple script that sends a shutdown message to the message broker. It is used to shut down the Orchestrator.

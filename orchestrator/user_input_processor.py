@@ -141,6 +141,11 @@ class UserInputProcessor:
                 # Keep this one hidden - it shuts down the Orchestrator and AI broker!
                 "description": "",
             },
+            "mission_accomplished": {
+                "function": self.world_manager.do_agent_manager_shutdown,
+                # Keep this one hidden - it shuts down the agent manager and its agents, leaving the rest of the world running
+                "description": "",
+            },
             # Help is special, as it doesn't need a function to be defined in the world manager, it can be handled here
             "help": {
                 "function": self.get_help_text,

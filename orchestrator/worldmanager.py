@@ -209,6 +209,18 @@ class WorldManager:
         else:
             return f"'{other_entity_name}' is not a valid person name."
 
+    async def do_agent_manager_shutdown(self, person: Person, rest_of_response: str) -> None:
+        message: str = f"{person.name} has signalled that it is time for AI agents to leave"
+        if rest_of_response:
+            message = message[:-1] + f", saying '{rest_of_response}'."
+        logger.info(message)
+        #await self.tell_everyone(message)
+        # Log everyone out
+        for user_id in list(self.people.keys()):
+            await self.remove_person(user_id, message)
+        await asyncio.sleep(2)
+        await self.mbh.publish("agent_manager_shutdown", message)
+
     async def do_shutdown(self, person: Person, rest_of_response: str) -> None:
         message: str = f"{person.name} has triggered a shutdown of the world!"
         if rest_of_response:
@@ -217,7 +229,7 @@ class WorldManager:
         await self.tell_everyone(message)
         # TODO #68 Web client should do something when the back end is down, can we terminate the client too?
         # TODO #69 Make shutdown command restart process not shut down
-        await self.mbh.publish("shutdown", message)
+        await self.mbh.publish("global_shutdown", message)
         await asyncio.sleep(1)
         raise ShutdownException(logger, f"Shutdown command invoked by {person.name}")
 
@@ -949,9 +961,13 @@ class WorldManager:
                 return other_entity.get_current_location()
         return None
 
-    # Get number of people in the world
+    # Get number of (visible) people in the world
     def get_user_count(self) -> int:
-        return len(self.people)
+        user_count = 0
+        for person in self.people.values():
+            if person.is_visible:
+                user_count += 1
+        return user_count
 
     # Check if a person name is unique
     def is_existing_user_name(self, user_name: str) -> bool:
@@ -999,11 +1015,12 @@ class WorldManager:
         self.register_person(user_id, person, user_name)
 
         # Tell other people about this new person
-        await self.tell_others(
-            user_id,
-            f"{user_name} has joined, starting in the {person.get_current_location()}; there are now {self.get_user_count()} people.",
-            shout=True,
-        )
+        if person.is_visible:
+            await self.tell_others(
+                user_id,
+                f"{user_name} has joined, starting in the {person.get_current_location()}; there are now {self.get_user_count()} people.",
+                shout=True,
+            )
 
         # Tell this person about the world
         instructions: str = (
@@ -1031,7 +1048,7 @@ class WorldManager:
             return "You are currently alone in this world."
         user_list = "Other people in this world: "
         for other_user_id, user_name in self.user_id_to_name_map.items():
-            if other_user_id != user_id:
+            if other_user_id != user_id and self.people[other_user_id].is_visible:
                 user_list += user_name + ", "
         user_list = user_list[:-2] + "."
         return user_list
@@ -1070,8 +1087,8 @@ class WorldManager:
         previous_room: str = entity.get_current_location()
 
         # Resolve arrival and departure messages
-        departure_message: str
-        arrival_message: str
+        departure_message: str = ""
+        arrival_message: str = ""
         if direction == "jump":
             departure_message = f"{entity.name} has disappeared in a puff of smoke!"
             arrival_message = f"{entity.name} has materialised as if by magic!"
@@ -1112,20 +1129,22 @@ class WorldManager:
                 + self.world.get_room_exits_description(entity.get_current_location())
             )
 
-        # Check for other people you are leaving / joining
+        # Check for other people to tell you are leaving / joining, if you are visible
         new_location_people: List[str] = [entity.name]
         for other_entity in self.get_other_entities(entity.user_id, people_only=True):
             if other_entity.get_current_location() == entity.get_current_location():
                 new_location_people.append(other_entity.name)
-                await self.tell_person(
-                    other_entity,
-                    departure_message,
-                )
+                if entity.is_visible:
+                    await self.tell_person(
+                        other_entity,
+                        departure_message,
+                    )
             elif other_entity.get_current_location() == next_room:
-                await self.tell_person(
-                    other_entity,
-                    arrival_message,
-                )
+                if entity.is_visible:
+                    await self.tell_person(
+                        other_entity,
+                        arrival_message,
+                    )
 
         message: str = ""
         if entity.is_person:
@@ -1264,6 +1283,7 @@ class WorldManager:
             # Check again (race condition)
             if user_id in self.people:
                 del self.people[user_id]
+                del self.user_id_to_name_map[user_id]
             # If there are no people left, stop the background loop
             if self.get_user_count() == 0:
                 self.deactivate_background_loop()

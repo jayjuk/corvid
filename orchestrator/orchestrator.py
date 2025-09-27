@@ -1,5 +1,5 @@
 # Set up logger first
-from utils import set_up_logger, exit, get_logs_folder, get_critical_env_variable
+from utils import set_up_logger, exit, get_logs_folder, get_critical_env_variable, get_boolean_env_variable
 from typing import Dict, Optional, Callable, Tuple, TextIO
 from os import environ
 from sys import argv
@@ -50,7 +50,8 @@ class Orchestrator:
     def get_session_log_file_handle(self, world_name) -> TextIO:
         # Create a new log file for the user and return a handle to it
         makedirs(get_logs_folder(), exist_ok=True)
-        session_log_file_name: str = path.join(get_logs_folder(), f"{world_name}_session_log.txt")
+        timestamp: str = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
+        session_log_file_name: str = path.join(get_logs_folder(), f"{world_name}_session_transcript_{timestamp}.log")
         f: TextIO = open(
             session_log_file_name, "w"
         )
@@ -208,7 +209,8 @@ class Orchestrator:
                 "world_update": {"mode": "publish"},
                 "world_data_update": {"mode": "publish"},
                 "logout": {"mode": "publish"},
-                "shutdown": {"mode": "publish"},
+                "global_shutdown": {"mode": "publish"},
+                "agent_manager_shutdown": {"mode": "publish"},
                 # Image creation
                 "image_creation_request": {"mode": "publish"},
                 "image_creation_response": {
@@ -248,7 +250,7 @@ class Orchestrator:
             world_name=world_name,
             model_name=environ.get("MODEL_NAME"),
             landscape=environ.get("LANDSCAPE_DESCRIPTION"),
-            animals_active=environ.get("ANIMALS_ACTIVE", "True").lower() == "true",
+            animals_active=get_boolean_env_variable("ANIMALS_ACTIVE"),
             session_logger = self.log_to_session_log
         )
 
@@ -270,15 +272,16 @@ class Orchestrator:
     async def do_world_startup_checks(self):
         logger.info("Performing world startup checks.")
         # Get rooms missing images
-        missing_image_count: int = 0
-        for (room_name, room_description) in self.world_manager.world.get_rooms_missing_images():
-            missing_image_count += 1
-            logger.info(f"Room {room_name} is missing its image - requesting a fresh one.")
-            await self.world_manager.request_room_image_creation(
-                room_name, room_description
-            )
-        if not missing_image_count:
-            logger.info("No missing images found.")
+        if get_boolean_env_variable("CHECK_FOR_MISSING_IMAGES"):
+            missing_image_count: int = 0
+            for (room_name, room_description) in self.world_manager.world.get_rooms_missing_images():
+                missing_image_count += 1
+                logger.info(f"Room {room_name} is missing its image - requesting a fresh one.")
+                await self.world_manager.request_room_image_creation(
+                    room_name, room_description
+                )
+            if not missing_image_count:
+                logger.info("No missing images found.")
 
     # Perform cleanup here (e.g., closing file handles)
     def clean_up(self) -> None:

@@ -1,5 +1,5 @@
 from typing import Optional, Dict, List, Any
-from utils import set_up_logger
+from utils import set_up_logger, get_boolean_env_variable
 import os
 import time
 from entity import Entity
@@ -34,19 +34,16 @@ class Person(Entity):
             )
 
         # Set up person
-        # TODO #74 Remove this, it's for simulating AI builders
-        if user_name in ("Doug", "Alice", "Bob"):
-            user_role = "builder"
+
+        # Invisible user for administration and supervisory tasks
+        if user_name.lower() in ("admin", "monitor"):
+            self.user_role = "monitor"
 
         # Call superclass constructor
         Entity.__init__(self, world, user_name, user_role)
 
         # Register any specification to record their history
-        if str(os.environ.get("RECORD_LOCATION_HISTORY", "")).upper() in {
-            "TRUE",
-            "Y",
-            "YES",
-        }:
+        if get_boolean_env_variable("RECORD_LOCATION_HISTORY"):
             # (This flag is defaulted to false in the superclass (Entity)
             # because that is where it is accessed)
             self.record_location_history = True

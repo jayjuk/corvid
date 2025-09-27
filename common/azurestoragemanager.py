@@ -169,8 +169,7 @@ class AzureStorageManager(StorageManager):
         # 3. Input history - not needed, we want to start fresh each session
         if "input_history" in entity:
             del entity["input_history"]
-        from pprint import pprint
-        pprint(entity)
+
         # Convert fields containing lists/dicts to strings
         # This keeps the database readable/editable, simple, and cheap (can use Azure Table Storage in other words)
 

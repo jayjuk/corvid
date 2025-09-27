@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Iterable
 import json
 import base64
 from typing import Optional
-from utils import get_critical_env_variable, set_up_logger
+from utils import get_critical_env_variable, get_boolean_env_variable, set_up_logger
 from io import BytesIO
 from pprint import pprint
 
@@ -85,7 +85,7 @@ def build_message(role: str, content: str) -> Union[Dict[str, str], Content]:
 
 # Get the model response (Gemini specific)
 def do_request(model_client: GenerativeModel, messages: List[Dict[str, str]]) -> str:
-    if os.environ.get("MODEL_DEBUG_MODE", "False").upper() == "TRUE":
+    if get_boolean_env_variable("MODEL_DEBUG_MODE"):
         logger.info("Messages sent to model:")
         pprint(messages)
 

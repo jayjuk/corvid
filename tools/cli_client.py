@@ -87,7 +87,7 @@ async def main() -> None:
             "user_action": {"mode": "publish"},
             "world_update": {"mode": "subscribe", "callback": world_update},
             "instructions": {"mode": "subscribe", "callback": instructions},
-            "shutdown": {"mode": "subscribe", "callback": shutdown},
+            "global_shutdown": {"mode": "subscribe", "callback": shutdown},
             "logout": {"mode": "both", "callback": logout},
             "room_update": {"mode": "subscribe", "callback": room_update},
             "world_data_update": {"mode": "subscribe", "callback": world_data_update},

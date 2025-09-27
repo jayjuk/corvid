@@ -152,3 +152,14 @@ def get_critical_env_variable(env_var_name: str) -> Optional[str]:
     # Otherwise, exit
     print(f"{env_var_name} not set. Exiting.")
     sys.exit(1)
+
+# Check if environment variable is true or false
+def get_boolean_env_variable(env_var_name: str) -> Optional[bool]:
+    v = environ.get(env_var_name)
+    # If it does exist, return it
+    if v:
+        if str(v).lower() in ("true", "y", "yes"):
+            return True
+        elif str(v).lower() in ("false", "n", "no"):
+            return False
+    return None

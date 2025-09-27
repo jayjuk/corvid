@@ -1,7 +1,7 @@
 import asyncio
 from typing import Dict, Optional, Tuple
 import os
-from utils import get_critical_env_variable, set_up_logger, exit
+from utils import get_critical_env_variable, get_boolean_env_variable, set_up_logger, exit
 
 # Set up logger before importing other modules
 logger = set_up_logger("Image Creator")
@@ -124,7 +124,7 @@ class ImageCreator:
         )
         image_filename: Optional[str] = None
         image_data: Optional[bytes] = None
-        if os.environ.get("TEST_MODE", "False").upper() == "TRUE":
+        if get_boolean_env_variable("TEST_MODE"):
             logger.info("TEST_MODE is enabled, generating a random image locally")
             try:
 

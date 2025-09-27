@@ -65,7 +65,7 @@ class agentmanager:
             "AI_NAME": user_dict.get(
                 "user_name", ""
             ),  # If blank, AI broker will assign a name
-            "AI_MODE": "agent",
+            "AI_MODE": user_dict.get("mode", "agent"),
             "AI_COUNT": "1",
             "MODEL_SYSTEM_MESSAGE": os.environ.get("MODEL_SYSTEM_MESSAGE", "")
             + "\n" + "STAY IN CHARACTER. Person Character: "
@@ -124,6 +124,7 @@ async def main() -> None:
     # Shutdown event handler
     async def shutdown(data: str) -> None:
         logger.critical(data)
+        await asyncio.sleep(3)
         sys.exit(1)
 
     # Set up the message broker
@@ -136,7 +137,8 @@ async def main() -> None:
                 "mode": "subscribe",
                 "callback": summon_agent_request,
             },
-            "shutdown": {"mode": "subscribe", "callback": shutdown},
+            "agent_manager_shutdown": {"mode": "subscribe", "callback": shutdown},
+            "global_shutdown": {"mode": "subscribe", "callback": shutdown},
         },
     )
 
