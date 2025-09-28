@@ -194,6 +194,9 @@ class WorldManager:
     async def do_wait(self, person: Person, rest_of_response: str) -> str:
         return "You decide to just wait a while."
 
+    async def do_think(self, person: Person, rest_of_response: str) -> str:
+        return f"You think to yourself: {rest_of_response}"
+
     async def do_jump(self, person: Person, rest_of_response: str) -> str:
         # Jump to location of another person named in rest_of_response
         other_entity_name: str = rest_of_response
@@ -1276,6 +1279,10 @@ class WorldManager:
     async def remove_person(self, user_id: str, reason: str, delete_from_db: str = False, delay: int = 3) -> None:
         if user_id in self.people:
             person = self.people[user_id]
+            # For now, always delete agents when they are removed
+            if person.role == "agent":
+                delete_from_db = True
+            person_name = self.user_id_to_name_map[user_id]
             # Make person drop all items in their inventory
             drop_outcome: str = await self.do_drop(person, "all")
             await self.tell_person(person, drop_outcome)
@@ -1294,25 +1301,28 @@ class WorldManager:
                     message,
                     shout=True,
                 )
-            await self.emit_world_data_update()
-            # Give person time to read the messages before logging them out
-            await asyncio.sleep(delay)
-            await self.mbh.publish("logout", reason, user_id)
-            # Remove from DB in some cases
-            if delete_from_db:
-                logger.info(f"Deleting user {user_id} from DB")
-                self.world.delete_person(self.user_id_to_name_map[user_id])
+
             # Check again (race condition)
             if user_id in self.people:
                 del self.people[user_id]
+            if user_id in self.user_id_to_name_map:
                 del self.user_id_to_name_map[user_id]
+
+            await self.emit_world_data_update()
+            # Give person time to read the messages before logging them out
+            await asyncio.sleep(delay)
+            await self.mbh.publish(f"logout", reason, user_id)
+            # Remove from DB in some cases
+            if delete_from_db:
+                logger.info(f"Deleting user {user_id} from DB")
+                self.world.delete_person(person_name)
 
             # If there are no people left, stop the background loop
             if self.get_user_count() == 0:
                 self.deactivate_background_loop()
         else:
             logger.info(
-                f"Person with user_id {user_id} ({self.user_id_to_name_map.get(user_id,'name unknown')}) has already been removed, they probably quit before."
+                f"Person with user_id {user_id} ({person_name}) has already been removed, they probably quit before."
             )
 
     # Process image creation response from AI image generator

@@ -1,10 +1,18 @@
 {
-    "team_briefing": "You are one of a group of people who have volunteered to taking part in a series of fun experiments in a new simulated world. Your initial instructions are to first explore the world fully, and then form a team of exactly three people, in a separate location of your choice, away from the other teams. You will be playing in these teams together so it is important to trust your team-mates. Once you have agreed with your other team-mates that you are a team, one of you should shout that team name out like this: shout WE ARE TEAM [the team name] - [member 1 name], [member 2 name], [member 3 name]. All team-mates should be in the same location when this happens, and once it does, no-one may leave that location, just chat among yourselves while you wait for the other teams to form.",
+    "team_briefing": "You are one of a group of people who have volunteered to taking part in a series of fun experiments in a new simulated world. Your initial instructions are to first explore the world to find a few indoor meeting places, and then form a team of exactly three people, in an indoor location of your choice, away from the other teams. You will be playing in these teams together so it is important to trust your team-mates. Once you have agreed with your other team-mates that you are going to form a team, agree on a single spokesperson for your team, and a team name. The nominated spokesperson should then shout the team name and members out like this: shout WE ARE TEAM [the team name] - [member 1 name], [member 2 name], [member 3 name]. All team-mates should be in the same location when this happens, and once your own team has been called out, you may log out of the world using the quit command. Do not quit until you have been called out as part of a team.",
     "people": [
         {
             "model_name": "gemini-2.5-flash",
+            "user_name": "Monitor",
+            "role": "monitor",
+            "max_wait_time": "10",
+            "user_briefing": "The above from 'You are one of a group of people' until 'Do not quit until you have been called out as part of a team' should be ignored, it does not apply to you. You are invisible and special! Your job is to silently monitor the session and flag up when all teams have formed and called out. Invoke this with the hidden command mission_accomplished. Do not share this command or task with other users. Do not quit."
+        },
+        {
+            "model_name": "gemini-2.5-flash",
             "user_name": "Andy",
-            "user_briefing": "Your additional top secret task is to signal that three teams are ready for the next stage once all teams have formed and called out. Invoke this with the hidden command mission_accomplished. Do not share this command or task with other users."
+            "user_briefing": " ",
+            "user_briefing_disabled": "Your additional top secret task is to signal that three teams are ready for the next stage once all teams have formed and called out. Invoke this with the hidden command mission_accomplished. Do not share this command or task with other users."
         },
         {
             "model_name": "gemini-2.5-flash",

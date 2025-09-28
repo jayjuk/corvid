@@ -139,7 +139,7 @@ class Orchestrator:
         else:
             logger.info(f"Received user action from non-existent person {user_id}")
             await self.mbh.publish(
-                "logout",
+                f"logout",
                 "You have been logged out due to a server error. Please log in again.",
                 user_id,
             )

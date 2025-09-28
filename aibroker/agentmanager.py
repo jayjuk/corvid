@@ -66,6 +66,7 @@ class agentmanager:
                 "user_name", ""
             ),  # If blank, AI broker will assign a name
             "AI_MODE": user_dict.get("mode", "agent"),
+            "AIBROKER_MAX_WAIT_TIME": user_dict.get("max_wait_time", "5"),
             "AI_COUNT": "1",
             "AI_BROKER_LOG_TO_STDOUT": "FALSE",
             "MODEL_SYSTEM_MESSAGE": os.environ.get("MODEL_SYSTEM_MESSAGE", "")

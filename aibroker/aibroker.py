@@ -69,7 +69,6 @@ class AIBroker:
                 "world_update": {"mode": "subscribe", "callback": self.world_update},
                 "instructions": {"mode": "subscribe", "callback": self.instructions},
                 "global_shutdown": {"mode": "subscribe", "callback": self.shutdown},
-                "logout": {"mode": "both", "callback": self.logout},
                 "room_update": {"mode": "subscribe", "callback": self.room_update},
                 "world_data_update": {
                     "mode": "subscribe",
@@ -108,8 +107,10 @@ class AIBroker:
 
     # This might happen if the AI quits!
     async def logout(self, data: Dict) -> None:
-        logger.critical(f"Logout event received: {data} - either AI quit or an agent-wide logout was triggered.")
-        self.time_to_exit = True
+        logout_user = data["user_id"]
+        if logout_user == self.user_id:
+            logger.critical(f"Logout event received: {data} - either AI quit or an agent-wide logout was triggered.")
+            self.time_to_exit = True
 
     # Room update event handler
     async def room_update(self, data: Dict) -> None:
@@ -169,7 +170,7 @@ class AIBroker:
             "You have been brought to life in a simulated world! "
             + "Do not apologise to the world! "
             + "Do not try to talk to merchants, they cannot talk. "
-            + "Respond only with one valid command phrase each time you are contacted.\n"
+            + "Respond only with one valid single-line command phrase each time you are contacted.\n"
         )
         # Set up role-specific instructions for the AI
         if self.mode == "builder":
@@ -243,7 +244,6 @@ class AIBroker:
         # Unsubscribe from the previous name if already set
         if self.user_name:
             await self.mbh.unsubscribe(f"world_update.{self.user_id}")
-            await self.mbh.unsubscribe(f"logout.{self.user_id}")
             await self.mbh.unsubscribe(f"instructions.{self.user_id}")
             await self.mbh.unsubscribe(f"room_update.{self.user_id}")
 

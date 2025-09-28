@@ -209,7 +209,6 @@ class AzureStorageManager(StorageManager):
     def delete_world_object(
         self, world_name: str, object_type: str, name: str, location: str = ""
     ) -> bool:
-        print(f"DEBUG: world={world_name}, type={object_type}, name={name}")
         objects_client = self.table_service_client.get_table_client(self.get_table_name(object_type))
         if objects_client:
             parameters: dict = {"pk": world_name, "rk": name}
@@ -217,7 +216,6 @@ class AzureStorageManager(StorageManager):
             if location:
                 parameters["location"] = location
                 query_filter += " and location eq @location"
-            print("DEBUG:", query_filter, parameters)
             for entity in objects_client.query_entities(
                 query_filter, parameters=parameters
             ):

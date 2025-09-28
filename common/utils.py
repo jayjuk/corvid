@@ -110,8 +110,8 @@ def prepare_log_file(file_name: str) -> str:
         if os.path.exists(log_file_path):
             timestamp = time.strftime("%Y%m%d_%H%M%S")
             rolled_file_path = os.path.join(get_logs_folder(), "old", f"{file_name[:-4]}_{timestamp}.log")
+            os.makedirs(os.path.join(get_logs_folder(), "old"), exist_ok=True)
             try:
-                os.makedirs(os.path.join(get_logs_folder(), "old"))
                 shutil.move(log_file_path, rolled_file_path)
             except Exception as e:
                 print(f"Error rolling log file: {e}")

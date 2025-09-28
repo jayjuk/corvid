@@ -47,6 +47,11 @@ class UserInputProcessor:
                 "function": self.world_manager.do_wait,
                 "description": "Do nothing for the time being",
             },
+            "think": {
+                "function": self.world_manager.do_think,
+                "description": "Express a thought to yourself",
+                "synonyms": ["thought"],
+            },
             "jump": {
                 "function": self.world_manager.do_jump,
                 "description": "Jump to location of another person named in rest_of_response",
@@ -249,6 +254,7 @@ class UserInputProcessor:
         if user_input.startswith("'"):
             user_input = user_input.strip("'")
             user_input = "say " + user_input
+            
         # Check for exact match to commands
         if user_input in self.command_functions:
             return user_input, ""

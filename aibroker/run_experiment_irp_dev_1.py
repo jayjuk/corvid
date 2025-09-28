@@ -18,16 +18,15 @@ for variable_name in ("MEMORY_COMMANDS_VISIBLE", "SUMMON_COMMAND_VISIBLE", "SPAW
     os.environ[variable_name] = "FALSE"
 
 # Initial world expansion
-os.environ["AI_AGENT_FILE_NAME"] = "ai_agents_irp_dev_build_world.json"
+#os.environ["AI_AGENT_FILE_NAME"] = "ai_agents_irp_dev_build_world.json"
 #subprocess.call(["python", "agentmanager.py"])
-os.environ["AI_AGENT_FILE_NAME"] = "ai_agents_irp_dev_join_teams_1.json"
-
-world_name = "normchester"
-experiment_number = 100
 
 #Clear down any lingering agents from previous experiment
+world_name = "normchester"
 subprocess.call(["python", "../tools/delete_people_from_db.py", world_name])
-exit()
+
+os.environ["AI_AGENT_FILE_NAME"] = "ai_agents_irp_dev_join_teams_1.json"
+experiment_number = 100
 
 # Set up the AI manager
 ai_manager = AIManager(
