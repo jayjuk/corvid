@@ -212,7 +212,7 @@ class AzureStorageManager(StorageManager):
         print(f"DEBUG: world={world_name}, type={object_type}, name={name}")
         objects_client = self.table_service_client.get_table_client(self.get_table_name(object_type))
         if objects_client:
-            parameters: dict = {"pk": world_name + "__" + object_type, "rk": name}
+            parameters: dict = {"pk": world_name, "rk": name}
             query_filter: str = "PartitionKey eq @pk and RowKey eq @rk"
             if location:
                 parameters["location"] = location
@@ -256,10 +256,10 @@ class AzureStorageManager(StorageManager):
     def get_world_object_data(
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None
     ) -> List[Dict[str, Any]]:
-        objects_client = self.table_service_client.get_table_client("PythonObjects")
+        objects_client = self.table_service_client.get_table_client(self.get_table_name(object_type))
         if objects_client:
             objects: List[Dict[str, Any]] = []
-            parameters: Dict[str, str] = {"pk": world_name + "__" + object_type}
+            parameters: Dict[str, str] = {"pk": world_name}
             query_filter: str = "PartitionKey eq @pk"
             if rowkey_value:
                 parameters["rk"] = rowkey_value

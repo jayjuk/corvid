@@ -413,7 +413,7 @@ class WorldManager:
         return_message = f"You build {direction} and make a new location, {room_name}: {room_description}."
         if process_first_built_room:
             logger.info(
-                "This is the first room in the world. Removing the starting room."
+                "This is the first location in the world. Removing the starting location."
             )
             for other_person in self.people.values():
                 await self.move_entity(other_person, "join", room_name)
@@ -1069,7 +1069,7 @@ class WorldManager:
         self, person: Person, action: str, next_room: str
     ) -> str:
         # Build message. only describe room if it is new to this person.
-        message = f"You {action} the {next_room.lower()}"
+        message = f"You {action} the {next_room}"
         if next_room in person.seen_rooms:
             message += f". {self.world.get_room_description(next_room, brief=True, role=person.get_role())}"
         else:
