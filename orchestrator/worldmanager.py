@@ -240,7 +240,7 @@ class WorldManager:
     async def do_quit(self, person: Person, rest_of_response: str) -> None:
         if rest_of_response:
             return "Not sure what you mean. To leave this world, use the quit command on its own."
-        await self.remove_person(person.user_id, "You have left the world.")
+        await self.remove_person(person.user_id, f"{person.name} has left the world.")
 
     async def emit_summon_request(self, request_id: str, request: str) -> None:
         emit_data = {"request_id": request_id, "request_data": request}

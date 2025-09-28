@@ -12,6 +12,8 @@ load_dotenv("../common/.env")
 os.environ["AIBROKER_MAX_HISTORY"] = "1000"
 os.environ["MODEL_SYSTEM_MESSAGE"] = ""
 os.environ["AI_MANAGER_LOGGING_LEVEL"] = "WARNING"
+# Disabling summon mode means that the agent manager exits when all its AI brokers have exited.
+os.environ["AGENT_MANAGER_SUMMON_MODE"] = "FALSE"
 
 # Set a bunch of flags - for now hide these commands
 for variable_name in ("MEMORY_COMMANDS_VISIBLE", "SUMMON_COMMAND_VISIBLE", "SPAWN_COMMAND_VISIBLE", "CREATE_COMMAND_VISIBLE"):

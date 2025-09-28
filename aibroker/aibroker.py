@@ -3,7 +3,7 @@ import asyncio
 import time
 from os import environ
 import re
-from utils import get_critical_env_variable, set_up_logger, update_logger_filename, exit, get_boolean_env_variable
+from utils import get_critical_env_variable, set_up_logger, exit, get_boolean_env_variable, update_logger_filename
 
 # Set up logger before importing other modules that use it
 # Assume that if an AI name is pre-set, we are calling from the Agent Manager and do not log to stdout
@@ -67,6 +67,7 @@ class AIBroker:
                 "summon_agent_response": {"mode": "publish"},
                 "user_action": {"mode": "publish"},
                 "world_update": {"mode": "subscribe", "callback": self.world_update},
+                "logout": {"mode": "subscribe", "callback": self.logout},
                 "instructions": {"mode": "subscribe", "callback": self.instructions},
                 "global_shutdown": {"mode": "subscribe", "callback": self.shutdown},
                 "room_update": {"mode": "subscribe", "callback": self.room_update},
@@ -107,10 +108,8 @@ class AIBroker:
 
     # This might happen if the AI quits!
     async def logout(self, data: Dict) -> None:
-        logout_user = data["user_id"]
-        if logout_user == self.user_id:
-            logger.critical(f"Logout event received: {data} - either AI quit or an agent-wide logout was triggered.")
-            self.time_to_exit = True
+        self.time_to_exit = True
+        exit(logger, f"Logout event received: {data} - either AI quit or an agent-wide logout was triggered.")
 
     # Room update event handler
     async def room_update(self, data: Dict) -> None:
@@ -144,8 +143,7 @@ class AIBroker:
         while True:
             # Exit own thread when time comes
             if self.time_to_exit:
-                # Publish logout message to the Orchestrator to exit cleanly
-                await self.mbh.publish("logout", {"user_id": self.user_id})
+                logger.info("Exiting the main loop in order to exit cleanly.")
                 return
 
             # Check if we need to wait before polling the event log

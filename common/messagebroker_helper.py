@@ -122,7 +122,7 @@ class MessageBrokerHelper:
         elif not isinstance(message, str):
             exit(
                 logger,
-                f"Message must be a dictionary or a string. Message {message} is of type: {type(message)}",
+                f"Message must be a dictionary or a string. Message {message} sent to queue {queue} is of type: {type(message)}",
             )
 
         if user_id:
