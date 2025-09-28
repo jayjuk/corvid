@@ -66,10 +66,9 @@ class agentmanager:
     # Create an agent
     async def create_agent(self, user_dict: Dict) -> None:
         # Create a agent
-        logger.info(f"Creating agent: {user_dict}")
-
         user_name: str = user_dict.get("user_name", "")
         user_id: str = user_name.lower()
+        logger.info(f"Creating agent {user_name}")
 
         env_vars = {
             "MODEL_NAME": user_dict.get(
