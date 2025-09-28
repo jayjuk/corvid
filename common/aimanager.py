@@ -9,12 +9,12 @@ import stability_client
 import anthropic_client
 import openai_client
 from utils import set_up_logger, exit, get_logs_folder
+from os import environ
 
 # NOTE: Model-specific clients are imported dynamically in the StabilityAI section
 
 # Set up logger
-logger = set_up_logger()
-
+logger = set_up_logger(logging_level_override=environ.get("AI_MANAGER_LOGGING_LEVEL","INFO"))
 
 # Class to handle interaction with the AI
 class AIManager:
@@ -102,13 +102,17 @@ class AIManager:
             return
 
         # Combine all history into a single string
-        combined_history = "\n".join(
+        combined_history : str = "\n".join(
             f"{item['role']}: {item[self.content_word]}" for item in self.chat_history
         )
 
+        compress_request: str = ( f"In the context of a multi-user simulated world with the system message to this AI agent of [{self.system_message}], condense this agent's chat history into a single summary of useful information. "
+                                 + "Be sure to keep track of the visited locations and routes, information about the world and other people in it. "
+                                 + "Their history is:\n{combined_history}")
+
         # Use the AI to condense the history
         condensed_history = self.submit_request(
-            request=f"In the context of a multi-user simulated world with the system message to this AI agent of [{self.system_message}], condense this agent's chat history into a single summary. Their history is:\n{combined_history}",
+            request=compress_request,
             history=False,
             cleanup_output=True
         )
@@ -200,7 +204,7 @@ class AIManager:
         request: str,
         model_name: Optional[str] = None,
         max_tokens: Optional[int] = 1000,
-        temperature: float = 0.7,
+        temperature: float = 0.2,
         history: bool = True,
         system_message: Optional[str] = None,
         cleanup_output: bool = True
@@ -260,8 +264,6 @@ class AIManager:
         logger.info(
             f"About to submit to model, with system message: {this_system_message}"
         )
-
-        print("DEBUG - MESSAGES:\n", messages)
 
         # Get model response, retrying if necessary
         model_response: Optional[str] = None

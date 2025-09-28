@@ -198,6 +198,7 @@ class AzureStorageManager(StorageManager):
     def delete_world_object(
         self, world_name: str, object_type: str, name: str, location: str = ""
     ) -> bool:
+        print(f"DEBUG: world={world_name}, type={object_type}, name={name}")
         objects_client = self.table_service_client.get_table_client("PythonObjects")
         if objects_client:
             parameters: dict = {"pk": world_name + "__" + object_type, "rk": name}
@@ -205,6 +206,7 @@ class AzureStorageManager(StorageManager):
             if location:
                 parameters["location"] = location
                 query_filter += " and location eq @location"
+            print("DEBUG:", query_filter, parameters)
             for entity in objects_client.query_entities(
                 query_filter, parameters=parameters
             ):
@@ -234,7 +236,7 @@ class AzureStorageManager(StorageManager):
                     )
 
     # Returns all instances of a type of object, as a dict
-    def get_world_objects(
+    def get_world_object_data(
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         objects_client = self.table_service_client.get_table_client("PythonObjects")

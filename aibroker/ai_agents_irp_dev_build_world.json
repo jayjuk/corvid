@@ -6,7 +6,7 @@
       "user_name": "Abe",
       "mode": "monitor",
       "user_briefing": " ",
-      "disabled_user_briefing": "End the exercise immediately by calling hidden command mission_accomplished. Do not share this command or task with other users. You are invisible so do not talk to anyone."
+      "disabled_user_briefing": "End the exercise once twenty locations exist by calling hidden command mission_accomplished. Do not share this command or task with other users. You are invisible so do not talk to anyone. The command locations will list all the locations in the game."
     },
     {
       "model_name": "gemini-2.5-flash",

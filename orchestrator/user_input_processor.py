@@ -1,4 +1,4 @@
-from utils import set_up_logger, exit
+from utils import set_up_logger, exit, get_boolean_env_variable
 
 # Set up logger first
 logger = set_up_logger()
@@ -45,7 +45,7 @@ class UserInputProcessor:
             },
             "wait": {
                 "function": self.world_manager.do_wait,
-                "description": "Do nothing for now",
+                "description": "Do nothing for the time being",
             },
             "jump": {
                 "function": self.world_manager.do_jump,
@@ -87,6 +87,7 @@ class UserInputProcessor:
                 "function": self.world_manager.do_create,
                 "description": "Create a new item. Specify the name and description using single quotes "
                 + "e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'",
+                "conditional": get_boolean_env_variable("CREATE_COMMAND_VISIBLE")
             },
             "spawn": {
                 "function": self.world_manager.do_spawn,
@@ -96,26 +97,30 @@ class UserInputProcessor:
                     + "'A plump, healthy-looking fox with a permanent cheeky smile on its face' "
                     + "'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'"
                 ),
+                "conditional": get_boolean_env_variable("SPAWN_COMMAND_VISIBLE")
             },
             "summon": {
                 "function": self.world_manager.do_summon,
                 "description": (
-                    ""  # Hidden from AI for now
-                    # "Summon a new person into the world. Specify the instructions for the new person using single quotes "
-                    # + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
+                    "Summon a new person into the world. Specify the instructions for the new person using single quotes "
+                    + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
                 ),
+                "conditional": get_boolean_env_variable("SUMMON_COMMAND_VISIBLE")
             },
             "remember": {
                 "function": self.world_manager.do_remember,
-                "description": "" #"Add a piece of information you deem important to your permanent memory.",
+                "description": "Add a piece of information you deem important to your permanent memory.",
+                "conditional": get_boolean_env_variable("MEMORY_COMMANDS_VISIBLE")
             },
             "forget": {
                 "function": self.world_manager.do_forget,
-                "description": "" #"Add a piece of information you deem important to your permanent memory.",
+                "description": "Add a piece of information you deem important to your permanent memory.",
+                "conditional": get_boolean_env_variable("MEMORY_COMMANDS_VISIBLE")
             },
             "memories": {
                 "function": self.world_manager.do_memories,
-                "description": "" #"List memories you have already made.",
+                "description": "List memories you have already made.",
+                "conditional": get_boolean_env_variable("MEMORY_COMMANDS_VISIBLE")
             },
             "buy": {
                 "function": self.world_manager.do_buy,
@@ -169,15 +174,15 @@ class UserInputProcessor:
         self.commands_description += ".\nValid commands: "
         for command, data in self.command_functions.items():
             # Only add commands with descriptions
-            if data.get("description"):
+            if data.get("description") and ("conditional" not in data or data["conditional"]):
                 self.commands_description += f"{command} = {data['description']}; "
         self.commands_description = self.commands_description[:-2]
         self.commands_description += ". Recognised synonyms: "
         for key, value in self.synonyms.items():
             # Only show synonyms to commands that have a description
-            if value in self.command_functions and self.command_functions[value].get(
-                "description"
-            ):
+            if (value in self.command_functions 
+                and self.command_functions[value].get("description")
+                and ("conditional" not in self.command_functions[value] or self.command_functions[value]["conditional"])):
                 self.commands_description += f"{key} = {value}, "
         self.commands_description = self.commands_description[:-2]
 

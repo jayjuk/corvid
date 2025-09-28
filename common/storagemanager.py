@@ -97,7 +97,7 @@ class StorageManager:
     def get_world_object(
         self, world_name: str, object_type: str, rowkey_value: str
     ) -> Dict[str, Any]:
-        for object in self.get_world_objects(world_name, object_type, rowkey_value):
+        for object in self.get_world_object_data(world_name, object_type, rowkey_value):
             return object
 
     def store_world_object(
@@ -118,7 +118,7 @@ class StorageManager:
         )
         return False
 
-    def get_world_objects(
+    def get_world_object_data(
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         # Unit testing will use this superclass method hence not abstract

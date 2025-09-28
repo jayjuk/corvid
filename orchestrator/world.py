@@ -85,7 +85,7 @@ class World:
         logger.info("Loading rooms...")
 
         # Get rooms from storage
-        rooms_list: List[Dict[str, Any]] = self.storage_manager.get_world_objects(
+        rooms_list: List[Dict[str, Any]] = self.storage_manager.get_world_object_data(
             self.name, "Room"
         )
         store_default_rooms = False
@@ -377,6 +377,8 @@ class World:
                 "",
                 "",
             )
+        #Reserve this grid reference so no-one else
+        self.grid_references[new_grid_reference] = [room_name]
 
         logger.info(f"Adding room {room_name} to the {direction} of {current_location}")
 
@@ -436,6 +438,11 @@ class World:
         room_description: str,
         new_grid_reference: str,
     ) -> str:
+        
+        # Check grid ref again:
+        if new_grid_reference in self.grid_references and self.grid_references[new_grid_reference] != room_name:
+            # Race condition which should now not happen
+            return f"Sorry, someone else is building in that location now, and {room_name} cannot be built."
 
         # Create and store room
         new_room: Room = Room(
@@ -535,7 +542,7 @@ class World:
     def load_room_items(self) -> None:
         logger.info("Loading room items...")
         item_load_count: int = 0
-        for this_item in self.storage_manager.get_world_objects(self.name, "WorldItem"):
+        for this_item in self.storage_manager.get_world_object_data(self.name, "WorldItem"):
             # Populate the room_item_map with item versions of the items
             o: WorldItem = WorldItem(world=self, init_dict=this_item)
             self.register_item(o)
@@ -620,7 +627,7 @@ class World:
             exit(logger, "Load_entities called when entities are already registered!")
         logger.info("Loading entities...")
         for entity_role in ("Animal", "Merchant"):
-            for this_item in self.storage_manager.get_world_objects(
+            for this_item in self.storage_manager.get_world_object_data(
                 self.name, entity_role
             ):
                 logger.debug(f"Loading entity {this_item['name']}")
@@ -739,3 +746,6 @@ class World:
 
         # TODO #82 Improve error handling around person creation
         return "", p
+
+    def delete_person(self, user_id: str) -> None:
+        self.storage_manager.delete_world_object(self.name, "Person", user_id)

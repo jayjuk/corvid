@@ -19,7 +19,7 @@ print("Backing up " + args.world)
 
 for object_type in ("Room", "WorldItem", "Animal"):
     print(f"Backing up type {object_type}")
-    objects = storage_manager.get_world_objects(args.world, object_type)
+    objects = storage_manager.get_world_object_data(args.world, object_type)
     for object_data in objects:
             if object_type=="Room":
                 o = Room(world=None, init_dict=object_data)

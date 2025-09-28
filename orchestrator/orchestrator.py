@@ -116,7 +116,7 @@ class Orchestrator:
             if command_function:
                 if isinstance(command_function, Callable):
                     logger.info(
-                        f"Command function: {command_function.__name__}, Args: {command_args}"
+                        f"Command function: {command_function.__name__}, Args: {command_args[1:]}"
                     )
                     if asyncio.iscoroutinefunction(command_function):
                         response_to_person = await command_function(*command_args)

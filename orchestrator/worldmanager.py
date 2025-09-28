@@ -7,6 +7,7 @@ import json
 
 # Set up logger first
 logger = set_up_logger()
+lock = asyncio.Lock()
 
 from world import World
 from person import Person
@@ -217,8 +218,8 @@ class WorldManager:
         #await self.tell_everyone(message)
         # Log everyone out
         for user_id in list(self.people.keys()):
-            await self.remove_person(user_id, message)
-        await asyncio.sleep(2)
+            await self.remove_person(user_id, message, delete_from_db=True, delay=0)
+        #await asyncio.sleep(1)
         await self.mbh.publish("agent_manager_shutdown", message)
 
     async def do_shutdown(self, person: Person, rest_of_response: str) -> None:
@@ -279,6 +280,7 @@ class WorldManager:
         room_name: str,
         room_description: Optional[str] = "",
     ) -> str:
+        
         # Create a new room
         if direction in self.world.get_exits(person.get_current_location()):
             return f"There is already a room to the {direction}."
@@ -345,6 +347,7 @@ class WorldManager:
     async def handle_room_description_ai_response(
         self, ai_response: str, request_data: Dict
     ) -> str:
+
         person: Person = request_data["person"]
         user_context: Dict = request_data["user_context"]
         room_description: str = ai_response.strip()
@@ -377,7 +380,6 @@ class WorldManager:
         # If empty world, set new room to 0,0
         if self.world.is_empty:
             new_grid_reference = "0,0"
-
 
         # If there was no response, it means room was built directly - handle the room built
         self.world.add_room(
@@ -1203,19 +1205,21 @@ class WorldManager:
                     or other_person.get_current_location()
                     == self.people[user_id].get_current_location()
                 ):
-                    await self.tell_person(other_person, message)
+                    await self.tell_person(other_person, message, shout = shout)
                     told_count += 1
         return told_count
 
     # Emit a message to a specific person
     async def tell_person(
-        self, person: Person, message: str, type: str = "world_update"
+        self, person: Person, message: str, type: str = "world_update", shout: bool = False
     ) -> None:
         message = message.strip()
         if message:
             await self.mbh.publish(type, message, person.user_id)
             person.add_input_history(f"World: {message}")
-            self.log_to_session(f"{person.name} is told: {message}")
+            # Do not log every shouted message to session
+            if not shout:
+                self.log_to_session(f"{person.name} is told: {message}")
 
     # Get other entities
     def get_other_entities(
@@ -1250,13 +1254,17 @@ class WorldManager:
             if current_time - person.last_action_time > self.max_inactive_time:
                 user_ids_to_remove.append(user_id)
         # Then once you're out of that dictionary, remove them
-        for user_id in user_ids_to_remove:
-            await self.remove_person(
+        await asyncio.gather(
+            *[
+            self.remove_person(
                 user_id, "You have been logged out due to inactivity."
             )
+            for user_id in user_ids_to_remove
+            ]
+        )
 
     # Remove a person from the world
-    async def remove_person(self, user_id: str, reason: str) -> None:
+    async def remove_person(self, user_id: str, reason: str, delete_from_db: str = False, delay: int = 3) -> None:
         if user_id in self.people:
             person = self.people[user_id]
             # Make person drop all items in their inventory
@@ -1271,19 +1279,25 @@ class WorldManager:
                 f"{person.name} has left; there are now {self.get_user_count()-1} people."
             )
             logger.info(message)
-            await self.tell_others(
-                user_id,
-                message,
-                shout=True,
-            )
+            if person.is_visible:
+                await self.tell_others(
+                    user_id,
+                    message,
+                    shout=True,
+                )
             await self.emit_world_data_update()
             # Give person time to read the messages before logging them out
-            await asyncio.sleep(3)
+            await asyncio.sleep(delay)
             await self.mbh.publish("logout", reason, user_id)
+            # Remove from DB in some cases
+            if delete_from_db:
+                logger.info(f"Deleting user {user_id} from DB")
+                self.world.delete_person(self.user_id_to_name_map[user_id])
             # Check again (race condition)
             if user_id in self.people:
                 del self.people[user_id]
                 del self.user_id_to_name_map[user_id]
+
             # If there are no people left, stop the background loop
             if self.get_user_count() == 0:
                 self.deactivate_background_loop()
