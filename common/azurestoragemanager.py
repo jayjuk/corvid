@@ -256,18 +256,21 @@ class AzureStorageManager(StorageManager):
     def get_world_object_data(
         self, world_name: str, object_type: str, rowkey_value: Optional[str] = None
     ) -> List[Dict[str, Any]]:
-        objects_client = self.table_service_client.get_table_client(self.get_table_name(object_type))
-        if objects_client:
-            objects: List[Dict[str, Any]] = []
-            parameters: Dict[str, str] = {"pk": world_name}
-            query_filter: str = "PartitionKey eq @pk"
-            if rowkey_value:
-                parameters["rk"] = rowkey_value
-                query_filter += " and RowKey eq @rk"
-            for entity in objects_client.query_entities(
-                query_filter, parameters=parameters
-            ):
-                self.stringify_object(entity, action="destringify")
-                objects.append(entity.copy())
-            return objects
-        exit(logger, "No objects found in cloud!")
+        try:
+            objects_client = self.table_service_client.get_table_client(self.get_table_name(object_type))
+            if objects_client:
+                objects: List[Dict[str, Any]] = []
+                parameters: Dict[str, str] = {"pk": world_name}
+                query_filter: str = "PartitionKey eq @pk"
+                if rowkey_value:
+                    parameters["rk"] = rowkey_value
+                    query_filter += " and RowKey eq @rk"
+                for entity in objects_client.query_entities(
+                    query_filter, parameters=parameters
+                ):
+                    self.stringify_object(entity, action="destringify")
+                    objects.append(entity.copy())
+                return objects
+        except Exception as e:
+            logger.warning(f"Error retrieving world object data of type {object_type}, perhaps no such data stored yet: {e}")
+            return []

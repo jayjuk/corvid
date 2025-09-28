@@ -1,7 +1,7 @@
 from os import environ
 from typing import Optional
 import sys
-
+import shutil 
 
 import logging
 import sys
@@ -56,7 +56,7 @@ def register_signal_handler(logger):
 
 # Function invoked by most modules for shared and common logging
 def set_up_logger(
-    file_name: str = "unit_testing.log", logging_level_override: str = ""
+    file_name: str = "", logging_level_override: str = "", log_to_stdout: bool = True
 ) -> logging.Logger:
     # If logger already set up, return it
     if logging.getLogger().hasHandlers():
@@ -66,7 +66,7 @@ def set_up_logger(
     file_name = prepare_log_file(file_name)
 
     # Set up logging to file and console
-    configure_logging(file_name, logging_level_override)
+    configure_logging(file_name, logging_level_override, log_to_stdout)
     register_signal_handler(logging.getLogger())
 
     return logging.getLogger()
@@ -74,17 +74,27 @@ def set_up_logger(
 
 # Update file name
 def update_logger_filename(
-    logger: logging.Logger, file_name: str, logging_level_override: int = None
+    logger: logging.Logger, file_name: str, logging_level_override: int = None, log_to_stdout: bool = True
 ) -> None:
     # Ensure proper file name and directory setup
     file_name = prepare_log_file(file_name)
 
+    # Remove all existing file handlers
+    for handler in logger.handlers[:]:
+        if isinstance(handler, logging.FileHandler):
+            logger.removeHandler(handler)
+            handler.close()
+
     # Reconfigure logging with the new file name
-    logging = configure_logging(file_name, logging_level_override)
+    return configure_logging(file_name, logging_level_override, log_to_stdout )
 
 
 # Helper function to prepare log file name and directory
 def prepare_log_file(file_name: str) -> str:
+
+    # If blank, use module name
+    if not file_name:
+        file_name = os.path.basename(sys.argv[0]).split(".")[0] + ".log"
 
     # Replace spaces with underscore
     file_name = file_name.replace(" ", "_").strip()
@@ -93,8 +103,19 @@ def prepare_log_file(file_name: str) -> str:
     if not file_name.endswith(".log"):
         file_name = file_name + ".log"
 
-    # Make directory if necessary
-    if not os.path.exists(get_logs_folder()):
+    # Roll old file, and make directory if necessary
+    if os.path.exists(get_logs_folder()):
+        # Roll the old log file if it exists
+        log_file_path = os.path.join(get_logs_folder(), file_name)
+        if os.path.exists(log_file_path):
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            rolled_file_path = os.path.join(get_logs_folder(), "old", f"{file_name[:-4]}_{timestamp}.log")
+            try:
+                os.makedirs(os.path.join(get_logs_folder(), "old"))
+                shutil.move(log_file_path, rolled_file_path)
+            except Exception as e:
+                print(f"Error rolling log file: {e}")
+    else:
         os.makedirs(get_logs_folder())
 
     return file_name
@@ -112,17 +133,22 @@ def determine_logging_level(logging_level_override: int = None) -> int:
 
 
 # Helper function to configure logging
-def configure_logging(file_name: str, logging_level: int = None) -> logging.Logger:
+def configure_logging(file_name: str, logging_level: int, log_to_stdout: bool) -> logging.Logger:
     # Set logging level based on waterfall of settings
     logging_level: int = determine_logging_level(logging_level)
+
+    handlers = [logging.FileHandler(os.path.join(get_logs_folder(), file_name))]
+    
+    # Add StreamHandler only if log_to_stdout is True
+    if log_to_stdout:
+        handlers.append(logging.StreamHandler())
+    else:
+        print("WARNING: Not logging to stdout, as directed")
 
     logging.basicConfig(
         level=logging_level,
         format="%(asctime)s %(levelname)s %(message)s",
-        handlers=[
-            logging.FileHandler(os.path.join(get_logs_folder(), file_name)),
-            logging.StreamHandler(),
-        ],
+        handlers=handlers,
     )
     return logging.getLogger()
 

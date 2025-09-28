@@ -4,10 +4,12 @@ from azurestoragemanager import AzureStorageManager
 from dotenv import load_dotenv
 import os
 import argparse
+import csv
 
 # ---------- CLI ----------
-parser = argparse.ArgumentParser(description="Recalculate room grid refs from exits and render a map.")
+parser = argparse.ArgumentParser(description="Recalculate room grid refs from exits and render CSV map with direction arrows.")
 parser.add_argument("world", nargs="?", default="normchester", help="World name to map")
+parser.add_argument("--outdir", default=".", help="Directory to write CSV outputs")
 args = parser.parse_args()
 
 # ---------- Env ----------
@@ -17,15 +19,7 @@ load_dotenv(dotenv_path=full_path)
 
 # ---------- Data fetch ----------
 storage_manager = AzureStorageManager()
-
-# Expecting each object like:
-# {
-#   "name": "Green Grocer",
-#   "grid_reference": "-2,-6",   # ignored for recalculation
-#   "exits": {"west": "Foo", "east": "Bar"}
-# }
 rooms = list(storage_manager.get_world_object_data(args.world, "Room"))
-
 if not rooms:
     sys.exit(f"No rooms found for world '{args.world}'.")
 
@@ -34,7 +28,6 @@ rooms_by_name = {}
 for r in rooms:
     name = r.get("name")
     if not name:
-        # Skip nameless entries defensively
         continue
     rooms_by_name[name] = {
         "name": name,
@@ -42,8 +35,7 @@ for r in rooms:
         "original_grid_reference": r.get("grid_reference"),
     }
 
-# ---------- Direction deltas ----------
-# Using conventional grid: +y = north, +x = east
+# ---------- Direction tables ----------
 DIR_DELTAS = {
     "north": (0, 1), "n": (0, 1),
     "south": (0, -1), "s": (0, -1),
@@ -53,13 +45,9 @@ DIR_DELTAS = {
     "northwest": (-1, 1), "nw": (-1, 1),
     "southeast": (1, -1), "se": (1, -1),
     "southwest": (-1, -1), "sw": (-1, -1),
-    "up": (0, 0),    # vertical/other dimensions: keep on same 2D tile for map, but track link
-    "down": (0, 0),
-    "in": (0, 0),
-    "out": (0, 0),
+    "up": (0, 0), "down": (0, 0), "in": (0, 0), "out": (0, 0),
 }
 
-# Reverse directions for consistency checks
 REVERSE = {
     "north": "south", "n": "s",
     "south": "north", "s": "n",
@@ -69,10 +57,15 @@ REVERSE = {
     "southwest": "northeast", "sw": "ne",
     "northwest": "southeast", "nw": "se",
     "southeast": "northwest", "se": "nw",
-    "up": "down",
-    "down": "up",
-    "in": "out",
-    "out": "in",
+    "up": "down", "down": "up", "in": "out", "out": "in",
+}
+
+# Arrows only for the four cardinals (as requested)
+DIR_TO_ARROW = {
+    "north": "^", "n": "^",
+    "south": "v", "s": "v",
+    "east": ">", "e": ">",
+    "west": "<", "w": "<",
 }
 
 # ---------- BFS over (possibly) multiple components ----------
@@ -90,13 +83,13 @@ issues = {
 }
 
 def assign(room_name, xy):
-    # If room already assigned a different xy, record reassignment issue
     if room_name in assigned and assigned[room_name] != xy:
         issues["room_reassigned"].append((room_name, assigned[room_name], xy))
     assigned[room_name] = xy
     by_coord[xy].append(room_name)
 
 def traverse_component(start_room_name, origin_xy=(0, 0)):
+    from collections import deque
     q = deque()
     assign(start_room_name, origin_xy)
     q.append(start_room_name)
@@ -105,9 +98,9 @@ def traverse_component(start_room_name, origin_xy=(0, 0)):
     while q:
         cur = q.popleft()
         cur_xy = assigned[cur]
-        exits = rooms_by_name[cur].get("exits", {})
+        exits = rooms_by_name[cur].get("exits", {}) or {}
 
-        for dir_raw, target in (exits or {}).items():
+        for dir_raw, target in exits.items():
             if not target:
                 continue
             dir_key = str(dir_raw).strip().lower()
@@ -119,17 +112,14 @@ def traverse_component(start_room_name, origin_xy=(0, 0)):
 
             if target not in rooms_by_name:
                 issues["missing_target_rooms"].append((cur, dir_raw, target))
-                # still carry on, as graph can be partially broken
                 continue
 
             # Backlink checks
             target_exits = rooms_by_name[target].get("exits", {}) or {}
             back_dir = REVERSE.get(dir_key)
             if back_dir:
-                # If backlink exists but points elsewhere, flag
                 if back_dir in target_exits and target_exits[back_dir] != cur:
                     issues["inconsistent_backlinks"].append((cur, dir_raw, target, back_dir))
-                # If backlink missing entirely, note one-way
                 if back_dir not in target_exits:
                     issues["one_way_links"].append((cur, dir_raw, target))
 
@@ -139,13 +129,10 @@ def traverse_component(start_room_name, origin_xy=(0, 0)):
                     visited.add(target)
                     q.append(target)
             else:
-                # Already assigned; check for coordinate consistency
                 if assigned[target] != next_xy:
-                    # This manifests as two computed coords for same room; record reassignment
                     issues["room_reassigned"].append((target, assigned[target], next_xy))
-                # else consistent, nothing to do
 
-# Kick off traversal for all components (choose any unvisited room as a new origin)
+# Kick off traversal for all components (each starts at origin)
 for room_name in rooms_by_name.keys():
     if room_name not in visited:
         traverse_component(room_name, origin_xy=(0, 0))
@@ -156,7 +143,7 @@ for xy, names in by_coord.items():
     if len(uniq) > 1:
         issues["coordinate_clashes"].append((xy, uniq))
 
-# ---------- Build map ----------
+# ---------- Bounds ----------
 if assigned:
     xs = [xy[0] for xy in assigned.values()]
     ys = [xy[1] for xy in assigned.values()]
@@ -165,58 +152,91 @@ if assigned:
 else:
     min_x = max_x = min_y = max_y = 0
 
-width = max_x - min_x + 1
-height = max_y - min_y + 1
+# ---------- Compute arrows per room (to/from) ----------
+# Outgoing cardinals from this room
+out_cardinals = {name: set() for name in rooms_by_name.keys()}
+# Incoming cardinals from neighbours pointing at this room
+in_cardinals = {name: set() for name in rooms_by_name.keys()}
 
-# Cell rendering rules:
-# - "  ." empty
-# - " XX" coordinate clash
-# - number token if single room; enumerate legend
-# Keep tokens width 3 for neat columns
-coord_to_token = {}
-legend = []
-index_by_room = {}
+for src_name, obj in rooms_by_name.items():
+    exits = obj.get("exits", {}) or {}
+    for dir_raw, tgt_name in exits.items():
+        if not tgt_name or tgt_name not in rooms_by_name:
+            continue
+        d = str(dir_raw).strip().lower()
+        # Outgoing arrow for src
+        if d in DIR_TO_ARROW:
+            out_cardinals[src_name].add(DIR_TO_ARROW[d])
+        # Incoming arrow for target (reverse direction)
+        rev = REVERSE.get(d)
+        if rev in DIR_TO_ARROW:
+            in_cardinals[tgt_name].add(DIR_TO_ARROW[rev])
 
-counter = 1
-for xy, names in sorted(by_coord.items(), key=lambda kv: (kv[0][1], kv[0][0])):
-    uniq = list(dict.fromkeys(names))
-    if len(uniq) == 1:
-        room = uniq[0]
-        index_by_room[room] = counter
-        coord_to_token[xy] = f"{counter:3d}"
-        legend.append((counter, xy, room))
-        counter += 1
-    else:
-        coord_to_token[xy] = " XX"  # clash
+def arrows_for(name: str) -> str:
+    # Union of outgoing and incoming to satisfy "to/from"
+    arrows = []
+    # fixed order for readability
+    order = ["<", "^", "v", ">"]
+    present = set()
+    present |= out_cardinals.get(name, set())
+    present |= in_cardinals.get(name, set())
+    for sym in order:
+        if sym in present:
+            arrows.append(sym)
+    return "".join(arrows)
 
-def cell(x, y):
-    xy = (x, y)
-    return coord_to_token.get(xy, "  .")
+# ---------- Build CSV grid with names + arrows ----------
+x_values = list(range(min_x, max_x + 1))
+y_values = list(range(max_y, min_y - 1, -1))  # north at top
 
-# Render with y descending (north at the top)
-lines = []
-lines.append("")
-lines.append(f"World: {args.world}")
-lines.append(f"Extent X[{min_x}..{max_x}] Y[{min_y}..{max_y}]  Rooms: {len(assigned)}  Components: {len({assigned[n] for n in assigned}) and 'var'}")
-lines.append("Map key: '.' empty, number = room, 'XX' = coordinate clash\n")
+def formatted_name(name: str) -> str:
+    arr = arrows_for(name)
+    return f"{name} ({arr})" if arr else name
 
-header = "     " + " ".join(f"{x:3d}" for x in range(min_x, max_x + 1))
-lines.append(header)
-for y in range(max_y, min_y - 1, -1):
-    row = [f"{y:4d}"]
-    for x in range(min_x, max_x + 1):
-        row.append(cell(x, y))
-    lines.append(" ".join(row))
+def cell_value(x, y):
+    names = list(dict.fromkeys(by_coord.get((x, y), [])))
+    if not names:
+        return ""  # blank cell
+    if len(names) == 1:
+        return formatted_name(names[0])
+    return "CLASH: " + " | ".join(formatted_name(n) for n in names)
 
-# ---------- Print map ----------
-print("\n".join(lines))
+rows = []
+header_row = ["y\\x"] + [str(x) for x in x_values]
+rows.append(header_row)
 
-# ---------- Legend ----------
-print("\nLegend:")
-for idx, xy, room in legend:
-    print(f" {idx:3d} @ {xy[0]},{xy[1]}  {room}")
+for y in y_values:
+    row = [str(y)]
+    for x in x_values:
+        row.append(cell_value(x, y))
+    rows.append(row)
 
-# ---------- Issues report ----------
+# ---------- Write CSV files ----------
+os.makedirs(args.outdir, exist_ok=True)
+map_path = os.path.join(args.outdir, f"{args.world}_map.csv")
+issues_path = os.path.join(args.outdir, f"{args.world}_issues.csv")
+
+with open(map_path, "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerows(rows)
+
+with open(issues_path, "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerow(["IssueType", "Details"])
+    for (xy, names) in issues["coordinate_clashes"]:
+        writer.writerow(["coordinate_clash", f"{xy} :: {' | '.join(names)}"])
+    for (room, old_xy, new_xy) in issues["room_reassigned"]:
+        writer.writerow(["room_reassigned", f"{room} :: {old_xy} -> {new_xy}"])
+    for (room, direction, target) in issues["unknown_directions"]:
+        writer.writerow(["unknown_direction", f"{room} :: {direction} -> {target}"])
+    for (room, direction, target) in issues["missing_target_rooms"]:
+        writer.writerow(["missing_target_room", f"{room} :: {direction} -> {target}"])
+    for (frm, direction, to) in issues["one_way_links"]:
+        writer.writerow(["one_way_link", f"{frm} :: {direction} -> {to}"])
+    for (frm, direction, to, expected_back) in issues["inconsistent_backlinks"]:
+        writer.writerow(["inconsistent_backlink", f"{frm} :: {direction} -> {to} (expected {expected_back} back)"])
+
+# ---------- Console report ----------
 def print_section(title, items):
     print(f"\n{title} ({len(items)}):")
     if not items:
@@ -225,24 +245,13 @@ def print_section(title, items):
     for it in items:
         print(" ", it)
 
+print(f"World: {args.world}")
+print(f"Wrote CSV map: {map_path}")
+print(f"Wrote CSV issues: {issues_path}")
+
 print_section("Coordinate clashes (multiple rooms on same tile)", issues["coordinate_clashes"])
 print_section("Rooms reassigned to conflicting coordinates", issues["room_reassigned"])
 print_section("Unknown directions", issues["unknown_directions"])
 print_section("Missing target rooms", issues["missing_target_rooms"])
 print_section("One-way links (no backlink)", issues["one_way_links"])
 print_section("Inconsistent backlinks (backlink exists but points elsewhere)", issues["inconsistent_backlinks"])
-
-# ---------- Optional: compare with original stored grid refs ----------
-mismatched_originals = []
-for name, xy in assigned.items():
-    orig = rooms_by_name[name].get("original_grid_reference")
-    if isinstance(orig, str) and "," in orig:
-        try:
-            ox, oy = map(int, orig.split(",", 1))
-            if (ox, oy) != xy:
-                mismatched_originals.append((name, (ox, oy), xy))
-        except ValueError:
-            # Ignore unparsable originals
-            pass
-
-print_section("Rooms whose stored grid_reference differs from recalculated", mismatched_originals)

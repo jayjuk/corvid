@@ -3,16 +3,18 @@ import asyncio
 import time
 from os import environ
 import re
-from utils import get_critical_env_variable, set_up_logger, update_logger_filename, exit
+from utils import get_critical_env_variable, set_up_logger, update_logger_filename, exit, get_boolean_env_variable
 
 # Set up logger before importing other modules that use it
-logger = set_up_logger("AI Broker")
-
+# Assume that if an AI name is pre-set, we are calling from the Agent Manager and do not log to stdout
+log_file_name: str = "AI_Broker.log"
+if environ.get("AI_NAME",""):
+    log_file_name = f"AI_Broker_{environ['AI_NAME']}.log"
+logger = set_up_logger(log_file_name, log_to_stdout=get_boolean_env_variable("AI_BROKER_LOG_TO_STDOUT"))
 
 from aimanager import AIManager
 from messagebroker_helper import MessageBrokerHelper
 import random
-
 
 # Class to manage the AI's interaction with the Orchestrator
 class AIBroker:
@@ -106,7 +108,7 @@ class AIBroker:
 
     # This might happen if the AI quits!
     async def logout(self, data: Dict) -> None:
-        logger.critical(f"Logout event received: {data} did AI quit?")
+        logger.critical(f"Logout event received: {data} - either AI quit or an agent-wide logout was triggered.")
         self.time_to_exit = True
 
     # Room update event handler
@@ -149,6 +151,7 @@ class AIBroker:
             wait_time = self.max_wait - (time.time() - self.last_time)
             if wait_time > 0:
                 # don't do anything for now
+                logger.info(f"{self.user_name} sleeping for {wait_time} seconds")
                 await asyncio.sleep(wait_time)
             await self.poll_event_log()
             # Record time
@@ -249,7 +252,7 @@ class AIBroker:
         self.user_id = self.user_name.lower()
 
         # Update logger filename
-        update_logger_filename(logger, f"ai_broker_{self.user_name}.log")
+        update_logger_filename(logger, f"ai_broker_{self.user_name}.log", log_to_stdout = get_boolean_env_variable("AI_BROKER_LOG_TO_STDOUT"))
 
         # Subscribe to name-specific events
         await self.mbh.subscribe(f"world_update.{self.user_id}", self.world_update)
@@ -269,12 +272,13 @@ class AIBroker:
     # Log the world events for the AI to process
     def log_event(self, event_text: str) -> None:
         # If the input is just echoing back what you said, do nothing
-        if (
-            str(event_text).startswith("You say")
-            or str(event_text).startswith("You:")
-            or str(event_text) == "I'm trying to guess what you meant by that."
-        ):
-            return
+        #if (
+            #str(event_text).startswith("You say")
+            #or str(event_text).startswith("You:")
+            #or str(event_text) == "I'm trying to guess what you meant by that."
+        #):
+            #return
+            
         # Otherwise, add this to the user input backlog
         # Strip anything inside angle brackets as this is detail human people will enjoy but it will just cost money for the AI
         # There could be stuff after the brackets, include that
@@ -323,6 +327,8 @@ class AIBroker:
                     exit(logger, "AI has left this world.")
             else:
                 logger.error("AI returned empty response!")
+        else:
+            logger.info(f"No events, active = {self.active}")
 
     # Log an error message
     def log_error(self, error_message: str) -> None:

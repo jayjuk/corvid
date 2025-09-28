@@ -1260,7 +1260,7 @@ class WorldManager:
         user_ids_to_remove: List[str] = []
         # First go through people and make a list of who to remove
         for user_id, person in self.people.items():
-            if current_time - person.last_action_time > self.max_inactive_time:
+            if current_time - person.last_action_time > self.max_inactive_time and person.role not in ("agent", "monitor"):
                 user_ids_to_remove.append(user_id)
         # Then once you're out of that dictionary, remove them
         await asyncio.gather(

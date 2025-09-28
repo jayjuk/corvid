@@ -67,6 +67,7 @@ class agentmanager:
             ),  # If blank, AI broker will assign a name
             "AI_MODE": user_dict.get("mode", "agent"),
             "AI_COUNT": "1",
+            "AI_BROKER_LOG_TO_STDOUT": "FALSE",
             "MODEL_SYSTEM_MESSAGE": os.environ.get("MODEL_SYSTEM_MESSAGE", "")
             + "\n" + "STAY IN CHARACTER. Person Character: "
             + "\n" + user_dict.get("team_briefing", "")
@@ -83,7 +84,7 @@ class agentmanager:
 
             log_file_name = os.path.join(
                 get_logs_folder(),
-                f"user_{env_vars['AI_NAME']}_{seconds_since_epoch}.log",
+                f"AI_Broker_{env_vars['AI_NAME']}_{seconds_since_epoch}_stdout.log",
             )
             logger.info(f"Log file name: {log_file_name}")
             with open(log_file_name, "w") as f:

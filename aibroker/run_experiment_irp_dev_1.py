@@ -23,6 +23,8 @@ os.environ["AI_AGENT_FILE_NAME"] = "ai_agents_irp_dev_build_world.json"
 os.environ["AI_AGENT_FILE_NAME"] = "ai_agents_irp_dev_join_teams_1.json"
 
 world_name = "normchester"
+experiment_number = 100
+
 #Clear down any lingering agents from previous experiment
 subprocess.call(["python", "../tools/delete_people_from_db.py", world_name])
 exit()
@@ -43,8 +45,8 @@ with open(ai_agent_file, "r") as file:
         agents.append(agent["user_name"])
 print(f"Loaded {len(agents)} agents from {ai_agent_file}: {', '.join(agents)}")
 
-# Run the subprocess 5 times
-for turn in range(100):
+# Run the subprocess many times
+for turn in range(experiment_number):
     print(f"Turn {turn+1}:")
     subprocess.call(["python", "agentmanager.py"])
 
