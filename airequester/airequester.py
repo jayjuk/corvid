@@ -80,7 +80,7 @@ async def main() -> None:
         model_name=airequester_model_name,
         system_message=environ.get(
             "MODEL_SYSTEM_MESSAGE",
-            "You are a helpful AI assistant handling requests in a simulated world.",
+            "You are a helpful AI assistant handling requests in a simulated world. Output text in UK English, using only basic ASCII characters (A-Z, a-z, digits, punctuation), avoiding any accented or diacritic marks.",
         ),
     )
 

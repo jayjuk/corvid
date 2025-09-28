@@ -235,6 +235,8 @@ class WorldManager:
         raise ShutdownException(logger, f"Shutdown command invoked by {person.name}")
 
     async def do_quit(self, person: Person, rest_of_response: str) -> None:
+        if rest_of_response:
+            return "Not sure what you mean. To leave this world, use the quit command on its own."
         await self.remove_person(person.user_id, "You have left the world.")
 
     async def emit_summon_request(self, request_id: str, request: str) -> None:
@@ -377,12 +379,15 @@ class WorldManager:
         new_grid_reference: str,
     ) -> str:
         
-        # If empty world, set new room to 0,0
+        # If empty world, set new room to 0,0 and reset grid references
+        process_first_built_room = False
         if self.world.is_empty:
             new_grid_reference = "0,0"
+            self.world.grid_references = {}
+            process_first_built_room = True
 
         # If there was no response, it means room was built directly - handle the room built
-        self.world.add_room(
+        outcome = self.world.add_room(
             person,
             current_location,
             direction,
@@ -390,6 +395,9 @@ class WorldManager:
             room_description,
             new_grid_reference,
         )
+        # Outcome means problem
+        if outcome:
+            return outcome
 
         # Otherwise, tell other people about the new room
         await self.tell_others(
@@ -403,7 +411,7 @@ class WorldManager:
 
         # If this is the first room apart from the empty world room, move all people there
         return_message = f"You build {direction} and make a new location, {room_name}: {room_description}."
-        if self.world.is_empty:
+        if process_first_built_room:
             logger.info(
                 "This is the first room in the world. Removing the starting room."
             )
@@ -834,10 +842,11 @@ class WorldManager:
             + "\n* Something the person says (only if appropriate) in string property 'user_utterance'."
             + "\n* The updated description of the current location in string property 'updated_location'."
             + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
-            + "\n* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values."
+            + "\n* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values. Limit these to things that can be picked up."
             + "\n* The descriptions of any destroyed/deleted items as string array 'deleted_items'. Don't forget that if you turn an item into one or more new items, you should delete the original item."
             + " (If an item has changed so much that its name no longer applies, then delete it and replace it with one or more new items. Note that an item cannot be both updated and deleted.)"
             + "\n* The updated descriptions of any modified entities (only those listed earlier) as nested object property 'updated_entities', with entity names as keys and new descriptions as values."
+            + "\nAt this time you may not create new locations, do not create items or modify the location description to imply otherwise."
             + "\nOnly include the updated elements if they have changed in a way that another person who did not witness the cause of the change would notice."
             + "\n If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'."
         )

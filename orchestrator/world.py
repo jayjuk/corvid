@@ -96,6 +96,7 @@ class World:
         if len(rooms_list) == 0:
             exit(logger, "No rooms found in cloud or static data")
         if len(rooms_list) == 1 and rooms_list[0]["name"] == "The Void":
+            logger.info("Flagging world as empty - first built location will replace The Void")
             self.is_empty = True
 
         # Add room name to each room
@@ -148,6 +149,8 @@ class World:
                     f"{room_name} has the same grid reference ({grid_ref_str}) as {self.grid_references[grid_ref_str]}"
                 )
                 self.grid_references[grid_ref_str].append(room_name)
+                # For now, take a hard line
+                exit(logger, "Need to fix issue with duplicate grid reference!")
         else:
             # logger.info(f"Adding grid reference {grid_ref_str} to {room_name}")
             self.grid_references[grid_ref_str] = [room_name]
@@ -297,7 +300,7 @@ class World:
         # TODO #77 Review logic around deciding when to show build options in room description
         description: str = ""
         if not brief:
-            # Contents of curly brackets removed from AI description,
+            # Contents of angle brackets removed from AI description,
             # Actual brackets removed in UI
             description = "<" + self.rooms[room].description + "\n" + ">"
 
@@ -440,7 +443,7 @@ class World:
     ) -> str:
         
         # Check grid ref again:
-        if new_grid_reference in self.grid_references and self.grid_references[new_grid_reference] != room_name:
+        if new_grid_reference in self.grid_references and self.grid_references[new_grid_reference][0] != room_name:
             # Race condition which should now not happen
             return f"Sorry, someone else is building in that location now, and {room_name} cannot be built."
 
@@ -456,6 +459,7 @@ class World:
         )
         self.storage_manager.store_world_object(self.name, new_room)
         self.rooms[room_name] = new_room
+        logger.info(f"Stored new room {new_room} in world {self.name}")
 
         # Add the new room to the exits of the current room
         if current_location in self.rooms:
@@ -464,7 +468,6 @@ class World:
             self.storage_manager.store_world_object(
                 self.name, self.rooms[current_location]
             )
-        return f"New location created: {room_description}"
 
     def update_room_image(self, room_name: str, image_name: str) -> None:
         self.rooms[room_name].image = image_name
@@ -488,8 +491,10 @@ class World:
                     del self.rooms[room].exits[direction]
                     self.storage_manager.store_world_object(self.name, self.rooms[room])
         # Delete the room
-        del self.grid_references[self.rooms[room_name].grid_reference]
-        del self.rooms[room_name]
+        if self.rooms[room_name].grid_reference in self.grid_references:
+            del self.grid_references[self.rooms[room_name].grid_reference]
+        if room_name in self.rooms:
+            del self.rooms[room_name]
         # Change default room
         if self.default_location == room_name:
             self.default_location = list(self.rooms.keys())[0]

@@ -27,7 +27,7 @@ class UserInputProcessor:
             "look": {
                 "function": self.world_manager.do_look,
                 "description": "Get a description of your current location",
-                "synonyms": ["examine", "inspect"],
+                "synonyms": ["examine", "inspect", "exits"],
             },
             "say": {
                 "function": self.world_manager.do_say,
@@ -59,7 +59,7 @@ class UserInputProcessor:
             "quit": {
                 "function": self.world_manager.do_quit,
                 "description": "",  # Don't encourage the AI to quit! TODO: make this only appear in the help to human people
-                "synonyms": ["exit"],
+                "synonyms": ["exit", "logout", "log out", "give up"],
             },
             "get": {
                 "function": self.world_manager.do_get,
@@ -77,16 +77,16 @@ class UserInputProcessor:
             },
             "build": {
                 "function": self.world_manager.do_build,  # Called with special inputs - see process_user_input below
-                "description": "Build a new location. Specify the direction, name and description (avoid confusion by not describing specific items, those are created separately). Be sure to use the right quote marks carefully e.g. "
-                + "build west 'Secluded Clearing' 'A small, but beautiful clearing in the middle of a forest', but build east \"Wizard's House\" 'A mysterious and magical....(etc)...'",
+                "description": "Build a new location. Specify the direction, name and description (avoid confusion by not describing specific items, those are created separately). Be sure to use the right quote marks carefully for the title e.g. "
+                + "build west 'Secluded Clearing' A small, but beautiful clearing in the middle of a forest, but build east \"Wizard's House\" A mysterious and magical....(etc)...",
             },
             "locations": {
                 "function": self.world_manager.do_list_locations,
             },
             "create": {
                 "function": self.world_manager.do_create,
-                "description": "Create a new item. Specify the name and description using single quotes "
-                + "e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside'",
+                "description": "Create a new item. Specify the name and description using single quotes, then optionally a price "
+                + "e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside' 3",
                 "conditional": get_boolean_env_variable("CREATE_COMMAND_VISIBLE")
             },
             "spawn": {
@@ -249,10 +249,30 @@ class UserInputProcessor:
         if user_input.startswith("'"):
             user_input = user_input.strip("'")
             user_input = "say " + user_input
-        # Separate first word (command) from rest
+        # Check for exact match to commands
+        if user_input in self.command_functions:
+            return user_input, ""
+        elif user_input in self.synonyms:
+            return self.synonyms[user_input], ""
+
+        # Otherwise, separate first word (command) from rest
         words = str(user_input).split()
+        rest = ""
+
+        # Check for two-word phrases
+        if len(words) > 1:
+            possible_phrase = words[0].lower() + " " + words[1].lower()
+            if len(words)>2:
+                rest = " ".join(words[2:])
+            if possible_phrase in self.command_functions:
+                return possible_phrase, rest
+            elif possible_phrase in self.synonyms:
+                return self.synonyms[possible_phrase], rest
+
+        # If full input and phrase not matched, assume first word is a verb
         verb = words[0].lower()
-        rest = " ".join(words[1:])
+        if len(words) > 1:
+            rest = " ".join(words[1:])
         return verb, rest
 
     # Translate person input and try to process it again
@@ -405,15 +425,9 @@ class UserInputProcessor:
                     return None, None, error
                 # Check room description is in quotes if given
                 if room_description:
-                    if not room_description.startswith(
+                    if room_description.startswith(
                         "'"
-                    ) and not room_description.startswith('"'):
-                        return (
-                            None,
-                            None,
-                            "Invalid input: room description must be in quotes.",
-                        )
-                    else:
+                    ) or room_description.startswith('"'):
                         # Quoted room description given by user
                         quote_char: str = room_description[0]
                         end_quote_index: int = room_description.find(quote_char, 1)

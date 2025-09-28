@@ -36,6 +36,7 @@ class AzureStorageManager(StorageManager):
                 self.get_azure_blob_service_client()
             )
             self.image_container_name: str = "corvidimages"
+            self.table_prefix: str = "PythonObjects"
         else:
             exit(logger, "Could not get Azure credential.")
 
@@ -135,20 +136,30 @@ class AzureStorageManager(StorageManager):
                 logger.error("Could not resolve blob client.")
         return None
 
+    # Determine correct Python object table name
+    def get_table_name(self, object_name: str, historical: bool = False) -> str:
+        table_name = self.table_prefix + object_name
+        if historical:
+            table_name = "Historical" + table_name
+        return table_name
+
     # Store all Python objects, received as actual objects
     def store_world_object(
         self, world_name: str, object: object, record_location_history: bool = False
     ) -> bool:
         logger.debug(f"Storing python object in world {world_name}: {object.__dict__}")
 
+        # Resolve object name
+        object_type: str = type(object).__name__
+
         objects_client = self.table_service_client.create_table_if_not_exists(
-            "PythonObjects"
+            self.get_table_name(object_type)
         )
 
         # Store object in Azure
         # Convert to dict
         entity: dict = object.__dict__.copy()
-        entity["PartitionKey"] = world_name + "__" + type(object).__name__
+        entity["PartitionKey"] = world_name
 
         # Don't store objects named "system" - they are transient
         if entity["name"] == "system":
@@ -187,7 +198,7 @@ class AzureStorageManager(StorageManager):
             entity["RowKey"] = timestamp + "_" + entity["RowKey"]
             print(entity)
             objects_client = self.table_service_client.create_table_if_not_exists(
-                "HistoricalPythonObjects"
+                self.get_table_name(object_type, True)
             )
             objects_client.create_entity(entity=entity)
 
@@ -199,7 +210,7 @@ class AzureStorageManager(StorageManager):
         self, world_name: str, object_type: str, name: str, location: str = ""
     ) -> bool:
         print(f"DEBUG: world={world_name}, type={object_type}, name={name}")
-        objects_client = self.table_service_client.get_table_client("PythonObjects")
+        objects_client = self.table_service_client.get_table_client(self.get_table_name(object_type))
         if objects_client:
             parameters: dict = {"pk": world_name + "__" + object_type, "rk": name}
             query_filter: str = "PartitionKey eq @pk and RowKey eq @rk"
@@ -219,21 +230,27 @@ class AzureStorageManager(StorageManager):
 
     # Delete all objects in a world
     def delete_world_from_db(self, world_name: str) -> None:
-        for table_name in ("PythonObjects", "HistoricalPythonObjects"):
-            objects_client = self.table_service_client.get_table_client(table_name)
-            if objects_client:
-                logger.info(
-                    f"Deleting all objects in table {table_name} for world {world_name}"
-                )
-                parameters: dict = {"world": world_name}
-                query_filter: str = "world eq @world"
-                for entity in objects_client.query_entities(
-                    query_filter, parameters=parameters
-                ):
-                    logger.info(f"Deleting {entity['PartitionKey']} - {entity['name']}")
-                    objects_client.delete_entity(
-                        partition_key=entity["PartitionKey"], row_key=entity["RowKey"]
+        tables = self.table_service_client.list_tables()
+        python_object_tables = [
+            table.name for table in tables if table.name.startswith(self.table_prefix) and table.name != self.table_prefix
+        ]
+        logger.info(f"Found tables: {python_object_tables}")
+        for prefix in ("", "Historical"):
+            for table_name in (python_object_tables):
+                objects_client = self.table_service_client.get_table_client(table_name)
+                if objects_client:
+                    logger.info(
+                        f"Deleting all objects in table {table_name} for world {world_name}"
                     )
+                    parameters: dict = {"world": world_name}
+                    query_filter: str = "world eq @world"
+                    for entity in objects_client.query_entities(
+                        query_filter, parameters=parameters
+                    ):
+                        logger.info(f"Deleting {entity['PartitionKey']} - {entity['name']}")
+                        objects_client.delete_entity(
+                            partition_key=entity["PartitionKey"], row_key=entity["RowKey"]
+                        )
 
     # Returns all instances of a type of object, as a dict
     def get_world_object_data(
