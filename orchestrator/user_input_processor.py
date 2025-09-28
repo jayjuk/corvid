@@ -32,7 +32,7 @@ class UserInputProcessor:
             "say": {
                 "function": self.world_manager.do_say,
                 "description": "Say something to all other people in your *current* location, e.g. say which way shall we go?",
-                "synonyms": ["talk"],
+                "synonyms": ["talk", "chat"],
             },
             "shout": {
                 "function": self.world_manager.do_shout,

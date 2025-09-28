@@ -320,9 +320,6 @@ class AIBroker:
                     "user_action",
                     {"user_input": response, "user_id": self.user_id},
                 )
-                # If response was to exit, exit here (after sending the exit message to the Orchestrator)
-                if response == "exit":
-                    exit(logger, "AI has left this world.")
             else:
                 logger.error("AI returned empty response!")
         else:

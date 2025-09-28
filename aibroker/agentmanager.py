@@ -59,7 +59,7 @@ class agentmanager:
 
     async def logout(self, data: Dict) -> None:
         self.user_count -= 1
-        logger.info(f"User {data} has logged out. I now have {self.user_count} users left.")
+        logger.info(f"{data} - I now have {self.user_count} users left.")
         if self.user_count == 0 and get_boolean_env_variable("AGENT_MANAGER_SUMMON_MODE")==False:
             exit(logger, "No users left! Exiting.")
 

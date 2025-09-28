@@ -9,7 +9,7 @@ import json
 load_dotenv("../common/.env")
 
 #Override environment variables
-os.environ["AIBROKER_MAX_HISTORY"] = "1000"
+os.environ["AIBROKER_MAX_HISTORY"] = "200"
 os.environ["MODEL_SYSTEM_MESSAGE"] = ""
 os.environ["AI_MANAGER_LOGGING_LEVEL"] = "WARNING"
 # Disabling summon mode means that the agent manager exits when all its AI brokers have exited.
