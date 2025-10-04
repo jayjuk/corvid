@@ -33,7 +33,7 @@ class AIBroker:
         # The more events, the more context the AI has, but also the more expensive it is to process
         self.max_history: int = int(environ.get("AIBROKER_MAX_HISTORY", 100))
         # Maximum wait time in seconds between polling the event log for new events
-        self.max_wait: int = int(environ.get("AIBROKER_MAX_WAIT_TIME", 5))
+        self.max_wait: int = int(environ.get("AIBROKER_RESPONSE_INTERVAL", 5))
         self.last_time: float = time.time()
         self.active: bool = True
         self.user_name: str = None
@@ -147,11 +147,11 @@ class AIBroker:
                 return
 
             # Check if we need to wait before polling the event log
-            wait_time = self.max_wait - (time.time() - self.last_time)
-            if wait_time > 0:
+            response_interval = self.max_wait - (time.time() - self.last_time)
+            if response_interval > 0:
                 # don't do anything for now
-                logger.info(f"{self.user_name} sleeping for {wait_time} seconds")
-                await asyncio.sleep(wait_time)
+                logger.info(f"{self.user_name} sleeping for {response_interval} seconds")
+                await asyncio.sleep(response_interval)
             await self.poll_event_log()
             # Record time
             self.last_time = time.time()

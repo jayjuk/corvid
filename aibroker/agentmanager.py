@@ -34,15 +34,13 @@ class agentmanager:
             self.user_data: Dict = self.read_user_data(init_filename)
         else:
             # Allow empty agent data - they can be summnoned later
-            self.user_data = {"people": []}
+            self.user_data = {"agents": []}
 
         self.user_count = 0
 
     async def create_agents(self):
-        for agent in self.user_data["people"]:
+        for agent in self.user_data["agents"]:
             self.user_count += 1
-            # Add the team briefing to the agent data
-            agent["team_briefing"] = self.user_data["team_briefing"]
             logger.info(f"Creating agent {self.user_count}")
             await self.create_agent(agent)  # Create the agent
 
@@ -76,13 +74,14 @@ class agentmanager:
             ),
             "AI_NAME": user_name,  # If blank, AI broker will assign a name
             "AI_MODE": user_dict.get("mode", "agent"),
-            "AIBROKER_MAX_WAIT_TIME": user_dict.get("max_wait_time", "5"),
+            "AIBROKER_RESPONSE_INTERVAL": user_dict.get("response_interval", "5"),
             "AI_COUNT": "1",
             "AI_BROKER_LOG_TO_STDOUT": "FALSE",
             "MODEL_SYSTEM_MESSAGE": os.environ.get("MODEL_SYSTEM_MESSAGE", "")
-            + "\n" + "STAY IN CHARACTER. Person Character: "
-            + "\n" + user_dict.get("team_briefing", "")
-            + "\n" + user_dict.get("user_briefing", ""),
+            + "\n" + "Agent persona: "
+            # Add the common instructions to the agent data unless overridden            
+            + "\n" + user_dict.get("instructions", self.user_data.get("instructions", ""))
+            + "\n" + user_dict.get("additional_instructions", ""),
         }
 
         # Subscribe to logout message for this name
@@ -133,7 +132,7 @@ async def main() -> None:
                 logger.info(
                     f"Assuming request is just a briefing: {data['request_data']}"
                 )
-                data["request_data"] = {"user_briefing": data["request_data"]}
+                data["request_data"] = {"additional_instructions": data["request_data"]}
             new_user_name: str = agent_manager.create_agent(data["request_data"])
             await mbh.publish(
                 "summon_agent_response",

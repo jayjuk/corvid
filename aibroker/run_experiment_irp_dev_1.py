@@ -42,7 +42,7 @@ ai_agent_file = os.environ["AI_AGENT_FILE_NAME"]
 agents = []
 with open(ai_agent_file, "r") as file:
     data = json.load(file)
-    for agent in data["people"]:
+    for agent in data["agents"]:
         agents.append(agent["user_name"])
 print(f"Loaded {len(agents)} agents from {ai_agent_file}: {', '.join(agents)}")
 

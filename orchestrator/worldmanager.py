@@ -251,10 +251,10 @@ class WorldManager:
         # Generate a unique request ID from person user_id and time
         request_id: str = person.user_id + str(time.time())
         # Strip quotes from the response
-        user_briefing = rest_of_response.strip("'")
+        additional_instructions = rest_of_response.strip("'")
         # Trigger a summon request
-        self.summon_requests[request_id] = user_briefing
-        await self.emit_summon_request(request_id, user_briefing)
+        self.summon_requests[request_id] = additional_instructions
+        await self.emit_summon_request(request_id, additional_instructions)
 
     async def do_remember(self, person: Person, rest_of_response: str) -> str:
         logger.info(f"Remember command received: {rest_of_response}")
