@@ -77,6 +77,7 @@ class WorldManager:
         self.item_name_empty_message: str = "Invalid input: item name is empty."
 
     def log_to_session(self, text: str) -> None:
+        # Use designated session logger function to log this text
         if self.session_logger:
             self.session_logger(text)
 
@@ -195,6 +196,7 @@ class WorldManager:
         return "You decide to just wait a while."
 
     async def do_think(self, person: Person, rest_of_response: str) -> str:
+        self.log_to_session(f"{person.name} thinks: {rest_of_response}")
         return f"You think to yourself: {rest_of_response}"
 
     async def do_jump(self, person: Person, rest_of_response: str) -> str:
@@ -278,6 +280,18 @@ class WorldManager:
         locations_list = ", ".join(rooms) + "."
         return locations_list
 
+    async def do_list_users(self, person: Person, rest_of_response: str) -> str:
+        # Return a comma-separated list of other users.
+        # Get a list of all users except the current person
+        other_users = [
+            person.name
+            for user_id, person in self.people.items()
+            if user_id != person.user_id and person.is_visible
+        ]
+        if not other_users:
+            return "You are the only user in this world."
+        return "Other users in this world: " + ", ".join(other_users) + "."
+
     async def do_build(
         self,
         person: Person,
@@ -301,11 +315,11 @@ class WorldManager:
         if room_name.startswith("The "):
             room_name = room_name[4:]
 
-        # Prevent naming a room the same as a player's name (current or historical)
+        # Prevent naming a room the same as a user's name (current or historical)
         check_name = room_name.strip()
         for existing_name in self.user_id_to_name_map.values():
             if existing_name and existing_name.lower() == check_name.lower():
-                return f"You cannot name a location the same as a player: '{existing_name}'."
+                return f"You cannot name a location the same as a user: '{existing_name}'."
 
         # Format the room name to be title case
         room_name = room_name.title().replace("'S", "'s")
@@ -1291,16 +1305,15 @@ class WorldManager:
                 person,
                 reason,
             )
-            message: str = (
-                f"{person.name} has left; there are now {self.get_user_count()-1} people."
-            )
-            logger.info(message)
             if person.is_visible:
                 await self.tell_others(
                     user_id,
-                    message,
+                    f"{person.name} has left; there are now {self.get_user_count()-1} others.",
                     shout=True,
                 )
+            log_info: str = f"{person.name} has left; there are now {self.get_user_count()} users online."
+            logger.info(log_info)
+            self.log_to_session(log_info)
 
             # Check again (race condition)
             if user_id in self.people:
@@ -1319,6 +1332,7 @@ class WorldManager:
 
             # If there are no people left, stop the background loop
             if self.get_user_count() == 0:
+                self.log_to_session("All users have left the world.")
                 self.deactivate_background_loop()
         else:
             logger.info(

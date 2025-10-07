@@ -137,10 +137,11 @@ class Orchestrator:
                 self.log_to_session_log(f"Response to {person.name}: {response_to_person}")
                 self.log_to_user_transcript(person.name, user_input, response_to_person)
         else:
-            logger.info(f"Received user action from non-existent person {user_id}")
+            logger.info(f"Received user input from non-existent person {user_id}: {data.get('user_input', '')}")
+            # Publish a user error (agents do not have to read it, they are likely to be sending messages due to race condition)
             await self.mbh.publish(
-                f"logout",
-                "You have been logged out due to a server error. Please log in again.",
+                f"user_error",
+                "You have been logged out due to a system problem. Please log in again.",
                 user_id,
             )
 
@@ -209,6 +210,7 @@ class Orchestrator:
                 "world_update": {"mode": "publish"},
                 "world_data_update": {"mode": "publish"},
                 "logout": {"mode": "publish"},
+                "user_error": {"mode": "publish"},
                 "global_shutdown": {"mode": "publish"},
                 "agent_manager_shutdown": {"mode": "publish"},
                 # Image creation

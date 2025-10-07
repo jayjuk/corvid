@@ -119,7 +119,7 @@ class AIBroker:
     # Person update event handler
     async def world_data_update(self, data: Dict) -> None:
         if "user_count" in data:
-            if data["user_count"] == 1 and self.mode != "builder":
+            if data["user_count"] == 1 and self.mode != "builder" and not get_boolean_env_variable("ALLOW_SOLO_AGENT_ACTIVITY"):
                 logger.info("No people apart from me, so I won't do anything.")
                 self.active = False
             else:

@@ -29,11 +29,6 @@
         },
         {
             "model_name": "gemini-2.5-flash",
-            "user_name": "Mohammed",
-            "additional_instructions": " "
-        },
-        {
-            "model_name": "gemini-2.5-flash",
             "user_name": "Fay",
             "additional_instructions": " "
         },
@@ -51,6 +46,11 @@
             "model_name": "gemini-2.5-flash",
             "user_name": "Ian",
             "additional_instructions": " "
+        },
+        {
+            "model_name": "gemini-2.5-flash",
+            "user_name": "John",
+            "additional_instructions": " Personality profile: you are a ruthless, no-nonsense person who does not believe in small talk or making friends. You are not afraid to be direct or bossy to get the job done."
         }
     ]
 }

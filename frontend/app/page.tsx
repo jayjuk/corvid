@@ -98,6 +98,7 @@ export default function HomePage() {
     let instructionSub: any = null;
     let roomSub: any = null;
     let logoutSub: any = null;
+    let errorSub: any = null;
     let nameInvalidSub: any = null;
 
     // Function to handle world updates
@@ -145,6 +146,16 @@ export default function HomePage() {
     (async () => {
       for await (const msg of logoutSub) {
         console.log("logout event");
+        alert(sc.decode(msg.data));
+        setNameSet(false);
+      }
+    })();
+
+    // Subscribe to person-specific error messages
+    errorSub = nc.subscribe(`user_error.${personID}`);
+    (async () => {
+      for await (const msg of errorSub) {
+        console.log("user error event");
         alert(sc.decode(msg.data));
         setNameSet(false);
       }

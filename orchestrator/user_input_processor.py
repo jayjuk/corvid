@@ -88,6 +88,10 @@ class UserInputProcessor:
             "locations": {
                 "function": self.world_manager.do_list_locations,
             },
+            "users": {
+                "function": self.world_manager.do_list_users,
+                "description": "Find out who else is online"
+            },
             "create": {
                 "function": self.world_manager.do_create,
                 "description": "Create a new item. Specify the name and description using single quotes, then optionally a price "
