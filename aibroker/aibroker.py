@@ -84,7 +84,6 @@ class AIBroker:
         await self.mbh.set_up_nats()
 
         # Get the AI's name
-        # TODO #89 Enable many AI agents to be managed by the same broker
         await self.set_ai_name()
 
     # World update event handler
