@@ -268,8 +268,8 @@ class AIManager:
 
         # Dump messages to a file
         if self.ai_name:
-            messages_filename = path.join(get_logs_folder(), f"messages_{self.ai_name}.json")
-            with open(messages_filename, "a") as f:
+            messages_filename = path.join(get_logs_folder(), f"model_messages_{self.ai_name}.log")
+            with open(messages_filename, "w") as f:
                 f.write(json.dumps({
                     "timestamp": time.time(),
                     "request": request,
