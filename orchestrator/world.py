@@ -457,17 +457,20 @@ class World:
             image=None,
             creator=person.name or "system",
         )
-        self.storage_manager.store_world_object(self.name, new_room)
-        self.rooms[room_name] = new_room
-        logger.info(f"Stored new room {new_room} in world {self.name}")
+        if self.storage_manager.store_world_object(self.name, new_room):
+            self.rooms[room_name] = new_room
+            logger.info(f"Stored new room {new_room} in world {self.name}")
 
-        # Add the new room to the exits of the current room
-        if current_location in self.rooms:
-            self.rooms[current_location].exits[direction] = room_name
-            #  TODO #86 Effect transactionality around storage of new room
-            self.storage_manager.store_world_object(
-                self.name, self.rooms[current_location]
-            )
+            # Add the new room to the exits of the current room
+            if current_location in self.rooms:
+                self.rooms[current_location].exits[direction] = room_name
+                #  TODO #86 Effect transactionality around storage of new room
+                self.storage_manager.store_world_object(
+                    self.name, self.rooms[current_location]
+                )
+            return ""
+        else:
+            return "Sorry, something went wrong."
 
     def update_room_image(self, room_name: str, image_name: str) -> None:
         self.rooms[room_name].image = image_name

@@ -52,9 +52,10 @@ class AIBroker:
         self.system_message = system_message_in
         # Set up the AI manager
         self.ai_manager = AIManager(
-            model_name=model_name,
-            system_message=system_message,
-            max_history=self.max_history,
+            model_name = model_name,
+            system_message = system_message,
+            max_history = self.max_history,
+            #ai_name = environ.get("AI_NAME")
         )
 
     async def set_up_agent(self) -> None:

@@ -134,7 +134,7 @@ class Orchestrator:
                 await self.mbh.publish("world_update", response_to_person, user_id)
 
                 # Log person input and response
-                self.log_to_session_log(f"Response to {person.name}: {response_to_person}")
+                #self.log_to_session_log(f"Response to {person.name}: {response_to_person}")
                 self.log_to_user_transcript(person.name, user_input, response_to_person)
         else:
             logger.info(f"Received user input from non-existent person {user_id}: {data.get('user_input', '')}")
@@ -249,11 +249,13 @@ class Orchestrator:
         self.world_manager: WorldManager = WorldManager(
             self.mbh,
             storage_manager,
-            world_name=world_name,
-            model_name=environ.get("MODEL_NAME"),
-            landscape=environ.get("LANDSCAPE_DESCRIPTION"),
-            animals_active=get_boolean_env_variable("ANIMALS_ACTIVE"),
-            session_logger = self.log_to_session_log
+            world_name = world_name,
+            model_name = environ.get("MODEL_NAME"),
+            landscape = environ.get("LANDSCAPE_DESCRIPTION"),
+            animals_active = get_boolean_env_variable("ANIMALS_ACTIVE"),
+            session_logger = self.log_to_session_log,
+            minute_timer = get_boolean_env_variable("MINUTE_TIMER"),
+            shut_down_on_empty = get_boolean_env_variable("SHUT_DOWN_ON_EMPTY")
         )
 
         # Set up user input processor

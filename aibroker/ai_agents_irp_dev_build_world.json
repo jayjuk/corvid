@@ -4,7 +4,7 @@
     {
       "model_name": "gemini-2.5-flash",
       "user_name": "Zara",
-      "additional_instructions": " Your additional task is to end this exercise once ten distinct buildings exist by calling hidden command mission_accomplished. There is no rush to achieve this, and it is important for the buildings to be sensibly laid out (i.e. with outdoor locations in between them). Do not share this command or task with other users. The command locations will list all the locations in the game."
+      "additional_instructions": " Your additional task is to end this exercise once fifteen distinct indoor locations exist by calling hidden command mission_accomplished. There is no rush to achieve this, and it is important for the buildings to be sensibly laid out (i.e. with outdoor locations in between them). Do not share this command or task with other users. The command locations will list all the locations in the game."
     },
     {
       "model_name": "gemini-2.5-flash",

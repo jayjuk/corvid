@@ -79,8 +79,8 @@ class MessageBrokerHelper:
     async def global_callback(self, msg):
         """Handles received messages."""
         body = msg.data.decode()
-        logger.info(f"Global callback invoked for message with subject: {msg.subject}")
-        logger.info(f"Message body: <{body}>")
+        logger.debug(f"Global callback invoked for message with subject: {msg.subject}")
+        logger.debug(f"Message body: <{body}>")
         callback = self.callback_functions.get(msg.subject, None)
         # Check callback is a function
         if not callback:
@@ -89,12 +89,14 @@ class MessageBrokerHelper:
             exit(logger, f"Callback function for queue {msg.subject} is not callable")
 
         # Display callback function name
-        logger.info(f"Invoking callback function: {callback.__name__}...")
+        logger.debug(f"Invoking callback function: {callback.__name__}...")
 
         # Convert body to dictionary if possible
         try:
             body_dict = json.loads(body)
             if isinstance(body_dict, dict):
+                # Stamp callback function on data for debugging and monitoring purposes
+                body_dict["_subject"] = msg.subject
                 await callback(body_dict)
             else:
                 logger.warning(

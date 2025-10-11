@@ -23,11 +23,8 @@ class agentmanager:
 
     def __init__(
         self,
-        init_filename: str,
-        mbh: MessageBrokerHelper
+        init_filename: str
     ) -> None:
-        # Constructor
-        self.mbh: MessageBrokerHelper = mbh
 
         # Read the agent data from the file
         if init_filename:
@@ -38,11 +35,53 @@ class agentmanager:
 
         self.user_count = 0
 
+        # Record previous instructions
+        self.previous_instructions: str = ""
+
+
+    # Set up MBH
+    async def set_up_mbh(self) -> None:
+
+        # Set up the message broker
+        self.mbh = MessageBrokerHelper(
+            os.environ.get("ORCHESTRATOR_HOSTNAME", "localhost"),
+            os.environ.get("ORCHESTRATOR_PORT", 4222),
+            {
+                "summon_agent_response": {"mode": "publish"},
+                "summon_agent_request": {
+                    "mode": "subscribe",
+                    "callback": self.summon_agent_request,
+                },
+                "agent_manager_shutdown": {"mode": "subscribe", "callback": self.shutdown},
+                "global_shutdown": {"mode": "subscribe", "callback": self.shutdown},
+                "world_data_update": {"mode": "subscribe", "callback": self.world_data_update},
+                # This is replaced by user-specific logout instructions
+                "logout": {"mode": "subscribe", "callback": self.handle_logout_placeholder},
+            },
+        )
+        # Start consuming messages
+        await self.mbh.set_up_nats()
+
+
     async def create_agents(self):
         for agent in self.user_data["agents"]:
             self.user_count += 1
             logger.info(f"Creating agent {self.user_count}")
+
+            # Default previous instructions?
+            if str(agent.get("instructions", "")).lower().startswith("ditto") and self.previous_instructions:
+                logger.info(f"Repeating previous instructions: {self.previous_instructions}")
+                agent["instructions"] = self.previous_instructions
+            elif not (agent.get("instructions")):
+                if self.user_data.get("instructions"):
+                    agent["instructions"] = self.user_data["instructions"]
+                else:
+                    exit(logger, "All agents must have instructions, either at the group or individual level.")
+
             await self.create_agent(agent)  # Create the agent
+            
+            # Remember last instructions
+            self.previous_instructions = agent["instructions"]
 
     # Check file is JSON and parse it into a dictionary
     def read_user_data(self, filename: str) -> Dict:
@@ -56,10 +95,11 @@ class agentmanager:
         return user_data
 
     async def logout(self, data: Dict) -> None:
-        self.user_count -= 1
-        logger.info(f"{data} - I now have {self.user_count} users left.")
-        if self.user_count == 0 and get_boolean_env_variable("AGENT_MANAGER_SUMMON_MODE")==False:
-            exit(logger, "No users left! Exiting.")
+        #self.user_count -= 1
+        #logger.info(f"{data} - I now have {self.user_count} users left.")
+        #if self.user_count == 0 and get_boolean_env_variable("AGENT_MANAGER_SUMMON_MODE")==False:
+        #    exit(logger, "No users left! Exiting.")
+        logger.info(f"Logout message received by agent manager")
 
     # Create an agent
     async def create_agent(self, user_dict: Dict) -> None:
@@ -80,7 +120,7 @@ class agentmanager:
             "MODEL_SYSTEM_MESSAGE": os.environ.get("MODEL_SYSTEM_MESSAGE", "")
             + "\n" + "Agent persona: "
             # Add the common instructions to the agent data unless overridden            
-            + "\n" + user_dict.get("instructions", self.user_data.get("instructions", ""))
+            + "\n" + user_dict["instructions"]
             + "\n" + user_dict.get("additional_instructions", ""),
         }
 
@@ -90,7 +130,7 @@ class agentmanager:
 
         def run_user_process(env_vars):
 
-            logger.info(f"Starting agent process with env vars: {env_vars}")
+            logger.info(f"Starting agent process for agent {env_vars.get('AI_NAME')}")
 
             env = {**os.environ, **env_vars}
             # Generate unique log file name based on timestamp
@@ -113,13 +153,10 @@ class agentmanager:
 
         # TODO #100 Improve solution for managing AI processes
         _ = asyncio.create_task(asyncio.to_thread(run_user_process, env_vars))
-        logger.info(f"Person created: {env_vars}")
+        logger.info(f"Person created: {env_vars['AI_NAME']}")
 
 
-# Main
-async def main() -> None:
-
-    async def summon_agent_request(data: Dict) -> None:
+    async def summon_agent_request(self, data: Dict) -> None:
         logger.info(f"Received Summon Person request: {data}")
 
         if get_boolean_env_variable("AGENT_MANAGER_SUMMON_MODE")==False:
@@ -133,8 +170,8 @@ async def main() -> None:
                     f"Assuming request is just a briefing: {data['request_data']}"
                 )
                 data["request_data"] = {"additional_instructions": data["request_data"]}
-            new_user_name: str = agent_manager.create_agent(data["request_data"])
-            await mbh.publish(
+            new_user_name: str = self.create_agent(data["request_data"])
+            await self.mbh.publish(
                 "summon_agent_response",
                 {"request_id": data["request_id"], "user_name": new_user_name},
             )
@@ -142,38 +179,33 @@ async def main() -> None:
             exit(logger, f"Invalid request data: {data}")
 
     # Shutdown event handler
-    async def shutdown(data: str) -> None:
+    async def shutdown(self, data: str) -> None:
         logger.critical(data)
         await asyncio.sleep(3)
         sys.exit(1)
 
     # Shutdown event handler
-    async def dummy(data: str) -> None:
+    async def handle_logout_placeholder(self, data: str) -> None:
         logger.info(f"dummy called???? {data}")
 
+    async def world_data_update(self, data: Dict) -> None:
+        if "user_count" in data:
+            self.user_count = data["user_count"]
+            logger.info(f"World data update received: there are now {self.user_count} users online.")
+            if self.user_count == 0 and get_boolean_env_variable("AGENT_MANAGER_SUMMON_MODE")==False:
+                exit(logger, "No users left! Exiting.")
+        else:
+            exit(logger, "Invalid world data update message! Exiting.")
 
-    # Set up the message broker
-    mbh = MessageBrokerHelper(
-        os.environ.get("ORCHESTRATOR_HOSTNAME", "localhost"),
-        os.environ.get("ORCHESTRATOR_PORT", 4222),
-        {
-            "summon_agent_response": {"mode": "publish"},
-            "summon_agent_request": {
-                "mode": "subscribe",
-                "callback": summon_agent_request,
-            },
-            "agent_manager_shutdown": {"mode": "subscribe", "callback": shutdown},
-            "global_shutdown": {"mode": "subscribe", "callback": shutdown},
-            "logout": {"mode": "subscribe", "callback": dummy},
-        },
-    )
+
+# Main
+async def main() -> None:
 
     # Create AI Worker
-    init_filename = os.environ.get("AI_AGENT_FILE_NAME")
-    agent_manager = agentmanager(init_filename=init_filename, mbh=mbh)
+    init_filename = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("AI_AGENT_FILE_NAME")
+    agent_manager = agentmanager(init_filename=init_filename)
 
-    # Start consuming messages
-    await mbh.set_up_nats()
+    await agent_manager.set_up_mbh()
 
     await agent_manager.create_agents()
 

@@ -24,6 +24,7 @@ class AIManager:
         system_message: str,
         mbh: object = None,
         max_history: int = None,
+        ai_name: str = None
     ) -> None:
 
         # Static variables
@@ -67,7 +68,7 @@ class AIManager:
 
         #  Adjust the max_tokens based on desired response length
         self.max_tokens: int = 200
-        self.ai_name: Optional[str] = None
+        self.ai_name: Optional[str] = ai_name
 
         # Flag to prevent image generation
         self.do_not_generate_images: bool = environ.get("DO_NOT_GENERATE_IMAGES", False)
@@ -102,12 +103,12 @@ class AIManager:
             return
 
         # Combine all history into a single string
-        combined_history : str = "\n".join(
+        combined_history: str = "\n".join(
             f"{item['role']}: {item[self.content_word]}" for item in self.chat_history
         )
 
         compress_request: str = ( f"In the context of a multi-user simulated world with the system message to this AI agent of [{self.system_message}], condense this agent's chat history into a single summary of useful information. "
-                                 + "Be sure to keep track of the visited locations and routes, information about the world and other people in it. "
+                                 + "Be sure to keep track of the visited locations and routes, information about the world and other people in it, and any memories. "
                                  + "Their history is:\n{combined_history}")
 
         # Use the AI to condense the history
@@ -264,6 +265,16 @@ class AIManager:
         logger.info(
             f"About to submit to model, with system message: {this_system_message}"
         )
+
+        # Dump messages to a file
+        if self.ai_name:
+            messages_filename = path.join(get_logs_folder(), f"messages_{self.ai_name}.json")
+            with open(messages_filename, "a") as f:
+                f.write(json.dumps({
+                    "timestamp": time.time(),
+                    "request": request,
+                    "messages": messages
+                }) + "\n")
 
         # Get model response, retrying if necessary
         model_response: Optional[str] = None
@@ -450,7 +461,7 @@ class AIManager:
         logger.info(
             f"Processing AI response for request ID {request_id} with data {data}"
         )
-        logger.info(f"Handler : {self.remote_requests[request_id]['response_handler']}")
+        logger.info(f"Handler: {self.remote_requests[request_id]['response_handler']}")
 
         # Get the response from the AI and pass it to the designated response handler along with the person object and AI response
         if "ai_response" not in data:

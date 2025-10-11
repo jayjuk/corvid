@@ -83,7 +83,8 @@ class UserInputProcessor:
             "build": {
                 "function": self.world_manager.do_build,  # Called with special inputs - see process_user_input below
                 "description": "Build a new location. Specify the direction, name and description (avoid confusion by not describing specific items, those are created separately). Be sure to use the right quote marks carefully for the title e.g. "
-                + "build west 'Secluded Clearing' A small, but beautiful clearing in the middle of a forest, but build east \"Wizard's House\" A mysterious and magical....(etc)...",
+                + " build west 'Secluded Clearing' A small, but beautiful clearing in the middle of a forest, but build east \"Wizard's House\" A mysterious and magical....(etc)..."
+                + " (do not escape apostrophes with backslashes)",
             },
             "locations": {
                 "function": self.world_manager.do_list_locations,
@@ -96,7 +97,6 @@ class UserInputProcessor:
                 "function": self.world_manager.do_create,
                 "description": "Create a new item. Specify the name and description using single quotes, then optionally a price "
                 + "e.g: create 'burnt sausage' 'A British pork sausage that looks cooked, at least it is burnt on the outside' 3",
-                "conditional": get_boolean_env_variable("CREATE_COMMAND_VISIBLE")
             },
             "spawn": {
                 "function": self.world_manager.do_spawn,
@@ -106,7 +106,6 @@ class UserInputProcessor:
                     + "'A plump, healthy-looking fox with a permanent cheeky smile on its face' "
                     + "'yawns, stretches, wags its tail, looks around, sniffs the air, scratches its ear'"
                 ),
-                "conditional": get_boolean_env_variable("SPAWN_COMMAND_VISIBLE")
             },
             "summon": {
                 "function": self.world_manager.do_summon,
@@ -114,22 +113,18 @@ class UserInputProcessor:
                     "Summon a new person into the world. Specify the instructions for the new person using single quotes "
                     + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
                 ),
-                "conditional": get_boolean_env_variable("SUMMON_COMMAND_VISIBLE")
             },
             "remember": {
                 "function": self.world_manager.do_remember,
                 "description": "Add a piece of information you deem important to your permanent memory.",
-                "conditional": get_boolean_env_variable("MEMORY_COMMANDS_VISIBLE")
             },
             "forget": {
                 "function": self.world_manager.do_forget,
                 "description": "Add a piece of information you deem important to your permanent memory.",
-                "conditional": get_boolean_env_variable("MEMORY_COMMANDS_VISIBLE")
             },
             "memories": {
                 "function": self.world_manager.do_memories,
                 "description": "List memories you have already made.",
-                "conditional": get_boolean_env_variable("MEMORY_COMMANDS_VISIBLE")
             },
             "buy": {
                 "function": self.world_manager.do_buy,
@@ -180,20 +175,24 @@ class UserInputProcessor:
         self.commands_description: str = "Valid directions: " + ", ".join(
             self.directions
         )
-        self.commands_description += ".\nValid commands: "
+        # Build valid commands list
+        valid_commands = []
         for command, data in self.command_functions.items():
-            # Only add commands with descriptions
-            if data.get("description") and ("conditional" not in data or data["conditional"]):
-                self.commands_description += f"{command} = {data['description']}; "
-        self.commands_description = self.commands_description[:-2]
-        self.commands_description += ". Recognised synonyms: "
+            # Only add commands with descriptions and that are not hidden by environment variable
+            if data.get("description") and not (get_boolean_env_variable(command + "_COMMAND_VISIBLE")==False):
+                valid_commands.append(f"{command} = {data['description']}")
+        self.commands_description += ".\nValid commands: " + "; ".join(valid_commands) + "."
+
+        # Build recognised synonyms list
+        recognised_synonyms = []
         for key, value in self.synonyms.items():
             # Only show synonyms to commands that have a description
             if (value in self.command_functions 
                 and self.command_functions[value].get("description")
-                and ("conditional" not in self.command_functions[value] or self.command_functions[value]["conditional"])):
-                self.commands_description += f"{key} = {value}, "
-        self.commands_description = self.commands_description[:-2]
+                and not (get_boolean_env_variable(value + "_COMMAND_VISIBLE")==False)):
+                recognised_synonyms.append(f"{key} = {value}")
+        if recognised_synonyms:
+            self.commands_description += " Recognised synonyms: " + ", ".join(recognised_synonyms)
 
     def get_help_text(
         self, person: Optional[Person] = None, rest_of_response: Optional[str] = None
@@ -386,6 +385,10 @@ class UserInputProcessor:
         if not user_input:
             # Empty command
             return None, None, "You need to enter a command."
+
+        if '\\' in user_input:
+            # Empty command
+            return None, None, "Please avoid using the backslash character, no good will come of it."
 
         person.add_input_history(f"You: {user_input}")
 

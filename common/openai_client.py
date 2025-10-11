@@ -1,5 +1,5 @@
 from typing import List, Dict, Tuple, Union, Optional
-from utils import get_critical_env_variable, set_up_logger
+from utils import get_critical_env_variable, set_up_logger, exit
 from urllib.request import urlopen
 
 # Set up logger
@@ -30,13 +30,30 @@ def do_model_request(
     if "JSON" in messages[-1]["content"]:
         response_format = {"type": "json_object"}
 
-    response: openai.Response = model_client.chat.completions.create(
-        model=model_name,
-        messages=messages,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        response_format=response_format,
-    )
+    # Different parameter name for max tokens from GPT-5 onwards
+    # TODO: #120 Improve management of model API versioning
+    if model_name.startswith("gpt-10"):
+        exit(logger, "Must reconfigure model parameters beyond GPT-9")
+    if model_name.startswith("gpt-") and model_name[4] in ("5", "6", "7", "8", "9"):
+        if model_name=="gpt-5-mini" and temperature!=1:
+            logger.warning(f"Overriding temperature to 1 as other values not supported by {model_name}")
+            temperature = 1
+        response: openai.Response = model_client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            max_completion_tokens=max_tokens,
+            temperature=temperature,
+            response_format=response_format,
+        )
+    else:
+        response: openai.Response = model_client.chat.completions.create(
+            model=model_name,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            response_format=response_format,
+        )
+
     # Extract response content
     for choice in response.choices:
         return (

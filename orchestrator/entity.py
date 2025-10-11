@@ -19,10 +19,8 @@ class Entity:
         self.name: str = entity_name
         self.role: str = entity_role
 
-        # Some roles are invisible
+        # Some entities are invisible
         self.is_visible: bool = True
-        if self.role == "monitor":
-            self.is_visible = False
 
         self.is_person: bool = False
         self.user_id: Optional[str] = None  # Overridden for people
@@ -112,9 +110,8 @@ class Entity:
             return "a person"
         if self.get_role() == "animal":
             return f"a {self.name}"
-        return (
-            f"{self.name}{' The ' + str(self.role).capitalize() if self.role else ''}"
-        )
+        # Otherwise, return the name of the person
+        return self.name
 
     def get_description(self) -> str:
         if self.description:

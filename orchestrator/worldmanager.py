@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Tuple, Optional, Union, Callable
 import time
 import sys
 import json
+import inflect
 
 # Set up logger first
 logger = set_up_logger()
@@ -32,7 +33,9 @@ class WorldManager:
         model_name: Optional[str] = None,
         landscape: Optional[str] = None,
         animals_active: bool = True,
-        session_logger: Optional[Callable[[str], None]] = None
+        session_logger: Optional[Callable[[str], None]] = None,
+        minute_timer: bool = False,
+        shut_down_on_empty: bool = False
     ) -> None:
 
         # Static variables
@@ -41,6 +44,17 @@ class WorldManager:
         self.world_loop_time_secs: int = 30  # Animals etc move on this cycle
         self.animals_active: bool = animals_active
         self.session_logger: Optional[Callable[[str], None]] = session_logger
+        self.minute_timer: bool = False
+        if minute_timer:
+            self.minute_timer = True
+            self.inflect_engine = inflect.engine()
+            logger.info("Announcing minutes elapsed with a Bong!")
+        else:
+            logger.info("No minute timers selected. No Bong!")
+        self.shut_down_on_empty = False
+        if shut_down_on_empty:
+            logger.warning("Will shut down once last user is removed.")
+            self.shut_down_on_empty = True
 
         # Set up world state
         self.mbh: object = mbh
@@ -284,9 +298,9 @@ class WorldManager:
         # Return a comma-separated list of other users.
         # Get a list of all users except the current person
         other_users = [
-            person.name
-            for user_id, person in self.people.items()
-            if user_id != person.user_id and person.is_visible
+            other_person.name
+            for other_user_id, other_person in self.people.items()
+            if other_user_id != person.user_id and other_person.is_visible
         ]
         if not other_users:
             return "You are the only user in this world."
@@ -857,7 +871,7 @@ class WorldManager:
             + "\nRespond with a JSON object as follows:"
             + "\nIf this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with feedback to the person in string property 'success_response' and any combination (or none) of the following:"
             + "\n* Something the person says (only if appropriate) in string property 'user_utterance'."
-            + "\n* The updated description of the current location in string property 'updated_location'."
+            + "\n* The updated description of the current location in string property 'updated_location'. Do not reference any world users, entities, animals or objects in the location."
             + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
             + "\n* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values. Limit these to things that can be picked up."
             + "\n* The descriptions of any destroyed/deleted items as string array 'deleted_items'. Don't forget that if you turn an item into one or more new items, you should delete the original item."
@@ -1072,7 +1086,7 @@ class WorldManager:
         await self.activate_background_loop()
 
     def list_people(self, user_id: str) -> str:
-        if self.get_user_count() == 1:
+        if self.get_user_count() <= 1:
             return "You are currently alone in this world."
         user_list = "Other people in this world: "
         for other_user_id, user_name in self.user_id_to_name_map.items():
@@ -1222,7 +1236,7 @@ class WorldManager:
     async def tell_others(
         self, user_id: Optional[str], message: str, shout: bool = False
     ) -> int:
-        told_count = 0
+        told_people = []
         if message.strip():
             for other_user_id, other_person in self.people.items():
                 # Only tell another person if they are in the same room
@@ -1232,8 +1246,17 @@ class WorldManager:
                     == self.people[user_id].get_current_location()
                 ):
                     await self.tell_person(other_person, message, shout = shout)
-                    told_count += 1
-        return told_count
+                    told_people.append(other_person.name)
+
+            # Log to transcript
+            if told_people:
+                teller: str = self.people[user_id].name if user_id else "System"
+                if shout:
+                    self.log_to_session(f"{teller} shouts (to {', '.join(told_people)}): {message}")
+                else:
+                    self.log_to_session(f"{teller} says (in earshot of {', '.join(told_people)}): {message}")
+
+        return len(told_people)
 
     # Emit a message to a specific person
     async def tell_person(
@@ -1243,9 +1266,6 @@ class WorldManager:
         if message:
             await self.mbh.publish(type, message, person.user_id)
             person.add_input_history(f"World: {message}")
-            # Do not log every shouted message to session
-            if not shout:
-                self.log_to_session(f"{person.name} is told: {message}")
 
     # Get other entities
     def get_other_entities(
@@ -1264,12 +1284,11 @@ class WorldManager:
 
     # Emit world data update to all people
     async def emit_world_data_update(self) -> None:
-        if self.get_user_count() > 0:
-            world_data: Dict[str, int] = {"user_count": self.get_user_count()}
-            await self.mbh.publish(
-                "world_data_update",
-                world_data,
-            )
+        world_data: Dict[str, int] = {"user_count": self.get_user_count()}
+        await self.mbh.publish(
+            "world_data_update",
+            world_data,
+        )
 
     # Check each person to see if they have been inactive for too long
     async def check_people_activity(self) -> None:
@@ -1334,6 +1353,11 @@ class WorldManager:
             if self.get_user_count() == 0:
                 self.log_to_session("All users have left the world.")
                 self.deactivate_background_loop()
+                # And in some cases, shut down
+                if self.shut_down_on_empty:
+                    message: str = "Shutting down due to last user leaving."
+                    exit(logger, message)
+
         else:
             logger.info(
                 f"Person with user_id {user_id} ({person_name}) has already been removed, they probably quit before."
@@ -1374,9 +1398,23 @@ class WorldManager:
     # This loop runs in the background to do things like broadcast person count
     # It only runs when there are people in the world
     async def world_background_loop(self) -> None:
+        seconds_since_last_update: int = 0
+        elapsed_seconds: int = 0
         while self.background_loop_active:
             # Run the loop periodically
             await asyncio.sleep(self.world_loop_time_secs)
+
+            # If minute timer set, communicate this
+            # (minute is minimum)
+            if self.minute_timer:
+                seconds_since_last_update += self.world_loop_time_secs
+                if seconds_since_last_update >= 60:
+                    elapsed_seconds += int(seconds_since_last_update)
+                    elapsed_minutes = int(elapsed_seconds/60)
+                    time_message: str = f"Bong! {elapsed_minutes} {self.inflect_engine.plural_noun('minute', elapsed_minutes)} {self.inflect_engine.plural_verb('has', elapsed_minutes)} passed in the world."
+                    logger.info(time_message)
+                    await self.tell_everyone(time_message)
+                    seconds_since_last_update = 0
 
             # Time out people who do nothing for too long.
             await self.check_people_activity()

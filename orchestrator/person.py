@@ -35,12 +35,14 @@ class Person(Entity):
 
         # Set up person
 
-        # Invisible user for administration and supervisory tasks
-        if user_name.lower() in ("admin", "monitor"):
-            self.user_role = "monitor"
-
         # Call superclass constructor
         Entity.__init__(self, world, user_name, user_role)
+
+        # Invisible user for administration and supervisory tasks
+        if user_name.lower() in ("monitor"):
+            self.role = "monitor"
+            logger.info(f"Setting {user_id} to be invisible as role is {self.role}.")
+            self.is_visible = False
 
         # Register any specification to record their history
         if get_boolean_env_variable("RECORD_LOCATION_HISTORY"):

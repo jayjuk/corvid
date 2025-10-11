@@ -153,19 +153,19 @@ def configure_logging(file_name: str, logging_level: int, log_to_stdout: bool) -
     return logging.getLogger()
 
 
-# Default common exit logic which logs a critical error and exits at the same time.
-def exit(logger: logging.Logger, error_message: str = None) -> None:
-    # If no message, assume normal exit.
-    exit_code: int = 0
-    if error_message:
-        logger.critical(error_message)
-        exit_code: int = 1
+# Default common exit logic which logs a message and exits at the same time.
+def exit(logger: Optional[logging.Logger] = None, message: str = None, logging_level: int = logging.CRITICAL) -> None:
+    exit_code: int = 1 if logger is None or logging_level == logging.CRITICAL else 0
+    if message:
+        if logger:
+            logger.log(logging_level, message)
+        else:
+            print(message)
     else:
         # Check logger not a string
         if isinstance(logger, str):
-            print(
-                f"I suspect an error message was passed into the logger parameter: {logger}"
-            )
+            print(f"I suspect a message was passed into the logger parameter: {logger}")
+    print("Exiting...")
     sys.exit(exit_code)
 
 
@@ -176,8 +176,7 @@ def get_critical_env_variable(env_var_name: str) -> Optional[str]:
     if v:
         return environ.get(env_var_name)
     # Otherwise, exit
-    print(f"{env_var_name} not set. Exiting.")
-    sys.exit(1)
+    exit(logger = None, message = f"{env_var_name} not set. Exiting.")
 
 # Check if environment variable is true or false
 def get_boolean_env_variable(env_var_name: str) -> Optional[bool]:

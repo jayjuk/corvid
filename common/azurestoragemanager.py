@@ -5,6 +5,7 @@ from azure.storage.blob import BlobServiceClient, ContainerClient
 from azure.data.tables import TableServiceClient, UpdateMode
 from utils import get_critical_env_variable, set_up_logger, exit, debug
 from typing import Optional, Dict, List, Any
+import traceback
 
 # Set up logger
 logger = set_up_logger()
@@ -188,7 +189,12 @@ class AzureStorageManager(StorageManager):
         self.stringify_object(entity)
 
         logger.info(f"Storing {entity['name']}")
-        objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
+        try:
+            objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
+        except Exception as e:
+            traceback.print_exc()
+            logger.error(f"Error storing entity: {e}")
+            return False
 
         # If flag says to, also write this record to an equivalent history table
         if record_location_history:

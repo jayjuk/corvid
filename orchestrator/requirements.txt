@@ -1,2 +1,3 @@
 azure-data-tables
 azure-storage-blob
+inflect
