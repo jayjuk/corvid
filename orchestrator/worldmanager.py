@@ -275,7 +275,11 @@ class WorldManager:
     async def do_remember(self, person: Person, rest_of_response: str) -> str:
         logger.info(f"Remember command received: {rest_of_response}")
         return person.add_memory(rest_of_response)
-    
+
+    async def do_user_log(self, person: Person, rest_of_response: str) -> str:
+        logger.info(f"Log command received: {rest_of_response}")
+        self.log_to_session(f"{person.name} logs event: {rest_of_response}")
+
     async def do_forget(self, person: Person, rest_of_response: str) -> str:
         logger.info(f"Forget command received: {rest_of_response}")
         return person.forget_memory(rest_of_response)

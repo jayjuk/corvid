@@ -3,11 +3,6 @@ import traceback
 from os import path, makedirs, environ, sep
 import json
 import time
-import gemini_client
-import groq_client
-import stability_client
-import anthropic_client
-import openai_client
 from utils import set_up_logger, exit, get_logs_folder
 from os import environ
 
@@ -15,6 +10,13 @@ from os import environ
 
 # Set up logger
 logger = set_up_logger(logging_level_override=environ.get("AI_MANAGER_LOGGING_LEVEL","INFO"))
+
+# Import AI libs
+import gemini_client
+import groq_client
+import stability_client
+import anthropic_client
+import openai_client
 
 # Class to handle interaction with the AI
 class AIManager:
@@ -149,9 +151,10 @@ class AIManager:
     def get_model_api(self) -> str:
         if self.model_name.startswith("gpt"):
             return "GPT"
-        elif self.model_name.startswith("gemini") or self.model_name.startswith(
-            "imagen"
-        ):
+        elif (self.model_name.startswith("gemini")
+              or self.model_name.startswith("imagen")
+              or self.model_name.lower().startswith("deepseek")
+              ):
             return "Gemini"
         elif self.model_name.startswith("claude"):
             return "Anthropic"
@@ -262,7 +265,7 @@ class AIManager:
         # Now add request
         messages.append(build_message("user", request))
 
-        logger.info(
+        logger.debug(
             f"About to submit to model, with system message: {this_system_message}"
         )
 

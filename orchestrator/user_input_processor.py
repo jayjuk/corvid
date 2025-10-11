@@ -114,6 +114,10 @@ class UserInputProcessor:
                     + "e.g: summon 'You are a brave adventurer. Your mission is to find the treasure.'"
                 ),
             },
+            "log": {
+                "function": self.world_manager.do_user_log,
+                "description": "Record a key piece of information in the session log.",
+            },
             "remember": {
                 "function": self.world_manager.do_remember,
                 "description": "Add a piece of information you deem important to your permanent memory.",

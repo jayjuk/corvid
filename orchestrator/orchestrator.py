@@ -51,7 +51,10 @@ class Orchestrator:
         # Create a new log file for the user and return a handle to it
         makedirs(get_logs_folder(), exist_ok=True)
         timestamp: str = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
-        session_log_file_name: str = path.join(get_logs_folder(), f"{world_name}_session_transcript_{timestamp}.log")
+        session_name: str = "session_transcript"
+        if "ORCHESTRATOR_SESSION_NAME" in environ:
+            session_name += "_" + environ["ORCHESTRATOR_SESSION_NAME"]
+        session_log_file_name: str = path.join(get_logs_folder(), f"{world_name}_{session_name}_{timestamp}.log")
         f: TextIO = open(
             session_log_file_name, "w"
         )

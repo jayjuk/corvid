@@ -58,6 +58,7 @@ def register_signal_handler(logger):
 def set_up_logger(
     file_name: str = "", logging_level_override: str = "", log_to_stdout: bool = True
 ) -> logging.Logger:
+
     # If logger already set up, return it
     if logging.getLogger().hasHandlers():
         return logging.getLogger()

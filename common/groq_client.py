@@ -31,6 +31,5 @@ def do_model_request(
         model=model_name,
         max_tokens=max_tokens,
     )
-    import pprint
 
     return chat_completion.choices[0].message.content
