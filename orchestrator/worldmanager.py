@@ -337,7 +337,7 @@ class WorldManager:
 
         # Check quote have not been messed up
         # Check quotes haven't been messed up: description should not start with "'s"
-        if room_description.startswith("'s"):
+        if room_description and room_description.lower().startswith("'s"):
             return "Invalid input: room description appears to start with \"'s\" — perhaps your quotes are misplaced."
 
         # Remove 'The ' from the room name
