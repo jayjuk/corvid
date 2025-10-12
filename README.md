@@ -46,7 +46,7 @@ Responsible for delivering visual assets to users, this service employs a Flask-
 
 This service produces visuals for new locations or entities within simulated environments. Utilising image-generation models, it enriches textual prompts with LLM support to ensure meaningful and contextually accurate imagery.
 
-### 5. User Manager
+### 5. Agent Manager
 
 Responding to "summon" requests, this service dynamically initiates AI Broker instances, enabling the introduction of new AI-controlled entities into active environments.
 
