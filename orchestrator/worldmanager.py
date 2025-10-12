@@ -37,7 +37,8 @@ class WorldManager:
         minute_timer: bool = False,
         shut_down_on_empty: bool = False,
         read_only_mode: bool = False,
-        default_starting_location: Optional[str] = None
+        default_starting_location: Optional[str] = None,
+        max_agent_session_minutes: Optional[int] = None
     ) -> None:
 
         # Static variables
@@ -61,6 +62,9 @@ class WorldManager:
         if read_only_mode:
             logger.info("Read-only mode has been set: users cannot modify this world currently.")
             self.read_only_mode = True
+        # Time out for agents
+        self.max_agent_session_minutes = max_agent_session_minutes or 9999
+
 
         # Set up world state
         self.mbh: object = mbh
@@ -236,12 +240,15 @@ class WorldManager:
         else:
             return f"'{other_entity_name}' is not a valid person name."
 
-    async def do_agent_manager_shutdown(self, person: Person, rest_of_response: str) -> None:
-        message: str = f"{person.name} has signalled that it is time for AI agents to leave"
-        if rest_of_response:
-            message = message[:-1] + f", saying '{rest_of_response}'."
+    async def do_agent_manager_shutdown(self, person: Optional[Person] = None, rest_of_response: Optional[str] = None) -> None:
+        message: str
+        if person:
+            message: str = f"{person.name} has signalled that it is time for AI agents to leave."
+            if rest_of_response:
+                message = message[:-1] + f", saying '{rest_of_response}'."
+        else:
+            message: str = f"Time for AI agents to leave."
         logger.info(message)
-        #await self.tell_everyone(message)
         # Log everyone out
         for user_id in list(self.people.keys()):
             await self.remove_person(user_id, message, delete_from_db=True, delay=0)
@@ -1441,9 +1448,18 @@ class WorldManager:
                     elapsed_seconds += int(seconds_since_last_update)
                     elapsed_minutes = int(elapsed_seconds/60)
                     time_message: str = f"Bong! {elapsed_minutes} {self.inflect_engine.plural_noun('minute', elapsed_minutes)} {self.inflect_engine.plural_verb('has', elapsed_minutes)} passed in the world."
+                    minutes_left: int = self.max_agent_session_minutes - elapsed_minutes
+                    if minutes_left < 5:
+                        time_message += f" There are {minutes_left} minutes remaining."
                     logger.info(time_message)
                     await self.tell_everyone(time_message)
                     seconds_since_last_update = 0
+                    if elapsed_minutes >= self.max_agent_session_minutes:
+                        logger.info("Session time limit reached - logging agents out.")
+                        await self.tell_everyone("Time's up!")
+                        await asyncio.sleep(10)
+                        await self.do_agent_manager_shutdown()
+
 
             # Time out people who do nothing for too long.
             await self.check_people_activity()

@@ -249,6 +249,16 @@ class Orchestrator:
         # Start up world manager
         logger.info(f"Starting up world manager - world '{world_name}'")
         storage_manager: AzureStorageManager = AzureStorageManager()
+        # Convert MAX_AGENT_SESSION_MINUTES to int safely
+        max_agent_session_minutes: int = None
+        if environ.get("MAX_AGENT_SESSION_MINUTES"):
+            try:
+                max_agent_session_minutes = int(environ.get("MAX_AGENT_SESSION_MINUTES"))
+                logger.info(f"Agents will be logged out automatically after {max_agent_session_minutes} minutes.")
+            except ValueError:
+                logger.warning(f"Invalid MAX_AGENT_SESSION_MINUTES value {environ.get('MAX_AGENT_SESSION_MINUTES')}")
+                max_agent_session_minutes = None
+
         self.world_manager: WorldManager = WorldManager(
             self.mbh,
             storage_manager,
@@ -260,7 +270,8 @@ class Orchestrator:
             minute_timer = get_boolean_env_variable("MINUTE_TIMER"),
             shut_down_on_empty = get_boolean_env_variable("SHUT_DOWN_ON_EMPTY"),
             read_only_mode = get_boolean_env_variable("READ_ONLY_MODE"),
-            default_starting_location = environ.get("DEFAULT_STARTING_LOCATION")
+            default_starting_location = environ.get("DEFAULT_STARTING_LOCATION"),
+            max_agent_session_minutes = max_agent_session_minutes,
         )
 
         # Set up user input processor

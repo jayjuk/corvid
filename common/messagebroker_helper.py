@@ -55,7 +55,7 @@ class MessageBrokerHelper:
         if self.am_consumer:
             for queue_name in self.callback_functions.keys():
                 await self.nc.subscribe(queue_name, cb=self.global_callback)
-                logger.info(f"Subscribed to queue {queue_name}")
+                logger.debug(f"Subscribed to queue {queue_name}")
 
     async def subscribe(self, queue_name: str, callback):
         """Subscribe to a queue and set the callback function."""
@@ -70,11 +70,11 @@ class MessageBrokerHelper:
 
         self.callback_functions[queue_name] = callback
         await self.nc.subscribe(queue_name, cb=self.global_callback)
-        logger.info(f"Subscribed to queue {queue_name}")
+        logger.debug(f"Subscribed to queue {queue_name}")
 
     async def unsubscribe(self, queue_name: str):
         await self.nc.unsubscribe(queue_name)
-        logger.info(f"Unsubscribed from queue {queue_name}")
+        logger.debug(f"Unsubscribed from queue {queue_name}")
 
     async def global_callback(self, msg):
         """Handles received messages."""

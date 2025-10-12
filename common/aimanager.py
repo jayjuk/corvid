@@ -90,8 +90,6 @@ class AIManager:
         logger.info(
             f"Starting up AI with model {self.model_name} and system message {self.system_message}"
         )
-        # Create specific log file for model responses
-        self.create_model_log_file()
 
         # Remote requests log
         self.remote_requests: Dict[str, Dict[str, Any]] = {}
@@ -131,20 +129,6 @@ class AIManager:
             self.system_message = system_message
         else:
             logger.info("System message is empty, not updating")
-
-    # Create a log file for model responses
-    def create_model_log_file(self) -> None:
-        makedirs(get_logs_folder(), exist_ok=True)
-        self.model_log_file: str = path.join(
-            get_logs_folder(), f"{self.get_model_api()}_response_log.txt"
-        )
-        with open(self.model_log_file, "w") as f:
-            f.write(f"# Model input and response log for {self.get_model_api()}\n\n")
-
-    # Log model response to file
-    def log_response_to_file(self, request: str, response: str) -> None:
-        with open(self.model_log_file, "a") as f:
-            f.write(f"Request: {request}\nResponse: {response}\n\n")
 
     # Get the model API name
     # We use the specific model name to generalise which class/company we are using
@@ -337,6 +321,12 @@ class AIManager:
                     if "#" in model_response:
                         model_response = model_response.split("#")[0].strip()
 
+                    # If multiple lines separated by newline, return only the first one
+                    model_response = model_response.strip()
+                    if '\n' in model_response:
+                        logger.warning(f"Model response split over multiple lines, accepting only the first line:\n{model_response}")
+                        model_response = model_response.split('\n')[0]
+
             except Exception as e:
                 traceback.print_exc()
                 logger.info(f"Error from model: {str(e)}")
@@ -374,9 +364,7 @@ class AIManager:
             # self.store_model_data("input", messages)
             # self.store_model_data("response", response)
 
-            logger.info("Model Response: " + str(model_response))
-
-            self.log_response_to_file(request, model_response)
+            logger.info("Cleaned model response: " + str(model_response))
 
             # Add request to history
             if history:

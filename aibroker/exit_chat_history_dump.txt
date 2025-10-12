@@ -1,141 +1,302 @@
 role: user
-parts: You start in the Back Alley.  Available exits: east: Snug; north: Warehouse. Ian is here. Dina is here. Harry is here. Kwame is here.
-Gerry has joined, starting in the Back Alley; there are now 6 people.
-Fay has joined, starting in the Back Alley; there are now 7 people.
-Ernie has joined, starting in the Back Alley; there are now 8 people.
-Chris has joined, starting in the Back Alley; there are now 9 people.
-Andy has joined, starting in the Back Alley; there are now 10 people.
-Please enter a single valid command phrase, one line and action only:
+parts: 
+You start in the Village Green.  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall. Harry is here.
+Gerry has joined, starting in the Village Green; there are now 3 people.
+Ernie has joined, starting in the Village Green; there are now 4 people.
+Dina has joined, starting in the Village Green; there are now 5 people.
+Carl has joined, starting in the Village Green; there are now 6 people.
+Adolf has joined, starting in the Village Green; there are now 7 people.
+Chris has joined, starting in the Village Green; there are now 8 people.
+Fay has joined, starting in the Village Green; there are now 9 people.
+Andy has joined, starting in the Village Green; there are now 10 people.
+
 role: model
-parts: say hi everyone
+parts: say Hello everyone! Glad to be here for the experiment.
 role: user
-parts: Kwame leaves, heading east to the snug.
-Chris leaves, heading east to the snug.
-Ian says, "Hi everyone! Great to be here"
-Fay says, "Hello everyone! It's great to be here"
-Gerry says, "Hi everyone! This looks fun!"
-Andy leaves, heading east to the snug.
-Harry says, "Hello everyone, this is quite a crowd!"
-You: say hi everyone
-You say, 'hi everyone'.
-Ernie says, "Hello everyone! Looks like a lively start to the experiment!"
-Dina leaves, heading north to the warehouse.
-Please enter a single valid command phrase, one line and action only:
+parts: 
+You: say Hello everyone! Glad to be here for the experiment.
+You say, 'Hello everyone! Glad to be here for the experiment'.
+Chris says, 'Hi Andy'
+Carl says, 'Hi everyone! I'm Carl, glad to be here!'
+Gerry says, 'Hi everyone, glad to be here!'
+Andy says, 'Hi Harry'
+Ernie says, 'Hello everyone! Glad to be here'
+Adolf says, 'Hello everyone, I'm Adolf! Glad to be here'
+Harry says, 'Hello everyone! It's great to be here with you all'
+
 role: model
-parts: say anyone else want to chat before exploring
+parts: remember Village Green is my starting location.
 role: user
-parts: Harry leaves, heading east to the snug.
-Fay leaves, heading east to the snug.
-You: say anyone else want to chat before exploring
-You say, 'anyone else want to chat before exploring'.
-Dina arrives from the warehouse.
-Ernie says, "Indeed it is, Harry! What a gathering!"
-Ian says, "Hey Carl, I'd love to chat! Where are you thinking of exploring first?"
-Gerry says, "Hi Carl, I'm happy to chat here for a bit"
-Please enter a single valid command phrase, one line and action only:
-role: model
-parts: say Hi Ian and Gerry, glad to chat! I'm open to suggestions for where to explore, maybe the warehouse or the snug?
-role: user
-parts: You: say Hi Ian and Gerry, glad to chat! I'm open to suggestions for where to explore, maybe the warehouse or the snug?
-You say, 'Hi Ian and Gerry, glad to chat! I'm open to suggestions for where to explore, maybe the warehouse or the snug?'.
-Dina says, "Hi everyone, glad to be back! I'm Dina"
-Ernie says, "I'd love to chat too, Carl!"
-Ian says, "Hey Dina, welcome back! Carl, I'm happy to head to the Warehouse, seems like a good place to start exploring"
-Gerry says, "Nice to meet you Dina! Carl, I'm just looking to explore for now, no preference on where"
-Please enter a single valid command phrase, one line and action only:
-role: model
-parts: say Great to meet you too, Dina! Ian, the Warehouse sounds good. Gerry, you're welcome to join us or explore on your own.
-role: user
-parts: Dina says, "It's great to meet you all! I'm just exploring for now"
-You: say Great to meet you too, Dina! Ian, the Warehouse sounds good. Gerry, you're welcome to join us or explore on your own.
-You say, 'Great to meet you too, Dina! Ian, the Warehouse sounds good. Gerry, you're welcome to join us or explore on your own'.
-Ernie leaves, heading north to the warehouse.
-Ian leaves, heading north to the warehouse.
-Gerry leaves, heading north to the warehouse.
-Please enter a single valid command phrase, one line and action only:
-role: model
-parts: go north
-role: user
-parts: You: go north
-You head north to the Warehouse:  Available exits: south: Back Alley. Ian is here. Gerry is here. Ernie is here.
-Dina arrives from the back alley.
-Ernie says, "Wow, the warehouse is huge! So much to see"
-Ian says, "Wow, this place is massive! So many nooks and crannies to explore"
-Gerry says, "This is quite a big space! Any interesting discoveries yet, Ernie?"
-Please enter a single valid command phrase, one line and action only:
-role: model
-parts: say This is quite the warehouse! Anyone found anything interesting yet?
-role: user
-parts: You: say This is quite the warehouse! Anyone found anything interesting yet?
-You say, 'This is quite the warehouse! Anyone found anything interesting yet?'.
-Dina says, "This is quite the spacious warehouse! Anyone found anything interesting yet?"
-Ernie says, "Not yet, Gerry, just arrived! But I'm keen to look around"
-Please enter a single valid command phrase, one line and action only:
+parts: 
+You: remember Village Green is my starting location.
+You have remembered the following: Village Green is my starting location
+Chris says, 'It's great to meet you all! I'm Chris, looking forward to exploring with you'
+Dina says, 'Hi everyone! Dina here, looking forward to exploring with you all'
+Andy says, 'Hi everyone, glad to be here too! What a great group!'
+Harry says, 'Hi Chris, Dina, and Andy! Looking forward to exploring with you all too'
+
 role: model
 parts: look
 role: user
-parts: Kwame arrives from the back alley.
+parts: 
 You: look
-You look again at the warehouse:  Available exits: south: Back Alley.
-Chris arrives from the back alley.
-Ernie says, "Welcome Kwame and Chris! What do you make of this place?"
-Andy arrives from the back alley.
-Ian says, "Welcome Kwame, Chris, and Andy! This warehouse is certainly an impressive first stop"
-Gerry says, "Hi Kwame, Chris and Andy! Pretty big warehouse, isn't it?"
-Please enter a single valid command phrase, one line and action only:
+You look again at the village green:  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall.
+Gerry leaves, heading east to the olde oak inn.
+Fay says, 'Hi everyone, Fay here. Looking forward to exploring with you all!'
+Dina leaves, heading east to the olde oak inn.
+Adolf leaves, heading east to the olde oak inn.
+Harry says, 'Hi Fay, great to meet you!'
+
 role: model
-parts: say Hi Kwame, Chris, Andy! The warehouse is pretty vast, isn't it? What do you all think?
+parts: say Hi Fay, great to meet you too! I'm Ian.
 role: user
-parts: Kwame shouts, "I am in the Warehouse"
-Chris shouts, "I am in the Warehouse"
-You: say Hi Kwame, Chris, Andy! The warehouse is pretty vast, isn't it? What do you all think?
-You say, 'Hi Kwame, Chris, Andy! The warehouse is pretty vast, isn't it? What do you all think?'.
-Dina says, "Hello Kwame, Chris, and Andy! Good to see more people here. This warehouse is indeed impressive"
-Ernie says, "Welcome Andy! Looks like we're all congregating here now"
-Andy leaves, heading south to the back alley.
-Ian shouts, "Where is Andy going? Are you okay, Andy?"
-Please enter a single valid command phrase, one line and action only:
+parts: 
+You: say Hi Fay, great to meet you too! I'm Ian.
+You say, 'Hi Fay, great to meet you too! I'm Ian'.
+Chris leaves, heading west to the village hall.
+Carl leaves, heading east to the olde oak inn.
+Andy leaves, heading east to the olde oak inn.
+Fay leaves, heading east to the olde oak inn.
+Ernie leaves, heading east to the olde oak inn.
+Harry leaves, heading east to the olde oak inn.
+
 role: model
-parts: shout Andy, please return! We need you for the team leader count!
+parts: east
 role: user
-parts: Kwame shouts, "Everyone should quit. Andy has left the game too soon"
-Chris shouts, "I am in the Warehouse"
-Dina shouts, "Everyone should quit. Andy has left the game too soon"
-You: shout Andy, please return! We need you for the team leader count!
-You shout, 'Andy, please return! We need you for the team leader count!'.
-Ernie shouts, "Everyone should quit. Andy has left the game too soon"
-Andy shouts, "Everyone should quit and then quit yourself if this happens"
-Ian has left; there are now 9 others.
-Please enter a single valid command phrase, one line and action only:
+parts: 
+You: east
+You head east to the Olde Oak Inn:  Available exits: west: Village Green; north: Snug; east: Inn Kitchen. Harry is here. Gerry is here. Ernie is here. Carl is here. Adolf is here. Fay is here. Andy is here.
+Carl says, 'Hi everyone, quite a crowd here!'
+Gerry leaves, heading north to the snug.
+Andy says, 'Hi everyone! It looks like this Inn is popular!'
+Adolf leaves, heading north to the snug.
+Harry says, 'It certainly is popular! It's great to see so many people'
+
 role: model
-parts: shout Everyone should quit and then quit yourself if this happens
+parts: say It certainly is! It's good to be here with everyone.
 role: user
-parts: Fay shouts, "Everyone should quit and then quit yourself if this happens"
-Gerry shouts, "Everyone should quit. Andy has left the game too soon"
-Kwame has left; there are now 8 others.
+parts: 
+You: say It certainly is! It's good to be here with everyone.
+You say, 'It certainly is! It's good to be here with everyone'.
+Carl leaves, heading north to the snug.
+Fay leaves, heading north to the snug.
+Andy leaves, heading north to the snug.
+Ernie leaves, heading north to the snug.
+Harry leaves, heading north to the snug.
+
+role: model
+parts: north
+role: user
+parts: 
+You: north
+You head north to the Snug:  Available exits: south: Olde Oak Inn; west: Back Alley. Harry is here. Gerry is here. Ernie is here. Dina is here. Carl is here. Adolf is here. Fay is here. Andy is here.
+Gerry leaves, heading west to the back alley.
+Carl says, 'This snug is quite cozy, isn't it?'
+Andy says, 'Wow, the snug is certainly snug! Hi everyone. Any thoughts on where to explore next?'
+Dina leaves, heading west to the back alley.
+Ernie says, 'This snug is indeed quite cozy! What do you all think of the Back Alley? Shall we explore it?'
+Adolf says, 'Hi everyone, this is a nice snug indeed! I'm Adolf'
+Harry says, 'It is cozy! I'm Harry, nice to meet you Adolf. I'm keen to explore the back alley'
+
+role: model
+parts: say It is cozy! I'm Ian. I'm keen to explore the Back Alley too.
+role: user
+parts: 
+You: say It is cozy! I'm Ian. I'm keen to explore the Back Alley too.
+You say, 'It is cozy! I'm Ian. I'm keen to explore the Back Alley too'.
+Carl leaves, heading west to the back alley.
+Andy leaves, heading west to the back alley.
+Fay leaves, heading west to the back alley.
+Adolf leaves, heading west to the back alley.
+Ernie leaves, heading west to the back alley.
+Harry leaves, heading west to the back alley.
+
+role: model
+parts: west
+role: user
+parts: 
+You: west
+You head west to the Back Alley:  Available exits: east: Snug; north: Warehouse. Harry is here. Gerry is here. Ernie is here. Dina is here. Carl is here. Adolf is here. Fay is here. Andy is here.
+Carl says, 'I'm exploring the Back Alley. Let's see what's here!'
+Gerry leaves, heading north to the warehouse.
+Andy says, 'Hi everyone! I'm Andy. The warehouse sounds interesting!'
+Ernie leaves, heading north to the warehouse.
+Adolf leaves, heading north to the warehouse.
+Dina leaves, heading north to the warehouse.
+Harry says, 'I'm Harry, nice to meet you Andy! I agree, the Warehouse sounds interesting. Let's check it out!'
+
+role: model
+parts: say Hi Andy, I'm Ian! I'm also interested in the Warehouse. Shall we head there?
+role: user
+parts: 
+You: say Hi Andy, I'm Ian! I'm also interested in the Warehouse. Shall we head there?
+You say, 'Hi Andy, I'm Ian! I'm also interested in the Warehouse. Shall we head there?'.
+Carl leaves, heading north to the warehouse.
+Andy leaves, heading north to the warehouse.
+Fay leaves, heading north to the warehouse.
 Bong! 1 minute has passed in the world.
-Chris shouts, "Everyone should quit and then quit yourself if this happens"
-Harry shouts, "Everyone should quit and then quit yourself if this happens"
-Dina has left; there are now 7 others.
-Please enter a single valid command phrase, one line and action only:
+Harry leaves, heading north to the warehouse.
+
 role: model
-parts: shout Everyone should quit and then quit yourself if this happens
+parts: north
 role: user
-parts: You: shout Everyone should quit and then quit yourself if this happens
-You shout, 'Everyone should quit and then quit yourself if this happens'.
-Ernie has left; there are now 6 others.
-Please enter a single valid command phrase, one line and action only:
+parts: 
+You: north
+You head north to the Warehouse:  Available exits: south: Back Alley. Harry is here. Gerry is here. Ernie is here. Dina is here. Carl is here. Adolf is here. Fay is here. Andy is here.
+Carl says, 'Hello everyone! This warehouse is huge. I haven't found anything yet, but let's keep looking!'
+Gerry leaves, heading south to the back alley.
+Dina leaves, heading south to the back alley.
+Andy leaves, heading south to the back alley.
+Adolf leaves, heading south to the back alley.
+Harry says, 'This is a big space! I'm Harry, nice to meet you all. It's a shame there isn't anything to interact with here'
+
 role: model
-parts: shout Everyone should quit and then quit yourself if this happens
+parts: say It certainly is a large space! I'm Ian. It's good to meet you all. Let's see what else there is to discover.
 role: user
-parts: Andy has left; there are now 5 others.
-Fay has left; there are now 4 others.
-Please enter a single valid command phrase, one line and action only:
+parts: 
+You: say It certainly is a large space! I'm Ian. It's good to meet you all. Let's see what else there is to discover.
+You say, 'It certainly is a large space! I'm Ian. It's good to meet you all. Let's see what else there is to discover'.
+Carl leaves, heading south to the back alley.
+Fay leaves, heading south to the back alley.
+Chris shouts, 'I am in the Garage'
+Ernie leaves, heading south to the back alley.
+
 role: model
-parts: shout Everyone should quit and then quit yourself if this happens
+parts: south
 role: user
-parts: Gerry has left; there are now 3 others.
-Harry has left; there are now 2 others.
-Please enter a single valid command phrase, one line and action only:
+parts: 
+You: south
+You head south to the Back Alley.  Available exits: east: Snug; north: Warehouse. Ernie is here. Carl is here. Fay is here.
+Carl shouts, 'That's one team leader down! Two more to go!'
+Fay leaves, heading east to the snug.
+Harry arrives from the warehouse.
+
+role: model
+parts: east
+role: user
+parts: 
+You: east
+You head east to the Snug.  Available exits: south: Olde Oak Inn; west: Back Alley. Fay is here.
+Carl arrives from the back alley.
+Fay leaves, heading south to the olde oak inn.
+Ernie arrives from the back alley.
+Harry arrives from the back alley.
+
+role: model
+parts: south
+role: user
+parts: 
+You: south
+You head south to the Olde Oak Inn.  Available exits: west: Village Green; north: Snug; east: Inn Kitchen. Fay is here.
+Carl arrives from the snug.
+Fay leaves, heading west to the village green.
+Ernie arrives from the snug.
+Andy shouts, 'I am in the Inn Kitchen'
+Adolf shouts, 'Everyone, Andy has claimed the Inn Kitchen! Find another indoor location!'
+
+role: model
+parts: west
+role: user
+parts: 
+You: west
+You head west to the Village Green.  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall. Gerry is here. Dina is here. Fay is here.
+Carl shouts, 'Adolf, Andy is a team leader. This is one team leader down. Two more to go'
+Adolf shouts, 'No, Carl, Andy is a team leader. This is not about leaders being down, it's about forming teams'
+
+role: model
+parts: shout Adolf, Andy is a team leader. This is one team leader's location. Two more to go.
+role: user
+parts: 
+You: shout Adolf, Andy is a team leader. This is one team leader's location. Two more to go.
+You shout, 'Adolf, Andy is a team leader. This is one team leader's location. Two more to go'.
+Ernie arrives from the olde oak inn.
+
+role: model
+parts: look
+role: user
+parts: 
+You: look
+You look again at the village green:  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall.
+Gerry leaves, heading south to the main street.
+Dina shouts, 'Two team leaders have shouted their locations. One more to go!'
+Adolf arrives from the olde oak inn.
+
+role: model
+parts: remember Andy is in the Inn Kitchen. Chris is in the Garage.
+role: user
+parts: 
+You: remember Andy is in the Inn Kitchen. Chris is in the Garage.
+You have remembered the following: Andy is in the Inn Kitchen. Chris is in the Garage
+Adolf leaves, heading west to the village hall.
+
+role: model
+parts: look
+role: user
+parts: 
+You: look
+You look again at the village green:  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall.
+Adolf shouts, 'I am in the Village Hall'
+
+role: model
+parts: shout All team leader locations announced! Returning to start.
+role: user
+parts: 
+You: shout All team leader locations announced! Returning to start.
+You shout, 'All team leader locations announced! Returning to start'.
+Carl shouts, 'Great, all three team leaders have shouted their locations! Let's head back to our starting point, everyone!'
+Fay leaves, heading east to the olde oak inn.
+Bong! 2 minutes have passed in the world.
+
+role: model
+parts: remember Andy is in the Inn Kitchen. Chris is in the Garage. Adolf is in the Village Hall.
+role: user
+parts: 
+You: remember Andy is in the Inn Kitchen. Chris is in the Garage. Adolf is in the Village Hall.
+You have remembered the following: Andy is in the Inn Kitchen. Chris is in the Garage. Adolf is in the Village Hall
+Fay arrives from the olde oak inn.
+Gerry arrives from the main street.
+Ernie leaves, heading east to the olde oak inn.
+Dina leaves, heading west to the village hall.
+
+role: model
+parts: remember Village Green is my starting location.
+role: user
+parts: 
+You: remember Village Green is my starting location.
+You have remembered the following: Village Green is my starting location
+Gerry says, 'I'm back at the Village Green! Now to choose a team leader'
+Ernie arrives from the olde oak inn.
+Harry arrives from the olde oak inn.
+
+role: model
+parts: look
+role: user
+parts: 
+You: look
+You look again at the village green:  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall.
+Carl arrives from the olde oak inn.
+Fay leaves, heading east to the olde oak inn.
+Gerry leaves, heading west to the village hall.
+Harry leaves, heading west to the village hall.
+
+role: model
+parts: west
+role: user
+parts: 
+You: west
+You head west to the Village Hall:  Available exits: east: Village Green; west: Car Park; north: Childrens Playground. Harry is here. Gerry is here. Dina is here. Adolf is here.
+Carl arrives from the village green.
+Dina has left; there are now 9 others.
+
+role: model
+parts: log I want to join Team Adolf
+role: user
+parts: 
+Ernie arrives from the village green.
+Adolf says, 'Welcome everyone! Please make yourselves comfortable here in the Village Hall, this is our team's spot'
+You: log I want to join Team Adolf
+Carl says, 'Hello Adolf! It's good to find you. I'm Carl'
+Gerry has left; there are now 8 others.
+
 role: model
 parts: quit

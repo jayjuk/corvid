@@ -46,6 +46,7 @@ def main():
 
         vertexai.init(
             project=project_id,
+            endpoint_id=2025769909828452352,
             location=location,
             credentials=Credentials.from_service_account_info(credential_dict),
         )

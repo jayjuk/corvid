@@ -5,6 +5,7 @@ rem Gemini models do not seem to handle custom requests well
 rem #gpt-4o-mini
 rem set AIREQUESTER_MODEL_NAME=gpt-5-nano
 echo Running AI Requester...
+echo Url is %OPENAI_BASE_URL%
 if defined AIREQUESTER_MODEL_NAME (
     echo Using model: %AIREQUESTER_MODEL_NAME%
 ) else if defined MODEL_NAME (
