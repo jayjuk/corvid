@@ -31,12 +31,12 @@ class UserInputProcessor:
             },
             "say": {
                 "function": self.world_manager.do_say,
-                "description": "Say something to all other people in your *current* location, e.g. say which way shall we go?",
+                "description": "Say something to all other people in your *current* location, e.g. say which way shall we go? Note that just typing what you want to say is incorrect, you must preface it with the say command. ",
                 "synonyms": ["talk", "chat"],
             },
             "shout": {
                 "function": self.world_manager.do_shout,
-                "description": "Shout something to everyone in the world, e.g. shout Where is everyone?",
+                "description": "Shout something to everyone in the world, e.g. shout Where is everyone? Note that just typing what you want to shout is incorrect, you must preface it with the say command. ",
             },
             "greet": {
                 "function": self.world_manager.do_greet,
@@ -207,6 +207,7 @@ class UserInputProcessor:
             + " "
             + self.world_manager.get_people_text()
             + f"\nAvailable commands:\n{self.get_commands_description()}"
+            + "\n You will be given some new events/inputs as well as the history; in response, please enter a single valid command phrase, one line and action only.\n"
         )
 
     # Get a description of the commands available
@@ -309,6 +310,7 @@ class UserInputProcessor:
             )
             + f"\nPerson's inventory: {person.get_inventory_description()}"
             + f"\nPerson's input: {user_input}"
+            + "\nNote that a common mistake is a user meaning to say or shout something but forgetting to prefix their input with that command."
             + "\nIf the person did not mean one of the above commands or the person references an item that is not listed, please respond with the special command 'custom' only."
             + "\nRespond with only a valid user input or the word 'custom', nothing else.\n"
         )
@@ -339,7 +341,7 @@ class UserInputProcessor:
         if ai_response:
             # Try to process the AI translation as a command, but only try this once
             output = (
-                f"\nI think you meant '{ai_response}', and will proceed accordingly.\n"
+                f"\nI think you meant '{ai_response}', and will proceed accordingly. \n"
             )
             command_function, command_args, response_to_person = (
                 await self.process_user_input(person, ai_response, translated=True)

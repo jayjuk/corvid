@@ -35,7 +35,9 @@ class WorldManager:
         animals_active: bool = True,
         session_logger: Optional[Callable[[str], None]] = None,
         minute_timer: bool = False,
-        shut_down_on_empty: bool = False
+        shut_down_on_empty: bool = False,
+        read_only_mode: bool = False,
+        default_starting_location: Optional[str] = None
     ) -> None:
 
         # Static variables
@@ -55,6 +57,10 @@ class WorldManager:
         if shut_down_on_empty:
             logger.warning("Will shut down once last user is removed.")
             self.shut_down_on_empty = True
+        self.read_only_mode = False
+        if read_only_mode:
+            logger.info("Read-only mode has been set: users cannot modify this world currently.")
+            self.read_only_mode = True
 
         # Set up world state
         self.mbh: object = mbh
@@ -86,6 +92,7 @@ class WorldManager:
             mode=None,
             ai_manager=self.ai_manager,
             landscape=landscape,
+            default_starting_location=default_starting_location
         )
 
         self.item_name_empty_message: str = "Invalid input: item name is empty."
@@ -188,7 +195,7 @@ class WorldManager:
             user_response = mutter_response
         else:
             told_count: int = await self.tell_others(
-                person.user_id, f'{person.name} {verb}, "{rest_of_response}"', shout
+                person.user_id, f"{person.name} {verb}, '{rest_of_response}'", shout
             )
             if not told_count:
                 user_response = mutter_response
@@ -317,6 +324,10 @@ class WorldManager:
         room_name: str,
         room_description: Optional[str] = "",
     ) -> str:
+
+        # Return error in read-only mode
+        if self.read_only_mode:
+            return "Sorry, you cannot build in this world at present."
         
         # Create a new room
         if direction in self.world.get_exits(person.get_current_location()):
@@ -483,6 +494,10 @@ class WorldManager:
         self, person: Person, item_name: str, description: str, price: int = 0
     ) -> str:
 
+        # Return error in read-only mode
+        if self.read_only_mode:
+            return "Sorry, you cannot create items in this world at present."
+
         # Strip trailing non alphabet characters from item name
         item_name = item_name.rstrip(".,!?")
 
@@ -547,6 +562,11 @@ class WorldManager:
 
     # Spawn an animal
     async def do_spawn(self, person: Person, rest_of_response: str) -> str:
+
+        # Return error in read-only mode
+        if self.read_only_mode:
+            return "Sorry, you cannot spawn creatures in this world at present."
+
         # Get the description and actions from the rest of the response
         animal_name: str
         description: str
@@ -874,8 +894,12 @@ class WorldManager:
             f"\nThe person issues this command: {action}"
             + "\nRespond with a JSON object as follows:"
             + "\nIf this makes sense (try to be creative flexible and permissive, allowing some artistic license), respond with feedback to the person in string property 'success_response' and any combination (or none) of the following:"
-            + "\n* Something the person says (only if appropriate) in string property 'user_utterance'."
-            + "\n* The updated description of the current location in string property 'updated_location'. Do not reference any world users, entities, animals or objects in the location."
+            + "\n* Something the person says (only if appropriate) in string property 'user_utterance'." )
+        if self.read_only_mode:
+            prompt += f"\n(Note that the world is in read-only mode)"
+        else:
+            prompt += (
+            "\n* The updated description of the current location in string property 'updated_location'. Do not reference any world users, entities, animals or objects in the location."
             + "\n* The updated descriptions of any modified items (only those listed earlier) as nested object property 'updated_items', with item names as keys and new descriptions as values."
             + "\n* The descriptions of any newly created items as nested object property 'new_items', with new item names as keys and descriptions as values. Limit these to things that can be picked up."
             + "\n* The descriptions of any destroyed/deleted items as string array 'deleted_items'. Don't forget that if you turn an item into one or more new items, you should delete the original item."
@@ -883,8 +907,9 @@ class WorldManager:
             + "\n* The updated descriptions of any modified entities (only those listed earlier) as nested object property 'updated_entities', with entity names as keys and new descriptions as values."
             + "\nAt this time you may not create new locations, do not create items or modify the location description to imply otherwise."
             + "\nOnly include the updated elements if they have changed in a way that another person who did not witness the cause of the change would notice."
-            + "\n If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'."
         )
+        prompt += "\n If the command doesn't make sense or is too unrealistic, provide a meaningful response in JSON with element 'rejection_response'."
+
         await self.ai_manager.submit_remote_request(
             self.handle_custom_action_response,
             person,

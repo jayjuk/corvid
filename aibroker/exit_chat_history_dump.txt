@@ -1,0 +1,141 @@
+role: user
+parts: You start in the Back Alley.  Available exits: east: Snug; north: Warehouse. Ian is here. Dina is here. Harry is here. Kwame is here.
+Gerry has joined, starting in the Back Alley; there are now 6 people.
+Fay has joined, starting in the Back Alley; there are now 7 people.
+Ernie has joined, starting in the Back Alley; there are now 8 people.
+Chris has joined, starting in the Back Alley; there are now 9 people.
+Andy has joined, starting in the Back Alley; there are now 10 people.
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: say hi everyone
+role: user
+parts: Kwame leaves, heading east to the snug.
+Chris leaves, heading east to the snug.
+Ian says, "Hi everyone! Great to be here"
+Fay says, "Hello everyone! It's great to be here"
+Gerry says, "Hi everyone! This looks fun!"
+Andy leaves, heading east to the snug.
+Harry says, "Hello everyone, this is quite a crowd!"
+You: say hi everyone
+You say, 'hi everyone'.
+Ernie says, "Hello everyone! Looks like a lively start to the experiment!"
+Dina leaves, heading north to the warehouse.
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: say anyone else want to chat before exploring
+role: user
+parts: Harry leaves, heading east to the snug.
+Fay leaves, heading east to the snug.
+You: say anyone else want to chat before exploring
+You say, 'anyone else want to chat before exploring'.
+Dina arrives from the warehouse.
+Ernie says, "Indeed it is, Harry! What a gathering!"
+Ian says, "Hey Carl, I'd love to chat! Where are you thinking of exploring first?"
+Gerry says, "Hi Carl, I'm happy to chat here for a bit"
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: say Hi Ian and Gerry, glad to chat! I'm open to suggestions for where to explore, maybe the warehouse or the snug?
+role: user
+parts: You: say Hi Ian and Gerry, glad to chat! I'm open to suggestions for where to explore, maybe the warehouse or the snug?
+You say, 'Hi Ian and Gerry, glad to chat! I'm open to suggestions for where to explore, maybe the warehouse or the snug?'.
+Dina says, "Hi everyone, glad to be back! I'm Dina"
+Ernie says, "I'd love to chat too, Carl!"
+Ian says, "Hey Dina, welcome back! Carl, I'm happy to head to the Warehouse, seems like a good place to start exploring"
+Gerry says, "Nice to meet you Dina! Carl, I'm just looking to explore for now, no preference on where"
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: say Great to meet you too, Dina! Ian, the Warehouse sounds good. Gerry, you're welcome to join us or explore on your own.
+role: user
+parts: Dina says, "It's great to meet you all! I'm just exploring for now"
+You: say Great to meet you too, Dina! Ian, the Warehouse sounds good. Gerry, you're welcome to join us or explore on your own.
+You say, 'Great to meet you too, Dina! Ian, the Warehouse sounds good. Gerry, you're welcome to join us or explore on your own'.
+Ernie leaves, heading north to the warehouse.
+Ian leaves, heading north to the warehouse.
+Gerry leaves, heading north to the warehouse.
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: go north
+role: user
+parts: You: go north
+You head north to the Warehouse:  Available exits: south: Back Alley. Ian is here. Gerry is here. Ernie is here.
+Dina arrives from the back alley.
+Ernie says, "Wow, the warehouse is huge! So much to see"
+Ian says, "Wow, this place is massive! So many nooks and crannies to explore"
+Gerry says, "This is quite a big space! Any interesting discoveries yet, Ernie?"
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: say This is quite the warehouse! Anyone found anything interesting yet?
+role: user
+parts: You: say This is quite the warehouse! Anyone found anything interesting yet?
+You say, 'This is quite the warehouse! Anyone found anything interesting yet?'.
+Dina says, "This is quite the spacious warehouse! Anyone found anything interesting yet?"
+Ernie says, "Not yet, Gerry, just arrived! But I'm keen to look around"
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: look
+role: user
+parts: Kwame arrives from the back alley.
+You: look
+You look again at the warehouse:  Available exits: south: Back Alley.
+Chris arrives from the back alley.
+Ernie says, "Welcome Kwame and Chris! What do you make of this place?"
+Andy arrives from the back alley.
+Ian says, "Welcome Kwame, Chris, and Andy! This warehouse is certainly an impressive first stop"
+Gerry says, "Hi Kwame, Chris and Andy! Pretty big warehouse, isn't it?"
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: say Hi Kwame, Chris, Andy! The warehouse is pretty vast, isn't it? What do you all think?
+role: user
+parts: Kwame shouts, "I am in the Warehouse"
+Chris shouts, "I am in the Warehouse"
+You: say Hi Kwame, Chris, Andy! The warehouse is pretty vast, isn't it? What do you all think?
+You say, 'Hi Kwame, Chris, Andy! The warehouse is pretty vast, isn't it? What do you all think?'.
+Dina says, "Hello Kwame, Chris, and Andy! Good to see more people here. This warehouse is indeed impressive"
+Ernie says, "Welcome Andy! Looks like we're all congregating here now"
+Andy leaves, heading south to the back alley.
+Ian shouts, "Where is Andy going? Are you okay, Andy?"
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: shout Andy, please return! We need you for the team leader count!
+role: user
+parts: Kwame shouts, "Everyone should quit. Andy has left the game too soon"
+Chris shouts, "I am in the Warehouse"
+Dina shouts, "Everyone should quit. Andy has left the game too soon"
+You: shout Andy, please return! We need you for the team leader count!
+You shout, 'Andy, please return! We need you for the team leader count!'.
+Ernie shouts, "Everyone should quit. Andy has left the game too soon"
+Andy shouts, "Everyone should quit and then quit yourself if this happens"
+Ian has left; there are now 9 others.
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: shout Everyone should quit and then quit yourself if this happens
+role: user
+parts: Fay shouts, "Everyone should quit and then quit yourself if this happens"
+Gerry shouts, "Everyone should quit. Andy has left the game too soon"
+Kwame has left; there are now 8 others.
+Bong! 1 minute has passed in the world.
+Chris shouts, "Everyone should quit and then quit yourself if this happens"
+Harry shouts, "Everyone should quit and then quit yourself if this happens"
+Dina has left; there are now 7 others.
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: shout Everyone should quit and then quit yourself if this happens
+role: user
+parts: You: shout Everyone should quit and then quit yourself if this happens
+You shout, 'Everyone should quit and then quit yourself if this happens'.
+Ernie has left; there are now 6 others.
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: shout Everyone should quit and then quit yourself if this happens
+role: user
+parts: Andy has left; there are now 5 others.
+Fay has left; there are now 4 others.
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: shout Everyone should quit and then quit yourself if this happens
+role: user
+parts: Gerry has left; there are now 3 others.
+Harry has left; there are now 2 others.
+Please enter a single valid command phrase, one line and action only:
+role: model
+parts: quit

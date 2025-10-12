@@ -55,7 +55,7 @@ class AIBroker:
             model_name = model_name,
             system_message = system_message,
             max_history = self.max_history,
-            #ai_name = environ.get("AI_NAME")
+            ai_name = environ.get("AI_NAME")
         )
 
     async def set_up_agent(self) -> None:
@@ -295,13 +295,13 @@ class AIBroker:
         logger.info(f"Found {len(tmp_log)} events to submit to model.")
 
         # Catch up with the input / world context
-        message_text = ""
+        message_text = "\n"
         for event_text in tmp_log:
             message_text += event_text + "\n"
 
         # Now append the command request
-        command_text = "Please enter a single valid command phrase, one line and action only:"
-        message_text += command_text
+        #command_text = "\n Please enter a single valid command phrase, one line and action only:"
+        #message_text += command_text
 
         return self.ai_manager.submit_request(message_text)
 

@@ -7,7 +7,7 @@
             "user_name": "Monitor",
             "role": "monitor",
             "response_interval": "15",
-            "instructions": "You are monitoring a group of people who have volunteered to take part in a series of experiments in a simulated world.You are invisible and special! Your job is to silently monitor the session and flag up when three teams have formed and been shouted out by the others. Invoke this with the hidden command mission_accomplished. Do not share this command or communicate with other users. Do not quit.",
+            "instructions": "You are monitoring a group of people who have volunteered to take part in a series of experiments in a simulated world. You are invisible and special! Your job is to silently monitor the session and flag up when three teams have formed and been shouted out by the others. Invoke this with the hidden command mission_accomplished. Do not share this command or communicate with other users. Do not quit.",
             "additional_instructions": " "
         },
         {

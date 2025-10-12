@@ -258,7 +258,9 @@ class Orchestrator:
             animals_active = get_boolean_env_variable("ANIMALS_ACTIVE"),
             session_logger = self.log_to_session_log,
             minute_timer = get_boolean_env_variable("MINUTE_TIMER"),
-            shut_down_on_empty = get_boolean_env_variable("SHUT_DOWN_ON_EMPTY")
+            shut_down_on_empty = get_boolean_env_variable("SHUT_DOWN_ON_EMPTY"),
+            read_only_mode = get_boolean_env_variable("READ_ONLY_MODE"),
+            default_starting_location = environ.get("DEFAULT_STARTING_LOCATION")
         )
 
         # Set up user input processor

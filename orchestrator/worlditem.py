@@ -44,7 +44,7 @@ class WorldItem:
                 new_location: str = self.starting_location
             else:
                 # Set default location
-                new_location: str = world.get_default_location()
+                new_location: str = world.get_default_starting_location()
             logger.info(f"Moving it to {new_location}.")
             self.set_location(new_location)
 

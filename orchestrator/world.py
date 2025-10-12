@@ -25,6 +25,7 @@ class World:
         mode: Optional[str] = None,
         ai_manager: AIManager = None,
         landscape: Optional[str] = None,
+        default_starting_location: str = None
     ) -> None:
 
         logger.info(f"Creating world {name}")
@@ -53,8 +54,8 @@ class World:
         self.entities: Dict[str, Entity] = {}
         self.done_path: Dict[str, bool] = {}
 
-        # Populate dictionary of room items, keyed off room name (aka location)
-        self.rooms: Dict = self.load_rooms()
+        # Load rooms
+        self.load_rooms(default_starting_location)
 
         # Only load items and merchants if not in any special mode
         if not mode:
@@ -80,7 +81,8 @@ class World:
         # )
         return f"Welcome to this world: {world_theme}\nYour objective for now is simply to explore and have fun!"
 
-    def load_rooms(self) -> Dict[str, Room]:
+    # Populate dictionary of room items, keyed off room name (aka location)
+    def load_rooms(self, default_starting_location: Optional[str] = None) -> Dict[str, Room]:
 
         logger.info("Loading rooms...")
 
@@ -100,33 +102,28 @@ class World:
             self.is_empty = True
 
         # Add room name to each room
-        rooms_dict: Dict[str, Room] = {}
+        self.rooms: Dict[str, Room] = {}
         for room in rooms_list:
             r = Room(world=self, init_dict=room)
-            rooms_dict[r.name] = r
+            self.rooms[r.name] = r
 
         # Set default room
-        self.default_location: str = "Road"
-        if self.default_location not in rooms_dict:
-            # Default to alphabetically first room
-            # TODO #76 Make starting room per world data / configurable
-            self.default_location = list(sorted(rooms_dict.keys()))[0]
+        self.set_default_starting_location(default_starting_location)
 
         # Add a grid reference for each room. This is used to validate that rooms don't overlap
         # Start with the first room found, grid references can go negative
         self.add_grid_references(
-            rooms_dict,
-            self.get_default_location(),
-            rooms_dict[self.get_default_location()],
+            self.rooms,
+            self.get_default_starting_location(),
+            self.rooms[self.get_default_starting_location()],
             0,
             0,
         )
         if store_default_rooms:
             logger.info(f"Storing default rooms in database for new world {self.name}")
             self.storage_manager.store_world_objects(
-                self.name, list(rooms_dict.values())
+                self.name, list(self.rooms.values())
             )
-        return rooms_dict
 
     def add_grid_references(
         self,
@@ -197,8 +194,14 @@ class World:
                 )
         return rooms_missing_images
 
-    def get_default_location(self) -> str:
-        return self.default_location
+    def get_default_starting_location(self) -> str:
+        return self.default_starting_location
+
+    def set_default_starting_location(self, location: str) -> None:
+        if location and location in self.rooms:
+            self.default_starting_location = location
+        else:
+            self.default_starting_location = list(self.rooms.keys())[0]
 
     def get_directions(self) -> List[str]:
         return list(self.directions.keys())
@@ -499,8 +502,8 @@ class World:
         if room_name in self.rooms:
             del self.rooms[room_name]
         # Change default room
-        if self.default_location == room_name:
-            self.default_location = list(self.rooms.keys())[0]
+        if self.get_default_starting_location() == room_name:
+            self.reset_default_starting_location()
 
         self.storage_manager.delete_world_object(
             self.name, "Room", room_name, location=""
@@ -620,7 +623,7 @@ class World:
                     f"item location {item.location} for item {item.name} does not correspond to a room or entity. Resetting it to default location."
                 )
                 # This will also register the item with the room, and store the update
-                item.set_room(self.default_location)
+                item.set_room(self.get_default_starting_location())
             else:
                 # Add item to list of items for its starting room
                 self.add_item_to_room(item, item.location)
@@ -740,9 +743,9 @@ class World:
             logger.info(f"Person {name} has played before")
             # Check room is still valid
             if stored_user_data["location"] not in self.rooms:
-                stored_user_data["location"] = self.default_location
+                stored_user_data["location"] = self.get_default_starting_location()
                 logger.info(
-                    f"Person {name} has invalid location, resetting to {self.default_location}"
+                    f"Person {name} has invalid location, resetting to {stored_user_data['location']}"
                 )
         try:
             p: Person = Person(self, user_id, name, role, stored_user_data=stored_user_data)

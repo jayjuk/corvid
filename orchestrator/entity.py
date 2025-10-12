@@ -29,7 +29,7 @@ class Entity:
         # By default don't record location history
         self.record_location_history = False
         # Default starting location
-        self.location: str = location or world.get_default_location()
+        self.location: str = location or world.get_default_starting_location()
 
         # Inventory
         self.inventory: List[WorldItem] = []
