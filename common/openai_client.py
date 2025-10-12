@@ -12,8 +12,7 @@ import openai
 # Connect to the LLM API
 def get_model_client() -> openai.OpenAI:
     # Use pre-set variable before dotenv.
-    openai.api_key = get_critical_env_variable("OPENAI_API_KEY")
-    return openai.OpenAI()
+    return openai.OpenAI(base_url=get_critical_env_variable("OPENAI_BASE_URL"), api_key=get_critical_env_variable("OPENAI_API_KEY"))
 
 
 # Get the model response (OpenAI specific)

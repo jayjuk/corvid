@@ -31,7 +31,7 @@ def query_gpt(model_client, prompt):
 
 
 def main():
-    load_dotenv()
+    load_dotenv("../.env", override=True)
     openai.api_key = os.getenv("OPENAI_API_KEY")
     model_client = openai.OpenAI()
 

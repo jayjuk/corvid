@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 
 if not os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"):
-    load_dotenv()
+    load_dotenv("../../common/.env", override=True)
     if not os.environ.get("AZURE_STORAGE_ACCOUNT_NAME"):
         print("AZURE_STORAGE_ACCOUNT_NAME not set. Exiting.")
         exit(1)

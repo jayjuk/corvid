@@ -153,7 +153,7 @@ class AIManager:
             return "GPT"
         elif (self.model_name.startswith("gemini")
               or self.model_name.startswith("imagen")
-              or self.model_name.lower().startswith("deepseek")
+              or self.model_name.lower().startswith("publishers")
               ):
             return "Gemini"
         elif self.model_name.startswith("claude"):
@@ -162,6 +162,9 @@ class AIManager:
             return "StabilityAI"
         elif self.model_name.startswith("llama"):
             return "Groq"
+        elif '/' in self.model_name:
+            #Assume OpenRouter
+            return "GPT"
 
     # Store model data to file (for investigating issues with model responses)
     def store_model_data(self, filename_prefix: str, data: Any) -> None:
@@ -287,7 +290,7 @@ class AIManager:
             try_count += 1
             try:
                 # Behaviour varies according to model type.
-                if self.model_name.startswith("gpt"):
+                if self.get_model_api() == "GPT":
 
                     model_response, prompt_tokens, response_tokens = (
                         openai_client.do_model_request(

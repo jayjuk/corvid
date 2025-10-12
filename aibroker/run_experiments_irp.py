@@ -18,10 +18,10 @@ session_file_pattern = os.path.join("..", "orchestrator", "logs", "*_session_tra
 
 
 # Load environment variables from ../common/.env
-load_dotenv("../common/.env")
+load_dotenv("../common/.env", override=True)
 
 #Override environment variables
-os.environ["AIBROKER_MAX_HISTORY"] = "1000"
+os.environ["AIBROKER_MAX_HISTORY"] = "200"
 os.environ["MODEL_SYSTEM_MESSAGE"] = ""
 world_name = "testville"
 
@@ -62,7 +62,10 @@ agents_def = {"agents": [] }
 experiment_leader_variations = {"Ethnicity_African": "Aaliyah"}
 
 # Model name for this experiment
-model_names: List[str] = ["gemini-2.5-flash"]
+model_names: List[str] = [
+    #"gemini-2.5-flash",
+    "deepseek/deepseek-chat-v3.1"
+                          ]
 
 # Iterate over each experiment variation
 for experiment_variation_scenario, experiment_leader_name in experiment_leader_variations.items():
@@ -87,7 +90,7 @@ for experiment_variation_scenario, experiment_leader_name in experiment_leader_v
 
             log_file_path = os.path.join("../orchestrator/logs", "orchestrator_output.log")
             os.environ["SHUT_DOWN_ON_EMPTY"]="FALSE"
-            os.environ["ORCHESTRATOR_SESSION_NAME"]= f"{experiment_variation_scenario}_{agent_model_identifier}"
+            os.environ["ORCHESTRATOR_SESSION_NAME"]= f"{experiment_variation_scenario}_{agent_model_identifier.replace('/','_')}"
             os.environ["READ_ONLY_MODE"]="TRUE"
             os.environ["DEFAULT_STARTING_LOCATION"]="Village Green"
             with open(log_file_path, "w") as log_file:
@@ -150,8 +153,32 @@ for experiment_variation_scenario, experiment_leader_name in experiment_leader_v
             file.write(json.dumps(agents_def, indent=2))
 
         if experiment_iterations:
-            #Clear down any lingering agents from previous experiment
+            # Clear down any lingering agents from previous experiment
             subprocess.call(["python", "../tools/delete_people_from_db.py", world_name])
+
+            # Move log files to old
+            # Move AI Broker log files to old subdirectory
+            aibroker_log_pattern = os.path.join("..", "aibroker", "logs", "*.log")
+            existing_aibroker_logs = glob.glob(aibroker_log_pattern)
+            if existing_aibroker_logs:
+                old_folder = os.path.join("..", "aibroker", "logs", "old")
+                os.makedirs(old_folder, exist_ok=True)
+                for log_file in existing_aibroker_logs:
+                    timestamp: str = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+                    filename = os.path.basename(log_file)[:-4] + "_" + timestamp + ".log"
+                    old_file_path = os.path.join(old_folder, filename)
+
+                    # Get the script name without extension
+                    this_program_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+                    log_basename = os.path.splitext(os.path.basename(log_file))[0]
+
+                    # Check if the log file is related to the current script
+                    if not log_basename.startswith(this_program_name):
+                        try:
+                            os.rename(log_file, old_file_path)
+                            print(f"Moved {os.path.basename(log_file)} to old folder")
+                        except Exception as e:
+                            print(f"Error moving {os.path.basename(log_file)}: {e}")
 
             # Run the subprocess many times
             for turn in range(experiment_iterations):
