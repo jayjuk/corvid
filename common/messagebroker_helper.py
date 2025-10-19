@@ -39,7 +39,7 @@ class MessageBrokerHelper:
     async def set_up_nats(self):
         try:
             await self.nc.connect(servers=[f"nats://{self.host}:{self.port}"])
-            logger.info(f"Connected to NATS server at {self.host}")
+            logger.debug(f"Connected to NATS server at {self.host}")
 
             # Publish startup messages
             for queue_name, message in self.startup_messages:
@@ -133,7 +133,7 @@ class MessageBrokerHelper:
 
         await self.nc.publish(queue, message.encode())
         await self.nc.flush()
-        logger.info(f"Sent message to queue {queue}: {message}")
+        logger.debug(f"Sent message to queue {queue}: {message}")
 
     def close(self):
         """Close the NATS connection."""

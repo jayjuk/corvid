@@ -321,9 +321,9 @@ class AIManager:
                     if "#" in model_response:
                         model_response = model_response.split("#")[0].strip()
 
-                    # If multiple lines separated by newline, return only the first one
+                    # If multiple lines separated by newline, and not JSON, return only the first one
                     model_response = model_response.strip()
-                    if '\n' in model_response:
+                    if '\n' in model_response and not (model_response.startswith('{') and model_response.endswith('}')):
                         logger.warning(f"Model response split over multiple lines, accepting only the first line:\n{model_response}")
                         model_response = model_response.split('\n')[0]
 

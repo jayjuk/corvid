@@ -56,7 +56,7 @@ class Orchestrator:
             session_name += "_" + environ["ORCHESTRATOR_SESSION_NAME"]
         session_log_file_name: str = path.join(get_logs_folder(), f"{world_name}_{session_name}_{timestamp}.log")
         f: TextIO = open(
-            session_log_file_name, "w"
+            session_log_file_name, "a"
         )
         f.write(f"# Session log for {world_name}\n\n")
         self.session_transcript_handle = f
@@ -103,7 +103,7 @@ class Orchestrator:
         if user_id in self.world_manager.people:
             person: Person = self.world_manager.people[user_id]
             logger.info(
-                f"Received user action: {user_input} from {user_id} ({person.name})"
+                f"Received user action: {user_input} from {person.name}"
             )
             self.log_to_session_log(f"{person.name}: {user_input}")
             await self.mbh.publish("world_update", f"You: {user_input}", user_id)
@@ -112,13 +112,12 @@ class Orchestrator:
             response_to_person: Optional[str]
 
             # Process person input to resolve the command and arguments, or return an error message
-            result = await self.user_input_processor.process_user_input(
+            (command_function, command_args, response_to_person) = await self.user_input_processor.process_user_input(
                 person, user_input
             )
-            (command_function, command_args, response_to_person) = result
             if command_function:
                 if isinstance(command_function, Callable):
-                    logger.info(
+                    logger.debug(
                         f"Command function: {command_function.__name__}, Args: {command_args[1:]}"
                     )
                     if asyncio.iscoroutinefunction(command_function):

@@ -327,7 +327,7 @@ class UserInputProcessor:
 
     async def handle_translation_response(
         self, ai_response: str, request_data: str = ""
-    ) -> Optional[Tuple[str, str, str]]:
+    ) -> str:
         # Strip any leading/trailing whitespace or carriage returns
         ai_response = ai_response.strip()
         person = request_data["person"]
@@ -351,9 +351,9 @@ class UserInputProcessor:
                 outcome = await command_function(*command_args)
                 return outcome
             elif response_to_person:
-                return None, None, response_to_person
+                return response_to_person
             else:
-                return None, None, output
+                return output
         else:
             exit(logger, "AI requester response empty!")
 
@@ -405,7 +405,7 @@ class UserInputProcessor:
 
         # Check for synonyms
         command = self.synonyms.get(command, command)
-        logger.info(f"Command: {command}")
+        logger.debug(f"Command: {command}")
 
         # Resolve the function associated with a command, and its parameters.
         if command in self.command_functions:

@@ -9,6 +9,7 @@ import os
 import time
 from typing import Any
 import signal
+import asyncio
 
 # INSTRUCTIONS TO USE THIS MODULE
 # At the top of your module, add the following:
@@ -167,7 +168,11 @@ def exit(logger: Optional[logging.Logger] = None, message: str = None, logging_l
         if isinstance(logger, str):
             print(f"I suspect a message was passed into the logger parameter: {logger}")
     print("Exiting...")
-    sys.exit(exit_code)
+    loop = asyncio.get_event_loop()
+    if loop:
+        loop.stop()
+    else:
+        sys.exit(exit_code)
 
 
 # Check if mandatory environment variable is set

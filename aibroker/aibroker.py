@@ -58,6 +58,11 @@ class AIBroker:
             ai_name = environ.get("AI_NAME")
         )
 
+        self.orchestrator_last_update: Optional[float] = None
+
+    async def orchestrator_alive(self) -> None:
+        self.orchestrator_last_update = time.time()
+
     async def set_up_agent(self) -> None:
         # Set up the message broker
         self.mbh = MessageBrokerHelper(
@@ -88,6 +93,10 @@ class AIBroker:
 
     # World update event handler
     async def world_update(self, data: Dict) -> None:
+        # Record that orchestrator is alive and well
+        self.orchestrator_alive()
+
+        # Check update has data
         if data:
             logger.info(f"Received world update event: {data}")
             self.log_event(data)
@@ -98,6 +107,8 @@ class AIBroker:
 
     # Instructions event handler
     async def instructions(self, data: Dict) -> None:
+        # Record that orchestrator is alive and well
+        self.orchestrator_alive()
         logger.info(f"Received instructions event: {data}")
         self.record_instructions(data)
 
@@ -114,10 +125,14 @@ class AIBroker:
     # Room update event handler
     async def room_update(self, data: Dict) -> None:
         # For now nothing, do not even log - this consists of the room description, and the image URL, not relevant to AI
-        pass
+        # Just record that orchestrator is alive and well
+        self.orchestrator_alive()
 
     # Person update event handler
     async def world_data_update(self, data: Dict) -> None:
+        # Record that orchestrator is alive and well
+        self.orchestrator_alive()
+        # Activate/deactivate depending on user count
         if "user_count" in data:
             if data["user_count"] == 1 and self.mode != "builder" and not get_boolean_env_variable("ALLOW_SOLO_AGENT_ACTIVITY"):
                 logger.info("No people apart from me, so I won't do anything.")
@@ -141,6 +156,15 @@ class AIBroker:
     # The main processing loop
     async def ai_response_loop(self) -> None:
         while True:
+            
+            # Check last update time of orchestrator
+            # Check if we haven't heard from orchestrator for too long
+            orchestrator_timeout = int(environ.get("ORCHESTRATOR_TIMEOUT", 180))
+            if self.orchestrator_last_update and (time.time() - self.orchestrator_last_update) > orchestrator_timeout:
+                logger.critical(f"Haven't heard from orchestrator in over {orchestrator_timeout} seconds. Exiting.")
+                self.time_to_exit = True
+                return
+
             # Exit own thread when time comes
             if self.time_to_exit:
                 logger.info("Exiting the main loop in order to exit cleanly.")
@@ -250,7 +274,7 @@ class AIBroker:
         self.user_id = self.user_name.lower()
 
         # Update logger filename
-        update_logger_filename(logger, f"ai_broker_{self.user_name}.log", log_to_stdout = get_boolean_env_variable("AI_BROKER_LOG_TO_STDOUT"))
+        update_logger_filename(logger, f"AI_broker_{self.user_name}.log", log_to_stdout = get_boolean_env_variable("AI_BROKER_LOG_TO_STDOUT"))
 
         # Subscribe to name-specific events
         await self.mbh.subscribe(f"world_update.{self.user_id}", self.world_update)

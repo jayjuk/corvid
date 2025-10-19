@@ -188,7 +188,7 @@ class AzureStorageManager(StorageManager):
         # First, learn and cache the list of fields to convert for this type of object (partition key can be used for this)
         self.stringify_object(entity)
 
-        logger.info(f"Storing {entity['name']}")
+        logger.debug(f"Storing {entity['name']}")
         try:
             objects_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
         except Exception as e:
@@ -198,7 +198,7 @@ class AzureStorageManager(StorageManager):
 
         # If flag says to, also write this record to an equivalent history table
         if record_location_history:
-            logger.info("Recording history as requested")
+            logger.debug("Recording history as requested")
             entity["Entity_Key"] = entity["RowKey"]
             timestamp = str(int(time.time())) + "_" + str(time.perf_counter_ns())
             entity["RowKey"] = timestamp + "_" + entity["RowKey"]

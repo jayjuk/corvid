@@ -79,7 +79,7 @@ class World:
         #     + "You don't know what will happen when you press The Button, but you know it will be good. "
         #     + "Hint: earn money buy exploring the world, finding items and selling them to a merchant."
         # )
-        return f"Welcome to this world: {world_theme}\nYour objective for now is simply to explore and have fun!"
+        return ""#f"Welcome to this world: {world_theme}\nYour objective for now is simply to explore and have fun!"
 
     # Populate dictionary of room items, keyed off room name (aka location)
     def load_rooms(self, default_starting_location: Optional[str] = None) -> Dict[str, Room]:

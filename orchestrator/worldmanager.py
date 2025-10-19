@@ -1229,7 +1229,10 @@ class WorldManager:
             message = self.build_move_outcome_message(
                 entity, self.resolve_move_action(direction), next_room
             )
-            self.log_to_session(f"{entity.name} moves {direction} to {next_room} which now contains {len(new_location_people)} people ({', '.join(new_location_people)}).")
+            move_desc: str = f"moves {direction} to"
+            if direction=="join":
+                move_desc = "joins in"
+            self.log_to_session(f"{entity.name} {move_desc} the {next_room} which now contains {len(new_location_people)} people ({', '.join(new_location_people)}).")
             
             # Emit update to person
             await self.emit_user_room_update(entity, next_room)

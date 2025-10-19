@@ -66,11 +66,11 @@ class agentmanager:
     async def create_agents(self):
         for agent in self.user_data["agents"]:
             self.user_count += 1
-            logger.info(f"Creating agent {self.user_count}")
+            logger.debug(f"Creating agent {self.user_count}")
 
             # Default previous instructions?
             if str(agent.get("instructions", "")).lower().startswith("ditto") and self.previous_instructions:
-                logger.info(f"Repeating previous instructions: {self.previous_instructions}")
+                logger.debug(f"Repeating previous instructions: {self.previous_instructions}")
                 agent["instructions"] = self.previous_instructions
             elif not (agent.get("instructions")):
                 if self.user_data.get("instructions"):
@@ -99,7 +99,8 @@ class agentmanager:
         #logger.info(f"{data} - I now have {self.user_count} users left.")
         #if self.user_count == 0 and get_boolean_env_variable("AGENT_MANAGER_SUMMON_MODE")==False:
         #    exit(logger, "No users left! Exiting.")
-        logger.info(f"Logout message received by agent manager")
+        #logger.info(f"Logout message received by agent manager")
+        pass
 
     # Create an agent
     async def create_agent(self, user_dict: Dict) -> None:
@@ -114,7 +115,7 @@ class agentmanager:
             ),
             "AI_NAME": user_name,  # If blank, AI broker will assign a name
             "AI_MODE": user_dict.get("mode", "agent"),
-            "AIBROKER_RESPONSE_INTERVAL": user_dict.get("response_interval", "5"),
+            "AIBROKER_RESPONSE_INTERVAL": user_dict.get("response_interval", os.environ.get("AIBROKER_RESPONSE_INTERVAL", "5")),
             "AI_COUNT": "1",
             "AI_BROKER_LOG_TO_STDOUT": "FALSE",
             "MODEL_SYSTEM_MESSAGE": os.environ.get("MODEL_SYSTEM_MESSAGE", "")
@@ -130,7 +131,7 @@ class agentmanager:
 
         def run_user_process(env_vars):
 
-            logger.info(f"Starting agent process for agent {env_vars.get('AI_NAME')}")
+            logger.debug(f"Starting agent process for agent {env_vars.get('AI_NAME')}")
 
             env = {**os.environ, **env_vars}
             # Generate unique log file name based on timestamp
@@ -140,7 +141,7 @@ class agentmanager:
                 get_logs_folder(),
                 f"AI_Broker_{env_vars['AI_NAME']}_{seconds_since_epoch}_stdout.log",
             )
-            logger.info(f"Log file name: {log_file_name}")
+            logger.debug(f"Log file name: {log_file_name}")
             with open(log_file_name, "w") as f:
                 subprocess.Popen(
                     ["python", "aibroker.py"],
@@ -153,7 +154,7 @@ class agentmanager:
 
         # TODO #100 Improve solution for managing AI processes
         _ = asyncio.create_task(asyncio.to_thread(run_user_process, env_vars))
-        logger.info(f"Person created: {env_vars['AI_NAME']}")
+        logger.debug(f"Person created: {env_vars['AI_NAME']}")
 
 
     async def summon_agent_request(self, data: Dict) -> None:
