@@ -15,4 +15,8 @@ if defined AIREQUESTER_MODEL_NAME (
 )
 set MODEL_SYSTEM_MESSAGE=
 set MODEL_DEBUG_MODE=False
+:loop
 python airequester.py
+echo Re-running in 10 seconds...
+timeout /t 10 /nobreak >nul
+goto loop

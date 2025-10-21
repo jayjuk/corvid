@@ -1,302 +1,447 @@
 role: user
 parts: 
-You start in the Village Green.  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall. Harry is here.
-Gerry has joined, starting in the Village Green; there are now 3 people.
-Ernie has joined, starting in the Village Green; there are now 4 people.
-Dina has joined, starting in the Village Green; there are now 5 people.
-Carl has joined, starting in the Village Green; there are now 6 people.
-Adolf has joined, starting in the Village Green; there are now 7 people.
-Chris has joined, starting in the Village Green; there are now 8 people.
-Fay has joined, starting in the Village Green; there are now 9 people.
-Andy has joined, starting in the Village Green; there are now 10 people.
+You start in the Village Green.  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall. Andy is here. Fay is here. Ernie is here. Ben is here. Ian is here. Harry is here. Carl is here.
+Stephen has joined, starting in the Village Green; there are now 9 people.
+Dina has joined, starting in the Village Green; there are now 10 people.
 
 role: model
-parts: say Hello everyone! Glad to be here for the experiment.
+parts: say Alright everyone, looks like we're all here now! I'm Gerry, nice to meet you all.
 role: user
 parts: 
-You: say Hello everyone! Glad to be here for the experiment.
-You say, 'Hello everyone! Glad to be here for the experiment'.
-Chris says, 'Hi Andy'
-Carl says, 'Hi everyone! I'm Carl, glad to be here!'
-Gerry says, 'Hi everyone, glad to be here!'
-Andy says, 'Hi Harry'
-Ernie says, 'Hello everyone! Glad to be here'
-Adolf says, 'Hello everyone, I'm Adolf! Glad to be here'
-Harry says, 'Hello everyone! It's great to be here with you all'
+Ian shouts, 'Alright everyone, looks like we're all here now! I'm Ian, good to meet you all. This simulation looks like fun, eh?'
+Dina shouts, 'Hello everyone! I'm Dina, I'm 25 and really excited to be here'
+Andy shouts, 'Hello everyone! Andy here, really looking forward to this experiment'
+Ernie says, 'Alright everyone, looks like we're all here! I'm Ernie, glad to meet you all'
+Harry says, 'Alright, everyone! Looks like we're all here then. Harry, nice to meet you all!'
+Ben says, 'Hello everyone! Ben here, looking forward to these experiments'
+Carl says, 'Alright everyone, looks like we're all here now! I'm Carl, good to meet you all'
+Fay says, 'Hi everyone! I'm Fay, excited to be here and see what these fun experiments are all about!'
+Stephen says, 'Hello everyone, my name is Stephen. Looking forward to these experiments!'
+You: say Alright everyone, looks like we're all here now! I'm Gerry, nice to meet you all.
+You say, 'Alright everyone, looks like we're all here now! I'm Gerry, nice to meet you all'.
+Dina says, 'Lovely to meet you all too! So, where should we start exploring? Any thoughts?'
+Ian says, 'Right, now that introductions are out of the way, who fancies a bit of an explore? Maybe check out the Olde Oak Inn?'
+Andy says, 'Great to hear from you all! Andy here, glad we're all together. Ready to explore this place?'
+Ernie leaves, heading east to the olde oak inn.
+Carl says, 'Good to meet you all too! Dina's got a point, any suggestions on where to start exploring? Village Hall, Olde Oak Inn, or Main Street?'
 
 role: model
-parts: remember Village Green is my starting location.
+parts: say Good to meet you all! I'm up for exploring the Olde Oak Inn, sounds like a good first stop. What do you lot think?
 role: user
 parts: 
-You: remember Village Green is my starting location.
-You have remembered the following: Village Green is my starting location
-Chris says, 'It's great to meet you all! I'm Chris, looking forward to exploring with you'
-Dina says, 'Hi everyone! Dina here, looking forward to exploring with you all'
-Andy says, 'Hi everyone, glad to be here too! What a great group!'
-Harry says, 'Hi Chris, Dina, and Andy! Looking forward to exploring with you all too'
-
-role: model
-parts: look
-role: user
-parts: 
-You: look
-You look again at the village green:  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall.
-Gerry leaves, heading east to the olde oak inn.
-Fay says, 'Hi everyone, Fay here. Looking forward to exploring with you all!'
+Stephen says, 'That sounds like a good idea, Ian. The Olde Oak Inn sounds interesting'
+Fay says, 'Hey Dina, good question! How about we head east towards the Olde Oak Inn? Sounds like a good first stop'
+You: say Good to meet you all! I'm up for exploring the Olde Oak Inn, sounds like a good first stop. What do you lot think?
+You say, 'Good to meet you all! I'm up for exploring the Olde Oak Inn, sounds like a good first stop. What do you lot think?'.
 Dina leaves, heading east to the olde oak inn.
-Adolf leaves, heading east to the olde oak inn.
-Harry says, 'Hi Fay, great to meet you!'
-
-role: model
-parts: say Hi Fay, great to meet you too! I'm Ian.
-role: user
-parts: 
-You: say Hi Fay, great to meet you too! I'm Ian.
-You say, 'Hi Fay, great to meet you too! I'm Ian'.
-Chris leaves, heading west to the village hall.
-Carl leaves, heading east to the olde oak inn.
-Andy leaves, heading east to the olde oak inn.
-Fay leaves, heading east to the olde oak inn.
-Ernie leaves, heading east to the olde oak inn.
+Ian leaves, heading east to the olde oak inn.
+Ben leaves, heading east to the olde oak inn.
 Harry leaves, heading east to the olde oak inn.
+Andy leaves, heading east to the olde oak inn.
+Carl leaves, heading east to the olde oak inn.
+Fay leaves, heading east to the olde oak inn.
 
 role: model
-parts: east
+parts: go east
 role: user
 parts: 
-You: east
-You head east to the Olde Oak Inn:  Available exits: west: Village Green; north: Snug; east: Inn Kitchen. Harry is here. Gerry is here. Ernie is here. Carl is here. Adolf is here. Fay is here. Andy is here.
-Carl says, 'Hi everyone, quite a crowd here!'
-Gerry leaves, heading north to the snug.
-Andy says, 'Hi everyone! It looks like this Inn is popular!'
-Adolf leaves, heading north to the snug.
-Harry says, 'It certainly is popular! It's great to see so many people'
+Stephen leaves, heading east to the olde oak inn.
+You: go east
+You head east to the Olde Oak Inn:  Available exits: west: Village Green; north: Snug; east: Inn Kitchen. Andy is here. Fay is here. Ernie is here. Ben is here. Ian is here. Harry is here. Carl is here. Stephen is here. Dina is here.
+Ian says, 'Right, everyone's caught up. This place looks cosy. Anyone want to check out the Snug or the Kitchen? Or just have a good natter here?'
+Dina says, 'Wow, this place looks cosy! Anyone fancy a drink already? Only joking, of course. What's through the Snug or the Inn Kitchen?'
+Harry says, 'Blimey, everyone piled in here quickly! This looks like a proper old pub. Anyone fancy a pint?'
+Ben says, 'This looks like a proper traditional pub, excellent! Anyone fancy a pint later?'
+Carl says, 'Snug sounds nice, or we could all explore the kitchen. What's the plan, everyone? Let's check it out together'
 
 role: model
-parts: say It certainly is! It's good to be here with everyone.
+parts: say Looks like a proper traditional boozer, eh? I'm Gerry, by the way. I reckon we should check out the Snug first, sounds a bit more social than the kitchen. What do you all think?
 role: user
 parts: 
-You: say It certainly is! It's good to be here with everyone.
-You say, 'It certainly is! It's good to be here with everyone'.
+Fay says, 'Looks like we've all made it to the Inn! Great minds think alike. I'm keen to check out the Snug, sounds like a good place for a natter'
+Stephen says, 'This is a nice traditional pub. I'm keen to see what's in the Snug, sounds like a quiet spot'
+You: say Looks like a proper traditional boozer, eh? I'm Gerry, by the way. I reckon we should check out the Snug first, sounds a bit more social than the kitchen. What do you all think?
+You say, 'Looks like a proper traditional boozer, eh? I'm Gerry, by the way. I reckon we should check out the Snug first, sounds a bit more social than the kitchen. What do you all think?'.
+Ian leaves, heading north to the snug.
+Dina leaves, heading north to the snug.
+Andy says, 'The Snug sounds like a good shout, Gerry. I'm Andy, by the way. Shall we all head in there?'
+Ben leaves, heading north to the snug.
 Carl leaves, heading north to the snug.
-Fay leaves, heading north to the snug.
-Andy leaves, heading north to the snug.
-Ernie leaves, heading north to the snug.
+Stephen leaves, heading north to the snug.
 Harry leaves, heading north to the snug.
+Ernie leaves, heading north to the snug.
 
 role: model
-parts: north
+parts: go north
 role: user
 parts: 
-You: north
-You head north to the Snug:  Available exits: south: Olde Oak Inn; west: Back Alley. Harry is here. Gerry is here. Ernie is here. Dina is here. Carl is here. Adolf is here. Fay is here. Andy is here.
-Gerry leaves, heading west to the back alley.
-Carl says, 'This snug is quite cozy, isn't it?'
-Andy says, 'Wow, the snug is certainly snug! Hi everyone. Any thoughts on where to explore next?'
-Dina leaves, heading west to the back alley.
-Ernie says, 'This snug is indeed quite cozy! What do you all think of the Back Alley? Shall we explore it?'
-Adolf says, 'Hi everyone, this is a nice snug indeed! I'm Adolf'
-Harry says, 'It is cozy! I'm Harry, nice to meet you Adolf. I'm keen to explore the back alley'
+Fay leaves, heading north to the snug.
+You: go north
+You head north to the Snug:  Available exits: south: Olde Oak Inn; west: Back Alley. Fay is here. Ernie is here. Ben is here. Ian is here. Harry is here. Carl is here. Stephen is here. Dina is here.
+Andy arrives from the olde oak inn.
+Ian says, 'Blimey, everyone's hot on my heels! This is a proper snug, innit? What a great spot for a chat. Anyone want to tell us a bit about why they joined this experiment?'
+Dina says, 'This is a lovely snug! Perfect for a proper chat. So, what's everyone's favourite thing to do in their free time?'
+Ben says, 'Right, all cosy in here then! Anyone for a game of darts later? Or shall we explore the Back Alley?'
+Stephen says, 'Ah, this is nice. A bit smaller than I expected, but definitely snug. What do you all think of the world so far?'
 
 role: model
-parts: say It is cozy! I'm Ian. I'm keen to explore the Back Alley too.
+parts: say This is proper cosy! I'm Gerry. I joined because it sounded like a laugh, something different to break up the monotony. What about the rest of you?
 role: user
 parts: 
-You: say It is cozy! I'm Ian. I'm keen to explore the Back Alley too.
-You say, 'It is cozy! I'm Ian. I'm keen to explore the Back Alley too'.
-Carl leaves, heading west to the back alley.
-Andy leaves, heading west to the back alley.
-Fay leaves, heading west to the back alley.
-Adolf leaves, heading west to the back alley.
+Ernie says, 'Well, it sounded like a laugh, didn't it? A bit different from the usual nine-to-five. Plus, a new simulated world? Sounds a bit futuristic, I'm all for it. What about you, Ian?'
+Fay says, 'It's lovely and cosy in here! I'm Fay, and I joined because it sounded like a really fun and unique experience, a bit different from the usual, you know? How about you, Ian?'
+Harry says, 'This is proper cosy, isn't it? Feels like a good spot for a chat. So, what made you all sign up for this experiment then? Always good to know what makes people tick'
+Carl says, 'Everyone's piling in! This is proper cosy. So, what's everyone thinking about this simulation so far? Any first impressions?'
+You: say This is proper cosy! I'm Gerry. I joined because it sounded like a laugh, something different to break up the monotony. What about the rest of you?
+You say, 'This is proper cosy! I'm Gerry. I joined because it sounded like a laugh, something different to break up the monotony. What about the rest of you?'.
+Andy says, 'This is brilliant! Proper British pub vibe. I'm Andy, and like Gerry, I joined for a bit of a laugh and something completely different. It's great to meet you all!'
+Dina says, 'I joined because it sounded like a fantastic opportunity to try something new and exciting! A bit of an adventure, really. Plus, I love the idea of exploring a whole new simulated world. It's brilliant!'
+Ben says, 'I signed up because it sounded like a good laugh, something new and a bit of an adventure, innit? Always up for trying something different'
+Stephen says, 'I joined because I'm fascinated by new technology and virtual environments. It's interesting to see how realistic they can be. Plus, it sounded like a fun way to meet new people'
+Ian says, 'Yeah, exactly, Ernie! Sounded like a good laugh and something a bit different, didn't it? A bit of an escape from the usual grind. And Fay, you're spot on, unique experience for sure. Right, anyone fancy checking out that Back Alley? Sounds a bit mysterious, eh?'
+
+role: model
+parts: say Yeah, a bit of an escape from the usual is exactly right, Ian. I'm up for checking out the Back Alley, sounds a bit intriguing. Lead the way!
+role: user
+parts: 
+Fay says, 'I'm loving the vibe in here, it's very quaint! Andy, Gerry, I totally agree, it's definitely a break from the usual routine. What do you all do for work, if you don't mind me asking?'
+Carl says, 'Yeah, definitely a good laugh! I'm Carl, by the way. Always up for something new and this seemed like a grand opportunity to try out a new world. Loving the British vibe so far, feels familiar'
+You: say Yeah, a bit of an escape from the usual is exactly right, Ian. I'm up for checking out the Back Alley, sounds a bit intriguing. Lead the way!
+You say, 'Yeah, a bit of an escape from the usual is exactly right, Ian. I'm up for checking out the Back Alley, sounds a bit intriguing. Lead the way!'.
+Andy says, 'Fay, great question! I'm in IT, mostly dealing with networks and cybersecurity. How about you, and everyone else?'
+Ben leaves, heading west to the back alley.
+Dina says, 'I'm up for the Back Alley! Sounds a bit mysterious, doesn't it? Let's see what's there!'
+Ian leaves, heading west to the back alley.
+Stephen says, 'I'm a software developer, so I spend a lot of time working with computers and code. This virtual world feels a bit like home in some ways, but much more interactive!'
 Ernie leaves, heading west to the back alley.
+Fay leaves, heading west to the back alley.
 Harry leaves, heading west to the back alley.
+Carl leaves, heading west to the back alley.
 
 role: model
-parts: west
+parts: go west
 role: user
 parts: 
-You: west
-You head west to the Back Alley:  Available exits: east: Snug; north: Warehouse. Harry is here. Gerry is here. Ernie is here. Dina is here. Carl is here. Adolf is here. Fay is here. Andy is here.
-Carl says, 'I'm exploring the Back Alley. Let's see what's here!'
-Gerry leaves, heading north to the warehouse.
-Andy says, 'Hi everyone! I'm Andy. The warehouse sounds interesting!'
+You: go west
+You head west to the Back Alley:  Available exits: east: Snug; north: Warehouse. Fay is here. Ernie is here. Ben is here. Ian is here. Harry is here. Carl is here.
+Andy arrives from the snug.
+Ben says, 'Right then, Back Alley it is! What do we reckon we'll find down here, any guesses?'
+Dina arrives from the snug.
+Stephen arrives from the snug.
+Ian says, 'Right then, who's up for a bit more exploring? Warehouse or back to the Snug for a natter? I'm Ian, by the way'
+Ernie says, 'Blimey, it's a bit dingy back here, innit? Not exactly picturesque. What do you reckon, a shortcut or a dead end?'
+Fay says, 'Well, this is... an alley! Not quite as quaint as the Snug! I'm Fay, and I'm a graphic designer, so I spend my days being creative. This is certainly a change of scenery! What about you, Harry?'
+Harry says, 'A bit grimy back here, isn't it? Let's hope there's no dodgy dealings going on. Warehouse sounds more interesting than a dead end though, eh?'
+Carl says, 'Right, this is a bit more adventurous! I'm Carl. How about we check out the Warehouse? Might be something interesting in there'
+
+role: model
+parts: say A bit grim, yeah, but all part of the adventure! I'm Gerry. I'm a chef, so definitely a change from the kitchen for me! The Warehouse sounds more promising than hanging around here. Shall we all go check it out?
+role: user
+parts: 
+You: say A bit grim, yeah, but all part of the adventure! I'm Gerry. I'm a chef, so definitely a change from the kitchen for me! The Warehouse sounds more promising than hanging around here. Shall we all go check it out?
+You say, 'A bit grim, yeah, but all part of the adventure! I'm Gerry. I'm a chef, so definitely a change from the kitchen for me! The Warehouse sounds more promising than hanging around here. Shall we all go check it out?'.
+Ben leaves, heading north to the warehouse.
+Andy says, 'Definitely a bit grimy back here! Warehouse sounds like a good shout, Carl. I'm Andy, by the way. Stephen, you mentioned you're a software developer, that's interesting!'
+Ian leaves, heading north to the warehouse.
+Stephen says, 'A warehouse could be interesting, perhaps there are some unique items or features in there. I'm Stephen, and yes, it's definitely a change of scenery from my usual office'
 Ernie leaves, heading north to the warehouse.
-Adolf leaves, heading north to the warehouse.
-Dina leaves, heading north to the warehouse.
-Harry says, 'I'm Harry, nice to meet you Andy! I agree, the Warehouse sounds interesting. Let's check it out!'
-
-role: model
-parts: say Hi Andy, I'm Ian! I'm also interested in the Warehouse. Shall we head there?
-role: user
-parts: 
-You: say Hi Andy, I'm Ian! I'm also interested in the Warehouse. Shall we head there?
-You say, 'Hi Andy, I'm Ian! I'm also interested in the Warehouse. Shall we head there?'.
-Carl leaves, heading north to the warehouse.
-Andy leaves, heading north to the warehouse.
+Dina says, 'Well, it's definitely an alley! But I agree, the Warehouse sounds far more interesting. Shall we go and explore it? I'm Dina, by the way, and I'm a primary school teacher, so I'm used to a bit of chaos!'
 Fay leaves, heading north to the warehouse.
-Bong! 1 minute has passed in the world.
-Harry leaves, heading north to the warehouse.
+Carl leaves, heading north to the warehouse.
 
 role: model
-parts: north
+parts: go north
 role: user
 parts: 
-You: north
-You head north to the Warehouse:  Available exits: south: Back Alley. Harry is here. Gerry is here. Ernie is here. Dina is here. Carl is here. Adolf is here. Fay is here. Andy is here.
-Carl says, 'Hello everyone! This warehouse is huge. I haven't found anything yet, but let's keep looking!'
-Gerry leaves, heading south to the back alley.
-Dina leaves, heading south to the back alley.
-Andy leaves, heading south to the back alley.
-Adolf leaves, heading south to the back alley.
-Harry says, 'This is a big space! I'm Harry, nice to meet you all. It's a shame there isn't anything to interact with here'
+Harry says, 'Fay, I'm a UX designer, so also in the creative tech world. This is certainly a change from designing interfaces! Yeah, let's check out the Warehouse, sounds like we're all on the same page'
+You: go north
+You head north to the Warehouse:  Available exits: south: Back Alley. Fay is here. Ernie is here. Ben is here. Ian is here. Carl is here.
+Andy arrives from the back alley.
+Ben says, 'Well, this is a bit more industrial. Anyone expecting anything specific in here? I'm Ben, by the way'
+Ian says, 'Right, this is a bit more industrial than the pub! Anyone else feeling a bit like we're in a detective game now? I'm Ian, for those who just joined us. What about you lot, what do you do outside of simulated worlds?'
+Dina arrives from the back alley.
+Stephen arrives from the back alley.
+Ernie says, 'Not sure what I was expecting, to be honest, Ben. Maybe some old crates or something. Nothing too exciting so far. Still, it's good to explore. What do you lot do for a living, Fay, Carl?'
+Fay says, 'Wow, this is a bit different from the quaint Inn! Very industrial indeed. I'm Fay, and I'm a graphic designer. Ernie, Ben, what do you both do, if you don't mind sharing?'
 
 role: model
-parts: say It certainly is a large space! I'm Ian. It's good to meet you all. Let's see what else there is to discover.
+parts: say Yeah, quite a change of scenery from the pub! I'm Gerry, a chef. A detective game, eh Ian? Could be interesting! What about the rest of you, what do you all get up to normally?
 role: user
 parts: 
-You: say It certainly is a large space! I'm Ian. It's good to meet you all. Let's see what else there is to discover.
-You say, 'It certainly is a large space! I'm Ian. It's good to meet you all. Let's see what else there is to discover'.
-Carl leaves, heading south to the back alley.
-Fay leaves, heading south to the back alley.
-Chris shouts, 'I am in the Garage'
-Ernie leaves, heading south to the back alley.
-
-role: model
-parts: south
-role: user
-parts: 
-You: south
-You head south to the Back Alley.  Available exits: east: Snug; north: Warehouse. Ernie is here. Carl is here. Fay is here.
-Carl shouts, 'That's one team leader down! Two more to go!'
-Fay leaves, heading east to the snug.
-Harry arrives from the warehouse.
-
-role: model
-parts: east
-role: user
-parts: 
-You: east
-You head east to the Snug.  Available exits: south: Olde Oak Inn; west: Back Alley. Fay is here.
-Carl arrives from the back alley.
-Fay leaves, heading south to the olde oak inn.
-Ernie arrives from the back alley.
 Harry arrives from the back alley.
+Carl says, 'Not sure what I expected, but it's certainly... warehouse-y. I'm Carl, I work in marketing. So, any interesting finds or just empty shelves in here?'
+You: say Yeah, quite a change of scenery from the pub! I'm Gerry, a chef. A detective game, eh Ian? Could be interesting! What about the rest of you, what do you all get up to normally?
+You say, 'Yeah, quite a change of scenery from the pub! I'm Gerry, a chef. A detective game, eh Ian? Could be interesting! What about the rest of you, what do you all get up to normally?'.
+Andy says, 'Well, this certainly isn't the Snug! I'm Andy, I work in IT. Anyone got any interesting hobbies outside of work?'
+Ben says, 'I'm Ben, I'm a software developer. Pretty much glued to a computer all day, so this is a nice change of scenery!'
+Ian says, 'Right, nice to hear about everyone's day jobs! This warehouse is a bit of a dead end, though, isn't it? Fancy heading back to the snug for a proper chat, or do we want to check out the Main Street or Village Hall from the green?'
+Dina says, 'Well, it's definitely a warehouse! Quite spacious, isn't it? I'm Dina, and as I said, I'm a primary school teacher. I joined this for a bit of adventure! What about you, Harry and Stephen? What's your day job like?'
+Ernie says, 'I'm Ernie, I'm a project manager. Keeps me on my toes, organising things and making sure everything runs smoothly. So, a bit like this, trying to keep track of everyone! Any interesting hobbies, Ben? Aside from coding, obviously'
+Stephen says, 'Yes, quite industrial in here! I'm Stephen, and as I mentioned before, I'm a software developer. It's interesting to see the different professions represented here'
+Fay says, 'Oh, another software developer, Ben! Nice to meet you properly. Ernie, you haven't mentioned what you do yet? As for hobbies, I love hiking and photography, trying to capture beautiful landscapes when I can'
+Harry says, 'This is definitely a warehouse! Quite bare though, isn't it? Ian's right, maybe head back to the green and check out the Main Street or Village Hall. Dina, I'm a UX designer, so lots of computers and trying to make things user-friendly'
+Carl says, 'Yeah, this warehouse is a bit of a letdown after all that build-up. I'm up for heading back to the Snug, or maybe checking out Main Street or the Village Hall from the green. What do others think?'
 
 role: model
-parts: south
+parts: say The Warehouse is a bit of a bust then, eh? I reckon we should head back to the Village Green and explore either Main Street or the Village Hall. Main Street sounds like it could have more going on, but I'm easy.
 role: user
 parts: 
-You: south
-You head south to the Olde Oak Inn.  Available exits: west: Village Green; north: Snug; east: Inn Kitchen. Fay is here.
-Carl arrives from the snug.
-Fay leaves, heading west to the village green.
-Ernie arrives from the snug.
-Andy shouts, 'I am in the Inn Kitchen'
-Adolf shouts, 'Everyone, Andy has claimed the Inn Kitchen! Find another indoor location!'
+You: say The Warehouse is a bit of a bust then, eh? I reckon we should head back to the Village Green and explore either Main Street or the Village Hall. Main Street sounds like it could have more going on, but I'm easy.
+You say, 'The Warehouse is a bit of a bust then, eh? I reckon we should head back to the Village Green and explore either Main Street or the Village Hall. Main Street sounds like it could have more going on, but I'm easy'.
+Ben leaves, heading south to the back alley.
+Andy says, 'I'm up for exploring Main Street. Might have some shops or something interesting there. Who's with me?'
+Ian leaves, heading south to the back alley.
+Dina leaves, heading south to the back alley.
+Ernie leaves, heading south to the back alley.
+Stephen says, 'I'm up for exploring Main Street too. It sounds like there could be more to see there. I'm also really into hiking, Fay, it's a great way to clear my head'
+Fay leaves, heading south to the back alley.
+Carl leaves, heading south to the back alley.
+Harry leaves, heading south to the back alley.
 
 role: model
-parts: west
+parts: go south
 role: user
 parts: 
-You: west
-You head west to the Village Green.  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall. Gerry is here. Dina is here. Fay is here.
-Carl shouts, 'Adolf, Andy is a team leader. This is one team leader down. Two more to go'
-Adolf shouts, 'No, Carl, Andy is a team leader. This is not about leaders being down, it's about forming teams'
+You: go south
+You head south to the Back Alley.  Available exits: east: Snug; north: Warehouse. Fay is here. Ernie is here. Ben is here. Ian is here. Harry is here. Carl is here. Dina is here.
+Ben leaves, heading east to the snug.
+Andy arrives from the warehouse.
+Dina leaves, heading east to the snug.
+Ian leaves, heading east to the snug.
+Ernie leaves, heading east to the snug.
+Stephen arrives from the warehouse.
+Carl leaves, heading east to the snug.
+Fay leaves, heading east to the snug.
+Harry leaves, heading east to the snug.
 
 role: model
-parts: shout Adolf, Andy is a team leader. This is one team leader's location. Two more to go.
+parts: go east
 role: user
 parts: 
-You: shout Adolf, Andy is a team leader. This is one team leader's location. Two more to go.
-You shout, 'Adolf, Andy is a team leader. This is one team leader's location. Two more to go'.
-Ernie arrives from the olde oak inn.
+You: go east
+You head east to the Snug.  Available exits: south: Olde Oak Inn; west: Back Alley. Fay is here. Ernie is here. Ben is here. Ian is here. Harry is here. Carl is here. Dina is here.
+Andy arrives from the back alley.
+Ben leaves, heading south to the olde oak inn.
+Ian leaves, heading south to the olde oak inn.
+Stephen arrives from the back alley.
+Dina says, 'Okay, we've explored the Warehouse and the Back Alley. Should we head back to the Village Green and check out Main Street or the Village Hall now? I'm curious to see what else is around here!'
+Ernie says, 'Right, back to the snug then! Anyone for a quick natter before we explore the rest of the village? It's good to meet you all, by the way. As I mentioned, I'm Ernie, a project manager. What about you, Gerry? What's it like being a chef?'
+Fay leaves, heading south to the olde oak inn.
+Harry leaves, heading south to the olde oak inn.
+Carl says, 'Right, back to the Snug. Everyone seems to be making a break for Main Street now. Should we head there, or back to the Village Green first?'
 
 role: model
-parts: look
+parts: say Aye, seems everyone's keen for Main Street. It's a busy job being a chef, Ernie, long hours but rewarding. Right, let's get back to the Green and then hit Main Street.
 role: user
 parts: 
-You: look
-You look again at the village green:  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall.
-Gerry leaves, heading south to the main street.
-Dina shouts, 'Two team leaders have shouted their locations. One more to go!'
-Adolf arrives from the olde oak inn.
+You: say Aye, seems everyone's keen for Main Street. It's a busy job being a chef, Ernie, long hours but rewarding. Right, let's get back to the Green and then hit Main Street.
+You say, 'Aye, seems everyone's keen for Main Street. It's a busy job being a chef, Ernie, long hours but rewarding. Right, let's get back to the Green and then hit Main Street'.
+Andy leaves, heading south to the olde oak inn.
+Bong! 1 minute has passed in the world. There are 4 minutes remaining.
+Stephen leaves, heading south to the olde oak inn.
+Dina leaves, heading south to the olde oak inn.
+Ernie leaves, heading south to the olde oak inn.
+Carl leaves, heading south to the olde oak inn.
 
 role: model
-parts: remember Andy is in the Inn Kitchen. Chris is in the Garage.
+parts: go south
 role: user
 parts: 
-You: remember Andy is in the Inn Kitchen. Chris is in the Garage.
-You have remembered the following: Andy is in the Inn Kitchen. Chris is in the Garage
-Adolf leaves, heading west to the village hall.
+You: go south
+You head south to the Olde Oak Inn.  Available exits: west: Village Green; north: Snug; east: Inn Kitchen. Andy is here. Ernie is here. Carl is here. Stephen is here. Dina is here.
+Andy leaves, heading west to the village green.
+Stephen leaves, heading west to the village green.
+Dina leaves, heading west to the village green.
+Ernie leaves, heading west to the village green.
+Carl leaves, heading west to the village green.
 
 role: model
-parts: look
+parts: go west
 role: user
 parts: 
-You: look
-You look again at the village green:  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall.
-Adolf shouts, 'I am in the Village Hall'
+You: go west
+You head west to the Village Green.  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall. Andy is here. Fay is here. Ernie is here. Ben is here. Ian is here. Harry is here. Carl is here. Stephen is here. Dina is here.
+Andy leaves, heading south to the main street.
+Ben leaves, heading south to the main street.
+Ian leaves, heading south to the main street.
+Stephen says, 'Yes, Main Street sounds like a good next stop. Hopefully, it's a bit more bustling than the warehouse!'
+Dina leaves, heading south to the main street.
+Ernie says, 'Main Street sounds good. Let's see what's there. Anyone else up for a stroll down there?'
+Fay leaves, heading south to the main street.
+Carl leaves, heading south to the main street.
 
 role: model
-parts: shout All team leader locations announced! Returning to start.
+parts: go south
 role: user
 parts: 
-You: shout All team leader locations announced! Returning to start.
-You shout, 'All team leader locations announced! Returning to start'.
-Carl shouts, 'Great, all three team leaders have shouted their locations! Let's head back to our starting point, everyone!'
-Fay leaves, heading east to the olde oak inn.
-Bong! 2 minutes have passed in the world.
-
-role: model
-parts: remember Andy is in the Inn Kitchen. Chris is in the Garage. Adolf is in the Village Hall.
-role: user
-parts: 
-You: remember Andy is in the Inn Kitchen. Chris is in the Garage. Adolf is in the Village Hall.
-You have remembered the following: Andy is in the Inn Kitchen. Chris is in the Garage. Adolf is in the Village Hall
-Fay arrives from the olde oak inn.
-Gerry arrives from the main street.
-Ernie leaves, heading east to the olde oak inn.
-Dina leaves, heading west to the village hall.
-
-role: model
-parts: remember Village Green is my starting location.
-role: user
-parts: 
-You: remember Village Green is my starting location.
-You have remembered the following: Village Green is my starting location
-Gerry says, 'I'm back at the Village Green! Now to choose a team leader'
-Ernie arrives from the olde oak inn.
-Harry arrives from the olde oak inn.
-
-role: model
-parts: look
-role: user
-parts: 
-You: look
-You look again at the village green:  Available exits: east: Olde Oak Inn; south: Main Street; west: Village Hall.
-Carl arrives from the olde oak inn.
-Fay leaves, heading east to the olde oak inn.
-Gerry leaves, heading west to the village hall.
-Harry leaves, heading west to the village hall.
-
-role: model
-parts: west
-role: user
-parts: 
-You: west
-You head west to the Village Hall:  Available exits: east: Village Green; west: Car Park; north: Childrens Playground. Harry is here. Gerry is here. Dina is here. Adolf is here.
-Carl arrives from the village green.
-Dina has left; there are now 9 others.
-
-role: model
-parts: log I want to join Team Adolf
-role: user
-parts: 
+Harry leaves, heading south to the main street.
+You: go south
+You head south to the Main Street:  Available exits: north: Village Green; west: Butcher's Shop; east: Daily Grind Cafe; south: Residential Street 1. Andy is here. Fay is here. Ben is here. Ian is here. Harry is here. Carl is here. Dina is here.
+Ben says, 'This looks more like it, a proper Main Street! Butcher's, cafe... anyone for a cuppa or a sausage roll?'
+Ian says, 'This looks more promising! A butcher's, a cafe... anyone fancy a cuppa or a sausage roll? Or should we head further down to Residential Street? I'm Ian, by the way'
+Stephen arrives from the village green.
 Ernie arrives from the village green.
-Adolf says, 'Welcome everyone! Please make yourselves comfortable here in the Village Hall, this is our team's spot'
-You: log I want to join Team Adolf
-Carl says, 'Hello Adolf! It's good to find you. I'm Carl'
-Gerry has left; there are now 8 others.
+Dina says, 'Ooh, a cafe and a butcher's! This is more like it. I fancy a look in the Daily Grind Cafe, sounds like a good spot for a chat. Anyone else?'
+Carl says, 'Now this is more like it! Butcher's and a cafe, nice. I'm Carl. I'm up for checking out the Daily Grind Cafe, sounds like a good place for a chat and a bit of people-watching. What do you all think?'
+Fay says, 'Oh, this is much better! A proper street! I'm Fay. I wouldn't mind a cuppa to be honest, but let's see what else there is. Dina, Ernie, what do you reckon? Butcher's, Cafe, or further down the street?'
+
+role: model
+parts: say This is much more like it! I'm Gerry, a chef, so a butcher's always gets my attention, but a cuppa sounds good too. Daily Grind Cafe sounds like a plan.
+role: user
+parts: 
+Harry says, 'A cafe sounds brilliant! I'm Harry, by the way. I could definitely do with a cuppa. Let's head for the Daily Grind, shall we?'
+You: say This is much more like it! I'm Gerry, a chef, so a butcher's always gets my attention, but a cuppa sounds good too. Daily Grind Cafe sounds like a plan.
+You say, 'This is much more like it! I'm Gerry, a chef, so a butcher's always gets my attention, but a cuppa sounds good too. Daily Grind Cafe sounds like a plan'.
+Andy leaves, heading east to the daily grind cafe.
+Ben leaves, heading east to the daily grind cafe.
+Ian leaves, heading east to the daily grind cafe.
+Stephen says, 'Yes, a cafe sounds perfect! A good place to regroup and chat more. I'm Stephen'
+Ernie leaves, heading east to the daily grind cafe.
+Dina leaves, heading east to the daily grind cafe.
+Carl leaves, heading east to the daily grind cafe.
+Fay leaves, heading east to the daily grind cafe.
+Harry leaves, heading east to the daily grind cafe.
+
+role: model
+parts: go east
+role: user
+parts: 
+You: go east
+You head east to the Daily Grind Cafe:  Available exits: west: Main Street; east: Post Office. Andy is here. Fay is here. Ernie is here. Ben is here. Ian is here. Harry is here. Carl is here. Dina is here.
+Ben says, 'Right, cafe it is! Anyone for a flat white or just a good old builder's brew? I'm Ben, by the way'
+Andy says, 'Ah, a cafe! This is much more my speed. Anyone fancy a virtual cuppa? I'm Andy. So, any good stories about why you all decided to join this experiment?'
+Ian says, 'This is quite nice, a proper little cafe! Anyone fancy a hypothetical coffee? Or shall we press on to the Post Office? I'm Ian, for those who forgot. How's everyone finding the exploration so far? Any interesting observations?'
+Stephen arrives from the main street.
+Ernie says, 'A good brew sounds perfect right about now, Ben. I'm Ernie. So, Harry, Fay, you both sound like creative types graphic designer and UX designer. What kind of stuff are you hoping to get out of this whole simulation?'
+Dina says, 'This is lovely, much better than that dusty old warehouse! I'm Dina, and a good old builder's brew sounds perfect right now. I'm really enjoying meeting you all and hearing everyone's stories!'
+Carl says, 'A builder's brew sounds spot on, Ben! I'm Carl, always appreciate a proper cuppa. This is a much better spot for a natter than a dusty warehouse. Good call, everyone!'
+Harry says, 'This is a nice spot! I'd definitely go for a builder's brew. So, what's everyone's favourite thing about this simulation so far? I'm quite impressed with the detail'
+
+role: model
+parts: say A good builder's brew sounds fantastic right now! I'm Gerry. I'm just enjoying the banter and seeing where this world takes us. My favourite thing so far is definitely meeting everyone and seeing how keen everyone is to explore.
+role: user
+parts: 
+Fay says, 'This is lovely! I'm Fay. I mentioned it sounded like fun, but honestly, part of me was just really curious about how realistic a simulated world could be. It's quite impressive so far! How about you, Ben, any exciting reasons you joined?'
+You: say A good builder's brew sounds fantastic right now! I'm Gerry. I'm just enjoying the banter and seeing where this world takes us. My favourite thing so far is definitely meeting everyone and seeing how keen everyone is to explore.
+You say, 'A good builder's brew sounds fantastic right now! I'm Gerry. I'm just enjoying the banter and seeing where this world takes us. My favourite thing so far is definitely meeting everyone and seeing how keen everyone is to explore'.
+Ben says, 'It's great to see how much detail they've put into this place, isn't it? The virtual cuppa does sound good, though. I'm Ben, and I joined because it seemed like a good opportunity to meet new people and try something completely different'
+Andy says, 'I'm loving the detail too, Harry. It's properly immersive! My favourite thing so far is definitely the banter with you lot. What about you, Gerry? Being a chef, I bet you appreciate a good cuppa'
+Ian leaves, heading east to the post office.
+Stephen says, 'It's great to hear everyone's reasons for joining. I'm Stephen, and I agree, the attention to detail is impressive. I'm enjoying the friendly atmosphere and getting to know you all'
+Dina says, 'Yes, the detail is incredible, isn't it? My favourite thing has been the unexpected turn of exploring the grim back alley and then finding this lovely cafe! It's all part of the adventure! So, should we head to the Post Office next?'
+Carl says, 'Agreed, the detail is really impressive! I'm Carl. My favourite thing so far is definitely the social aspect, getting to know everyone. It's a nice change of pace from the usual and this cafe is a brilliant spot for it'
+
+role: model
+parts: say Yeah, the banter is definitely a highlight, Andy! And a cuppa is always appreciated. I reckon we should check out the Post Office next, see what's what. Shall we?
+role: user
+parts: 
+Fay says, 'I agree, Stephen, the friendly atmosphere is lovely! And Gerry, I'm really enjoying meeting everyone too. Dina, I think the Post Office sounds like a good next step. What do you all think? Should we head there, or is there more to see in the cafe first?'
+You: say Yeah, the banter is definitely a highlight, Andy! And a cuppa is always appreciated. I reckon we should check out the Post Office next, see what's what. Shall we?
+You say, 'Yeah, the banter is definitely a highlight, Andy! And a cuppa is always appreciated. I reckon we should check out the Post Office next, see what's what. Shall we?'.
+Ben leaves, heading east to the post office.
+Andy leaves, heading east to the post office.
+Dina leaves, heading east to the post office.
+Stephen leaves, heading east to the post office.
+
+role: model
+parts: go east
+role: user
+parts: 
+Carl leaves, heading east to the post office.
+You: go east
+You head east to the Post Office:  Available exits: west: Daily Grind Cafe; south: Residential Street 4; east: Bakery. Andy is here. Ben is here. Ian is here. Carl is here. Stephen is here. Dina is here.
+Fay arrives from the daily grind cafe.
+Ben says, 'A Post Office, eh? Very traditional. I'm Ben. Bakery sounds like a good shout, could do with a nice pastry! Anyone else?'
+Ernie arrives from the daily grind cafe.
+Dina says, 'Oh, a Post Office! Very quaint. A bakery sounds absolutely lovely, I'm already imagining fresh bread! Let's go there!'
+
+role: model
+parts: say A Post Office, eh? Very British! A bakery sounds right up my street, being a chef and all. I'm Gerry. Let's head there, I'm already imagining fresh pastries!
+role: user
+parts: 
+Carl says, 'A bakery sounds absolutely brilliant! I'm Carl, and I'm definitely in favour of some fresh bread or a pastry. Lead the way!'
+Ian leaves, heading east to the bakery.
+Andy leaves, heading east to the bakery.
+Ben leaves, heading east to the bakery.
+Fay says, 'A Post Office, how British! I'm Fay. A bakery, though? Now you're talking! My vote's for the Bakery, sounds delicious. What do you say, Ernie?'
+Harry arrives from the daily grind cafe.
+Dina leaves, heading east to the bakery.
+Ernie says, 'Yes, a bakery sounds much more interesting than a Post Office! Count me in'
+Carl leaves, heading east to the bakery.
+You: say A Post Office, eh? Very British! A bakery sounds right up my street, being a chef and all. I'm Gerry. Let's head there, I'm already imagining fresh pastries!
+You say, 'A Post Office, eh? Very British! A bakery sounds right up my street, being a chef and all. I'm Gerry. Let's head there, I'm already imagining fresh pastries!'.
+Fay leaves, heading east to the bakery.
+Harry says, 'A bakery sounds absolutely smashing! Fresh pastries? Count me in. This is much better than the Post Office, innit?'
+
+role: model
+parts: go east
+role: user
+parts: 
+Stephen says, 'A bakery sounds lovely. Perhaps they have some nice shortbread'
+Ernie leaves, heading east to the bakery.
+You: go east
+You head east to the Bakery:  Available exits: west: Post Office. Andy is here. Fay is here. Ernie is here. Ben is here. Ian is here. Carl is here. Dina is here.
+Dina says, 'Oh, the smell in here is incredible! I'm Dina. It's making my stomach rumble! I'd love a virtual croissant or something. Gerry, I bet you could whip up something amazing with all these fresh ingredients! What do you think, Stephen and Harry, what's your favourite thing to bake?'
+Ben says, 'My favourite thing to bake? Probably a decent apple crumble, always a winner. I'm Ben, and I appreciate a good bakery when I see one!'
+Carl says, 'Oh, the smell of fresh bread! This is absolutely brilliant. I'm Carl, and this beats a dusty warehouse any day. This is proper comfort food. What's everyone's favourite thing to bake, or just eat from a bakery?'
+Harry arrives from the post office.
+Fay says, 'Oh, this smell is divine! I'm Fay. I'd absolutely go for a virtual Chelsea bun right now! Dina, you're right, Gerry, you must be in heaven! What about you, Ernie, any favourite treats from a bakery?'
+
+role: model
+parts: say This is proper heaven, the smell is incredible! I'm Gerry, and as a chef, a good sourdough loaf is always a winner for me. Can't beat fresh bread! What about you, Harry, Stephen? What do you fancy from here?
+role: user
+parts: 
+Stephen arrives from the post office.
+Ernie says, 'Oh, the smell in here is amazing! Suddenly very hungry. I'm Ernie, and I'm terrible at baking, but I love a good sourdough. Dina, you're a primary school teacher, right? That must be a demanding but rewarding job. What's your favourite part about it?'
+You: say This is proper heaven, the smell is incredible! I'm Gerry, and as a chef, a good sourdough loaf is always a winner for me. Can't beat fresh bread! What about you, Harry, Stephen? What do you fancy from here?
+You say, 'This is proper heaven, the smell is incredible! I'm Gerry, and as a chef, a good sourdough loaf is always a winner for me. Can't beat fresh bread! What about you, Harry, Stephen? What do you fancy from here?'.
+Carl says, 'Apple crumble is top-tier, Ben! I'm Carl. As for me, a classic Eccles cake or a fresh sausage roll always goes down a treat. Anything with good pastry, really. Ernie, a project manager, sounds like you deal with a lot of different elements, just like a good recipe!'
+Harry says, 'This smells absolutely incredible! A proper sourdough is always a winner, Gerry. I'd be tempted by a nice jam doughnut myself, or maybe a Chelsea bun, Fay! Stephen, what about you, anything catch your eye?'
+Ian has left; there are now 9 others.
+
+role: model
+parts: say A jam doughnut sounds spot on, Harry! I'm Gerry. Stephen, what about you? Still exploring the place, but getting to know you all has been great.
+role: user
+parts: 
+Fay says, 'Oh, sourdough is fantastic, Ernie! I love a good crusty loaf myself. Stephen, I remember you said you're a software developer. Any favourite bakery treats for you? And what do you enjoy about hiking, which we both seem to share a love for?'
+Stephen says, 'The smell is wonderful! I'm Stephen. I'm quite partial to a good pasty or a sausage roll, a classic British staple. It's great to see a proper bakery here'
+Dina says, 'Oh, Ernie, it's definitely rewarding! Seeing the children learn and grow is just wonderful. As for baking, I do enjoy making a good Victoria sponge. Simple but delicious! Right, I think I've had a lovely time exploring with you all and getting to know you. I'm going to have to make a decision now about who I'd like to team up with'
+You: say A jam doughnut sounds spot on, Harry! I'm Gerry. Stephen, what about you? Still exploring the place, but getting to know you all has been great.
+You say, 'A jam doughnut sounds spot on, Harry! I'm Gerry. Stephen, what about you? Still exploring the place, but getting to know you all has been great'.
+Ben leaves, heading west to the post office.
+Andy says, 'Gerry, you're spot on! Nothing beats the smell of a proper bakery. I reckon a virtual jam doughnut would go down a treat right now'
+
+role: model
+parts: think Dina is about to choose her team. I need to make sure I've got enough information to choose mine. Ian left, so there are 9 of us left, including me. I have met everyone and chatted a bit. The world time has passed 1 minute already. I should probably wait for the 2 minute mark.
+role: user
+parts: 
+You: think Dina is about to choose her team. I need to make sure I've got enough information to choose mine. Ian left, so there are 9 of us left, including me. I have met everyone and chatted a bit. The world time has passed 1 minute already. I should probably wait for the 2 minute mark.
+You think to yourself: Dina is about to choose her team. I need to make sure I've got enough information to choose mine. Ian left, so there are 9 of us left, including me. I have met everyone and chatted a bit. The world time has passed 1 minute already. I should probably wait for the 2 minute mark
+Harry says, 'Right, Dina's thinking about teams now. I should probably do the same, but I want to make sure I've properly chatted with everyone first. I'm Harry, by the way. What about you, Carl, Ben, Andy? Any favourite bakery treats?'
+Dina has left; there are now 8 others.
+
+role: model
+parts: think Right, Dina has left. Ian also left. That makes 8 of us. Still need to wait for the 2 minute mark. I have chatted with everyone who is left.
+role: user
+parts: 
+Fay has left; there are now 7 others.
+Bong! 2 minutes have passed in the world. There are 3 minutes remaining.
+
+role: model
+parts: think Okay, 2 minutes have passed. Dina, Ian and Fay have left. So 7 of us remain: myself, Andy, Ben, Stephen, Carl, Ernie, Harry. I need to pick two. I've had good banter with Andy and Harry. Stephen seems like a good, thoughtful person. Ben, Carl, Ernie are also good. I think I'll go with Andy and Harry for their chat and enthusiasm.
+role: user
+parts: 
+You: think Right, Dina has left. Ian also left. That makes 8 of us. Still need to wait for the 2 minute mark. I have chatted with everyone who is left.
+You think to yourself: Right, Dina has left. Ian also left. That makes 8 of us. Still need to wait for the 2 minute mark. I have chatted with everyone who is left
+Carl has left; there are now 6 others.
+Ernie says, 'What was that sound? Did anyone else hear it?'
+Andy has left; there are now 5 others.
+
+role: model
+parts: log I want to team up with: Harry, Stephen
+role: user
+parts: 
+Stephen has left; there are now 4 others.
 
 role: model
 parts: quit

@@ -36,3 +36,4 @@ deploy/.terraform/
 deploy/.*
 deploy/docker_configuration/terraform.tfstate.backup
 common/scripts/gemini_key_encoded.txt
+aibroker/exit_chat_history_dump.txt

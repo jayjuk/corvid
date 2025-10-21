@@ -3,7 +3,7 @@ import traceback
 from os import path, makedirs, environ, sep
 import json
 import time
-from utils import set_up_logger, exit, get_logs_folder
+from utils import set_up_logger, exit, get_logs_folder, get_critical_env_variable
 from os import environ
 
 # NOTE: Model-specific clients are imported dynamically in the StabilityAI section
@@ -55,10 +55,10 @@ class AIManager:
         # Model costs as of 22 Feb 2024 from https://openai.com/pricing#language-models
         # Input, output pricing per 1000 tokens
         self.model_cost: Dict[str, Tuple[float, float]] = {
-            "gpt-3.5-turbo": (0.0005, 0.0015),
-            "gpt-4-turbo": (0.01, 0.03),
-            "gpt-4o": (0.005, 0.015),
-            "gpt-4o-mini": (0.00015, 0.0006),
+            "gpt-4o": (0.018, 0.074),
+            "gpt-4o-mini": (0.00015, 0.0044),
+            "gpt-5-mini": (0.00019, 0.015),
+            "gpt-5-nano": (0.0004, 0.003),
             "gemini-pro": (0, 0),
             "claude-3-haiku-20240307": (0.00025, 0.00125),
             "llama3-70b-8192": (0, 0),  # Free on Groq for now
@@ -147,8 +147,8 @@ class AIManager:
         elif self.model_name.startswith("llama"):
             return "Groq"
         elif '/' in self.model_name:
-            #Assume OpenRouter
-            return "GPT"
+            #Assume OpenRouter, which uses OpenAI client but different environment variables
+            return "OpenRouter"
 
     # Store model data to file (for investigating issues with model responses)
     def store_model_data(self, filename_prefix: str, data: Any) -> None:
@@ -166,6 +166,10 @@ class AIManager:
         # Use pre-set variable before dotenv.
         if self.get_model_api() == "GPT":
             self.model_client = openai_client.get_model_client()
+
+        elif self.get_model_api() == "OpenRouter":
+            # OpenAI library, but OpenRouter parameters
+            self.model_client = openai_client.get_model_client(get_critical_env_variable("OPENROUTER_BASE_URL"), get_critical_env_variable("OPENROUTER_API_KEY"))
 
         elif self.get_model_api() == "Anthropic":
             self.model_client = anthropic_client.get_model_client()
