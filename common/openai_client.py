@@ -39,14 +39,25 @@ def do_model_request(
         if model_name=="gpt-5-mini" and temperature!=1:
             logger.warning(f"Overriding temperature to 1 as other values not supported by {model_name}")
             temperature = 1
-        response: openai.Response = model_client.chat.completions.create(
+        # Need to use this new API in order to dial down reasoning and avoid excessive latency
+        response: openai.Response = model_client.responses.create(
             model=model_name,
-            messages=messages,
-            max_completion_tokens=max_tokens,
-            temperature=temperature,
-            response_format=response_format,
+            reasoning={"effort": "low"},
+            input=messages,
+            #max_completion_tokens=max_tokens,
+            #temperature=temperature,
+            #response_format=response_format,
         )
+        for output in response.output:
+            if output.type == 'message':
+                return (
+                    output.content[0].text,
+                    response.usage.input_tokens,
+                    response.usage.output_tokens,
+                )
+
     else:
+        # Legacy API for GPT-4* and below (heavily tested)
         response: openai.Response = model_client.chat.completions.create(
             model=model_name,
             messages=messages,
@@ -54,14 +65,13 @@ def do_model_request(
             temperature=temperature,
             response_format=response_format,
         )
-
-    # Extract response content
-    for choice in response.choices:
-        return (
-            choice.message.content,
-            response.usage.prompt_tokens,
-            response.usage.completion_tokens,
-        )
+        # Extract response content
+        for choice in response.choices:
+            return (
+                choice.message.content,
+                response.usage.prompt_tokens,
+                response.usage.completion_tokens,
+            )
 
 
 # Execute image generation request

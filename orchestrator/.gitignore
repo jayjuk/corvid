@@ -18,4 +18,6 @@ quick_backup_and_old
 frontend/perspective-package.zip
 .DS_Store
 logs/*_transcript.txt
-old_*.txt
+*.txt
+!requirements.txt
+

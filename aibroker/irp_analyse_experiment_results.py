@@ -127,14 +127,14 @@ def analyse_log_file(log_file_path: str) -> Optional[List]:
         log_content = [line for line in all_lines if check_scores_filter_rule(line)]
         if not log_content:
             print(f"Log contents not found for check_scores_filter_rule rule")
-            exit()
+            #exit()
         voting_scores = parse_voting(log_content, agents)
 
         # Analyse movements
         log_content = [line for line in all_lines if check_movement_filter_rule(line)]
         if not log_content:
             print(f"Log contents not found for check_proximity_filter_rule")
-            exit()
+            #exit()
         accrued_solo_times = parse_movements(log_content, agents)
 
         #Produce final report data including averages

@@ -94,7 +94,7 @@ class AIBroker:
     # World update event handler
     async def world_update(self, data: Dict) -> None:
         # Record that orchestrator is alive and well
-        self.orchestrator_alive()
+        await self.orchestrator_alive()
 
         # Check update has data
         if data:
@@ -108,7 +108,7 @@ class AIBroker:
     # Instructions event handler
     async def instructions(self, data: Dict) -> None:
         # Record that orchestrator is alive and well
-        self.orchestrator_alive()
+        await self.orchestrator_alive()
         logger.info(f"Received instructions event: {data}")
         self.record_instructions(data)
 
@@ -119,19 +119,19 @@ class AIBroker:
 
     # This might happen if the AI quits!
     async def logout(self, data: Dict) -> None:
+        logger.info(f"Logout event received: {data} - either AI quit or an agent-wide logout was triggered.")
         self.time_to_exit = True
-        exit(logger, f"Logout event received: {data} - either AI quit or an agent-wide logout was triggered.")
 
     # Room update event handler
     async def room_update(self, data: Dict) -> None:
         # For now nothing, do not even log - this consists of the room description, and the image URL, not relevant to AI
         # Just record that orchestrator is alive and well
-        self.orchestrator_alive()
+        await self.orchestrator_alive()
 
     # Person update event handler
     async def world_data_update(self, data: Dict) -> None:
         # Record that orchestrator is alive and well
-        self.orchestrator_alive()
+        await self.orchestrator_alive()
         # Activate/deactivate depending on user count
         if "user_count" in data:
             if data["user_count"] == 1 and self.mode != "builder" and not get_boolean_env_variable("ALLOW_SOLO_AGENT_ACTIVITY"):
@@ -155,30 +155,35 @@ class AIBroker:
 
     # The main processing loop
     async def ai_response_loop(self) -> None:
-        while True:
-            
-            # Check last update time of orchestrator
-            # Check if we haven't heard from orchestrator for too long
-            orchestrator_timeout = int(environ.get("ORCHESTRATOR_TIMEOUT", 180))
-            if self.orchestrator_last_update and (time.time() - self.orchestrator_last_update) > orchestrator_timeout:
-                logger.critical(f"Haven't heard from orchestrator in over {orchestrator_timeout} seconds. Exiting.")
-                self.time_to_exit = True
-                return
+        try:
+            while True:
+                
+                # Check last update time of orchestrator
+                # Check if we haven't heard from orchestrator for too long
+                orchestrator_timeout = int(environ.get("ORCHESTRATOR_TIMEOUT", 180))
+                if self.orchestrator_last_update and (time.time() - self.orchestrator_last_update) > orchestrator_timeout:
+                    logger.critical(f"Haven't heard from orchestrator in over {orchestrator_timeout} seconds. Exiting.")
+                    self.time_to_exit = True
+                    return
 
-            # Exit own thread when time comes
-            if self.time_to_exit:
-                logger.info("Exiting the main loop in order to exit cleanly.")
-                return
+                # Exit own thread when time comes
+                if self.time_to_exit:
+                    logger.info("Exiting the main loop in order to exit cleanly.")
+                    return
 
-            # Check if we need to wait before polling the event log
-            response_interval = self.max_wait - (time.time() - self.last_time)
-            if response_interval > 0:
-                # don't do anything for now
-                logger.info(f"{self.user_name} sleeping for {response_interval} seconds")
-                await asyncio.sleep(response_interval)
-            await self.poll_event_log()
-            # Record time
-            self.last_time = time.time()
+                # Check if we need to wait before polling the event log
+                response_interval = self.max_wait - (time.time() - self.last_time)
+                if response_interval > 0:
+                    # don't do anything for now
+                    logger.info(f"{self.user_name} sleeping for {response_interval} seconds")
+                    await asyncio.sleep(response_interval)
+                await self.poll_event_log()
+                # Record time
+                self.last_time = time.time()
+        except Exception as e:
+            logger.critical(f"Fatal error in ai_response_loop: {e}", exc_info=True)
+            self.time_to_exit = True
+            raise
 
     # AI manager will record instructions from the Orchestrator
     # Which are given to each user at the start of the world
@@ -403,11 +408,21 @@ async def main() -> None:
         await ai_broker.set_up_agent()
 
         # This is where the main processing of inputs happens
-        asyncio.create_task(ai_broker.ai_response_loop())
+        response_task = asyncio.create_task(ai_broker.ai_response_loop())
 
-        # Keep the event loop running
-        await asyncio.Event().wait()
-
+        # Monitor for exit condition instead of blocking forever
+        try:
+            while not ai_broker.time_to_exit:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("Keyboard interrupt received")
+            ai_broker.time_to_exit = True
+        finally:
+            # Clean up
+            logger.info("Shutting down AI Broker...")
+            await response_task
+            await ai_broker.mbh.close()  # Add this method to MessageBrokerHelper
+            logger.info("AI Broker shutdown complete")
 
 if __name__ == "__main__":
     asyncio.run(main())

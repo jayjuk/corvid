@@ -38,6 +38,9 @@ class agentmanager:
         # Record previous instructions
         self.previous_instructions: str = ""
 
+        # Shutdown flag
+        self.should_shutdown: bool = False
+
 
     # Set up MBH
     async def set_up_mbh(self) -> None:
@@ -95,12 +98,7 @@ class agentmanager:
         return user_data
 
     async def logout(self, data: Dict) -> None:
-        #self.user_count -= 1
-        #logger.info(f"{data} - I now have {self.user_count} users left.")
-        #if self.user_count == 0 and get_boolean_env_variable("AGENT_MANAGER_SUMMON_MODE")==False:
-        #    exit(logger, "No users left! Exiting.")
-        #logger.info(f"Logout message received by agent manager")
-        pass
+        logger.info(f"Logout message received by agent manager: {data}.")
 
     # Create an agent
     async def create_agent(self, user_dict: Dict) -> None:
@@ -143,12 +141,13 @@ class agentmanager:
             )
             logger.debug(f"Log file name: {log_file_name}")
             with open(log_file_name, "w") as f:
-                subprocess.Popen(
+                process = subprocess.Popen(
                     ["python", "aibroker.py"],
                     env=env,
                     stdout=f,
                     stderr=f,
                 )
+                logger.info(f"Started AI broker process for agent {user_name} with PID: {process.pid}")
 
         # Run the agent process in a background thread
 
@@ -194,7 +193,8 @@ class agentmanager:
             self.user_count = data["user_count"]
             logger.info(f"World data update received: there are now {self.user_count} users online.")
             if self.user_count == 0 and get_boolean_env_variable("AGENT_MANAGER_SUMMON_MODE")==False:
-                exit(logger, "No users left! Exiting.")
+                logger.info("No users left! Initiating graceful shutdown.")
+                self.should_shutdown = True
         else:
             exit(logger, "Invalid world data update message! Exiting.")
 
@@ -210,9 +210,11 @@ async def main() -> None:
 
     await agent_manager.create_agents()
 
-    # Keep the event loop running
-    await asyncio.Event().wait()
+    # Keep the event loop running and check for shutdown
+    while not agent_manager.should_shutdown:
+        await asyncio.sleep(1)
 
+    await agent_manager.mbh.close()
 
 # Main function to start the program
 if __name__ == "__main__":

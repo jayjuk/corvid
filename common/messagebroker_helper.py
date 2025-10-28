@@ -135,8 +135,8 @@ class MessageBrokerHelper:
         await self.nc.flush()
         logger.debug(f"Sent message to queue {queue}: {message}")
 
-    def close(self):
+    async def close(self):
         """Close the NATS connection."""
         if self.nc.is_connected:
-            asyncio.run(self.nc.close())
+            await self.nc.close()
             logger.info("Closed NATS connection")

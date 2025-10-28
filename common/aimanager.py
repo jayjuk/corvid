@@ -191,7 +191,7 @@ class AIManager:
 
     # Build a message for the model (everyone but Gemini)
     def build_message(self, role: str, content: str):
-        return {"role": role, self.content_word: content}
+        return {"role": role, self.content_word: content or ""}
 
     # Submit a request to the model
     def submit_request(
